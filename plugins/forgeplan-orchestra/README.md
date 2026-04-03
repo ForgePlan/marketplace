@@ -2,7 +2,7 @@
 
 # forgeplan-orchestra
 
-> Три системы как единый организм. Каждая делает то, что умеет лучше всех. Данные живут в одном месте, ссылки — везде.
+> Three systems as one organism. Each does what it does best. Data lives in one place, links everywhere.
 
 Unified workflow plugin connecting **Forgeplan** (methodology + artifacts), **[Orchestra](https://www.orchestra.pm/)** (task tracking + team collaboration), and **Claude Code** (AI execution + memory) into a coherent system.
 
