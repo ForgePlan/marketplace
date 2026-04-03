@@ -1,0 +1,26 @@
+{
+  "PreToolUse": [
+    {
+      "matcher": "Bash",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/safety-hook.sh",
+          "timeout": 3
+        }
+      ]
+    }
+  ],
+  "PostToolUse": [
+    {
+      "matcher": "Write|Edit|MultiEdit",
+      "hooks": [
+        {
+          "type": "prompt",
+          "prompt": "If the file just modified contains a new public function/method definition (export function, pub fn, def, public, etc.) that lacks a corresponding test, briefly remind the user: 'New public function detected — consider adding a test.' Keep it to one sentence. If no new public function was added, say nothing.",
+          "timeout": 15
+        }
+      ]
+    }
+  ]
+}

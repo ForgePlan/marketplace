@@ -1,8 +1,8 @@
 # ForgePlan Marketplace
 
-Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/ForgePlan) — UX, frontend, and developer tools.
+Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/ForgePlan) — UX, workflow, engineering, and developer tools.
 
-**1 plugin** | **30 UX laws** | **9 code pattern files** | **2 commands** | **1 agent** | **1 hook**
+**3 plugins** | **7 commands** | **3 agents** | **3 hooks** | **2 knowledge bases** | **81 files**
 
 ## Quick Start
 
@@ -45,6 +45,51 @@ Review HTML/CSS/JS/React/Vue code against psychological principles from [lawsofu
 ```bash
 /plugin install laws-of-ux@forgeplan-marketplace
 ```
+
+---
+
+### forgeplan-workflow `v1.0.0`
+
+> Structured engineering workflow for [forgeplan](https://github.com/ForgePlan/forgeplan) users.
+
+Full dev cycle automation: route tasks, create PRDs, build, audit, create evidence, activate — all in one flow.
+
+| Component | What you get |
+|-----------|-------------|
+| `/forge-cycle` | Complete cycle: health → route → shape → build → evidence → activate |
+| `/forge-audit` | Multi-expert review (6 parallel agents) with structured report |
+| **Forge Advisor** agent | Suggests routing before coding, evidence after implementation |
+| **Quality hooks** | Safety hook + PRD check before code edits |
+| **Methodology KB** | Agentic RAG: workflow, artifacts, depth, R_eff scoring, quality gates |
+
+**Requires:** `forgeplan` CLI installed (`cargo install forgeplan` or download binary)
+
+```bash
+/plugin install forgeplan-workflow@forgeplan-marketplace
+```
+
+---
+
+### dev-toolkit `v1.0.0`
+
+> Universal engineering toolkit — works with **any project and language**. No dependencies.
+
+| Component | What you get |
+|-----------|-------------|
+| `/audit` | Multi-expert code review (4 agents: logic, architecture, security, tests) |
+| `/sprint` | Wave-based sprint planner: break tasks into phases, execute with parallel agents |
+| `/recall` | Session context restore from git + CLAUDE.md + memory (Hindsight/mem0/forgeplan) |
+| **Dev Advisor** agent | Suggests audit after changes, reminds about tests |
+| **Safety hook** | Blocks `git push --force`, `rm -rf /`, `DROP TABLE` |
+| **Test reminder** | Detects new public functions without tests |
+
+**Supports:** JavaScript/TypeScript, Python, Rust, Go, Java, Ruby, PHP, C#
+
+```bash
+/plugin install dev-toolkit@forgeplan-marketplace
+```
+
+---
 
 ## How It Works
 

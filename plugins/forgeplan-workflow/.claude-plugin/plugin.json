@@ -1,0 +1,8 @@
+{
+  "name": "forgeplan-workflow",
+  "version": "1.0.0",
+  "description": "Structured engineering workflow for forgeplan users. Provides forge-cycle (full dev cycle), forge-audit (multi-expert review), methodology knowledge base, and quality gate hooks. Requires forgeplan CLI.",
+  "author": { "name": "ForgePlan" },
+  "license": "MIT",
+  "keywords": ["forgeplan", "workflow", "engineering", "prd", "rfc", "adr", "quality-gates"]
+}
