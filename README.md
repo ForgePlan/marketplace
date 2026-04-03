@@ -1,3 +1,5 @@
+[English](README.md) | [Русский](README-RU.md)
+
 # ForgePlan Marketplace
 
 Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/ForgePlan) — UX, workflow, engineering, and developer tools.
