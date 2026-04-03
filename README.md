@@ -4,7 +4,7 @@
 
 Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/ForgePlan) — UX, workflow, engineering, and developer tools.
 
-**3 plugins** | **7 commands** | **3 agents** | **3 hooks** | **2 knowledge bases** | **81 files**
+**4 plugins** | **11 commands** | **4 agents** | **4 hooks** | **3 knowledge bases** | **318 files**
 
 ## Quick Start
 
@@ -89,6 +89,27 @@ Full dev cycle automation: route tasks, create PRDs, build, audit, create eviden
 
 ```bash
 /plugin install dev-toolkit@forgeplan-marketplace
+```
+
+---
+
+### fpf `v1.0.0`
+
+> [First Principles Framework](https://github.com/ailev/FPF) — thinking amplifier for structured reasoning. By Anatoly Levenchuk, enhanced by ForgePlan.
+
+One command `/fpf` routes to the right thinking mode — decompose, evaluate, reason, or lookup.
+
+| Component | What you get |
+|-----------|-------------|
+| `/fpf` | Universal router: `/fpf decompose`, `/fpf evaluate`, `/fpf reason`, `/fpf lookup` |
+| `/fpf-decompose` | Break systems into bounded contexts, roles, interfaces |
+| `/fpf-evaluate` | Compare alternatives with F-G-R scoring and Trust Calculus |
+| `/fpf-reason` | ADI reasoning cycle: 3+ hypotheses → test → conclude |
+| **FPF Advisor** agent | Suggests FPF when architecture/decision tasks detected |
+| **Knowledge base** | 224 FPF spec sections + 4 applied pattern guides (agentic RAG) |
+
+```bash
+/plugin install fpf@forgeplan-marketplace
 ```
 
 ---

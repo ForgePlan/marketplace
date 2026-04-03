@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code — UX, frontend, workflow, and developer tools",
-    "version": "1.1.0"
+    "version": "1.2.0"
   },
   "plugins": [
     {
@@ -38,6 +38,16 @@
       "homepage": "https://github.com/ForgePlan/marketplace",
       "license": "MIT",
       "keywords": ["audit", "sprint", "safety", "code-review", "workflow", "quality", "universal"]
+    },
+    {
+      "name": "fpf",
+      "source": "./plugins/fpf",
+      "description": "First Principles Framework (FPF) — thinking amplifier for structured reasoning, decomposition, and decision-making. Enhanced plugin with /fpf command, applied patterns, forgeplan integration, and FPF advisor agent. Based on FPF by Anatoly Levenchuk.",
+      "version": "1.0.0",
+      "author": { "name": "ForgePlan" },
+      "homepage": "https://github.com/ForgePlan/marketplace",
+      "license": "MIT",
+      "keywords": ["fpf", "reasoning", "systems-thinking", "decomposition", "decision-making", "bounded-contexts", "architecture"]
     }
   ]
 }

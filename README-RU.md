@@ -4,7 +4,7 @@
 
 Официальный маркетплейс плагинов Claude Code от [ForgePlan](https://github.com/ForgePlan) — UX, воркфлоу, инженерные и dev-инструменты.
 
-**3 плагина** | **7 команд** | **3 агента** | **3 хука** | **2 базы знаний** | **81 файл**
+**4 плагина** | **11 команд** | **4 агента** | **4 хука** | **3 базы знаний** | **318 файлов**
 
 ## Быстрый старт
 
@@ -89,6 +89,27 @@
 
 ```bash
 /plugin install dev-toolkit@forgeplan-marketplace
+```
+
+---
+
+### fpf `v1.0.0`
+
+> [First Principles Framework](https://github.com/ailev/FPF) — усилитель мышления для структурированного рассуждения. Автор: Анатолий Левенчук, расширен ForgePlan.
+
+Одна команда `/fpf` маршрутизирует в нужный режим мышления.
+
+| Компонент | Что получаете |
+|-----------|-------------|
+| `/fpf` | Универсальный роутер: `/fpf decompose`, `/fpf evaluate`, `/fpf reason`, `/fpf lookup` |
+| `/fpf-decompose` | Разбить систему на bounded contexts, роли, интерфейсы |
+| `/fpf-evaluate` | Сравнить альтернативы с F-G-R scoring и Trust Calculus |
+| `/fpf-reason` | Цикл рассуждения ADI: 3+ гипотезы → проверка → заключение |
+| **FPF Advisor** агент | Предлагает FPF при архитектурных и decision задачах |
+| **База знаний** | 224 секции FPF спецификации + 4 applied pattern гайда (agentic RAG) |
+
+```bash
+/plugin install fpf@forgeplan-marketplace
 ```
 
 ---

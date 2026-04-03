@@ -1,0 +1,8 @@
+{
+  "name": "fpf",
+  "version": "1.0.0",
+  "description": "First Principles Framework (FPF) — thinking amplifier for structured reasoning, system decomposition, and decision-making. Enhanced version with applied patterns, forgeplan integration, and practical commands. Based on the FPF specification by Anatoly Levenchuk.",
+  "author": { "name": "ForgePlan" },
+  "license": "MIT",
+  "keywords": ["fpf", "reasoning", "systems-thinking", "decomposition", "decision-making", "bounded-contexts", "architecture"]
+}
