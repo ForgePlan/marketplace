@@ -81,7 +81,7 @@ Bidirectional sync, Session Start Protocol with Inbox Pattern, and methodology k
 | Component | What you get |
 |-----------|-------------|
 | `/sync` | Bidirectional sync: Forgeplan artifacts ↔ Orchestra tasks |
-| `/session-start` | Session Start Protocol: health + inbox + tasks + synthesis + next action |
+| `/session` | Session Start Protocol: health + inbox + tasks + synthesis + next action |
 | **Orchestra Advisor** agent | Suggests sync on artifact create/activate |
 | **Unified Workflow KB** | Agentic RAG: architecture, setup, playbook, configs (Solo/Team/Medium) |
 

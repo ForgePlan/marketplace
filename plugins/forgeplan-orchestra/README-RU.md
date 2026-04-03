@@ -24,10 +24,10 @@
 
 ## Использование
 
-### `/session-start` -- Протокол начала сессии
+### `/session` -- Протокол начала сессии
 
 ```
-> /session-start
+> /session
 
 Step 1: Context restored from Hindsight + CLAUDE.md
 Step 2: Inbox collection...

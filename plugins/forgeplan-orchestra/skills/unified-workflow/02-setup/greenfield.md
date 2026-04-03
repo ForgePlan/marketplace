@@ -128,7 +128,7 @@ set_fields: Artifact=EPIC-001, Type=Epic, Phase=Shape
 1. Confirm CLAUDE.md contains Session Start Protocol reference
 2. Confirm memory contains unified workflow architecture context
 3. Run `/sync` to verify Forgeplan-Orchestra connection
-4. Run `/session-start` to confirm it sees tasks and artifacts
+4. Run `/session` to confirm it sees tasks and artifacts
 
 ## Quick Verification Checklist
 
@@ -137,5 +137,5 @@ set_fields: Artifact=EPIC-001, Type=Epic, Phase=Shape
 - [ ] `forgeplan init` completed
 - [ ] First artifact created in Forgeplan
 - [ ] Matching task created in Orchestra with fields
-- [ ] `/session-start` shows both Forgeplan health and Orchestra tasks
+- [ ] `/session` shows both Forgeplan health and Orchestra tasks
 - [ ] `/sync` shows no discrepancies

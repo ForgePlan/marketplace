@@ -1,5 +1,5 @@
 ---
-name: session-start
+name: session
 description: "Session Start Protocol with Inbox Pattern. Restores context, collects signals from Orchestra/Git/Forgeplan, triages inbox, recommends next action."
 ---
 

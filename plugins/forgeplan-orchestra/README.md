@@ -24,10 +24,10 @@ Each system does what it does best. We don't duplicate -- we link. Artifact ID i
 
 ## Usage
 
-### `/session-start` -- Session Start Protocol
+### `/session` -- Session Start Protocol
 
 ```
-> /session-start
+> /session
 
 Step 1: Context restored from Hindsight + CLAUDE.md
 Step 2: Inbox collection...

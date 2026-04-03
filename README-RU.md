@@ -81,7 +81,7 @@
 | Компонент | Что получаете |
 |-----------|-------------|
 | `/sync` | Bidirectional sync артефактов Forgeplan ↔ задач Orchestra |
-| `/session-start` | Session Start Protocol: health + inbox + tasks + synthesis + next action |
+| `/session` | Session Start Protocol: health + inbox + tasks + synthesis + next action |
 | **Orchestra Advisor** агент | Предлагает sync при создании/активации артефактов |
 | **KB unified workflow** | Agentic RAG: архитектура, setup, playbook, configs (Solo/Team/Medium) |
 

@@ -37,7 +37,7 @@ Workspace: <Your Workspace>
 
 **Morning:**
 ```
-/session-start -> what's in progress, unread signals
+/session -> what's in progress, unread signals
 forgeplan health -> blind spots
 ```
 

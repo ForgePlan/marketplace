@@ -14,7 +14,7 @@ description: |
 
   Example 3:
   User opens a new Claude Code session.
-  Advisor suggests: "Run /session-start for full context restore with Orchestra inbox."
+  Advisor suggests: "Run /session for full context restore with Orchestra inbox."
 model: inherit
 color: yellow
 ---
@@ -50,9 +50,9 @@ If the user activates an artifact:
 
 ### At session start
 
-If the user begins a new session and has not run /session-start:
+If the user begins a new session and has not run /session:
 
-1. Suggest: "Run /session-start for full context restore with Orchestra inbox and project health."
+1. Suggest: "Run /session for full context restore with Orchestra inbox and project health."
 2. Only suggest once per session.
 
 ### When sprint/wave work begins

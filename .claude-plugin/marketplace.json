@@ -57,7 +57,7 @@
       "author": { "name": "ForgePlan" },
       "homepage": "https://github.com/ForgePlan/marketplace",
       "license": "MIT",
-      "keywords": ["forgeplan", "orchestra", "workflow", "sync", "task-tracking", "unified-workflow", "session-start"]
+      "keywords": ["forgeplan", "orchestra", "workflow", "sync", "task-tracking", "unified-workflow", "session"]
     }
   ]
 }
