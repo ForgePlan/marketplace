@@ -30,7 +30,7 @@ for the formal definition, then apply:
 For each Bounded Context, identify:
 
 - **Key Roles** — who or what acts within this context (human, system, or AI agent).
-  Use the Role Taxonomy from section A.2.
+  Read `sections/04-part-a-kernel-architecture-cluster/04-a-2---role-taxonomy.md` for the Role Taxonomy.
 - **Responsibilities** — what each role is accountable for producing or maintaining.
 - **Capabilities** — what each role needs in order to fulfil its responsibilities.
 

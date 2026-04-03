@@ -31,12 +31,13 @@ for the formal model, then for each alternative:
 
 ## Step 3 — F-G-R Scoring (C.2)
 
-Read `sections/08-part-c-kernel-extensions-specifications/` for the KD-CAL pattern,
-then score each alternative on three axes:
+Read `sections/08-part-c-kernel-extensions-specifications/_index.md`, then pick `01-c-2---epistemic-holon-composition.md` for the KD-CAL pattern (also `05-c-2-3---unified-formality-characteristic-f.md` for Formality, `03-c-2-2---reliability-r-in-the-f-g-r-triad.md` for Reliability).
 
-- **Formality** (1-5): How precisely is this option defined? (1 = vague idea, 5 = formal spec)
-- **Granularity** (1-5): How detailed is our understanding? (1 = hand-wavy, 5 = implementation-ready)
-- **Reliability** (1-5): How well-evidenced is it? (1 = gut feeling, 5 = proven in production)
+Score each alternative on three axes:
+
+- **Formality** (0-3): How precisely is this option defined? (0 = vague idea, 3 = formal spec)
+- **Granularity** (0-3): How detailed is our understanding? (0 = hand-wavy, 3 = implementation-ready)
+- **Reliability** (0-3): How well-evidenced is it? (0 = gut feeling, 3 = proven in production)
 
 ## Step 4 — Evidence Analysis
 

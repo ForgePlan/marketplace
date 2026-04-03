@@ -17,14 +17,14 @@ List 3-5 criteria that matter (performance, cost, risk, team familiarity, etc.).
 
 ### 2. Score with F-G-R (C.2)
 
-For each option, rate three dimensions on a 1-5 scale:
+For each option, rate three dimensions on a 0-3 scale (per FPF C.2):
 
 - **Formality** — How precisely defined is this option?
-  (1 = napkin sketch, 5 = formal specification with contracts)
+  (0 = napkin sketch, 3 = formal specification with contracts)
 - **Granularity** — How detailed is our understanding?
-  (1 = "it probably works", 5 = component-level design with edge cases)
+  (0 = "it probably works", 3 = component-level design with edge cases)
 - **Reliability** — How well-evidenced is it?
-  (1 = someone blogged about it, 5 = proven in our environment under load)
+  (0 = someone blogged about it, 3 = proven in our environment under load)
 
 Low scores are not disqualifying — they identify WHERE more work is needed.
 

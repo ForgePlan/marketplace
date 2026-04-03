@@ -1,0 +1,3 @@
+[submodule "plugins/fpf/FPF"]
+	path = plugins/fpf/FPF
+	url = https://github.com/ailev/FPF.git
