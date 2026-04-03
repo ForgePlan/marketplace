@@ -4,7 +4,7 @@
 
 Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/ForgePlan) — UX, workflow, engineering, and developer tools.
 
-**5 plugins** | **13 commands** | **5 agents** | **5 hooks** | **4 knowledge bases**
+**5 plugins** | **13 commands** | **5 agents** | **4 hook configs** | **4 knowledge bases**
 
 ## Quick Start
 

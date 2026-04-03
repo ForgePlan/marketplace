@@ -4,5 +4,5 @@
   "description": "Universal engineering toolkit: multi-expert audit, wave-based sprints, session context recall, and safety hooks. Works with any project and language.",
   "author": { "name": "ForgePlan" },
   "license": "MIT",
-  "keywords": ["audit", "sprint", "safety", "code-review", "workflow", "quality"]
+  "keywords": ["audit", "sprint", "safety", "code-review", "workflow", "quality", "universal"]
 }
