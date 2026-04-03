@@ -1,3 +1,5 @@
+[English](README.md) | [Русский](README-RU.md)
+
 # forgeplan-workflow
 
 A Claude Code plugin that provides structured engineering workflow automation for [forgeplan](https://github.com/forgeplan/forgeplan) users.

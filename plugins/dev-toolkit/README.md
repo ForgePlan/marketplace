@@ -1,3 +1,5 @@
+[English](README.md) | [Русский](README-RU.md)
+
 # dev-toolkit
 
 Universal engineering toolkit for Claude Code. Works with any project, any language.

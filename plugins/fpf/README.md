@@ -1,3 +1,5 @@
+[English](README.md) | [Русский](README-RU.md)
+
 # FPF Plugin — First Principles Framework for Claude Code
 
 A thinking amplifier for structured reasoning, system decomposition, and decision-making.

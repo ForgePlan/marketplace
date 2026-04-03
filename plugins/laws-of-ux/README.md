@@ -1,3 +1,5 @@
+[English](README.md) | [Русский](README-RU.md)
+
 # Laws of UX — Claude Code Plugin
 
 A Claude Code plugin that reviews frontend code against **30 Laws of UX** from [lawsofux.com](https://lawsofux.com/) by Jon Yablonski.
