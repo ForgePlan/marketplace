@@ -48,6 +48,16 @@
       "homepage": "https://github.com/ForgePlan/marketplace",
       "license": "MIT",
       "keywords": ["fpf", "reasoning", "systems-thinking", "decomposition", "decision-making", "bounded-contexts", "architecture"]
+    },
+    {
+      "name": "forgeplan-orchestra",
+      "source": "./plugins/forgeplan-orchestra",
+      "description": "Unified workflow: Forgeplan artifacts + Orchestra task tracking + Claude Code AI execution. Bidirectional sync, Session Start Protocol with Inbox Pattern, and methodology knowledge base. Requires forgeplan CLI + Orchestra MCP server.",
+      "version": "1.0.0",
+      "author": { "name": "ForgePlan" },
+      "homepage": "https://github.com/ForgePlan/marketplace",
+      "license": "MIT",
+      "keywords": ["forgeplan", "orchestra", "workflow", "sync", "task-tracking", "unified-workflow", "session-start"]
     }
   ]
 }

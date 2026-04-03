@@ -4,7 +4,7 @@
 
 Официальный маркетплейс плагинов Claude Code от [ForgePlan](https://github.com/ForgePlan) — UX, воркфлоу, инженерные и dev-инструменты.
 
-**4 плагина** | **11 команд** | **4 агента** | **4 хука** | **3 базы знаний** | **318 файлов**
+**5 плагинов** | **13 команд** | **5 агентов** | **5 хуков** | **4 базы знаний**
 
 ## Быстрый старт
 
@@ -64,10 +64,31 @@
 | **Quality hooks** | Safety hook + проверка PRD перед редактированием кода |
 | **KB методологии** | Agentic RAG: воркфлоу, артефакты, глубина, R_eff scoring, quality gates |
 
-**Требуется:** `forgeplan` CLI (`cargo install forgeplan` или скачать бинарник)
+**Требуется:** `forgeplan` CLI — приватное приложение, доступ через администратора проекта
 
 ```bash
 /plugin install forgeplan-workflow@forgeplan-marketplace
+```
+
+---
+
+### forgeplan-orchestra `v1.0.0`
+
+> Интеграция Forgeplan с [Orchestra](https://www.orchestra.pm/) — unified workflow для задач, артефактов и AI агентов.
+
+Связывает Forgeplan (методология) с Orchestra (task tracker) через bidirectional sync, Session Start Protocol с Inbox Pattern и knowledge base.
+
+| Компонент | Что получаете |
+|-----------|-------------|
+| `/sync` | Bidirectional sync артефактов Forgeplan ↔ задач Orchestra |
+| `/session-start` | Session Start Protocol: health + inbox + tasks + synthesis + next action |
+| **Orchestra Advisor** агент | Предлагает sync при создании/активации артефактов |
+| **KB unified workflow** | Agentic RAG: архитектура, setup, playbook, configs (Solo/Team/Medium) |
+
+**Требуется:** `forgeplan` CLI + Orchestra MCP server (`orch`)
+
+```bash
+/plugin install forgeplan-orchestra@forgeplan-marketplace
 ```
 
 ---

@@ -4,7 +4,7 @@
 
 Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/ForgePlan) — UX, workflow, engineering, and developer tools.
 
-**4 plugins** | **11 commands** | **4 agents** | **4 hooks** | **3 knowledge bases** | **318 files**
+**5 plugins** | **13 commands** | **5 agents** | **5 hooks** | **4 knowledge bases**
 
 ## Quick Start
 
@@ -64,10 +64,31 @@ Full dev cycle automation: route tasks, create PRDs, build, audit, create eviden
 | **Quality hooks** | Safety hook + PRD check before code edits |
 | **Methodology KB** | Agentic RAG: workflow, artifacts, depth, R_eff scoring, quality gates |
 
-**Requires:** `forgeplan` CLI installed (`cargo install forgeplan` or download binary)
+**Requires:** `forgeplan` CLI — private application, access through project admin
 
 ```bash
 /plugin install forgeplan-workflow@forgeplan-marketplace
+```
+
+---
+
+### forgeplan-orchestra `v1.0.0`
+
+> Unified workflow: Forgeplan artifacts + [Orchestra](https://www.orchestra.pm/) task tracking + Claude Code AI execution.
+
+Bidirectional sync, Session Start Protocol with Inbox Pattern, and methodology knowledge base.
+
+| Component | What you get |
+|-----------|-------------|
+| `/sync` | Bidirectional sync: Forgeplan artifacts ↔ Orchestra tasks |
+| `/session-start` | Session Start Protocol: health + inbox + tasks + synthesis + next action |
+| **Orchestra Advisor** agent | Suggests sync on artifact create/activate |
+| **Unified Workflow KB** | Agentic RAG: architecture, setup, playbook, configs (Solo/Team/Medium) |
+
+**Requires:** `forgeplan` CLI + Orchestra MCP server (`orch`)
+
+```bash
+/plugin install forgeplan-orchestra@forgeplan-marketplace
 ```
 
 ---

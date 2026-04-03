@@ -5,7 +5,7 @@ A Claude Code plugin that provides structured engineering workflow automation fo
 ## Prerequisites
 
 - Claude Code CLI installed
-- forgeplan CLI installed and initialized in your project (`forgeplan init`)
+- **forgeplan CLI** — приватное приложение ForgePlan. Для получения доступа обратитесь к администратору проекта. После получения: поместите бинарник в PATH и выполните `forgeplan init -y` в проекте.
 
 ## Installation
 

@@ -1,0 +1,14 @@
+{
+  "PostToolUse": [
+    {
+      "matcher": "Bash",
+      "hooks": [
+        {
+          "type": "prompt",
+          "prompt": "If the command just executed was 'forgeplan activate' or 'forgeplan new', briefly remind: 'Consider syncing with Orchestra (/sync) to keep tasks in sync.' Keep to one sentence. If the command was not forgeplan-related, say nothing.",
+          "timeout": 10
+        }
+      ]
+    }
+  ]
+}
