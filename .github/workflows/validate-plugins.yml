@@ -1,0 +1,66 @@
+name: Validate Plugins
+
+on:
+  pull_request:
+    paths:
+      - 'plugins/**'
+      - '.claude-plugin/marketplace.json'
+  push:
+    branches: [main]
+    paths:
+      - 'plugins/**'
+      - '.claude-plugin/marketplace.json'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate marketplace.json
+        run: python3 -c "import json; json.load(open('.claude-plugin/marketplace.json')); print('marketplace.json: OK')"
+
+      - name: Validate all plugin.json files
+        run: |
+          errors=0
+          for f in plugins/*/.claude-plugin/plugin.json; do
+            if python3 -c "import json; d=json.load(open('$f')); assert 'name' in d and 'description' in d" 2>/dev/null; then
+              echo "OK: $f"
+            else
+              echo "FAIL: $f"
+              errors=$((errors + 1))
+            fi
+          done
+          [ $errors -eq 0 ] || exit 1
+
+      - name: Check marketplace.json lists all plugins
+        run: |
+          python3 << 'SCRIPT'
+          import json, os
+          m = json.load(open('.claude-plugin/marketplace.json'))
+          listed = {p['name'] for p in m['plugins']}
+          on_disk = {d for d in os.listdir('plugins') if os.path.isdir(f'plugins/{d}')}
+          missing = on_disk - listed
+          if missing:
+              print(f'FAIL: Plugins on disk but not in marketplace.json: {missing}')
+              exit(1)
+          print(f'OK: All {len(on_disk)} plugins listed in marketplace.json')
+          SCRIPT
+
+      - name: Validate hooks.json files
+        run: |
+          for f in plugins/*/hooks/hooks.json; do
+            [ -f "$f" ] || continue
+            python3 -c "import json; json.load(open('$f'))" && echo "OK: $f" || exit 1
+          done
+          echo "All hooks validated"
+
+      - name: Check SKILL.md frontmatter
+        run: |
+          for f in $(find plugins -name "SKILL.md"); do
+            if head -1 "$f" | grep -q "^---"; then
+              echo "OK: $f"
+            else
+              echo "WARN: $f missing YAML frontmatter"
+            fi
+          done
