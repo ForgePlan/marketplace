@@ -30,9 +30,10 @@ Summarize: current branch, whether there is uncommitted work, and what the recen
 
 Try each of these — if unavailable, skip silently:
 
-### Forgeplan
-- Try running `forgeplan health` to get project task state
-- If forgeplan is not installed or not configured, skip this entirely
+### Project Management Tools (Optional)
+- If `forgeplan` is installed, try `forgeplan health` for task/artifact state
+- If other PM CLIs are available, check their status
+- Skip silently if none are available
 
 ### Memory MCP (Hindsight, mem0, or similar)
 - If a memory MCP server is available, query for recent memories related to this project

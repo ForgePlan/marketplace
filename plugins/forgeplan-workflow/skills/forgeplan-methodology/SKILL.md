@@ -12,7 +12,7 @@ Match the user's question to one of these topics and read the corresponding sect
 | User asks about... | Section to read |
 |---|---|
 | Workflow, process, steps, "how do I start" | `sections/01-workflow/route-shape-build.md` |
-| PRD, RFC, ADR, Evidence, Epic, Spec, artifacts | `sections/02-artifacts/` (pick the specific artifact file) |
+| PRD, RFC, ADR, Evidence, artifacts | `sections/02-artifacts/` (pick the specific artifact file) |
 | Depth, routing, tactical vs deep, when to PRD | `sections/03-depth/calibration.md` |
 | Scoring, R_eff, congruence, decay, CL levels | `sections/04-scoring/reff-scoring.md` |
 | Quality gates, verification, adversarial review | `sections/05-quality/gates.md` |

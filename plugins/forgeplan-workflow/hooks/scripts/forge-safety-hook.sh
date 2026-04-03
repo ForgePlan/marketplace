@@ -7,7 +7,12 @@
 set -euo pipefail
 
 INPUT=$(cat)
-COMMAND=$(echo "$INPUT" | grep -o '"command"\s*:\s*"[^"]*"' | head -1 | sed 's/"command"\s*:\s*"//;s/"$//' || true)
+# Use jq if available for reliable JSON parsing, fallback to grep
+if command -v jq &>/dev/null; then
+  COMMAND=$(echo "$INPUT" | jq -r '.command // empty' 2>/dev/null || true)
+else
+  COMMAND=$(echo "$INPUT" | grep -o '"command"\s*:\s*"[^"]*"' | head -1 | sed 's/"command"\s*:\s*"//;s/"$//' || true)
+fi
 
 if [ -z "$COMMAND" ]; then
   exit 0
@@ -45,7 +50,7 @@ if echo "$CMD_LOWER" | grep -qiE 'drop\s+table|drop\s+database'; then
 fi
 
 # git clean -fd / -ffd (removes untracked files)
-if echo "$CMD_LOWER" | grep -qE 'git\s+clean\s+-[a-z]*f'; then
+if echo "$CMD_LOWER" | grep -qE 'git\s+clean\s+-[a-z]*f' && ! echo "$CMD_LOWER" | grep -qE 'git\s+clean\s+-[a-z]*n'; then
   BLOCKED=1
   REASON="git clean with force flag is blocked. This permanently deletes untracked files."
 fi

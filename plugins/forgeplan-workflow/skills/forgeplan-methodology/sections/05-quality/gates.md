@@ -39,7 +39,7 @@ The forgeplan-workflow plugin includes hooks that run before code changes:
 - **Safety hook**: Blocks dangerous commands (force push, hard reset, rm -rf /).
 - **PRD check**: Warns if code is being edited without an active PRD.
 
-These are advisory — they warn but do not block normal development flow.
+The **safety hook blocks** dangerous commands (exits non-zero — the command will not execute). The **PRD check is advisory** — it warns but allows the edit to proceed.
 
 ## Continuous Health
 

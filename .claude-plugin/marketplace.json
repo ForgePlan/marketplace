@@ -12,17 +12,17 @@
     {
       "name": "laws-of-ux",
       "source": "./plugins/laws-of-ux",
-      "description": "30 Laws of UX applied to frontend code review. Analyzes HTML/CSS/JS/React/Vue against UX principles with actionable recommendations.",
+      "description": "UX laws knowledge base and frontend code reviewer. Analyzes HTML/CSS/JS/React/Vue/Svelte code against 30 Laws of UX principles with actionable recommendations.",
       "version": "1.0.0",
       "author": { "name": "ForgePlan" },
       "homepage": "https://github.com/ForgePlan/marketplace",
       "license": "MIT",
-      "keywords": ["ux", "frontend", "code-review", "laws-of-ux", "design-principles"]
+      "keywords": ["ux", "frontend", "code-review", "laws-of-ux", "accessibility", "usability", "design-principles"]
     },
     {
       "name": "forgeplan-workflow",
       "source": "./plugins/forgeplan-workflow",
-      "description": "Structured engineering workflow for forgeplan users. Provides forge-cycle (full dev cycle), forge-audit (multi-expert review), methodology knowledge base, and quality gate hooks.",
+      "description": "Structured engineering workflow for forgeplan users. Provides forge-cycle (full dev cycle), forge-audit (multi-expert review), methodology knowledge base, and quality gate hooks. Requires forgeplan CLI.",
       "version": "1.0.0",
       "author": { "name": "ForgePlan" },
       "homepage": "https://github.com/ForgePlan/marketplace",

@@ -23,7 +23,7 @@ Determine what to work on:
 ## Step 3: Route the Task
 
 Run `forgeplan route "<task description>"` to determine the appropriate depth level.
-- **Tactical**: Small fix, no artifact needed. Skip to Step 6.
+- **Tactical**: Small fix, no artifact needed. Skip to Step 5 (Build).
 - **Standard**: Needs a PRD. Continue to Step 5.
 - **Deep**: Needs PRD + RFC. Continue to Step 5, also create RFC.
 - **Critical**: Needs PRD + RFC + ADR. Continue to Step 5, create all artifacts.
