@@ -2,32 +2,67 @@
 
 Official plugin marketplace for [ForgePlan](https://github.com/ForgePlan) — Claude Code plugins for UX, frontend, and developer tools.
 
-## Install marketplace
+## Quick Start
 
 ```bash
 /plugin marketplace add ForgePlan/marketplace
 ```
 
-## Available plugins
+Then browse and install plugins:
 
-| Plugin | Description | Install |
-|--------|-------------|---------|
-| **laws-of-ux** | 30 Laws of UX applied to frontend code review | `/plugin install laws-of-ux@forgeplan-marketplace` |
+```bash
+/plugin
+```
 
-## What you get with laws-of-ux
+Or install a specific plugin:
 
-- `/ux-review` — full UX review of frontend code against 30 laws
-- `/ux-law [name]` — look up any UX law with frontend implications
-- **UX Reviewer Agent** — auto-activates for frontend tasks
-- **Auto-hints** — gentle UX reminders when editing frontend files
-- **Agentic RAG knowledge base** — 30 laws + 9 code pattern files
+```bash
+/plugin install laws-of-ux@forgeplan-marketplace
+```
 
-## Alternative: Install as Skill only
+## Available Plugins
 
-If you only want the knowledge base without commands/agents/hooks:
+| Plugin | Version | Description |
+|--------|---------|-------------|
+| **[laws-of-ux](plugins/laws-of-ux/)** | 1.0.0 | 30 Laws of UX applied to frontend code review |
+
+### laws-of-ux
+
+Review frontend code against 30 Laws of UX with actionable recommendations.
+
+| Feature | What it does |
+|---------|--------------|
+| `/ux-review` | Full UX review of all frontend files |
+| `/ux-law [name]` | Look up any UX law |
+| UX Reviewer Agent | Auto-activates for frontend tasks |
+| Auto-hints | UX reminders when editing frontend files |
+| Knowledge Base | 30 laws + 9 code pattern files (agentic RAG) |
+
+```bash
+/plugin install laws-of-ux@forgeplan-marketplace
+```
+
+## Alternative: Install as Skill (knowledge base only)
 
 ```bash
 npx skills add ForgePlan/laws-of-ux-standalone -g
+```
+
+## For Contributors
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to add or update plugins.
+
+```bash
+# Validate a plugin before submitting
+./scripts/validate-all-plugins.sh your-plugin-name
+```
+
+## Update marketplace
+
+Users get the latest plugins with:
+
+```bash
+/plugin marketplace update forgeplan-marketplace
 ```
 
 ## License
