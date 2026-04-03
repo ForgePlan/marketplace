@@ -19,7 +19,7 @@ Each system does what it does best. We don't duplicate -- we link. Artifact ID i
 ## Quick Start
 
 ```bash
-/plugin install forgeplan-orchestra@forgeplan-marketplace
+/plugin install forgeplan-orchestra@ForgePlan-marketplace
 ```
 
 ## Usage

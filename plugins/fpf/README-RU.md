@@ -13,7 +13,7 @@
 ## Быстрый старт
 
 ```bash
-/plugin install fpf@forgeplan-marketplace   # установка
+/plugin install fpf@ForgePlan-marketplace   # установка
 /fpf                                        # все режимы
 /fpf decompose my auth system               # начать рассуждение
 ```

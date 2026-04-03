@@ -16,7 +16,7 @@ Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/
 /plugin
 
 # Install a specific plugin
-/plugin install laws-of-ux@forgeplan-marketplace
+/plugin install laws-of-ux@ForgePlan-marketplace
 ```
 
 ## Available Plugins
@@ -45,7 +45,7 @@ Review HTML/CSS/JS/React/Vue code against psychological principles from [lawsofu
 | Principles | 10 | Doherty Threshold (400ms), Jakob's Law, Postel's Law |
 
 ```bash
-/plugin install laws-of-ux@forgeplan-marketplace
+/plugin install laws-of-ux@ForgePlan-marketplace
 ```
 
 ---
@@ -67,7 +67,7 @@ Full dev cycle automation: route tasks, create PRDs, build, audit, create eviden
 **Requires:** `forgeplan` CLI — private application, access through project admin
 
 ```bash
-/plugin install forgeplan-workflow@forgeplan-marketplace
+/plugin install forgeplan-workflow@ForgePlan-marketplace
 ```
 
 ---
@@ -88,7 +88,7 @@ Bidirectional sync, Session Start Protocol with Inbox Pattern, and methodology k
 **Requires:** `forgeplan` CLI + Orchestra MCP server (`orch`)
 
 ```bash
-/plugin install forgeplan-orchestra@forgeplan-marketplace
+/plugin install forgeplan-orchestra@ForgePlan-marketplace
 ```
 
 ---
@@ -109,7 +109,7 @@ Bidirectional sync, Session Start Protocol with Inbox Pattern, and methodology k
 **Supports:** JavaScript/TypeScript, Python, Rust, Go, Java, Ruby, PHP, C#
 
 ```bash
-/plugin install dev-toolkit@forgeplan-marketplace
+/plugin install dev-toolkit@ForgePlan-marketplace
 ```
 
 ---
@@ -130,7 +130,7 @@ One command `/fpf` routes to the right thinking mode — decompose, evaluate, re
 | **Knowledge base** | 224 FPF spec sections + 4 applied pattern guides (agentic RAG) |
 
 ```bash
-/plugin install fpf@forgeplan-marketplace
+/plugin install fpf@ForgePlan-marketplace
 ```
 
 ---

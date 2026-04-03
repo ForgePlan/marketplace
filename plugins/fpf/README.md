@@ -13,7 +13,7 @@
 ## Quick Start
 
 ```bash
-/plugin install fpf@forgeplan-marketplace   # install
+/plugin install fpf@ForgePlan-marketplace   # install
 /fpf                                        # see all modes
 /fpf decompose my auth system               # start reasoning
 ```

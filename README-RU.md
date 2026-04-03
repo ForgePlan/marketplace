@@ -16,7 +16,7 @@
 /plugin
 
 # Установить конкретный плагин
-/plugin install laws-of-ux@forgeplan-marketplace
+/plugin install laws-of-ux@ForgePlan-marketplace
 ```
 
 ## Доступные плагины
@@ -45,7 +45,7 @@
 | Принципы | 10 | Порог Доэрти (400мс), Закон Якоба, Закон Постела |
 
 ```bash
-/plugin install laws-of-ux@forgeplan-marketplace
+/plugin install laws-of-ux@ForgePlan-marketplace
 ```
 
 ---
@@ -67,7 +67,7 @@
 **Требуется:** `forgeplan` CLI — приватное приложение, доступ через администратора проекта
 
 ```bash
-/plugin install forgeplan-workflow@forgeplan-marketplace
+/plugin install forgeplan-workflow@ForgePlan-marketplace
 ```
 
 ---
@@ -88,7 +88,7 @@
 **Требуется:** `forgeplan` CLI + Orchestra MCP server (`orch`)
 
 ```bash
-/plugin install forgeplan-orchestra@forgeplan-marketplace
+/plugin install forgeplan-orchestra@ForgePlan-marketplace
 ```
 
 ---
@@ -109,7 +109,7 @@
 **Поддерживает:** JavaScript/TypeScript, Python, Rust, Go, Java, Ruby, PHP, C#
 
 ```bash
-/plugin install dev-toolkit@forgeplan-marketplace
+/plugin install dev-toolkit@ForgePlan-marketplace
 ```
 
 ---
@@ -130,7 +130,7 @@
 | **База знаний** | 224 секции FPF спецификации + 4 applied pattern гайда (agentic RAG) |
 
 ```bash
-/plugin install fpf@forgeplan-marketplace
+/plugin install fpf@ForgePlan-marketplace
 ```
 
 ---

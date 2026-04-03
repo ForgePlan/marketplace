@@ -19,7 +19,7 @@
 ## Быстрый старт
 
 ```bash
-/plugin install forgeplan-orchestra@forgeplan-marketplace
+/plugin install forgeplan-orchestra@ForgePlan-marketplace
 ```
 
 ## Использование
