@@ -157,7 +157,8 @@ AI: creates task:
     Status: To Do, Sprint: Sprint 10 (next sprint)
 
 You: "Let's do it next sprint"
-AI: Sprint=Sprint 10, Status=Backlog
+AI: Sprint=Sprint 10, Status=Backlog, Phase=Shape
+    (Phase reset to Shape because Backlog maps to Shape in the mapping)
 ```
 
 ### Scenario 5: Starting a New Sprint

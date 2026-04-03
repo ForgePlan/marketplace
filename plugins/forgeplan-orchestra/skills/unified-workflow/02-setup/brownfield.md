@@ -88,7 +88,7 @@ You are moving from Jira, Linear, Trello, etc. to Orchestra.
 1. Custom fields are already at workspace level — no changes needed.
 2. Rename "Development" project to your primary area (e.g., "Core").
 3. Create additional area projects (e.g., "Frontend", "Backlog", "Operations").
-4. Move tasks to appropriate projects using `move_entity`.
+4. Move tasks to appropriate projects using `mcp__orch__move_entity`.
 5. Start using the Assignee field on all tasks.
 6. Update sync routing rules if applicable.
 

@@ -16,8 +16,9 @@ Output should be brief and actionable — 10-15 lines max.
 ### Step 1: Context Restore
 
 - CLAUDE.md loads automatically (project conventions, rules).
-- Run `memory_recall("Forgeplan")` via Hindsight to restore cross-session context.
-- Check MEMORY.md if present for auto-memory notes.
+- If Hindsight MCP is available: call `memory_recall` with query "Forgeplan" to restore cross-session context.
+- If no memory MCP available: check `~/.claude/projects/*/memory/MEMORY.md` for auto-memory notes.
+- Skip memory step silently if neither is available.
 
 ### Step 2: Inbox Collection (read-only)
 

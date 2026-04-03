@@ -77,7 +77,7 @@ Workspace: <Your Workspace>
 At the end of a sprint:
 
 1. Create new sub-project: "Core Sprint 11"
-2. Move unfinished tasks to "Core Sprint 11" using `move_entity`
+2. Move unfinished tasks to "Core Sprint 11" using `mcp__orch__move_entity`
 3. Move new tasks from "Core Backlog" to "Core Sprint 11"
 4. Archive "Core Sprint 10" sub-project (do NOT delete!)
 

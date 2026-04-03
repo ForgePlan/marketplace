@@ -24,7 +24,7 @@ Key commands: `forgeplan health`, `forgeplan route`, `forgeplan new`, `forgeplan
 
 Orchestra manages the execution layer. It tracks the human and team aspects — who is responsible, what is the deadline, what is the current status, and what needs discussion.
 
-Key MCP tools: `mcp__orch__query_entities`, `mcp__orch__create_entity`, `mcp__orch__set_fields`, `mcp__orch__search_entities`, `mcp__orch__get_entity`, `mcp__orch__read_messages`.
+Key MCP tools: `mcp__orch__query_entities`, `mcp__orch__create_entity`, `mcp__orch__set_fields`, `mcp__orch__search_entities`, `mcp__orch__get_entity`, `mcp__orch__read_messages`, `mcp__orch__manage_field`, `mcp__orch__list_fields`, `mcp__orch__move_entity`.
 
 ### Claude Code — How (AI Execution)
 
