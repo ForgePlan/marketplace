@@ -7,6 +7,8 @@
 A Claude Code plugin that provides structured engineering workflow automation for [forgeplan](https://github.com/forgeplan/forgeplan) users.
 
 > **Note:** Requires **forgeplan CLI** -- private ForgePlan application, access through project admin. After receiving the binary: place it in PATH and run `forgeplan init -y` in your project.
+>
+> **Tip:** Works great with the global `/forge` skill for quick methodology reference. This plugin adds automation (commands, hooks, agent) on top of it.
 
 ## Quick Start
 
