@@ -1,14 +1,16 @@
 {
-  "PostToolUse": [
-    {
-      "matcher": "Write|Edit|MultiEdit",
-      "hooks": [
-        {
-          "type": "prompt",
-          "prompt": "Check if the file just written/edited has a frontend extension (.html, .css, .scss, .sass, .less, .js, .jsx, .ts, .tsx, .vue, .svelte, .astro). If YES, note 1-2 relevant UX laws (e.g., Fitts's Law for buttons, Hick's Law for navigation, Miller's Law for forms). Keep it to 1-2 sentences. If NOT a frontend file, say nothing.",
-          "timeout": 30
-        }
-      ]
-    }
-  ]
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Check if the file just written/edited has a frontend extension (.html, .css, .scss, .sass, .less, .js, .jsx, .ts, .tsx, .vue, .svelte, .astro). If YES, note 1-2 relevant UX laws (e.g., Fitts's Law for buttons, Hick's Law for navigation, Miller's Law for forms). Keep it to 1-2 sentences. If NOT a frontend file, say nothing.",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
 }
