@@ -5,9 +5,9 @@
         "matcher": "Write|Edit|MultiEdit",
         "hooks": [
           {
-            "type": "prompt",
-            "prompt": "Check the file extension. ONLY respond if the file has one of these extensions: .html, .css, .scss, .sass, .less, .js, .jsx, .ts, .tsx, .vue, .svelte, .astro. For those files: note 1-2 relevant UX laws in 1 sentence. For ALL OTHER file types: respond with EXACTLY an empty string. Do NOT explain why you are silent. Do NOT mention the file type. Just empty response.",
-            "timeout": 30
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/ux-hint.sh",
+            "timeout": 3
           }
         ]
       }

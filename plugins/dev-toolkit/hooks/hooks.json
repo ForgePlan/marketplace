@@ -17,9 +17,9 @@
         "matcher": "Write|Edit|MultiEdit",
         "hooks": [
           {
-            "type": "prompt",
-            "prompt": "Check the diff. ONLY respond if a new public function/method was added (export function, pub fn, def, public, func). For those: say 'New public function — consider adding a test.' For ALL other changes: respond with EXACTLY an empty string. No explanation.",
-            "timeout": 15
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/test-hint.sh",
+            "timeout": 3
           }
         ]
       }
