@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "If the file just modified contains a new public function/method definition (export function, pub fn, def, public, etc.) that lacks a corresponding test, briefly remind the user: 'New public function detected \u2014 consider adding a test.' Keep it to one sentence. If no new public function was added, say nothing.",
+            "prompt": "Check the diff. ONLY respond if a new public function/method was added (export function, pub fn, def, public, func). For those: say 'New public function — consider adding a test.' For ALL other changes: respond with EXACTLY an empty string. No explanation.",
             "timeout": 15
           }
         ]

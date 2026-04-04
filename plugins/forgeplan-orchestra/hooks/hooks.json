@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "If the command just executed was 'forgeplan activate' or 'forgeplan new', briefly remind: 'Consider syncing with Orchestra (/sync) to keep tasks in sync.' Keep to one sentence. If the command was not forgeplan-related, say nothing.",
+            "prompt": "Check the command. ONLY respond if it contains 'forgeplan activate' or 'forgeplan new'. For those: say 'Consider /sync to keep Orchestra in sync.' For ALL other commands: respond with EXACTLY an empty string. No explanation.",
             "timeout": 10
           }
         ]
