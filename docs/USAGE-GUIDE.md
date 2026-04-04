@@ -187,6 +187,58 @@ If using Forgeplan:
 
 ---
 
+## Hook Behavior
+
+When you install multiple plugins, their hooks stack — each fires independently.
+
+### What fires when
+
+| Event | Plugins | Hook | What it does |
+|-------|---------|------|-------------|
+| `PreToolUse:Bash` | dev-toolkit | safety-hook.sh | Blocks dangerous commands (force push, rm -rf /, DROP TABLE) |
+| `PreToolUse:Bash` | forgeplan-workflow | forge-safety-hook.sh | Delegates to dev-toolkit if installed, otherwise runs own checks |
+| `PreToolUse:Write` | forgeplan-workflow | pre-code-check.sh | Warns if no active PRD (cached, 5-min TTL) |
+| `PostToolUse:Write\|Edit` | dev-toolkit | test-hint.sh | Suggests tests when new public functions are added |
+| `PostToolUse:Write\|Edit` | laws-of-ux | ux-hint.sh | Suggests UX review when frontend files are modified |
+| `PostToolUse:Bash` | forgeplan-orchestra | forge-sync-hint.sh | Suggests Orchestra sync after forgeplan activate/new |
+
+### If both dev-toolkit and forgeplan-workflow are installed
+
+Both have safety hooks on `PreToolUse:Bash`. The dev-toolkit hook runs first. The forgeplan-workflow hook detects dev-toolkit is installed and skips (exit 0) to avoid double-checking.
+
+### Disabling a hook temporarily
+
+Hooks cannot be disabled per-session. To disable a plugin's hooks, uninstall the plugin:
+```
+/plugin uninstall <plugin-name>@ForgePlan-marketplace
+```
+
+---
+
+## Recommended Stacks
+
+| Stack | Plugins | Best for |
+|-------|---------|----------|
+| **Minimal** | dev-toolkit | Any project, zero dependencies |
+| **Frontend** | dev-toolkit + laws-of-ux | Frontend/UI development |
+| **FPF Thinker** | dev-toolkit + fpf | Architecture, decisions, reasoning |
+| **Forgeplan User** | forgeplan-workflow + fpf | Forgeplan CLI users |
+| **Full Stack** | all 5 plugins | ForgePlan power users with Orchestra |
+
+---
+
+## Dependency Requirements
+
+| Plugin | Required | Optional |
+|--------|----------|----------|
+| laws-of-ux | None | — |
+| dev-toolkit | None | Hindsight MCP (for /recall memory), forgeplan CLI (for /sprint scale detection) |
+| fpf | None | forgeplan CLI (for artifact suggestions) |
+| forgeplan-workflow | forgeplan CLI | dev-toolkit (shared safety hooks) |
+| forgeplan-orchestra | forgeplan CLI + Orchestra MCP | Hindsight MCP (for /session memory recall) |
+
+---
+
 ## Troubleshooting
 
 ### Plugins not loading after install

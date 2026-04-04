@@ -98,7 +98,9 @@ Fix: Add eager loading in users.service.ts:45
 - **4 applied patterns** -- bounded contexts, F-G-R scoring, ADI reasoning, category error detection
 - FPF spec is a **git submodule** from `ailev/FPF`, kept in sync via `split_spec.py`
 
-## Updating FPF Spec
+## Updating FPF Spec (Maintainers Only)
+
+> **Note:** `scripts/update-fpf.sh` and `split_spec.py` are maintainer-only tools not included in the plugin distribution. They live in the source repository used to build this plugin.
 
 ```bash
 cd plugins/fpf && ./scripts/update-fpf.sh
