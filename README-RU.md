@@ -21,7 +21,7 @@
 
 ## Доступные плагины
 
-### laws-of-ux `v1.0.0`
+### laws-of-ux
 
 > 30 UX-законов для ревью фронтенд-кода с конкретными рекомендациями.
 
@@ -50,7 +50,7 @@
 
 ---
 
-### forgeplan-workflow `v1.0.0`
+### forgeplan-workflow
 
 > Структурированный инженерный воркфлоу для пользователей [forgeplan](https://github.com/ForgePlan/forgeplan).
 
@@ -72,7 +72,7 @@
 
 ---
 
-### forgeplan-orchestra `v1.0.0`
+### forgeplan-orchestra
 
 > Интеграция Forgeplan с [Orchestra](https://www.orchestra.pm/) — unified workflow для задач, артефактов и AI агентов.
 
@@ -93,7 +93,7 @@
 
 ---
 
-### dev-toolkit `v1.0.0`
+### dev-toolkit
 
 > Универсальный инженерный тулкит — работает с **любым проектом и языком**. Без зависимостей.
 
@@ -114,7 +114,7 @@
 
 ---
 
-### fpf `v1.0.0`
+### fpf
 
 > [First Principles Framework](https://github.com/ailev/FPF) — усилитель мышления для структурированного рассуждения. Автор: Анатолий Левенчук, расширен ForgePlan.
 
