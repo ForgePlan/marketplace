@@ -3,6 +3,8 @@ name: forge-audit
 description: "Run a multi-expert audit on the current codebase. Launches parallel review agents for logic, architecture, security, tests, performance, and docs."
 ---
 
+Note: This command extends `/audit` from dev-toolkit with 2 additional experts (Performance, Documentation) and optional forgeplan evidence creation. If you only need a universal audit, use `/audit` instead.
+
 You are running a **multi-expert code audit** on this project. You will simulate multiple specialized reviewers, each examining the codebase from a different angle, then aggregate their findings into a structured report.
 
 ## Step 1: Detect Project Context

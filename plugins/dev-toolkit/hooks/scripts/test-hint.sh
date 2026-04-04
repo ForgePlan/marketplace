@@ -18,7 +18,9 @@ fi
 case "$FILE" in
   *.js|*.jsx|*.ts|*.tsx|*.py|*.rs|*.go|*.java|*.rb|*.php|*.cs|*.swift)
     DIFF=$(git diff HEAD -- "$FILE" 2>/dev/null || true)
-    if echo "$DIFF" | grep -qE '^\+.*(export function|export const|pub fn|def |public |func |function )'; then
+    # Match diff addition lines (+) containing new public function declarations.
+    # False positives are expected and harmless — this is a hint, not a block.
+    if echo "$DIFF" | grep -qE '^\+.*(export function |export const |pub fn |^def |public [a-zA-Z]|^func [A-Z]|function )'; then
       echo '{"message":"New public function — consider adding a test."}'
     fi
     exit 0

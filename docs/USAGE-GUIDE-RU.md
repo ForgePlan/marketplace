@@ -185,6 +185,58 @@
 
 ---
 
+## Поведение хуков
+
+При установке нескольких плагинов их хуки накапливаются — каждый срабатывает независимо.
+
+### Что и когда срабатывает
+
+| Событие | Плагин | Хук | Что делает |
+|---------|--------|-----|-----------|
+| `PreToolUse:Bash` | dev-toolkit | safety-hook.sh | Блокирует опасные команды (force push, rm -rf /, DROP TABLE) |
+| `PreToolUse:Bash` | forgeplan-workflow | forge-safety-hook.sh | Делегирует dev-toolkit если установлен, иначе свои проверки |
+| `PreToolUse:Write` | forgeplan-workflow | pre-code-check.sh | Предупреждает, если нет активного PRD (кэш, TTL 5 мин) |
+| `PostToolUse:Write\|Edit` | dev-toolkit | test-hint.sh | Предлагает тесты при добавлении публичных функций |
+| `PostToolUse:Write\|Edit` | laws-of-ux | ux-hint.sh | Предлагает UX-ревью при изменении фронтенд-файлов |
+| `PostToolUse:Bash` | forgeplan-orchestra | forge-sync-hint.sh | Предлагает sync с Orchestra после forgeplan activate/new |
+
+### Если установлены и dev-toolkit, и forgeplan-workflow
+
+У обоих есть safety hook на `PreToolUse:Bash`. Хук dev-toolkit срабатывает первым. Хук forgeplan-workflow обнаруживает, что dev-toolkit установлен, и пропускает проверку (exit 0), чтобы избежать дублирования.
+
+### Временное отключение хука
+
+Хуки нельзя отключить на одну сессию. Чтобы отключить хуки плагина, удалите его:
+```
+/plugin uninstall <имя-плагина>@ForgePlan-marketplace
+```
+
+---
+
+## Рекомендуемые стеки
+
+| Стек | Плагины | Подходит для |
+|------|---------|-------------|
+| **Минимальный** | dev-toolkit | Любой проект, без зависимостей |
+| **Фронтенд** | dev-toolkit + laws-of-ux | Фронтенд/UI разработка |
+| **FPF Мыслитель** | dev-toolkit + fpf | Архитектура, решения, reasoning |
+| **Пользователь Forgeplan** | forgeplan-workflow + fpf | Пользователи forgeplan CLI |
+| **Полный стек** | все 5 плагинов | Power users ForgePlan с Orchestra |
+
+---
+
+## Требования к зависимостям
+
+| Плагин | Обязательно | Опционально |
+|--------|-------------|-------------|
+| laws-of-ux | Нет | — |
+| dev-toolkit | Нет | Hindsight MCP (для /recall памяти), forgeplan CLI (для /sprint определения масштаба) |
+| fpf | Нет | forgeplan CLI (для предложений артефактов) |
+| forgeplan-workflow | forgeplan CLI | dev-toolkit (общие safety hooks) |
+| forgeplan-orchestra | forgeplan CLI + Orchestra MCP | Hindsight MCP (для /session recall памяти) |
+
+---
+
 ## Решение проблем
 
 ### Плагины не загружаются
