@@ -14,17 +14,18 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Validate marketplace.json
-        run: python3 -c "import json; json.load(open('.claude-plugin/marketplace.json')); print('marketplace.json: OK')"
+        run: python3 -c "import json, sys; json.load(open(sys.argv[1])); print('marketplace.json: OK')" ".claude-plugin/marketplace.json"
 
       - name: Validate all plugin.json files
         run: |
           errors=0
           for f in plugins/*/.claude-plugin/plugin.json; do
-            if python3 -c "import json; d=json.load(open('$f')); assert 'name' in d and 'description' in d" 2>/dev/null; then
+            if python3 -c "import json, sys; d=json.load(open(sys.argv[1])); assert 'name' in d and 'version' in d and 'description' in d" "$f" 2>/dev/null; then
               echo "OK: $f"
             else
               echo "FAIL: $f"
@@ -51,16 +52,18 @@ jobs:
         run: |
           for f in plugins/*/hooks/hooks.json; do
             [ -f "$f" ] || continue
-            python3 -c "import json; json.load(open('$f'))" && echo "OK: $f" || exit 1
+            python3 -c "import json, sys; json.load(open(sys.argv[1]))" "$f" && echo "OK: $f" || exit 1
           done
           echo "All hooks validated"
 
       - name: Check SKILL.md frontmatter
         run: |
-          for f in $(find plugins -name "SKILL.md"); do
+          set -o pipefail
+          find plugins -name "SKILL.md" -print0 | while IFS= read -r -d '' f; do
             if head -1 "$f" | grep -q "^---"; then
               echo "OK: $f"
             else
-              echo "WARN: $f missing YAML frontmatter"
+              echo "FAIL: $f missing YAML frontmatter"
+              exit 1
             fi
           done

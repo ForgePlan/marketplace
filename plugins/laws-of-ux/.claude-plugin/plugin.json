@@ -1,7 +1,7 @@
 {
   "name": "laws-of-ux",
-  "version": "1.1.1",
-  "description": "UX laws knowledge base and frontend code reviewer. Analyzes HTML/CSS/JS/React/Vue code against 30 Laws of UX principles. Provides actionable recommendations for improving user experience. Use when building UI components, reviewing frontend code, or learning UX best practices.",
+  "version": "1.2.0",
+  "description": "UX laws knowledge base and frontend code reviewer. Analyzes HTML/CSS/JS/React/Vue/Svelte code against 30 Laws of UX principles. Provides actionable recommendations for improving user experience. Use when building UI components, reviewing frontend code, or learning UX best practices.",
   "author": {
     "name": "ForgePlan"
   },

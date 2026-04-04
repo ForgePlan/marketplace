@@ -20,9 +20,9 @@ APPLIED_PATTERNS="$SECTIONS_DIR/applied-patterns"
 
 # Step 1: Backup applied-patterns (our additions, not from FPF spec)
 if [ -d "$APPLIED_PATTERNS" ]; then
-  BACKUP_DIR=$(mktemp -d)
-  echo "Backing up applied-patterns to $BACKUP_DIR..."
-  cp -R "$APPLIED_PATTERNS" "$BACKUP_DIR/applied-patterns"
+  BACKUP_DIR=$(mktemp -d) || { echo "ERROR: Failed to create temp directory"; exit 1; }
+  echo "Backing up applied-patterns..."
+  cp -R "$APPLIED_PATTERNS" "$BACKUP_DIR/applied-patterns" || { echo "ERROR: Backup failed"; exit 1; }
 fi
 
 # Step 2: Pull latest FPF (unless --regen-only)
@@ -30,6 +30,23 @@ if [ "${1:-}" != "--regen-only" ]; then
   echo "Pulling latest FPF spec..."
   cd "$PLUGIN_ROOT"
   git submodule update --remote FPF
+
+  # Verify the fetched commit against a known-good hash (supply chain protection)
+  EXPECTED_SHA="${FPF_EXPECTED_SHA:-}"
+  if [ -n "$EXPECTED_SHA" ]; then
+    ACTUAL_SHA=$(cd FPF && git rev-parse HEAD)
+    if [ "$ACTUAL_SHA" != "$EXPECTED_SHA" ]; then
+      echo "ERROR: FPF submodule SHA mismatch!"
+      echo "  Expected: $EXPECTED_SHA"
+      echo "  Got:      $ACTUAL_SHA"
+      echo "  Set FPF_EXPECTED_SHA=$ACTUAL_SHA if the update is intentional."
+      exit 1
+    fi
+    echo "FPF SHA verified: $ACTUAL_SHA"
+  else
+    echo "WARNING: FPF_EXPECTED_SHA not set. Skipping integrity check."
+    echo "  Current SHA: $(cd FPF && git rev-parse HEAD)"
+  fi
   echo "FPF updated to: $(cd FPF && git log --oneline -1)"
 fi
 
@@ -43,7 +60,10 @@ if [ -n "${BACKUP_DIR:-}" ] && [ -d "$BACKUP_DIR/applied-patterns" ]; then
   echo "Restoring applied-patterns..."
   rm -rf "$APPLIED_PATTERNS"
   mv "$BACKUP_DIR/applied-patterns" "$APPLIED_PATTERNS"
-  rm -rf "$BACKUP_DIR"
+  # Safe cleanup: verify BACKUP_DIR is a temp path before rm -rf
+  if [ -n "${BACKUP_DIR:-}" ] && [[ "$BACKUP_DIR" == /tmp/* || "$BACKUP_DIR" == /var/folders/* || "$BACKUP_DIR" == /private/tmp/* ]]; then
+    rm -rf "$BACKUP_DIR"
+  fi
 fi
 
 echo ""

@@ -9,7 +9,7 @@ Four parallel code reviewers, wave-based task execution, and instant session res
 ## Quick Start
 
 ```bash
-claude plugin add dev-toolkit    # install
+/plugin install dev-toolkit@ForgePlan-marketplace    # install
 /audit                           # review your code right now
 /sprint fix login bug            # break a task into parallel waves
 ```

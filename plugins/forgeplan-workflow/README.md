@@ -4,7 +4,7 @@
 
 > From idea to production through structured artifacts. Route -> Shape -> Build -> Evidence -> Activate.
 
-A Claude Code plugin that provides structured engineering workflow automation for [forgeplan](https://github.com/forgeplan/forgeplan) users.
+A Claude Code plugin that provides structured engineering workflow automation for [forgeplan](https://github.com/ForgePlan/forgeplan) users.
 
 > **Note:** Requires **forgeplan CLI** -- private ForgePlan application, access through project admin. After receiving the binary: place it in PATH and run `forgeplan init -y` in your project.
 >
@@ -13,7 +13,7 @@ A Claude Code plugin that provides structured engineering workflow automation fo
 ## Quick Start
 
 ```bash
-claude plugin add /path/to/forgeplan-workflow
+/plugin install forgeplan-workflow@ForgePlan-marketplace
 ```
 
 ## Usage
