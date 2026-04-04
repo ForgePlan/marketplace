@@ -1,6 +1,6 @@
 {
   "name": "forgeplan-workflow",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Structured engineering workflow for forgeplan users. Provides forge-cycle (full dev cycle), forge-audit (multi-expert review), methodology knowledge base, and quality gate hooks. Requires forgeplan CLI (private app, access via project admin).",
   "author": {
     "name": "ForgePlan"
