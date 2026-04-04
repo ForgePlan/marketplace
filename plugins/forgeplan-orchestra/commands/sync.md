@@ -64,6 +64,15 @@ Categorize all items into three groups:
 | Review           | Evidence            |
 | Done             | Done                |
 
+**MILESTONE CANDIDATE** — When IN FORGE NOT IN ORCH has 10+ items, suggest milestone approach:
+```
+⚠️ 15 artifacts have no Orchestra task.
+   Consider creating one milestone task instead of 15 individual Done tasks:
+   "[EPIC-XXX] Pre-Orchestra Milestone — 15 artifacts"
+   Then only create individual tasks for draft/active items.
+   Use milestone approach? [y/n]
+```
+
 ### Step 5: Present Diff to User
 
 Show the complete diff table to the user.

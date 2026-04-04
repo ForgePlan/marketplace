@@ -43,6 +43,19 @@ Use the Phase-Status mapping:
 
 4. **Verify** by running `/sync` — should show zero discrepancies.
 
+### Scenario 1a: Milestone Approach (10+ completed artifacts)
+
+If you have many completed artifacts (10+), creating individual Done tasks creates noise. Instead, create one milestone task:
+
+```
+create_entity: task "[EPIC-001] Pre-Orchestra Milestone — N artifacts"
+set_fields: Artifact=EPIC-001, Type=Epic, Phase=Done, Status=Done
+```
+
+Add a checklist listing all completed artifact IDs. Then only create individual tasks for **draft/active** artifacts that need tracking.
+
+**When to use**: backfill has 10+ active/done artifacts. Creating 30 Done tasks is noise — one milestone + individual tasks for in-progress work is cleaner.
+
 ## Scenario 2: Both Forgeplan and Orchestra Exist (Independently)
 
 You have artifacts and tasks, but they are not linked.
