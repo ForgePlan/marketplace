@@ -14,6 +14,7 @@ fi
 case "$CMD" in
   *"forgeplan activate"*|*"forgeplan new"*)
     echo '{"message":"Consider /sync to keep Orchestra in sync."}'
+    exit 0
     ;;
   *)
     exit 0

@@ -43,8 +43,8 @@ if echo "$CMD_LOWER" | grep -qE 'rm\s+-rf\s+/\s*$|rm\s+-rf\s+/\*|rm\s+-rf\s+/$';
   REASON="Recursive deletion of root filesystem is blocked."
 fi
 
-# DROP TABLE / DROP DATABASE
-if echo "$CMD_LOWER" | grep -qiE 'drop\s+table|drop\s+database'; then
+# DROP TABLE / DROP DATABASE (only when piped to SQL clients)
+if echo "$CMD_LOWER" | grep -qiE '(mysql|psql|sqlite3|sqlcmd)\s.*drop\s+(table|database)|drop\s+(table|database).*\|\s*(mysql|psql|sqlite3)'; then
   BLOCKED=1
   REASON="DROP TABLE/DATABASE detected. This is a destructive database operation. Run it manually if intentional."
 fi
