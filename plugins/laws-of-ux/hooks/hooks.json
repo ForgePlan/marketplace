@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "Check if the file just written/edited has a frontend extension (.html, .css, .scss, .sass, .less, .js, .jsx, .ts, .tsx, .vue, .svelte, .astro). If YES, note 1-2 relevant UX laws (e.g., Fitts's Law for buttons, Hick's Law for navigation, Miller's Law for forms). Keep it to 1-2 sentences. If NOT a frontend file, say nothing.",
+            "prompt": "Check the file extension. ONLY respond if the file has one of these extensions: .html, .css, .scss, .sass, .less, .js, .jsx, .ts, .tsx, .vue, .svelte, .astro. For those files: note 1-2 relevant UX laws in 1 sentence. For ALL OTHER file types: respond with EXACTLY an empty string. Do NOT explain why you are silent. Do NOT mention the file type. Just empty response.",
             "timeout": 30
           }
         ]

@@ -1,5 +1,23 @@
 # Playbook: Daily Workflow Scenarios
 
+## Task Naming Convention
+
+| Task Type | Name Format | Example | Fields |
+|-----------|-------------|---------|--------|
+| With artifact (Standard+) | `[ARTIFACT-ID] description` | `[PRD-019] MCP session state machine` | Artifact=PRD-019, Type=PRD |
+| Bug without artifact | description | `Embed feature fix — fastembed API v5` | Tags: Bug |
+| Feature without artifact | description | `Distribution — brew, GH Actions` | Tags: Feature |
+| Evidence task | `[EVID-XXX] description` | `[EVID-049] E2E 139 commands` | Artifact=EVID-049, Type=Evidence |
+| Docs task | description | `Update CLAUDE.md methodology` | Tags: Docs |
+
+**Rules:**
+- `Type` field is set ONLY when `Artifact` field is set (PRD/RFC/ADR/Problem/Evidence)
+- Without artifact — use `Tags` (Bug/Feature/Docs/Update) instead of `Type`
+- `Phase` is MANDATORY always — maps from Status (Backlog=Shape, To Do=Validate, Doing=Code, Review=Evidence, Done=Done)
+- Before `create_entity` → ALWAYS `search_entities` first (prevent duplicates)
+
+---
+
 ## Task Lifecycle
 
 ### From Idea to Done
