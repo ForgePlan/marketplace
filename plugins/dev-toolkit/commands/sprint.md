@@ -1,171 +1,196 @@
 ---
 name: sprint
-description: "Wave-based sprint planner and executor — breaks complex tasks into parallel execution waves, plans the approach, and executes with progress tracking."
+description: "Adaptive sprint — scales from quick fix to full release cycle. Auto-detects task complexity: Tactical (quick waves), Standard (ADI + tests + pipeline), Deep (teams + full pipeline + release). One command for all scales."
 ---
 
-# Wave-Based Sprint Planner & Executor
+# Adaptive Sprint
 
-You are a principal engineer managing a structured sprint execution. You break complex tasks into waves of parallel work, get user approval, then execute methodically.
+You are a principal engineer managing a structured sprint. You auto-detect task scale and adapt behavior — from a quick 1-agent fix to a full multi-agent release cycle with ADI reasoning, quality pipeline, and close-out.
 
 ## Step 1: Gather the Task
 
-If the user provided a task description as an argument, use that. Otherwise, ask:
+If the user provided a task description as an argument, use that. Otherwise ask:
 
-> "What task would you like me to sprint on? Describe the feature, bug fix, refactor, or improvement you need."
+> "What task would you like me to sprint on?"
 
-Wait for the user to describe the task before proceeding.
+## Step 2: Detect Scale
 
-## Step 2: Research Context
+Analyze the task and determine scale:
 
-Before planning, gather project context by doing ALL of the following:
+| Signal | Scale | Sprint Mode |
+|---|---|---|
+| Typo, config change, one-liner, obvious fix | **Tactical** | Quick: 1 agent, waves, test |
+| Feature 1-3 days, new endpoint, refactor, 2+ files | **Standard** | Full: ADI, 2 agents, pipeline, PR |
+| New module, irreversible, 5+ files, architecture change | **Deep** | Complete: ADI mandatory, 3-4 agents, full pipeline, release |
 
-### 2a. Project Overview
-- Read `CLAUDE.md` if it exists (project conventions, architecture notes)
-- Read `README.md` if no CLAUDE.md
-- Check `package.json`, `Cargo.toml`, `pyproject.toml`, `go.mod`, `pom.xml`, `composer.json`, or `Gemfile` for project type and dependencies
+If `forgeplan` CLI is available, run `forgeplan route "<task>"` for calibrated depth.
 
-### 2b. Recent History
-- Run `git log --oneline -20` to see recent work
-- Run `git branch` to see active branches
-- Run `git status` to see current state
-- Check for any in-progress work that might conflict
+Tell the user: "**Scale: [Tactical/Standard/Deep]** — [one line why]"
 
-### 2c. Project Structure
-- List the top-level directory structure
-- Identify source directories (src/, lib/, app/, etc.)
-- Identify test directories (tests/, __tests__/, spec/, etc.)
-- Note any CI/CD configuration (.github/workflows/, .gitlab-ci.yml, etc.)
+If they disagree, adjust.
 
-### 2d. Relevant Code
-- Search for files and functions related to the task
-- Read key files that will be affected
-- Identify dependencies between components
+## Step 3: Research Context
 
-## Step 3: Create the Sprint Plan
+### All scales:
+- Read `CLAUDE.md` or `README.md` for project conventions
+- `git log --oneline -10` + `git status` + `git branch`
+- Detect project type (package.json / Cargo.toml / pyproject.toml / go.mod)
+- Search for files related to the task
 
-Break the task into 2-4 **waves** (phases). Each wave contains 1-3 parallel work items.
+### Standard+ adds:
+- Read PRD if referenced (`.forgeplan/prds/` or task description)
+- Study existing code patterns in the area being changed
+- Identify test directories and conventions
 
-Rules for wave design:
-- **Wave 1** is always foundational work: types/interfaces, schemas, configuration
-- **Middle waves** are core implementation, done in parallel where possible
-- **Final wave** is always integration, tests, and cleanup
-- Items WITHIN a wave can run in parallel (no dependencies on each other)
-- Wave N+1 can depend on wave N (sequential between waves)
-- Each work item should be a concrete, well-scoped unit of work
+### Deep+ adds:
+- Gap analysis: what exists vs what's needed
+- Identify integration points and backward compat risks
+- Document key data structures and interfaces involved
 
-Present the plan in this format:
+## Step 4: ADI Checkpoint (Standard+ only)
 
-```markdown
-# Sprint Plan: [Task Title]
+Before coding, consider alternatives:
 
-## Overview
-[1-2 sentence summary of the approach]
-
-## Wave 1: Foundation
-**Goal**: [what this wave achieves]
-- [ ] **Agent 1.1**: [description] → [files to create/modify]
-- [ ] **Agent 1.2**: [description] → [files to create/modify]
-
-## Wave 2: Core Implementation
-**Goal**: [what this wave achieves]
-- [ ] **Agent 2.1**: [description] → [files to create/modify]
-- [ ] **Agent 2.2**: [description] → [files to create/modify]
-- [ ] **Agent 2.3**: [description] → [files to create/modify]
-
-## Wave 3: Integration & Tests
-**Goal**: [what this wave achieves]
-- [ ] **Agent 3.1**: [description] → [files to create/modify]
-- [ ] **Agent 3.2**: [description] → [files to create/modify]
-
-## Estimated Scope
-- Files to create: [N]
-- Files to modify: [N]
-- Tests to add: [N]
+```
+ABDUCTION: What approaches are possible? (generate 2-3)
+DEDUCTION: Which fits best? (compat, performance, simplicity)
+INDUCTION: Can we test this? (clear test strategy?)
 ```
 
-Then ask: **"Does this plan look good? Would you like to adjust anything before I start execution?"**
+Present to user:
 
-Wait for user approval. If they suggest changes, revise the plan and ask again.
+> **ADI Checkpoint:**
+> - **Option A**: [approach] — [pro] / [con]
+> - **Option B**: [approach] — [pro] / [con]
+> - **Recommended**: [choice] because [reason]
+>
+> Proceed with [choice]? Or prefer another approach?
 
-## Step 4: Execute Wave by Wave
+For Tactical: skip ADI entirely.
+For Deep: ADI is **mandatory** — do not proceed without user confirmation.
 
-Once approved, execute each wave:
+## Step 5: Create Sprint Plan
 
-### For each wave:
+Break the task into waves. Team size by scale:
 
-1. **Announce the wave**: "Starting Wave [N]: [Goal] — launching [M] parallel agents..."
+| Scale | Agents per wave | Total waves |
+|---|---|---|
+| Tactical | 1 | 1-2 |
+| Standard | 2 parallel | 2-3 |
+| Deep | 3-4 parallel | 3-4 |
 
-2. **Launch agents in parallel**: Use subagents for each work item in the wave. Each agent receives:
-   - The full sprint plan for context
-   - Its specific task description
-   - Relevant file contents it needs to read
-   - Clear instructions on what to create or modify
+Rules:
+- Wave 1 = foundation (types, interfaces, config)
+- Middle waves = core implementation (parallel where no file conflicts)
+- Final wave = integration, tests, cleanup
+- **One file = one agent** — never two agents editing the same file
 
-3. **Wait for all agents**: Do not start the next wave until ALL agents in the current wave complete.
+Present plan, wait for approval.
 
-4. **Report wave results**: After the wave completes, show:
-   ```
-   ## Wave [N] Complete
-   - [x] Agent [N].1: [what was done] — [files changed]
-   - [x] Agent [N].2: [what was done] — [files changed]
+## Step 6: Execute Wave by Wave
 
-   **Changes**: [brief summary of what changed]
-   ```
+For each wave:
+1. Announce: "Starting Wave [N]: [Goal] — [M] agents..."
+2. Launch agents in parallel (each gets: plan, specific task, relevant files)
+3. Wait for ALL agents in wave to complete
+4. Report results + verify before next wave
 
-5. **Verify before next wave**: Quick sanity check — do the outputs of this wave look correct? Are there any issues that would block the next wave? If so, fix them before proceeding.
+## Step 7: Quality Pipeline
 
-### Between waves:
-- Check that files from the current wave don't conflict
-- Verify imports and references are consistent
-- If a wave produced unexpected results, ask the user before continuing
+### Tactical:
+```
+Run tests → Report results → Done
+```
 
-## Step 5: Final Verification
+### Standard:
+```
+1. FORMAT  — auto-format (prettier, ruff format, cargo fmt)
+2. LINT    — 0 errors (eslint, ruff check, clippy)
+3. TYPES   — 0 errors (tsc, mypy, pyright)
+4. TESTS   — all pass (existing + new)
+5. SUMMARY — changes, files, test count
+```
 
-After all waves complete:
+### Deep:
+```
+1. FORMAT     — auto-format
+2. LINT       — 0 errors
+3. TYPES      — 0 errors
+4. UNIT       — all unit tests pass
+5. E2E        — all E2E/integration tests pass
+6. AUDIT      — launch 2+ review agents:
+                 a) Code quality (logic, edge cases, error handling)
+                 b) Architecture (patterns, coupling, backward compat)
+7. FIX        — fix all CRITICAL/HIGH findings
+8. RE-VERIFY  — repeat steps 1-5 AFTER audit fixes (don't trust previous run)
+9. SMOKE      — build/install in clean env, verify import + version
+```
 
-### 5a. Run Tests
-- Detect the test runner: `npm test`, `cargo test`, `pytest`, `go test ./...`, `mvn test`, `phpunit`, `rspec`, `bundle exec rake test`
-- Run the test suite
-- Report results: passing, failing, and skipped
+## Step 8: Evidence & Close-out
 
-### 5b. Lint Check (if available)
-- Run the linter if configured: `eslint`, `clippy`, `ruff`, `golint`, `checkstyle`, etc.
-- Report any new warnings or errors
+### Tactical:
+```
+Commit with conventional message → Done
+```
 
-### 5c. Type Check (if applicable)
-- Run type checker: `tsc --noEmit`, `mypy`, `pyright`, etc.
-- Report any type errors
+### Standard:
+```
+1. Commit with refs (PRD/FR numbers if available)
+2. Evidence summary:
+   | Check | Result |
+   |---|---|
+   | Tests | N passed |
+   | Lint | pass |
+   | Types | pass |
+3. If forgeplan available: suggest evidence creation
+```
 
-### 5d. Summary
+### Deep:
+```
+1. Evidence Table (include in output and PR body):
+   | Layer | Tests | Result |
+   |---|---|---|
+   | Unit | N passed, M new | pass/fail |
+   | E2E | N passed | pass/fail |
+   | Type check | N files | pass/fail |
+   | Lint | — | pass/fail |
+   | Audit | N agents, N findings | N fixed |
+   | Smoke | install + import | pass/fail |
 
-```markdown
-# Sprint Complete: [Task Title]
+2. Version bump (if releasing):
+   - Update version in ALL manifest files (same version everywhere)
+   - Update CHANGELOG
+   - Commit → PR → merge → tag → push tag
 
-## What Was Done
-[Bulleted list of all changes, organized by wave]
-
-## Files Changed
-[List of all files created or modified]
-
-## Test Results
-- Passing: [N]
-- Failing: [N]
-- New tests added: [N]
-
-## Notes
-[Any caveats, TODOs, or follow-up items]
+3. Close-out:
+   - If forgeplan: create evidence, link to PRD, activate
+   - If memory (Hindsight/mem0): save key decisions
+   - Update CLAUDE.md/TODO.md if needed
+   - Clean up: delete temp files, close branch
 ```
 
 ## Error Handling
 
-If an agent fails or produces incorrect output during execution:
-1. Report the failure to the user
-2. Attempt to fix the issue
-3. If the fix is non-trivial, ask the user how to proceed
-4. Never silently skip a failed task — it may be a dependency for later waves
+- Agent failure → report to user, attempt fix, ask if non-trivial
+- Test failure → show errors, fix, re-run affected tests
+- Audit findings → fix CRITICAL/HIGH, then RE-VERIFY everything
+- Never silently skip failures — they may block later waves
 
-If tests fail after execution:
-1. Show the failing tests and error messages
-2. Attempt to fix the failures
-3. Re-run only the affected tests to verify
-4. Report the final state to the user
+## Sprint Checklist (Deep scale — for reference)
+
+```
+[ ] Context researched (CLAUDE.md, git, project structure)
+[ ] ADI checkpoint: alternatives considered, approach justified
+[ ] Sprint plan approved by user
+[ ] Waves executed, all agents completed
+[ ] Format: 0 changes needed
+[ ] Lint: 0 errors
+[ ] Types: 0 errors
+[ ] Tests: all pass (unit + E2E)
+[ ] Audit: 2+ agents, 0 CRITICAL/HIGH remaining
+[ ] Re-verify: pipeline re-run after fixes
+[ ] Smoke: build/install works in clean env
+[ ] Evidence table generated
+[ ] Commit + PR (with evidence in body)
+[ ] Close-out: forgeplan/memory/docs updated
+```
