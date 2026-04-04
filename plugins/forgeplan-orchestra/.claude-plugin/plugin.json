@@ -1,10 +1,20 @@
 {
   "name": "forgeplan-orchestra",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Unified workflow: Forgeplan artifacts + Orchestra task tracking + Claude Code AI execution. Bidirectional sync, Session Start Protocol with Inbox Pattern, and methodology knowledge base. Requires forgeplan CLI (private app, access via project admin) + Orchestra MCP server.",
-  "author": { "name": "ForgePlan" },
+  "author": {
+    "name": "ForgePlan"
+  },
   "homepage": "https://github.com/ForgePlan/marketplace",
   "repository": "https://github.com/ForgePlan/marketplace",
   "license": "MIT",
-  "keywords": ["forgeplan", "orchestra", "workflow", "sync", "task-tracking", "unified-workflow", "session"]
+  "keywords": [
+    "forgeplan",
+    "orchestra",
+    "workflow",
+    "sync",
+    "task-tracking",
+    "unified-workflow",
+    "session"
+  ]
 }
