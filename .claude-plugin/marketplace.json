@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.3.0"
+    "version": "1.4.0"
   },
   "plugins": [
     {
       "name": "laws-of-ux",
       "source": "./plugins/laws-of-ux",
       "description": "UX laws knowledge base and frontend code reviewer. Analyzes HTML/CSS/JS/React/Vue/Svelte code against 30 Laws of UX principles with actionable recommendations.",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "author": {
         "name": "ForgePlan"
       },
@@ -33,7 +33,7 @@
       "name": "forgeplan-workflow",
       "source": "./plugins/forgeplan-workflow",
       "description": "Structured engineering workflow for forgeplan users. Provides forge-cycle (full dev cycle), forge-audit (multi-expert review), methodology knowledge base, and quality gate hooks. Requires forgeplan CLI.",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "author": {
         "name": "ForgePlan"
       },
@@ -54,7 +54,7 @@
       "name": "dev-toolkit",
       "source": "./plugins/dev-toolkit",
       "description": "Universal engineering toolkit: multi-expert audit, wave-based sprints, session context recall, and safety hooks. Works with any project and language.",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "author": {
         "name": "ForgePlan"
       },
@@ -74,7 +74,7 @@
       "name": "fpf",
       "source": "./plugins/fpf",
       "description": "First Principles Framework (FPF) \u2014 thinking amplifier for structured reasoning, decomposition, and decision-making. Enhanced plugin with /fpf command, applied patterns, forgeplan integration, and FPF advisor agent. Based on FPF by Anatoly Levenchuk.",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "author": {
         "name": "ForgePlan"
       },
@@ -94,7 +94,7 @@
       "name": "forgeplan-orchestra",
       "source": "./plugins/forgeplan-orchestra",
       "description": "Unified workflow: Forgeplan artifacts + Orchestra task tracking + Claude Code AI execution. Bidirectional sync, Session Start Protocol with Inbox Pattern, and methodology knowledge base. Requires forgeplan CLI + Orchestra MCP server.",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "author": {
         "name": "ForgePlan"
       },
