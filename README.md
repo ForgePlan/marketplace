@@ -74,7 +74,7 @@ Full dev cycle automation: route tasks, create PRDs, build, audit, create eviden
 
 ### [forgeplan-orchestra](plugins/forgeplan-orchestra/)
 
-> Unified workflow: Forgeplan artifacts + [Orchestra](https://www.orchestra.pm/) task tracking + Claude Code AI execution.
+> Unified workflow: Forgeplan artifacts + [Orchestra](https://orch.so) task tracking + Claude Code AI execution.
 
 Bidirectional sync, Session Start Protocol with Inbox Pattern, and methodology knowledge base.
 

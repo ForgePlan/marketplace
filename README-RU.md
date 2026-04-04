@@ -74,7 +74,7 @@
 
 ### [forgeplan-orchestra](plugins/forgeplan-orchestra/)
 
-> Интеграция Forgeplan с [Orchestra](https://www.orchestra.pm/) — unified workflow для задач, артефактов и AI агентов.
+> Интеграция Forgeplan с [Orchestra](https://orch.so) — unified workflow для задач, артефактов и AI агентов.
 
 Связывает Forgeplan (методология) с Orchestra (task tracker) через bidirectional sync, Session Start Protocol с Inbox Pattern и knowledge base.
 

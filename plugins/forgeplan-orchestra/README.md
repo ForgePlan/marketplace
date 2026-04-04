@@ -14,7 +14,7 @@
 
 Each system does what it does best. We don't duplicate -- we link. Artifact ID in Orchestra points to Forgeplan content. Status in Orchestra maps to Phase in Forge pipeline automatically.
 
-> **Note:** Requires **forgeplan CLI** (private ForgePlan application, access through project admin) + **Orchestra MCP server** configured (`mcp__orch__*` tools available). Product: [orchestra.pm](https://www.orchestra.pm/)
+> **Note:** Requires **forgeplan CLI** (private ForgePlan application, access through project admin) + **Orchestra MCP server** configured (`mcp__orch__*` tools available). Product: [orch.so](https://orch.so)
 
 ## Quick Start
 
@@ -97,7 +97,7 @@ Apply changes? [y/n]
 
 ## Credits
 
-- **[Orchestra](https://www.orchestra.pm/)** -- task tracking and team collaboration
+- **[Orchestra](https://orch.so)** -- task tracking and team collaboration
 - **[Forgeplan](https://github.com/ForgePlan)** -- artifact methodology and quality framework
 - Architecture: [UNIFIED-WORKFLOW.md](https://github.com/ForgePlan/forgeplan/blob/dev/docs/guides/UNIFIED-WORKFLOW.md)
 
