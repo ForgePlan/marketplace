@@ -21,7 +21,7 @@ Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/
 
 ## Available Plugins
 
-### laws-of-ux
+### [laws-of-ux](plugins/laws-of-ux/)
 
 > 30 Laws of UX applied to frontend code review with actionable recommendations.
 
@@ -50,7 +50,7 @@ Review HTML/CSS/JS/React/Vue code against psychological principles from [lawsofu
 
 ---
 
-### forgeplan-workflow
+### [forgeplan-workflow](plugins/forgeplan-workflow/)
 
 > Structured engineering workflow for [forgeplan](https://github.com/ForgePlan/forgeplan) users.
 
@@ -72,7 +72,7 @@ Full dev cycle automation: route tasks, create PRDs, build, audit, create eviden
 
 ---
 
-### forgeplan-orchestra
+### [forgeplan-orchestra](plugins/forgeplan-orchestra/)
 
 > Unified workflow: Forgeplan artifacts + [Orchestra](https://www.orchestra.pm/) task tracking + Claude Code AI execution.
 
@@ -93,7 +93,7 @@ Bidirectional sync, Session Start Protocol with Inbox Pattern, and methodology k
 
 ---
 
-### dev-toolkit
+### [dev-toolkit](plugins/dev-toolkit/)
 
 > Universal engineering toolkit — works with **any project and language**. No dependencies.
 
@@ -114,7 +114,7 @@ Bidirectional sync, Session Start Protocol with Inbox Pattern, and methodology k
 
 ---
 
-### fpf
+### [fpf](plugins/fpf/)
 
 > [First Principles Framework](https://github.com/ailev/FPF) — thinking amplifier for structured reasoning. By Anatoly Levenchuk, enhanced by ForgePlan.
 
