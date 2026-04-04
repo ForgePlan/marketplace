@@ -74,4 +74,33 @@ Add your plugin to `.claude-plugin/marketplace.json`:
 - [ ] Skills have `name` and `description` in SKILL.md frontmatter
 - [ ] `hooks.json` is valid JSON
 - [ ] No hardcoded paths (use `${CLAUDE_PLUGIN_ROOT}` for scripts)
+
+### hooks.json Schema
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/your-hook.sh",
+            "timeout": 3
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+| Field | Values | Notes |
+|-------|--------|-------|
+| Event | `PreToolUse`, `PostToolUse` | Top-level key |
+| `matcher` | Tool name or `\|`-joined list | e.g. `"Bash"`, `"Write\|Edit"` |
+| `type` | `"command"` | Only supported type |
+| `command` | Shell command | Use `${CLAUDE_PLUGIN_ROOT}` for paths |
+| `timeout` | Integer (seconds) | Recommended: 3-5 |
 - [ ] README.md included in plugin directory
