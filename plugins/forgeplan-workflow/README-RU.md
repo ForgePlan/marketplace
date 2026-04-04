@@ -4,7 +4,7 @@
 
 > От идеи до продакшена через структурированные артефакты. Route -> Shape -> Build -> Evidence -> Activate.
 
-Плагин для Claude Code, обеспечивающий структурированную автоматизацию инженерного рабочего процесса для пользователей [forgeplan](https://github.com/forgeplan/forgeplan).
+Плагин для Claude Code, обеспечивающий структурированную автоматизацию инженерного рабочего процесса для пользователей [forgeplan](https://github.com/ForgePlan/forgeplan).
 
 > **Примечание:** Требуется **forgeplan CLI** -- приватное приложение ForgePlan, доступ через администратора проекта. После получения бинарника: поместите в PATH и выполните `forgeplan init -y` в проекте.
 >
@@ -13,7 +13,7 @@
 ## Быстрый старт
 
 ```bash
-claude plugin add /path/to/forgeplan-workflow
+/plugin install forgeplan-workflow@ForgePlan-marketplace
 ```
 
 ## Использование

@@ -7,7 +7,7 @@ Catch UX violations in your frontend code before they reach users. Reviews HTML/
 ## Quick Start
 
 ```bash
-claude plugins add laws-of-ux        # install from marketplace
+/plugin install laws-of-ux@ForgePlan-marketplace   # install from marketplace
 /ux-review                            # scan current project
 /ux-law fitts                         # look up any law
 ```

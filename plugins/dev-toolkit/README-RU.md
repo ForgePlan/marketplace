@@ -9,7 +9,7 @@
 ## Быстрый старт
 
 ```bash
-claude plugin add dev-toolkit    # установка
+/plugin install dev-toolkit@ForgePlan-marketplace    # установка
 /audit                           # ревью кода прямо сейчас
 /sprint fix login bug            # разбить задачу на параллельные волны
 ```

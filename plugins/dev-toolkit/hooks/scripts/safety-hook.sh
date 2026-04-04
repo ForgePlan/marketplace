@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -uo pipefail
 # safety-hook.sh — Universal safety hook for Claude Code
 # Blocks dangerous bash commands before execution.
 # Exit 0 = allow, Exit 2 = block (with JSON error message).
@@ -6,11 +7,14 @@
 # Read tool input from stdin (JSON with "command" field)
 INPUT=$(cat)
 
-# Use jq if available for reliable JSON parsing, fallback to regex
+# Use jq if available for reliable JSON parsing, fallback to python3, fail-closed otherwise
 if command -v jq &>/dev/null; then
   COMMAND=$(echo "$INPUT" | jq -r '.command // empty' 2>/dev/null || true)
+elif command -v python3 &>/dev/null; then
+  COMMAND=$(echo "$INPUT" | python3 -c "import sys,json; print(json.load(sys.stdin).get('command',''))" 2>/dev/null || true)
 else
-  COMMAND=$(echo "$INPUT" | grep -o '"command"\s*:\s*"[^"]*"' | head -1 | sed 's/"command"\s*:\s*"//;s/"$//' 2>/dev/null || true)
+  echo '{"error":"Safety hook: neither jq nor python3 available. Install jq."}'
+  exit 2
 fi
 
 # If we couldn't parse the command, allow it (don't block on parse errors)
@@ -36,7 +40,7 @@ if echo "$COMMAND" | grep -qiE 'git\s+clean\s+-[a-z]*f' && ! echo "$COMMAND" | g
 fi
 
 # --- Destructive filesystem operations ---
-if echo "$COMMAND" | grep -qiE 'rm\s+(-rf|-fr|--recursive\s+--force)\s+(/|~|\$HOME|\.\.|\*)'; then
+if echo "$COMMAND" | grep -qiE '(sudo\s+)?rm\s+(-[a-z]*r[a-z]*f|-[a-z]*f[a-z]*r|-r\s+-f|-f\s+-r)\s+(/(\s|$|\*)|~|\.\.|\$HOME|\*)'; then
   echo '{"error":"Blocked: rm -rf on root, home, parent directory, or wildcard is catastrophically destructive."}'
   exit 2
 fi

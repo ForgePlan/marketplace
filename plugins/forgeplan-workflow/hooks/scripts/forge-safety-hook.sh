@@ -4,14 +4,17 @@
 # Reads tool input JSON from stdin, checks the command against a blacklist.
 # Exit 0 = allow, Exit 2 = block (with JSON error message).
 
-set -euo pipefail
+set -uo pipefail
 
 INPUT=$(cat)
-# Use jq if available for reliable JSON parsing, fallback to grep
+# Use jq if available for reliable JSON parsing, fallback to python3, fail-closed otherwise
 if command -v jq &>/dev/null; then
   COMMAND=$(echo "$INPUT" | jq -r '.command // empty' 2>/dev/null || true)
+elif command -v python3 &>/dev/null; then
+  COMMAND=$(echo "$INPUT" | python3 -c "import sys,json; print(json.load(sys.stdin).get('command',''))" 2>/dev/null || true)
 else
-  COMMAND=$(echo "$INPUT" | grep -o '"command"\s*:\s*"[^"]*"' | head -1 | sed 's/"command"\s*:\s*"//;s/"$//' || true)
+  echo '{"error":"Safety hook: neither jq nor python3 available. Install jq."}'
+  exit 2
 fi
 
 if [ -z "$COMMAND" ]; then
@@ -38,7 +41,7 @@ if echo "$CMD_LOWER" | grep -qE 'git\s+reset\s+--hard'; then
 fi
 
 # rm -rf / or rm -rf /*
-if echo "$CMD_LOWER" | grep -qE 'rm\s+-rf\s+/\s*$|rm\s+-rf\s+/\*|rm\s+-rf\s+/$'; then
+if echo "$CMD_LOWER" | grep -qE '(sudo\s+)?rm\s+(-[a-z]*r[a-z]*f|-[a-z]*f[a-z]*r|-r\s+-f|-f\s+-r)\s+(/(\s|$|\*)|~|\.\.|\$HOME|\*)'; then
   BLOCKED=1
   REASON="Recursive deletion of root filesystem is blocked."
 fi
@@ -56,7 +59,8 @@ if echo "$CMD_LOWER" | grep -qE 'git\s+clean\s+-[a-z]*f' && ! echo "$CMD_LOWER" 
 fi
 
 if [ "$BLOCKED" -eq 1 ]; then
-  echo "{\"error\": \"BLOCKED: $REASON\"}"
+  ESCAPED_REASON=$(printf '%s' "$REASON" | sed 's/\\/\\\\/g; s/"/\\"/g')
+  echo "{\"error\": \"BLOCKED: $ESCAPED_REASON\"}"
   exit 2
 fi
 

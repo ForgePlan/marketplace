@@ -4,12 +4,12 @@
 #   ./scripts/validate-all-plugins.sh              # all plugins
 #   ./scripts/validate-all-plugins.sh laws-of-ux   # specific plugin
 
-set -e
+set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 PLUGINS_DIR="$REPO_ROOT/plugins"
-SPECIFIC_PLUGIN="$1"
+SPECIFIC_PLUGIN="${1:-}"
 ERRORS=0
 
 validate_plugin() {
@@ -26,20 +26,23 @@ validate_plugin() {
     fi
 
     # Check plugin.json is valid JSON
-    if ! python3 -c "import json; json.load(open('$plugin_dir/.claude-plugin/plugin.json'))" 2>/dev/null; then
+    if ! python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$plugin_dir/.claude-plugin/plugin.json" 2>/dev/null; then
         echo "  FAIL: plugin.json is not valid JSON"
         ERRORS=$((ERRORS + 1))
         return
     fi
 
     # Check required fields
-    local name=$(python3 -c "import json; print(json.load(open('$plugin_dir/.claude-plugin/plugin.json')).get('name',''))")
-    local version=$(python3 -c "import json; print(json.load(open('$plugin_dir/.claude-plugin/plugin.json')).get('version',''))")
-    local desc=$(python3 -c "import json; print(json.load(open('$plugin_dir/.claude-plugin/plugin.json')).get('description',''))")
+    local name
+    name=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1])).get('name',''))" "$plugin_dir/.claude-plugin/plugin.json")
+    local version
+    version=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1])).get('version',''))" "$plugin_dir/.claude-plugin/plugin.json")
+    local desc
+    desc=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1])).get('description',''))" "$plugin_dir/.claude-plugin/plugin.json")
 
-    [ -z "$name" ] && echo "  WARN: Missing 'name' in plugin.json"
-    [ -z "$version" ] && echo "  WARN: Missing 'version' in plugin.json"
-    [ -z "$desc" ] && echo "  WARN: Missing 'description' in plugin.json"
+    [ -z "$name" ] && { echo "  FAIL: Missing 'name' in plugin.json"; ERRORS=$((ERRORS + 1)); }
+    [ -z "$version" ] && { echo "  FAIL: Missing 'version' in plugin.json"; ERRORS=$((ERRORS + 1)); }
+    [ -z "$desc" ] && { echo "  FAIL: Missing 'description' in plugin.json"; ERRORS=$((ERRORS + 1)); }
 
     # Check commands frontmatter
     if [ -d "$plugin_dir/commands" ]; then
@@ -63,7 +66,7 @@ validate_plugin() {
 
     # Check hooks.json validity
     if [ -f "$plugin_dir/hooks/hooks.json" ]; then
-        if ! python3 -c "import json; json.load(open('$plugin_dir/hooks/hooks.json'))" 2>/dev/null; then
+        if ! python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$plugin_dir/hooks/hooks.json" 2>/dev/null; then
             echo "  FAIL: hooks.json is not valid JSON"
             ERRORS=$((ERRORS + 1))
         fi
@@ -84,7 +87,7 @@ validate_plugin() {
 
 # Validate marketplace.json
 echo "=== Validating marketplace.json ==="
-if ! python3 -c "import json; json.load(open('$REPO_ROOT/.claude-plugin/marketplace.json'))" 2>/dev/null; then
+if ! python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$REPO_ROOT/.claude-plugin/marketplace.json" 2>/dev/null; then
     echo "  FAIL: marketplace.json is not valid JSON"
     exit 1
 fi

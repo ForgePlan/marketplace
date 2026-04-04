@@ -11,14 +11,14 @@ When the user asks about the unified workflow, route to the correct section file
 
 | Need | Section File |
 |------|-------------|
-| How the 3 systems work together | 01-architecture/bounded-contexts.md |
-| Setting up a new project from scratch | 02-setup/greenfield.md |
-| Migrating an existing project | 02-setup/brownfield.md |
-| Custom fields reference (Artifact, Type, Depth, Phase, Sprint, Branch) | 03-fields/custom-fields.md |
-| What to do in situation X (daily scenarios, playbook) | 04-playbook/scenarios.md |
-| Solo developer configuration | 05-configs/solo.md |
-| Small team (2-5) configuration | 05-configs/small-team.md |
-| Medium team (5-15) configuration | 05-configs/medium-team.md |
+| How the 3 systems work together | sections/01-architecture/bounded-contexts.md |
+| Setting up a new project from scratch | sections/02-setup/greenfield.md |
+| Migrating an existing project | sections/02-setup/brownfield.md |
+| Custom fields reference (Artifact, Type, Depth, Phase, Sprint, Branch) | sections/03-fields/custom-fields.md |
+| What to do in situation X (daily scenarios, playbook) | sections/04-playbook/scenarios.md |
+| Solo developer configuration | sections/05-configs/solo.md |
+| Small team (2-5) configuration | sections/05-configs/small-team.md |
+| Medium team (5-15) configuration | sections/05-configs/medium-team.md |
 
 ## How to Use
 

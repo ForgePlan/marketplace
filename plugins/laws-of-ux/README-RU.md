@@ -7,7 +7,7 @@
 ## Быстрый старт
 
 ```bash
-claude plugins add laws-of-ux        # установка из маркетплейса
+/plugin install laws-of-ux@ForgePlan-marketplace   # установка из маркетплейса
 /ux-review                            # сканировать текущий проект
 /ux-law fitts                         # найти любой закон
 ```
