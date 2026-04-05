@@ -34,6 +34,49 @@ jobs:
           done
           [ $errors -eq 0 ] || exit 1
 
+      - name: Check v2 optional fields
+        run: |
+          for f in plugins/*/.claude-plugin/plugin.json; do
+            [ -f "$f" ] || continue
+            plugin=$(dirname "$(dirname "$f")")
+            name=$(basename "$plugin")
+            category=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1])).get('category',''))" "$f" 2>/dev/null || true)
+            [ -z "$category" ] && echo "INFO: $name — no 'category' field (v2 schema)"
+            has_components=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print('yes' if 'components' in d else 'no')" "$f" 2>/dev/null || true)
+            [ "$has_components" = "yes" ] && echo "OK: $name — v2 components field present"
+          done
+
+      - name: Check command collisions
+        run: |
+          python3 << 'SCRIPT'
+          import os, re
+          owners = {}
+          collisions = 0
+          plugins_dir = 'plugins'
+          for plugin in sorted(os.listdir(plugins_dir)):
+              cmd_dir = os.path.join(plugins_dir, plugin, 'commands')
+              if not os.path.isdir(cmd_dir):
+                  continue
+              for fname in sorted(os.listdir(cmd_dir)):
+                  if not fname.endswith('.md'):
+                      continue
+                  fpath = os.path.join(cmd_dir, fname)
+                  with open(fpath) as f:
+                      head = ''.join(f.readline() for _ in range(5))
+                  m = re.search(r'^name:\s*["\']?(.+?)["\']?\s*$', head, re.MULTILINE)
+                  if m:
+                      cmd_name = m.group(1).strip()
+                      if cmd_name in owners:
+                          print(f"WARN: Command '{cmd_name}' in '{plugin}' collides with '{owners[cmd_name]}'")
+                          collisions += 1
+                      else:
+                          owners[cmd_name] = plugin
+          if collisions:
+              print(f"FAIL: {collisions} command collision(s) found")
+              exit(1)
+          print(f"OK: No command collisions ({len(owners)} commands checked)")
+          SCRIPT
+
       - name: Check marketplace.json lists all plugins
         run: |
           python3 << 'SCRIPT'

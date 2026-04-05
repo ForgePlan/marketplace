@@ -44,6 +44,18 @@ validate_plugin() {
     [ -z "$version" ] && { echo "  FAIL: Missing 'version' in plugin.json"; ERRORS=$((ERRORS + 1)); }
     [ -z "$desc" ] && { echo "  FAIL: Missing 'description' in plugin.json"; ERRORS=$((ERRORS + 1)); }
 
+    # Check v2 optional fields (warn if missing, don't fail)
+    local category
+    category=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1])).get('category',''))" "$plugin_dir/.claude-plugin/plugin.json" 2>/dev/null || true)
+    [ -z "$category" ] && echo "  INFO: No 'category' field (v2 schema)"
+
+    # Validate components if present
+    local has_components
+    has_components=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print('yes' if 'components' in d else 'no')" "$plugin_dir/.claude-plugin/plugin.json" 2>/dev/null || true)
+    if [ "$has_components" = "yes" ]; then
+        echo "  OK: v2 components field present"
+    fi
+
     # Check commands frontmatter
     if [ -d "$plugin_dir/commands" ]; then
         for cmd in "$plugin_dir/commands"/*.md; do
@@ -109,6 +121,38 @@ else
         validate_plugin "$plugin_dir"
     done
 fi
+
+# Check for command name collisions across plugins
+echo ""
+echo "=== Checking command collisions ==="
+python3 - "$PLUGINS_DIR" << 'PYEOF'
+import os, re, sys
+plugins_dir = sys.argv[1]
+owners = {}
+collisions = 0
+for plugin in sorted(os.listdir(plugins_dir)):
+    cmd_dir = os.path.join(plugins_dir, plugin, 'commands')
+    if not os.path.isdir(cmd_dir):
+        continue
+    for fname in sorted(os.listdir(cmd_dir)):
+        if not fname.endswith('.md'):
+            continue
+        fpath = os.path.join(cmd_dir, fname)
+        with open(fpath) as f:
+            head = ''.join(f.readline() for _ in range(5))
+        m = re.search(r'^name:\s*["\']?(.+?)["\']?\s*$', head, re.MULTILINE)
+        if m:
+            cmd_name = m.group(1).strip()
+            if cmd_name in owners:
+                print(f"  WARN: Command '{cmd_name}' in '{plugin}' collides with '{owners[cmd_name]}'")
+                collisions += 1
+            else:
+                owners[cmd_name] = plugin
+if collisions:
+    print(f"  {collisions} command collision(s) found")
+else:
+    print(f"  OK: No command collisions ({len(owners)} commands checked)")
+PYEOF
 
 echo ""
 if [ $ERRORS -gt 0 ]; then
