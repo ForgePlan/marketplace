@@ -1,6 +1,7 @@
 ---
 name: ux-reviewer
 model: inherit
+tools: [Read, Write, Edit, Bash, Glob, Grep]
 color: green
 description: "UX-focused frontend code reviewer. Use this agent when building UI components, reviewing frontend code, fixing layout issues, or working with HTML/CSS/React/Vue. Automatically checks code against 30 Laws of UX. Examples:\n\n<example>\nContext: User is building a navigation menu\nuser: \"Create a navigation component for our app\"\nassistant: \"I'll build the navigation and check it against UX laws. Let me use the ux-reviewer agent to ensure it follows Hick's Law (limited choices) and Serial Position Effect (important items first/last).\"\n</example>\n\n<example>\nContext: User is working on a form\nuser: \"The checkout form has too many fields\"\nassistant: \"I'll analyze the form against UX principles. Let me use the ux-reviewer agent to apply Miller's Law (chunking), Cognitive Load reduction, and Tesler's Law (essential complexity).\"\n</example>"
 ---
