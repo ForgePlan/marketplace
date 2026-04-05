@@ -39,6 +39,48 @@
 
 ---
 
+## How It All Fits Together
+
+ForgePlan ecosystem has 4 systems, each at its own level:
+
+```
+Orchestra    — WHERE is the task?  (tracking, sync, inbox)
+Forgeplan    — WHAT to do?         (PRD, evidence, lifecycle)
+FPF          — HOW to think?       (decompose, evaluate, reason)
+SPARC        — HOW to code?        (spec → pseudo → arch → refine → complete)
+```
+
+No overlaps — each system does one thing well, all complement each other.
+
+### Typical workflow
+
+```
+1. forgeplan route "task"      → determines depth (Tactical/Standard/Deep)
+2. forgeplan new prd "task"    → describes WHAT to build
+3. /fpf decompose              → breaks the problem into bounded parts
+4. /sprint Deep                → SPARC phases: Spec → Pseudo → Arch → Refine
+   ↳ agents from installed packs do the work
+5. /audit                      → reviewers check the result
+6. forgeplan new evidence      → documents what was verified
+7. Commit → PR → Merge
+```
+
+### What each plugin provides
+
+| Layer | Plugin | What you get |
+|-------|--------|-------------|
+| **Tracking** | forgeplan-orchestra | `/sync`, `/session`, Orchestra inbox |
+| **Lifecycle** | forgeplan-workflow | `/forge-cycle`, `/forge-audit`, methodology KB |
+| **Thinking** | fpf | `/fpf decompose/evaluate/reason`, 224 FPF sections |
+| **Coding** | agents-sparc | SPARC orchestrator + 4 phase agents |
+| **Universal tools** | dev-toolkit | `/audit`, `/sprint`, `/recall`, safety hooks |
+| **UX** | laws-of-ux | `/ux-review`, `/ux-law`, 30 UX laws |
+| **Agents** | agents-core/domain/pro/github | 55 specialized agents |
+
+You can install any subset — each plugin works independently.
+
+---
+
 ## Quick Reference
 
 | Command | Plugin | What it does |

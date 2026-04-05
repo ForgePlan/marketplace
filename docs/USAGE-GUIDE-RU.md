@@ -39,6 +39,48 @@
 
 ---
 
+## Как всё устроено
+
+Экосистема ForgePlan — 4 системы, каждая на своём уровне:
+
+```
+Orchestra    — ГДЕ задача?      (трекинг, синхронизация, inbox)
+Forgeplan    — ЧТО делать?      (PRD, evidence, lifecycle)
+FPF          — КАК думать?      (decompose, evaluate, reason)
+SPARC        — КАК кодить?      (spec → pseudo → arch → refine → complete)
+```
+
+Нет пересечений — каждая система делает одно дело хорошо, все дополняют друг друга.
+
+### Типичный workflow
+
+```
+1. forgeplan route "задача"    → определяет глубину (Tactical/Standard/Deep)
+2. forgeplan new prd "задача"  → описывает ЧТО строить
+3. /fpf decompose              → разбивает проблему на части
+4. /sprint Deep                → SPARC фазы: Spec → Pseudo → Arch → Refine
+   ↳ агенты из установленных пакетов делают работу
+5. /audit                      → ревьюеры проверяют результат
+6. forgeplan new evidence      → документирует что проверено
+7. Commit → PR → Merge
+```
+
+### Что даёт каждый плагин
+
+| Уровень | Плагин | Что получаете |
+|---------|--------|-------------|
+| **Трекинг** | forgeplan-orchestra | `/sync`, `/session`, Orchestra inbox |
+| **Lifecycle** | forgeplan-workflow | `/forge-cycle`, `/forge-audit`, methodology KB |
+| **Мышление** | fpf | `/fpf decompose/evaluate/reason`, 224 секции FPF |
+| **Кодинг** | agents-sparc | SPARC оркестратор + 4 фазовых агента |
+| **Инструменты** | dev-toolkit | `/audit`, `/sprint`, `/recall`, safety hooks |
+| **UX** | laws-of-ux | `/ux-review`, `/ux-law`, 30 законов UX |
+| **Агенты** | agents-core/domain/pro/github | 55 специализированных агентов |
+
+Можно установить любой набор — каждый плагин работает независимо.
+
+---
+
 ## Шпаргалка
 
 | Команда | Плагин | Что делает |
