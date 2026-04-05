@@ -39,6 +39,13 @@ Summarize the scope of changes (files, lines, areas affected).
 
 Use subagents to run these 4 reviews IN PARALLEL. Each agent receives the detected language, framework, and the changed files/code as context.
 
+**Agent selection**: If agent plugins are installed, prefer specialized agents:
+- Logic → use `code-reviewer` (agents-core) if available
+- Architecture → use `architect-reviewer` (agents-pro) if available
+- Security → use `security-expert` (agents-pro) if available
+- Tests → use `tester` (agents-core) if available
+Otherwise spawn generic inline sub-agents as described below.
+
 ### Agent 1: Logic Review
 Analyze the code for:
 - **Correctness**: Does the logic do what it claims? Are there off-by-one errors?
