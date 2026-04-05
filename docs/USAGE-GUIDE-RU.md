@@ -237,6 +237,65 @@
 
 ---
 
+## Агенты-советники
+
+Каждый из 5 основных плагинов включает фонового агента-советника, который активируется автоматически:
+
+| Плагин | Советник | Что делает |
+|--------|----------|-----------|
+| dev-toolkit | `dev-advisor` | Предлагает `/audit` после изменений, напоминает о тестах, предупреждает о безопасности, рекомендует SPARC |
+| forgeplan-workflow | `forge-advisor` | Предлагает `forgeplan route` перед кодингом, evidence после реализации, SPARC для Deep задач |
+| fpf | `fpf-advisor` | Предлагает `/fpf decompose`, `evaluate`, `reason` для сложных решений |
+| laws-of-ux | `ux-reviewer` | Проверяет фронтенд-код по 30 законам UX при изменении UI-файлов |
+| forgeplan-orchestra | `orchestra-advisor` | Предлагает синхронизацию с Orchestra после `forgeplan activate/new` |
+
+Советников не нужно вызывать — они наблюдают за работой и предлагают действия когда это уместно.
+
+---
+
+## Пакеты агентов
+
+5 плагинов с агентами предоставляют 55 специализированных агентов:
+
+| Пакет | Установка | Агентов | Назначение |
+|-------|-----------|:-------:|-----------|
+| **agents-core** | `/plugin install agents-core@ForgePlan-marketplace` | 11 | Ядро: debugger, code-reviewer, planner, tester, coder, researcher, reviewer |
+| **agents-domain** | `/plugin install agents-domain@ForgePlan-marketplace` | 11 | Языки: TypeScript, Go, React, Next.js, Electron, mobile |
+| **agents-pro** | `/plugin install agents-pro@ForgePlan-marketplace` | 21 | Security, архитектура, DDD, creative, research, инфраструктура |
+| **agents-github** | `/plugin install agents-github@ForgePlan-marketplace` | 7 | GitHub: PR, issues, релизы, multi-repo, project boards, workflows |
+| **agents-sparc** | `/plugin install agents-sparc@ForgePlan-marketplace` | 5 | SPARC методология: оркестратор + 4 фазовых специалиста |
+
+---
+
+## Как работают агенты
+
+Claude вызывает агентов автоматически когда задача соответствует их экспертизе. Можно также запросить конкретного агента:
+
+```
+"Используй security-expert для проверки этого кода"
+"Запусти typescript-pro для рефакторинга TypeScript"
+"Используй debugger для этой ошибки"
+```
+
+### SPARC Методология
+
+Когда `/sprint` определяет задачу как **Deep** и установлен `agents-sparc`, используются фазы SPARC:
+
+1. **Specification** — требования и критерии приёмки
+2. **Pseudocode** — алгоритмы и структуры данных
+3. **Architecture** — дизайн системы и файловая структура
+4. **Refinement** — TDD и реализация
+5. **Completion** — интеграция и PR
+
+Каждая фаза имеет **quality gate**. Следующая фаза получает полный вывод всех предыдущих — это предотвращает несогласованности.
+
+Три режима исполнения (определяются автоматически):
+- **Mode A** (Sequential): agents-sparc установлен → фазы по очереди
+- **Mode B** (Team-up): TeamCreate доступен → фазы как команда с зависимостями
+- **Mode C** (Inline): нет плагинов → Claude выполняет фазы сам
+
+---
+
 ## Решение проблем
 
 ### Плагины не загружаются
