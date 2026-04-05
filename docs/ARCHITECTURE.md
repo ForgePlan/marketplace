@@ -1,3 +1,5 @@
+[English](ARCHITECTURE.md) | [Русский](ARCHITECTURE-RU.md)
+
 # ForgePlan Architecture: 4 Systems, 4 Layers
 
 ## Overview
