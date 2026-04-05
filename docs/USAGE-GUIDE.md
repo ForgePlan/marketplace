@@ -241,60 +241,6 @@ Hooks cannot be disabled per-session. To disable a plugin's hooks, uninstall the
 
 ## Advisor Agents
 
-Each of the 5 original plugins includes a background advisor agent:
-
-| Plugin | Advisor | What it does |
-|--------|---------|-------------|
-| dev-toolkit | dev-advisor | Suggests /audit after changes, test reminders, security warnings, SPARC for complex tasks |
-| forgeplan-workflow | forge-advisor | Suggests forgeplan route before coding, evidence after implementation, SPARC for Deep tasks |
-| fpf | fpf-advisor | Suggests /fpf decompose, evaluate, reason for complex decisions |
-| laws-of-ux | ux-reviewer | Reviews frontend code against 30 Laws of UX |
-| forgeplan-orchestra | orchestra-advisor | Suggests Orchestra sync after forgeplan actions |
-
-Advisors activate automatically — you don't need to invoke them. They observe your work and offer suggestions when relevant.
-
----
-
-## Agent Packs
-
-5 agent plugins provide 55 specialized agents:
-
-| Pack | Agents | Use case |
-|------|:------:|---------|
-| agents-core (11) | debugger, code-reviewer, error-detective, performance-engineer, production-validator, coder, planner, researcher, reviewer, tester, tdd-london | Core development workflow |
-| agents-domain (11) | typescript-pro, type-auditor, golang-pro, frontend-dev, nextjs-dev, electron-pro, embedded-systems, fullstack-dev, game-dev, mobile-dev, websocket-engineer | Language/framework specialists |
-| agents-pro (21) | security-expert, injection-analyst, pii-detector, claims-authorizer, architect-reviewer, microservices-architect, ddd-domain-expert, adr-architect, distributed-systems-expert, goal-planner, ui-designer, prompt-engineer, documentation-engineer, api-docs-engineer, research-analyst, search-specialist, ml-developer, code-analyzer, memory-specialist, mcp-developer, platform-engineer | Professional specialists |
-| agents-github (7) | pr-manager, issue-manager, release-manager, multi-repo-manager, project-board-manager, workflow-engineer, repo-architect | GitHub operations |
-| agents-sparc (5) | sparc-orchestrator, specification, pseudocode, architecture, refinement | SPARC development methodology |
-
-Install: `/plugin install agents-core@ForgePlan-marketplace`
-
----
-
-## How Agents Work
-
-Agents are invoked automatically by Claude when a task matches their expertise. You can also request a specific agent:
-
-```
-"Use the security-expert agent to review this code"
-"Spawn the typescript-pro agent for this TypeScript refactoring"
-```
-
-### SPARC Methodology
-
-When /sprint detects a Deep task and agents-sparc is installed, it uses SPARC phases:
-1. Specification — requirements and acceptance criteria
-2. Pseudocode — algorithms and data structures
-3. Architecture — system design and file structure
-4. Refinement — TDD and implementation
-5. Completion — integration and PR
-
-Each phase has a quality gate. The next phase receives FULL output of all previous phases.
-
----
-
-## Advisor Agents
-
 Each of the 5 original plugins includes a background advisor agent that activates automatically:
 
 | Plugin | Advisor | What it does |
