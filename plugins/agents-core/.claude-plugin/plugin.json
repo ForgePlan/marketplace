@@ -1,0 +1,19 @@
+{
+  "name": "agents-core",
+  "version": "1.0.0",
+  "description": "Core development agents: debugger, code reviewer, error detective, performance engineer, production validator, plus a complete dev team (coder, planner, researcher, reviewer, tester, TDD London School).",
+  "author": {"name": "ForgePlan"},
+  "homepage": "https://github.com/ForgePlan/marketplace",
+  "repository": "https://github.com/ForgePlan/marketplace",
+  "license": "MIT",
+  "keywords": ["agents", "core", "debugging", "code-review", "testing", "dev-team"],
+  "category": "developer-tools",
+  "requires": {"cli": [], "mcp": [], "plugins": []},
+  "supersedes": {},
+  "components": {
+    "commands": [],
+    "agents": ["debugger", "code-reviewer", "error-detective", "performance-engineer", "production-validator", "coder", "planner", "researcher", "reviewer", "tester", "tdd-london"],
+    "skills": [],
+    "hooks": []
+  }
+}
