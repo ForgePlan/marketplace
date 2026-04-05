@@ -4,20 +4,33 @@
 
 Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/ForgePlan) — UX, workflow, engineering, and developer tools.
 
-**10 plugins** | **13 commands** | **60 agents** | **4 hook configs** | **4 knowledge bases** | [Usage Guide](docs/USAGE-GUIDE.md)
+**10 plugins** | **13 commands** | **60 agents** | **4 hook configs** | **4 knowledge bases** | [Usage Guide](docs/USAGE-GUIDE.md) | [Architecture](docs/ARCHITECTURE.md)
 
 ## Quick Start
 
 ```bash
-# Add the ForgePlan marketplace
+# 1. Add the ForgePlan marketplace
 /plugin marketplace add ForgePlan/marketplace
 
-# Browse available plugins
-/plugin
+# 2. Install your first plugin (works with any project, no dependencies)
+/plugin install dev-toolkit@ForgePlan-marketplace
 
-# Install a specific plugin
-/plugin install laws-of-ux@ForgePlan-marketplace
+# 3. Reload to activate
+/reload-plugins
+
+# 4. Try it — run a code audit
+/audit
 ```
+
+## Where to Start?
+
+| Your role | Install these | Why |
+|-----------|--------------|-----|
+| Any developer | dev-toolkit + agents-core | Universal tools |
+| Frontend | + laws-of-ux + agents-domain | UX + framework agents |
+| Architect | + fpf + agents-pro + agents-sparc | Thinking + SPARC |
+| Forgeplan user | + forgeplan-workflow + forgeplan-orchestra | Full lifecycle |
+| Everything | All 10 plugins | Complete ecosystem |
 
 ## Available Plugins
 

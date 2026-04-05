@@ -5,6 +5,38 @@ All notable changes to the ForgePlan Marketplace will be documented in this file
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-04-04
+
+### Added
+- Agent Army: 55 agents across 5 packs (agents-core, agents-domain, agents-pro, agents-github, agents-sparc)
+- SPARC development methodology integration with /sprint Deep tasks
+- ARCHITECTURE.md and ARCHITECTURE-RU.md documentation (4 Systems, 4 Layers)
+- Bilingual architecture docs with cross-links
+
+### Fixed
+- Duplicate sections in USAGE-GUIDE.md (Advisor Agents, Agent Packs, How Agents Work appeared twice)
+- README.md Quick Start updated with step-by-step flow
+- Added "Where to Start?" role-based guide to README.md
+- Architecture link added to README header stats
+
+## [1.4.0] - 2026-04-04
+
+### Added
+- plugin.json v2 schema support
+- Collision detection for overlapping plugin commands
+
+### Changed
+- Marketplace catalog updated with v2 schema fields
+
+## [1.3.1] - 2026-04-04
+
+### Changed
+- USAGE-GUIDE.md expanded with Advisor Agents, Agent Packs, How Agents Work, SPARC Methodology sections
+- USAGE-GUIDE-RU.md expanded with matching Russian translations
+
+### Fixed
+- Small formatting fixes in usage guides
+
 ## [1.3.0] - 2026-04-04
 
 ### Added
