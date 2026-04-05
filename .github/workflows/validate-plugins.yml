@@ -2,14 +2,17 @@ name: Validate Plugins
 
 on:
   pull_request:
+    branches: [main, dev]
     paths:
       - 'plugins/**'
       - '.claude-plugin/marketplace.json'
+      - '.github/workflows/**'
   push:
-    branches: [main]
+    branches: [main, dev]
     paths:
       - 'plugins/**'
       - '.claude-plugin/marketplace.json'
+      - '.github/workflows/**'
 
 jobs:
   validate:
