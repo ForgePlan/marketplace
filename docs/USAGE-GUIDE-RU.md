@@ -1,4 +1,4 @@
-[English](USAGE-GUIDE.md) | [Русский](USAGE-GUIDE-RU.md)
+[English](USAGE-GUIDE.md) | [Русский](USAGE-GUIDE-RU.md) | [Архитектура](ARCHITECTURE.md)
 
 # ForgePlan Marketplace — Руководство
 
