@@ -1,0 +1,25 @@
+{
+  "name": "agents-sparc",
+  "version": "1.0.0",
+  "description": "SPARC development methodology agents: orchestrator with quality gates, plus 4 phase specialists (specification, pseudocode, architecture, refinement/TDD).",
+  "author": {"name": "ForgePlan"},
+  "homepage": "https://github.com/ForgePlan/marketplace",
+  "repository": "https://github.com/ForgePlan/marketplace",
+  "license": "MIT",
+  "keywords": ["agents", "sparc", "methodology", "tdd", "architecture", "specification", "quality-gates"],
+  "category": "workflow",
+  "requires": {"cli": [], "mcp": [], "plugins": []},
+  "supersedes": {},
+  "components": {
+    "commands": [],
+    "agents": [
+      "sparc-orchestrator",
+      "specification",
+      "pseudocode",
+      "architecture",
+      "refinement"
+    ],
+    "skills": [],
+    "hooks": []
+  }
+}

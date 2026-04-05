@@ -1,0 +1,50 @@
+{
+  "name": "agents-domain",
+  "version": "1.0.0",
+  "description": "Domain-specific language and framework specialist agents. Provides expert-level guidance for TypeScript, Go, React, Next.js, Electron, embedded systems, fullstack, game dev, mobile, and WebSocket engineering.",
+  "author": {
+    "name": "ForgePlan"
+  },
+  "homepage": "https://github.com/ForgePlan/marketplace",
+  "repository": "https://github.com/ForgePlan/marketplace",
+  "license": "MIT",
+  "keywords": [
+    "agents",
+    "domain",
+    "typescript",
+    "golang",
+    "frontend",
+    "nextjs",
+    "electron",
+    "embedded",
+    "fullstack",
+    "game-dev",
+    "mobile",
+    "websocket"
+  ],
+  "category": "developer-tools",
+  "requires": {
+    "cli": [],
+    "mcp": [],
+    "plugins": []
+  },
+  "supersedes": {},
+  "components": {
+    "commands": [],
+    "agents": [
+      "typescript-pro",
+      "typescript-type-auditor",
+      "golang-pro",
+      "frontend-developer",
+      "nextjs-developer",
+      "electron-pro",
+      "embedded-systems",
+      "fullstack-developer",
+      "game-developer",
+      "mobile-app-developer",
+      "websocket-engineer"
+    ],
+    "skills": [],
+    "hooks": []
+  }
+}

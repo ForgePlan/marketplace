@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.5.0"
+    "version": "1.6.0"
   },
   "plugins": [
     {
@@ -109,6 +109,51 @@
         "unified-workflow",
         "session"
       ]
+    },
+    {
+      "name": "agents-core",
+      "source": "./plugins/agents-core",
+      "description": "Core development agents: debugger, code reviewer, error detective, performance engineer, production validator, plus complete dev team (coder, planner, researcher, reviewer, tester, TDD).",
+      "version": "1.0.0",
+      "author": {"name": "ForgePlan"},
+      "homepage": "https://github.com/ForgePlan/marketplace",
+      "license": "MIT"
+    },
+    {
+      "name": "agents-domain",
+      "source": "./plugins/agents-domain",
+      "description": "Language and framework specialist agents: TypeScript, Go, React, Next.js, Electron, embedded systems, mobile, WebSocket, and more.",
+      "version": "1.0.0",
+      "author": {"name": "ForgePlan"},
+      "homepage": "https://github.com/ForgePlan/marketplace",
+      "license": "MIT"
+    },
+    {
+      "name": "agents-pro",
+      "source": "./plugins/agents-pro",
+      "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, and infrastructure engineers.",
+      "version": "1.0.0",
+      "author": {"name": "ForgePlan"},
+      "homepage": "https://github.com/ForgePlan/marketplace",
+      "license": "MIT"
+    },
+    {
+      "name": "agents-github",
+      "source": "./plugins/agents-github",
+      "description": "GitHub operations agents: PR management, issue tracking, release automation, multi-repo coordination, project boards, workflow engineering.",
+      "version": "1.0.0",
+      "author": {"name": "ForgePlan"},
+      "homepage": "https://github.com/ForgePlan/marketplace",
+      "license": "MIT"
+    },
+    {
+      "name": "agents-sparc",
+      "source": "./plugins/agents-sparc",
+      "description": "SPARC development methodology: orchestrator with quality gates plus 4 phase specialists (specification, pseudocode, architecture, refinement).",
+      "version": "1.0.0",
+      "author": {"name": "ForgePlan"},
+      "homepage": "https://github.com/ForgePlan/marketplace",
+      "license": "MIT"
     }
   ]
 }

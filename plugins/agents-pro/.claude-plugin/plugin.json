@@ -1,0 +1,41 @@
+{
+  "name": "agents-pro",
+  "version": "1.0.0",
+  "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, and infrastructure engineers.",
+  "author": {"name": "ForgePlan"},
+  "homepage": "https://github.com/ForgePlan/marketplace",
+  "repository": "https://github.com/ForgePlan/marketplace",
+  "license": "MIT",
+  "keywords": ["agents", "security", "architecture", "creative", "research", "infrastructure", "professional"],
+  "category": "developer-tools",
+  "requires": {"cli": [], "mcp": [], "plugins": []},
+  "supersedes": {},
+  "components": {
+    "commands": [],
+    "agents": [
+      "security-expert",
+      "claims-authorizer",
+      "injection-analyst",
+      "pii-detector",
+      "adr-architect",
+      "architect-reviewer",
+      "ddd-domain-expert",
+      "distributed-systems-expert",
+      "goal-planner",
+      "microservices-architect",
+      "api-docs-engineer",
+      "documentation-engineer",
+      "prompt-engineer",
+      "ui-designer",
+      "code-analyzer",
+      "memory-specialist",
+      "ml-developer",
+      "research-analyst",
+      "search-specialist",
+      "mcp-developer",
+      "platform-engineer"
+    ],
+    "skills": [],
+    "hooks": []
+  }
+}

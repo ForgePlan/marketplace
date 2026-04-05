@@ -1,0 +1,27 @@
+{
+  "name": "agents-github",
+  "version": "1.0.0",
+  "description": "GitHub operations agents: PR management, issue tracking, release automation, multi-repo coordination, project boards, workflow engineering, and repo architecture.",
+  "author": {"name": "ForgePlan"},
+  "homepage": "https://github.com/ForgePlan/marketplace",
+  "repository": "https://github.com/ForgePlan/marketplace",
+  "license": "MIT",
+  "keywords": ["agents", "github", "pr", "issues", "releases", "workflows", "ci-cd", "automation"],
+  "category": "developer-tools",
+  "requires": {"cli": [{"name": "gh", "optional": false}], "mcp": [], "plugins": []},
+  "supersedes": {},
+  "components": {
+    "commands": [],
+    "agents": [
+      "pr-manager",
+      "issue-manager",
+      "release-manager",
+      "multi-repo-manager",
+      "project-board-manager",
+      "workflow-engineer",
+      "repo-architect"
+    ],
+    "skills": [],
+    "hooks": []
+  }
+}

@@ -4,7 +4,7 @@
 
 Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/ForgePlan) — UX, workflow, engineering, and developer tools.
 
-**5 plugins** | **13 commands** | **5 agents** | **4 hook configs** | **4 knowledge bases** | [Usage Guide](docs/USAGE-GUIDE.md)
+**10 plugins** | **13 commands** | **60 agents** | **4 hook configs** | **4 knowledge bases** | [Usage Guide](docs/USAGE-GUIDE.md)
 
 ## Quick Start
 
@@ -131,6 +131,52 @@ One command `/fpf` routes to the right thinking mode — decompose, evaluate, re
 
 ```bash
 /plugin install fpf@ForgePlan-marketplace
+```
+
+---
+
+## Agent Packs
+
+Five specialized agent packs providing 55 ready-to-use agents for Claude Code.
+
+### [agents-core](plugins/agents-core/)
+
+> Core development agents: debugger, code reviewer, error detective, performance engineer, production validator, plus complete dev team (coder, planner, researcher, reviewer, tester, TDD).
+
+```bash
+/plugin install agents-core@ForgePlan-marketplace
+```
+
+### [agents-domain](plugins/agents-domain/)
+
+> Language and framework specialist agents: TypeScript, Go, React, Next.js, Electron, embedded systems, mobile, WebSocket, and more.
+
+```bash
+/plugin install agents-domain@ForgePlan-marketplace
+```
+
+### [agents-pro](plugins/agents-pro/)
+
+> Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, and infrastructure engineers.
+
+```bash
+/plugin install agents-pro@ForgePlan-marketplace
+```
+
+### [agents-github](plugins/agents-github/)
+
+> GitHub operations agents: PR management, issue tracking, release automation, multi-repo coordination, project boards, workflow engineering.
+
+```bash
+/plugin install agents-github@ForgePlan-marketplace
+```
+
+### [agents-sparc](plugins/agents-sparc/)
+
+> SPARC development methodology: orchestrator with quality gates plus 4 phase specialists (specification, pseudocode, architecture, refinement).
+
+```bash
+/plugin install agents-sparc@ForgePlan-marketplace
 ```
 
 ---

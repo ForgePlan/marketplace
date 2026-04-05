@@ -85,6 +85,33 @@ Rules:
 - Final wave = integration, tests, cleanup
 - **One file = one agent** — never two agents editing the same file
 
+### Deep Scale — SPARC Methodology (if agents-sparc installed)
+
+When scale is Deep and the `agents-sparc` plugin is installed, structure execution as SPARC phases instead of generic waves:
+
+1. **Specification** → spawn `specification` agent: requirements, acceptance criteria, constraints
+   - Quality gate: all requirements testable
+2. **Pseudocode** → spawn `pseudocode` agent: algorithm design, data structures, complexity
+   - Quality gate: algorithm handles all spec edge cases
+3. **Architecture** → spawn `architecture` agent: system design, Mermaid diagram, file structure
+   - Quality gate: components match requirements
+4. **Refinement** → spawn `refinement` agent: TDD red-green-refactor, implement, optimize
+   - Quality gate: tests pass, coverage > 80%
+5. **Completion** → integration test, docs update, PR ready
+
+Use `sparc-orchestrator` agent to coordinate if available. Fall back to standard wave-based execution if agents-sparc is not installed.
+
+### Agent Recommendations by Category
+
+When spawning agents, prefer specialized agents from installed plugins:
+- **Code review**: use `code-reviewer` (agents-core) over generic inline sub-agent
+- **Security**: use `security-expert` (agents-pro) for security review wave
+- **Testing**: use `tester` or `tdd-london` (agents-core) for test writing
+- **TypeScript**: use `typescript-pro` (agents-domain) for TS-specific work
+- **Architecture**: use `architect-reviewer` (agents-pro) for arch review
+
+If agent plugins are not installed, fall back to inline sub-agents as before.
+
 Present plan, wait for approval.
 
 ## Step 6: Execute Wave by Wave
