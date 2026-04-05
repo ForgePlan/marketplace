@@ -19,7 +19,8 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Validate marketplace.json
-        run: python3 -c "import json, sys; json.load(open(sys.argv[1])); print('marketplace.json: OK')" ".claude-plugin/marketplace.json"
+        run: |
+          python3 -c "import json, sys; json.load(open(sys.argv[1])); print('marketplace.json: OK')" ".claude-plugin/marketplace.json"
 
       - name: Validate all plugin.json files
         run: |
