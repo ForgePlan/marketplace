@@ -4,7 +4,7 @@
 
 Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/ForgePlan) — UX, workflow, engineering, and developer tools.
 
-**10 plugins** | **13 commands** | **60+ agents** | **4 hook configs** | **4 knowledge bases** | [Usage Guide](docs/USAGE-GUIDE.md)
+**10 plugins** | **13 commands** | **60 agents** | **4 hook configs** | **4 knowledge bases** | [Usage Guide](docs/USAGE-GUIDE.md)
 
 ## Quick Start
 
@@ -137,7 +137,7 @@ One command `/fpf` routes to the right thinking mode — decompose, evaluate, re
 
 ## Agent Packs
 
-Five specialized agent packs providing 55+ ready-to-use agents for Claude Code.
+Five specialized agent packs providing 55 ready-to-use agents for Claude Code.
 
 ### [agents-core](plugins/agents-core/)
 

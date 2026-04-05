@@ -5,7 +5,7 @@ Domain-specific language and framework specialist agents for Claude Code. Each a
 ## Install
 
 ```bash
-/plugin install agents-domain@forgeplan-marketplace
+/plugin install agents-domain@ForgePlan-marketplace
 ```
 
 ## Agents

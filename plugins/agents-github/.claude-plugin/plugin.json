@@ -8,7 +8,7 @@
   "license": "MIT",
   "keywords": ["agents", "github", "pr", "issues", "releases", "workflows", "ci-cd", "automation"],
   "category": "developer-tools",
-  "requires": {"cli": ["gh"], "mcp": [], "plugins": []},
+  "requires": {"cli": [{"name": "gh", "optional": false}], "mcp": [], "plugins": []},
   "supersedes": {},
   "components": {
     "commands": [],
