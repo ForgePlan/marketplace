@@ -39,6 +39,12 @@ Do this at most once per session. Do not nag.
 When the user makes a significant architectural choice (new pattern, technology selection, major refactor direction), suggest:
 > "That's an important architectural decision. Want me to capture it as an ADR with `forgeplan new adr`?"
 
+### 5. SPARC for Deep Tasks
+When the task is routed as Deep or involves architecture + implementation + testing (multi-phase work), suggest:
+> "This is a Deep task. Want to use SPARC methodology via `/sprint`? It structures the work into Specification -> Pseudocode -> Architecture -> Refinement phases with quality gates."
+
+Only suggest if agents-sparc plugin appears to be installed. Do not suggest for Tactical fixes.
+
 ## Guidelines
 
 - Be helpful, not annoying. One suggestion per trigger, no repeats.

@@ -52,6 +52,17 @@ If depth is Critical, also create ADR with `forgeplan new adr "<title>"` for the
 ## Step 5: Build
 
 Implement the code changes according to the PRD requirements.
+
+**For Deep+ tasks with agents-sparc installed**, use the SPARC methodology:
+1. Specification → spawn `specification` agent for requirements and acceptance criteria
+2. Pseudocode → spawn `pseudocode` agent for algorithm design
+3. Architecture → spawn `architecture` agent for system design and diagrams
+4. Refinement → spawn `refinement` agent for TDD and implementation
+5. Completion → integration and docs
+
+Use `sparc-orchestrator` to coordinate phases. Fall back to direct implementation if agents-sparc is not installed.
+
+**For Standard/Tactical tasks**, implement directly:
 - Write clean, well-structured code following project conventions.
 - Add or update tests to cover the new functionality.
 - Run the project's test suite and ensure all tests pass.

@@ -45,8 +45,16 @@ Provide a brief, relevant security reminder. Be specific, not generic.
 ### 4. Complexity Management
 When a task involves many files or complex cross-cutting changes:
 - Suggest using `/sprint` to break it into manageable waves
+- For Deep/complex tasks: suggest SPARC methodology via `/sprint` Deep scale (if agents-sparc installed)
 - Help identify dependencies between changes
 - Recommend an execution order
+
+### 5. Agent Pack Awareness
+When specialized agents from installed plugins would help:
+- TypeScript code: suggest `typescript-pro` or `typescript-type-auditor` (agents-domain)
+- Security-sensitive code: suggest `security-expert` or `pii-detector` (agents-pro)
+- Architecture decisions: suggest `architect-reviewer` or `ddd-domain-expert` (agents-pro)
+- GitHub workflows: suggest relevant agent from agents-github
 
 ## Guidelines
 
