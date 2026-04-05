@@ -85,21 +85,71 @@ Rules:
 - Final wave = integration, tests, cleanup
 - **One file = one agent** — never two agents editing the same file
 
-### Deep Scale — SPARC Methodology (if agents-sparc installed)
+### Deep Scale — SPARC Methodology
 
-When scale is Deep and the `agents-sparc` plugin is installed, structure execution as SPARC phases instead of generic waves:
+When scale is Deep, auto-detect the best available execution mode:
 
-1. **Specification** → spawn `specification` agent: requirements, acceptance criteria, constraints
-   - Quality gate: all requirements testable
-2. **Pseudocode** → spawn `pseudocode` agent: algorithm design, data structures, complexity
-   - Quality gate: algorithm handles all spec edge cases
-3. **Architecture** → spawn `architecture` agent: system design, Mermaid diagram, file structure
-   - Quality gate: components match requirements
-4. **Refinement** → spawn `refinement` agent: TDD red-green-refactor, implement, optimize
+**Mode detection:**
+- If `TeamCreate` available AND `agents-sparc` installed → **Mode B: Team-up Pipeline**
+- If `agents-sparc` installed → **Mode A: Sequential Pipeline**
+- Otherwise → **Mode C: Inline** (execute phases yourself)
+
+Tell the user: "Using SPARC Mode [A/B/C]"
+
+---
+
+> **CRITICAL — SEQUENTIAL HANDOFF RULE:**
+> Each SPARC phase MUST receive the FULL accumulated output of ALL previous phases.
+> NEVER spawn the next phase without passing previous context.
+> Without this, agents produce INCONSISTENT results (proven by testing).
+
+---
+
+**SPARC Phases (all modes):**
+
+1. **Specification** → requirements, acceptance criteria, constraints
+   - Quality gate: all requirements testable, no ambiguity
+2. **Pseudocode** → algorithm design, data structures, complexity
+   - Quality gate: algorithm handles ALL spec edge cases
+3. **Architecture** → system design, Mermaid diagram, file structure
+   - Quality gate: components match requirements, no contradictions with spec
+4. **Refinement** → TDD red-green-refactor, implement, optimize
    - Quality gate: tests pass, coverage > 80%
 5. **Completion** → integration test, docs update, PR ready
 
-Use `sparc-orchestrator` agent to coordinate if available. Fall back to standard wave-based execution if agents-sparc is not installed.
+**Mode A (Sequential Pipeline):**
+```
+You spawn each agent one at a time:
+1. Spawn `specification` agent → receive output → CHECK quality gate
+2. Pass spec output in prompt to `pseudocode` agent → receive → CHECK
+3. Pass spec+pseudo in prompt to `architecture` agent → receive → CHECK
+4. Pass ALL accumulated output to `refinement` agent → receive → CHECK
+5. Completion: you integrate and finalize
+```
+
+**Mode B (Team-up Pipeline):**
+```
+TeamCreate → sparc-orchestrator as team lead
+Tasks with dependencies:
+  #1 Spec          → no blockers
+  #2 Pseudo        → blockedBy: [#1]
+  #3 Architecture  → blockedBy: [#1, #2]
+  #4 Security      → blockedBy: [#1, #3] (parallel with #5)
+  #5 Refinement    → blockedBy: [#1, #2, #3]
+  #6 Completion    → blockedBy: [#4, #5]
+
+CRITICAL: Orchestrator MUST pass accumulated context via SendMessage when unblocking.
+NEVER assign a blocked task. NEVER let an agent start without previous phase output.
+```
+
+**Mode C (Inline — no plugins):**
+```
+Execute all 5 phases yourself sequentially:
+"Acting as specification agent: [produce requirements]"
+"Acting as pseudocode agent: [produce algorithms based on spec above]"
+"Acting as architecture agent: [produce design based on spec+pseudo above]"
+"Acting as refinement agent: [TDD + implement based on everything above]"
+```
 
 ### Agent Recommendations by Category
 

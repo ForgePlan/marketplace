@@ -66,26 +66,56 @@ The orchestrator uses a **queen-worker model**:
 
 ## Orchestration Protocol
 
-1. Receive the task and assess scope
-2. Run each phase sequentially (unless phases can safely overlap)
-3. At each phase boundary, verify the quality gate before proceeding
-4. If a gate fails, return to the current phase agent with specific feedback
-5. After Completion, summarize outcomes and any lessons learned
+> **CRITICAL — THE #1 RULE THAT DETERMINES OUTPUT QUALITY:**
+> Every phase MUST receive the FULL accumulated output of ALL previous phases.
+> Phase 2 gets Phase 1 output. Phase 3 gets Phase 1+2 output. Phase 4 gets Phase 1+2+3 output.
+> NEVER let a phase start without this context. This is non-negotiable.
+> Violation of this rule produces INCONSISTENT output (tested and proven).
 
-## Delegation Pattern
+### Step-by-step protocol:
 
-For each phase, delegate with clear context:
+1. Receive task, assess scope
+2. **Phase 1 (Spec)**: delegate to `specification` agent. Collect output.
+3. **Quality gate check**: Are all requirements testable? If NO → send back with feedback.
+4. **Phase 2 (Pseudo)**: delegate to `pseudocode` agent. **MUST include Phase 1 output in prompt.**
+5. **Quality gate check**: Do algorithms cover all spec edge cases? If NO → send back.
+6. **Phase 3 (Arch)**: delegate to `architecture` agent. **MUST include Phase 1+2 output.**
+7. **Quality gate check**: Does architecture match spec? Any contradictions? If YES → fix.
+8. **Phase 4 (Refine)**: delegate to `refinement` agent. **MUST include Phase 1+2+3 output.**
+9. **Quality gate check**: Tests pass? Coverage > 80%? If NO → iterate.
+10. **Completion**: integrate, validate, summarize.
 
-- **What**: Specific deliverables expected
-- **From**: Outputs from the previous phase
-- **Gate**: Quality criteria that must be satisfied
-- **Constraints**: Time, scope, or technical boundaries
+### Context accumulation (CRITICAL):
 
-## When to Intervene
+```
+Phase 1 prompt: "Task: {task}"
+Phase 2 prompt: "Task: {task}\n\nPhase 1 (Spec) output:\n{spec_output}"
+Phase 3 prompt: "Task: {task}\n\nPhase 1 output:\n{spec}\n\nPhase 2 output:\n{pseudo}"
+Phase 4 prompt: "Task: {task}\n\nPhase 1:\n{spec}\n\nPhase 2:\n{pseudo}\n\nPhase 3:\n{arch}"
+```
 
-- A phase agent produces ambiguous or incomplete output
-- Quality gate criteria are not met after two attempts
-- Cross-phase dependencies create conflicts
-- Scope creep is detected (requirements changing mid-cycle)
+### When using TeamCreate (Mode B):
 
-Focus on systematic progression, clear communication between phases, and strict quality gate enforcement. Each phase builds on the previous one -- ensure that chain is never broken.
+> **CRITICAL — TASK DEPENDENCIES:**
+> Create ALL tasks upfront with blockedBy:
+> - Task #1 (Spec): no blockers
+> - Task #2 (Pseudo): blockedBy [#1]
+> - Task #3 (Arch): blockedBy [#1, #2]
+> - Task #4 (Security): blockedBy [#1, #3]
+> - Task #5 (Refine): blockedBy [#1, #2, #3]
+> - Task #6 (Complete): blockedBy [#4, #5]
+>
+> NEVER assign a blocked task. When unblocking, pass accumulated context via SendMessage.
+
+### Quality gate failure protocol:
+
+1. Send output back to the phase agent with SPECIFIC feedback
+2. Agent revises and resubmits
+3. If fails 3 times → escalate to user: "Phase X failed quality gate 3 times. Needs human input."
+
+### When to intervene:
+
+- Phase output contradicts previous phase (e.g., spec says RS256, arch says shared secret)
+- Quality gate not met after 2 attempts
+- Scope creep detected
+- Cross-phase dependency conflict
