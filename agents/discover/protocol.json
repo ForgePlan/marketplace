@@ -1,0 +1,272 @@
+{
+  "version": "2.0.0",
+  "name": "discover",
+  "description": "Brownfield codebase onboarding with layered analysis and tiered source priority",
+
+  "source_tiers": {
+    "tier_1": {
+      "name": "Source of Truth",
+      "sources": ["code", "git history", "package manifests", "database schemas", "migrations"],
+      "trust": "CL3 — highest trust, same context"
+    },
+    "tier_2": {
+      "name": "Extracted Knowledge",
+      "sources": ["JSDoc/docstrings", "tests", "CI configs", "OpenAPI specs", "type definitions"],
+      "trust": "CL2 — similar context, medium trust"
+    },
+    "tier_3": {
+      "name": "Supplementary",
+      "sources": ["docs/", "README", "CHANGELOG", "wiki", "ADRs"],
+      "trust": "CL1 — different context, may diverge from code",
+      "tags": ["legacy-doc", "unverified"]
+    }
+  },
+
+  "layers": [
+    {
+      "id": 1,
+      "name": "BIRDS_EYE",
+      "description": "High-level project map — ALWAYS first, never skip",
+      "estimated_time": "10 minutes",
+      "phases": [
+        {
+          "id": "1.1",
+          "name": "DETECT",
+          "instructions": "Read package.json, Cargo.toml, go.mod, pyproject.toml, pom.xml, docker-compose.yml, Makefile. Report: language(s), framework(s), monorepo structure, runtime(s), dependency count.",
+          "files_to_check": [
+            "package.json", "Cargo.toml", "go.mod", "pyproject.toml", "pom.xml",
+            "composer.json", "Gemfile", "build.gradle", "build.sbt",
+            "docker-compose.yml", "docker-compose.yaml", "Makefile", "Dockerfile",
+            "nx.json", "turbo.json", "lerna.json", "pnpm-workspace.yaml"
+          ],
+          "artifact_kind": "note"
+        },
+        {
+          "id": "1.2",
+          "name": "STRUCTURE",
+          "instructions": "List source directories to 2 levels depth (src/, lib/, app/, packages/, services/). Count files per directory. Identify entry points (main, index, app, server).",
+          "artifact_kind": "note"
+        },
+        {
+          "id": "1.3",
+          "name": "DATA_STORES",
+          "instructions": "Find database schemas (schema.sql, migrations/, prisma/schema.prisma, models/, entities/). Find cache configs (redis), message queues (kafka, rabbitmq, SQS). List ALL data stores with type and estimated table count.",
+          "files_to_check": [
+            "schema.sql", "migrations/", "prisma/", "models/", "entities/",
+            "*.entity.ts", "*.entity.js", "*.model.py", "*.model.rb",
+            "alembic/", "flyway/", "liquibase/", "knex/",
+            "docker-compose.yml"
+          ],
+          "artifact_kind": "note"
+        },
+        {
+          "id": "1.4",
+          "name": "INFRA",
+          "instructions": "Find deployment configs: docker-compose, k8s manifests, terraform, CI/CD (.github/workflows/, Jenkinsfile, .gitlab-ci.yml, .circleci/). Map: how is this deployed? Single server? K8s? Serverless?",
+          "artifact_kind": "note"
+        },
+        {
+          "id": "1.5",
+          "name": "GIT_OVERVIEW",
+          "instructions": "Run: git shortlog -sn --no-merges (who works here), git log --oneline -50 (what changed recently), git log --format= --name-only -100 | sort | uniq -c | sort -rn | head -20 (most changed files). Identify: active contributors, commit patterns, hot areas.",
+          "commands": [
+            "git shortlog -sn --no-merges | head -20",
+            "git log --oneline -50",
+            "git log --format= --name-only -100 | sort | uniq -c | sort -rn | head -20"
+          ],
+          "artifact_kind": "note"
+        }
+      ],
+      "output": {
+        "artifact_kind": "prd",
+        "title_template": "Project Overview — {project_name}",
+        "must_contain": [
+          "tech stack (languages, frameworks, runtimes)",
+          "module list (bounded contexts)",
+          "data stores (DB, cache, queues)",
+          "deployment model",
+          "team structure (from git)",
+          "entry points map",
+          "project type classification"
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "name": "MODULE_DEEP_DIVE",
+      "description": "Per-module analysis — repeat for EACH module identified in Layer 1",
+      "estimated_time": "5-10 minutes per module",
+      "repeat_for": "each module/bounded context from Layer 1",
+      "interaction": "If >8 modules found, ask user which to prioritize. Otherwise analyze all.",
+      "phases": [
+        {
+          "id": "2.1",
+          "name": "API_SURFACE",
+          "instructions": "Read module exports, routes, handlers, public functions. Map the public API: endpoints, function signatures, exported types.",
+          "artifact_kind": "spec"
+        },
+        {
+          "id": "2.2",
+          "name": "TYPES",
+          "instructions": "Read models, DTOs, interfaces, type definitions, enums. Document data structures this module owns. Note validation rules if present.",
+          "artifact_kind": "spec"
+        },
+        {
+          "id": "2.3",
+          "name": "DEPENDENCIES",
+          "instructions": "Check imports from OTHER modules. Map: what does this module depend on? What depends on it? Draw dependency direction.",
+          "artifact_kind": "note"
+        },
+        {
+          "id": "2.4",
+          "name": "DATABASE_USAGE",
+          "instructions": "Which database tables/collections does this module read/write? Any migrations specific to this module? ORM models? Raw SQL queries?",
+          "artifact_kind": "note"
+        },
+        {
+          "id": "2.5",
+          "name": "TESTS",
+          "instructions": "Find tests for this module. Count test files vs source files. Note test framework and patterns (unit/integration/e2e). Estimate coverage qualitatively.",
+          "artifact_kind": "evidence"
+        },
+        {
+          "id": "2.6",
+          "name": "GIT_HISTORY",
+          "instructions": "Run: git log --oneline -20 -- {module_path}. Identify hot files, recent changes, refactoring signals (rename, move, large diffs).",
+          "artifact_kind": "problem",
+          "condition": "only if hot spots or tech debt found"
+        }
+      ],
+      "output": {
+        "artifact_kind": "rfc",
+        "title_template": "Module: {module_name} — architecture and API",
+        "must_contain": [
+          "public API surface",
+          "owned types/models",
+          "dependencies (in and out)",
+          "database tables used"
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "name": "CROSS_CUTTING",
+      "description": "Horizontal concerns that span all modules",
+      "estimated_time": "15 minutes",
+      "phases": [
+        {
+          "id": "3.1",
+          "name": "DATABASE_SCHEMA",
+          "instructions": "Compile full database schema: all tables, their relations (foreign keys), key indexes. Use migrations, schema dump, or ORM models. Create ER-style overview.",
+          "artifact_kind": "rfc"
+        },
+        {
+          "id": "3.2",
+          "name": "AUTH",
+          "instructions": "How does authentication work? Find: auth middleware, session/JWT/OAuth handling, user model, permissions/RBAC/ABAC. Map the auth flow from request to response.",
+          "artifact_kind": "rfc"
+        },
+        {
+          "id": "3.3",
+          "name": "ERROR_HANDLING",
+          "instructions": "Grep for error handling patterns: try/catch, Result<>, error middleware, logging framework, error codes. Are errors handled consistently across modules?",
+          "artifact_kind": "note"
+        },
+        {
+          "id": "3.4",
+          "name": "CONFIGURATION",
+          "instructions": "How is config managed? Find: env vars (.env, .env.example), config files, secrets management (vault, AWS SSM). List all configuration points and their sources.",
+          "artifact_kind": "note"
+        },
+        {
+          "id": "3.5",
+          "name": "EXTERNAL_INTEGRATIONS",
+          "instructions": "Find HTTP clients, SDK imports, message queue producers/consumers, third-party API calls, webhook handlers. List ALL external dependencies with direction (inbound/outbound).",
+          "artifact_kind": "spec"
+        },
+        {
+          "id": "3.6",
+          "name": "SECURITY",
+          "instructions": "Check: CORS config, input validation patterns, SQL injection protection, XSS prevention, secret storage, dependency vulnerabilities. Flag ALL concerns even if minor.",
+          "artifact_kind": "problem",
+          "condition": "always create — even 'no issues found' is valuable evidence"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "LEGACY_DOCS",
+      "description": "Scan existing documentation — ALWAYS LAST",
+      "estimated_time": "5 minutes",
+      "always_last": true,
+      "phases": [
+        {
+          "id": "4.1",
+          "name": "SCAN_DOCS",
+          "instructions": "Read docs/, README.md, CHANGELOG.md, CONTRIBUTING.md, ADRs, wiki links. For each document: summarize content in 2-3 sentences, note last modified date if available.",
+          "artifact_kind": "note",
+          "tags": ["legacy-doc", "unverified"]
+        },
+        {
+          "id": "4.2",
+          "name": "CROSS_REFERENCE",
+          "instructions": "Compare docs findings with code findings from Layers 1-3. Flag contradictions as Problem artifacts with BOTH versions (doc says X, code does Y). Note which docs are current vs outdated.",
+          "artifact_kind": "problem",
+          "condition": "only if contradictions found"
+        }
+      ]
+    }
+  ],
+
+  "project_type_hints": {
+    "monolith": {
+      "detect_by": ["single package.json/Cargo.toml without workspaces", "no docker-compose with multiple services", "single Dockerfile"],
+      "layer_2_focus": "per-directory modules in src/",
+      "layer_3_focus": "shared utils, middleware, error handling, database migrations"
+    },
+    "microservices": {
+      "detect_by": ["docker-compose with 3+ services", "multiple package.json/go.mod in subdirectories", "API gateway config", "proto/ or schemas/ shared directory"],
+      "layer_2_focus": "per-service analysis (each service = one module)",
+      "layer_3_focus": "inter-service communication, message queues, shared schemas/proto, service mesh"
+    },
+    "monorepo": {
+      "detect_by": ["nx.json", "turbo.json", "lerna.json", "pnpm-workspace.yaml", "[workspace] in Cargo.toml"],
+      "layer_2_focus": "per-package/crate analysis",
+      "layer_3_focus": "shared libs, build pipeline, dependency graph between packages"
+    },
+    "frontend_spa": {
+      "detect_by": ["react/vue/angular/svelte in dependencies", "src/components/", "src/pages/", "router config"],
+      "layer_2_focus": "per-feature or per-page modules",
+      "layer_3_focus": "state management, API layer, auth, styling/design system, build config"
+    },
+    "data_pipeline": {
+      "detect_by": ["airflow/spark/dbt/dagster/prefect in dependencies", "dags/ directory", "pipelines/ directory"],
+      "layer_2_focus": "per-DAG/pipeline analysis",
+      "layer_3_focus": "data sources, transformations, sinks, monitoring, data quality checks"
+    }
+  },
+
+  "sampling_strategy": {
+    "when": "project has >50 source files in a single module",
+    "rules": [
+      "Layer 1: always full scan (top 2 levels only — fast by design)",
+      "Layer 2 file selection per module: entry points + 10 most imported files + 5 most changed files (git log --format= --name-only -100 -- {module} | sort | uniq -c | sort -rn | head -5)",
+      "Layer 3: grep-based pattern search, not full file reads",
+      "SKIP: generated files, vendor/, node_modules/, build/, dist/, .min.js, *.lock"
+    ]
+  },
+
+  "rules": [
+    "ALWAYS complete Layer 1 before starting Layer 2",
+    "ALWAYS complete Layers 1-3 before Layer 4 (docs)",
+    "NEVER start with docs — code is the source of truth",
+    "NEVER build narrative around a single document",
+    "If docs contradict code — code wins, create Problem artifact with both versions",
+    "Tag ALL Layer 4 findings as 'legacy-doc, unverified'",
+    "Link ALL artifacts to root PRD 'Project Overview' for traceability",
+    "For each module: create ALL artifacts BEFORE moving to next module",
+    "Ask user which modules to prioritize if >8 modules found",
+    "Use sampling strategy for modules with >50 source files",
+    "Create summary Note at the end with links to ALL created artifacts"
+  ]
+}
