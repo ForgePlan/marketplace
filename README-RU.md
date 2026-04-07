@@ -4,107 +4,53 @@
 
 Официальный маркетплейс плагинов Claude Code от [ForgePlan](https://github.com/ForgePlan) — UX, воркфлоу, инженерные и dev-инструменты.
 
-**10 плагинов** | **13 команд** | **60 агентов** | **1 standalone агент** | **4 хука** | **4 базы знаний** | [Руководство](docs/USAGE-GUIDE-RU.md)
+**10 плагинов** | **60+ агентов** | **13 команд** | **4 базы знаний** | [Руководство](docs/USAGE-GUIDE-RU.md)
 
 ## Быстрый старт
 
 ```bash
-# Подключить маркетплейс ForgePlan
+# 1. Подключить маркетплейс ForgePlan
 /plugin marketplace add ForgePlan/marketplace
 
-# Посмотреть доступные плагины
-/plugin
+# 2. Установить первый плагин (работает с любым проектом, без зависимостей)
+/plugin install dev-toolkit@ForgePlan-marketplace
 
-# Установить конкретный плагин
-/plugin install laws-of-ux@ForgePlan-marketplace
+# 3. Перезагрузить плагины
+/reload-plugins
+
+# 4. Попробовать — запустить аудит кода
+/audit
 ```
+
+## С чего начать?
+
+> **Впервые здесь?** Выберите строку, которая подходит вам. Каждая строка — готовый набор, не нужно читать весь каталог.
+
+| Ваша роль | Установить | Зачем |
+|-----------|-----------|-------|
+| Любой разработчик | dev-toolkit + agents-core | Универсальные инструменты |
+| Фронтенд | + laws-of-ux + agents-domain | UX + агенты фреймворков |
+| Архитектор | + fpf + agents-pro + agents-sparc | Мышление + SPARC |
+| Пользователь Forgeplan | + forgeplan-workflow + forgeplan-orchestra | Полный цикл |
+| Всё сразу | Все 10 плагинов | Полная экосистема |
 
 ## Доступные плагины
 
-### [laws-of-ux](plugins/laws-of-ux/)
-
-> 30 UX-законов для ревью фронтенд-кода с конкретными рекомендациями.
-
-Проверяет HTML/CSS/JS/React/Vue код на соответствие психологическим принципам из [lawsofux.com](https://lawsofux.com/) (Jon Yablonski).
-
-| Компонент | Что получаете |
-|-----------|-------------|
-| `/ux-review` | Полный UX-аудит всех фронтенд-файлов |
-| `/ux-law [имя]` | Справка по любому из 30 законов |
-| **UX Reviewer** агент | Автоматически подключается при работе с фронтендом |
-| **Auto-hints** хук | UX-подсказки при редактировании .html/.css/.jsx/.tsx/.vue |
-| **База знаний** | 30 законов + 9 файлов code patterns (agentic RAG) |
-
-**Категории:**
-
-| Категория | Законов | Примеры |
-|-----------|:-------:|---------|
-| Эвристики | 4 | Закон Фиттса (44px цели), Закон Хика (макс. 7 пунктов навигации) |
-| Когнитивные | 10 | Закон Миллера (7±2 чанка), Когнитивная нагрузка, Эффект Ресторфф |
-| Гештальт | 6 | Близость (пропорции отступов), Подобие (единые токены) |
-| Принципы | 10 | Порог Доэрти (400мс), Закон Якоба, Закон Постела |
-
-```bash
-/plugin install laws-of-ux@ForgePlan-marketplace
-```
-
----
-
-### [forgeplan-workflow](plugins/forgeplan-workflow/)
-
-> Структурированный инженерный воркфлоу для пользователей [forgeplan](https://github.com/ForgePlan/forgeplan).
-
-Автоматизация полного цикла разработки: маршрутизация задач, создание PRD, сборка, аудит, создание evidence, активация.
-
-| Компонент | Что получаете |
-|-----------|-------------|
-| `/forge-cycle` | Полный цикл: health → route → shape → build → evidence → activate |
-| `/forge-audit` | Мульти-экспертное ревью (6 параллельных агентов) со структурированным отчётом |
-| **Forge Advisor** агент | Предлагает маршрутизацию перед кодингом, evidence после реализации |
-| **Quality hooks** | Safety hook + проверка PRD перед редактированием кода |
-| **KB методологии** | Agentic RAG: воркфлоу, артефакты, глубина, R_eff scoring, quality gates |
-
-**Требуется:** `forgeplan` CLI — приватное приложение, доступ через администратора проекта
-
-```bash
-/plugin install forgeplan-workflow@ForgePlan-marketplace
-```
-
----
-
-### [forgeplan-orchestra](plugins/forgeplan-orchestra/)
-
-> Интеграция Forgeplan с [Orchestra](https://orch.so) — unified workflow для задач, артефактов и AI агентов.
-
-Связывает Forgeplan (методология) с Orchestra (task tracker) через bidirectional sync, Session Start Protocol с Inbox Pattern и knowledge base.
-
-| Компонент | Что получаете |
-|-----------|-------------|
-| `/sync` | Bidirectional sync артефактов Forgeplan ↔ задач Orchestra |
-| `/session` | Session Start Protocol: health + inbox + tasks + synthesis + next action |
-| **Orchestra Advisor** агент | Предлагает sync при создании/активации артефактов |
-| **KB unified workflow** | Agentic RAG: архитектура, setup, playbook, configs (Solo/Team/Medium) |
-
-**Требуется:** `forgeplan` CLI + Orchestra MCP server (`orch`)
-
-```bash
-/plugin install forgeplan-orchestra@ForgePlan-marketplace
-```
-
----
-
 ### [dev-toolkit](plugins/dev-toolkit/)
 
-> Универсальный инженерный тулкит — работает с **любым проектом и языком**. Без зависимостей.
+> [!TIP]
+> **Рекомендуется первым** — работает с любым проектом и языком, без зависимостей.
+
+Универсальный инженерный тулкит — аудит, спринт-планирование и восстановление контекста сессии.
 
 | Компонент | Что получаете |
 |-----------|-------------|
-| `/audit` | Мульти-экспертное ревью (4 агента: логика, архитектура, безопасность, тесты) |
-| `/sprint` | Планировщик спринтов волнами: разбивка на фазы, параллельные агенты |
-| `/recall` | Восстановление контекста сессии из git + CLAUDE.md + память (Hindsight/mem0/forgeplan) |
-| **Dev Advisor** агент | Предлагает аудит после изменений, напоминает о тестах |
+| `/audit` | Мульти-экспертный обзор кода (4 агента: логика, архитектура, безопасность, тесты) |
+| `/sprint` | Волновой спринт: разбивка на фазы, параллельные агенты |
+| `/recall` | Восстановление контекста из git + CLAUDE.md + память (Hindsight/mem0/forgeplan) |
+| **Dev Advisor** | Предлагает аудит после изменений, напоминает о тестах |
 | **Safety hook** | Блокирует `git push --force`, `rm -rf /`, `DROP TABLE` |
-| **Test reminder** | Находит новые публичные функции без тестов |
+| **Test reminder** | Обнаруживает новые публичные функции без тестов |
 
 **Поддерживает:** JavaScript/TypeScript, Python, Rust, Go, Java, Ruby, PHP, C#
 
@@ -114,20 +60,47 @@
 
 ---
 
-### [fpf](plugins/fpf/)
+### [laws-of-ux](plugins/laws-of-ux/)
 
-> [First Principles Framework](https://github.com/ailev/FPF) — усилитель мышления для структурированного рассуждения. Автор: Анатолий Левенчук, расширен ForgePlan.
+> 30 законов UX для код-ревью фронтенда с практическими рекомендациями.
 
-Одна команда `/fpf` маршрутизирует в нужный режим мышления.
+Проверка HTML/CSS/JS/React/Vue кода по психологическим принципам из [lawsofux.com](https://lawsofux.com/) Джона Яблонски.
 
 | Компонент | Что получаете |
 |-----------|-------------|
-| `/fpf` | Универсальный роутер: `/fpf decompose`, `/fpf evaluate`, `/fpf reason`, `/fpf lookup` |
-| `/fpf-decompose` | Разбить систему на bounded contexts, роли, интерфейсы |
-| `/fpf-evaluate` | Сравнить альтернативы с F-G-R scoring и Trust Calculus |
-| `/fpf-reason` | Цикл рассуждения ADI: 3+ гипотезы → проверка → заключение |
-| **FPF Advisor** агент | Предлагает FPF при архитектурных и decision задачах |
-| **База знаний** | 224 секции FPF спецификации + 4 applied pattern гайда (agentic RAG) |
+| `/ux-review` | Полный UX-аудит всех frontend файлов |
+| `/ux-law [имя]` | Поиск любого из 30 законов |
+| **UX Reviewer** | Автоактивация для frontend задач |
+| **Auto-hints** | UX-подсказки при редактировании .html/.css/.jsx/.tsx/.vue |
+| **База знаний** | 30 законов + 9 файлов code patterns (agentic RAG) |
+
+| Категория | Законов | Примеры |
+|-----------|:-------:|---------|
+| Эвристики | 4 | Закон Фиттса (44px цели), Закон Хика (макс 7 пунктов навигации) |
+| Когнитивные | 10 | Закон Миллера (7±2 чанка), Когнитивная нагрузка, Эффект Ресторфф |
+| Гештальт | 6 | Близость (пропорции отступов), Сходство (единообразие токенов) |
+| Принципы | 10 | Порог Доэрти (400мс), Закон Якоба, Закон Постеля |
+
+```bash
+/plugin install laws-of-ux@ForgePlan-marketplace
+```
+
+---
+
+### [fpf](plugins/fpf/)
+
+> [First Principles Framework](https://github.com/ailev/FPF) — усилитель мышления для структурированного рассуждения. Анатолий Левенчук, доработано ForgePlan.
+
+Одна команда `/fpf` направляет к нужному режиму — декомпозиция, оценка, рассуждение или справка.
+
+| Компонент | Что получаете |
+|-----------|-------------|
+| `/fpf` | Роутер: `/fpf decompose`, `/fpf evaluate`, `/fpf reason`, `/fpf lookup` |
+| `/fpf-decompose` | Разбивка систем на bounded contexts, роли, интерфейсы |
+| `/fpf-evaluate` | Сравнение альтернатив с F-G-R скорингом и Trust Calculus |
+| `/fpf-reason` | ADI цикл: 3+ гипотезы → проверка → вывод |
+| **FPF Advisor** | Предлагает FPF при задачах архитектуры/решений |
+| **База знаний** | 224 секции FPF спецификации + 4 гайда (agentic RAG) |
 
 ```bash
 /plugin install fpf@ForgePlan-marketplace
@@ -135,60 +108,64 @@
 
 ---
 
-## Как это работает
+### [forgeplan-workflow](plugins/forgeplan-workflow/)
 
-Каждый плагин использует **agentic RAG** — агент навигирует по иерархии секций, подгружая только нужные законы в контекст (~300 строк за раз), а не загружая всю базу целиком.
+> Структурированный инженерный воркфлоу для пользователей [forgeplan](https://github.com/ForgePlan/forgeplan).
 
+Автоматизация полного dev-цикла: маршрутизация → PRD → сборка → аудит → evidence → активация.
+
+| Компонент | Что получаете |
+|-----------|-------------|
+| `/forge-cycle` | Полный цикл: health → route → shape → build → evidence → activate |
+| `/forge-audit` | Мульти-экспертный обзор (6 параллельных агентов) |
+| **Forge Advisor** | Предлагает маршрутизацию до кода, evidence после реализации |
+| **Quality hooks** | Safety hook + проверка PRD перед редактированием кода |
+| **База знаний** | Agentic RAG: воркфлоу, артефакты, глубина, R_eff, quality gates |
+
+> [!WARNING]
+> Требуется `forgeplan` CLI — приватное приложение, доступ через администратора проекта.
+
+```bash
+/plugin install forgeplan-workflow@ForgePlan-marketplace
 ```
-SKILL.md (роутер)
-  → sections/01-heuristics/_index.md → specific-law.md
-  → sections/02-cognitive/_index.md  → specific-law.md
-  → sections/05-code-patterns/       → конкретные CSS/HTML/JS правила
+
+---
+
+### [forgeplan-orchestra](plugins/forgeplan-orchestra/)
+
+> Объединённый воркфлоу: артефакты Forgeplan + [Orchestra](https://orch.so) трекинг задач + Claude Code AI.
+
+Двунаправленная синхронизация, Session Start Protocol с Inbox Pattern, база знаний методологии.
+
+| Компонент | Что получаете |
+|-----------|-------------|
+| `/sync` | Двунаправленная синхронизация: артефакты Forgeplan ↔ задачи Orchestra |
+| `/session` | Session Start Protocol: health + inbox + задачи + синтез + следующее действие |
+| **Orchestra Advisor** | Предлагает синхронизацию при создании/активации артефактов |
+| **Unified Workflow KB** | Agentic RAG: архитектура, настройка, плейбук, конфиги (Solo/Team/Medium) |
+
+> [!WARNING]
+> Требуется `forgeplan` CLI + Orchestra MCP сервер (`orch`).
+
+```bash
+/plugin install forgeplan-orchestra@ForgePlan-marketplace
 ```
+
+---
 
 ## Пакеты агентов
 
 Пять специализированных пакетов с 55 готовыми агентами для Claude Code.
 
-### [agents-core](plugins/agents-core/)
+Установка любого пакета: `/plugin install <имя-пакета>@ForgePlan-marketplace`
 
-> Базовые агенты разработки: debugger, code-reviewer, error-detective, performance-engineer, production-validator + полная dev-команда (coder, planner, researcher, reviewer, tester, TDD).
-
-```bash
-/plugin install agents-core@ForgePlan-marketplace
-```
-
-### [agents-domain](plugins/agents-domain/)
-
-> Специалисты по языкам и фреймворкам: TypeScript, Go, React, Next.js, Electron, embedded systems, mobile, WebSocket и др.
-
-```bash
-/plugin install agents-domain@ForgePlan-marketplace
-```
-
-### [agents-pro](plugins/agents-pro/)
-
-> Профессиональные специалисты: security, architecture, creative tools, research, infrastructure.
-
-```bash
-/plugin install agents-pro@ForgePlan-marketplace
-```
-
-### [agents-github](plugins/agents-github/)
-
-> GitHub-операции: PR, issues, releases, multi-repo, project boards, workflow engineering.
-
-```bash
-/plugin install agents-github@ForgePlan-marketplace
-```
-
-### [agents-sparc](plugins/agents-sparc/)
-
-> SPARC методология: оркестратор с quality gates + 4 фазовых специалиста (specification, pseudocode, architecture, refinement).
-
-```bash
-/plugin install agents-sparc@ForgePlan-marketplace
-```
+| Пакет | Агентов | Специализация | Install |
+|-------|:-------:|--------------|---------|
+| [agents-core](plugins/agents-core/) | 11 | debugger, code-reviewer, planner, tester, TDD, production-validator | `agents-core` |
+| [agents-domain](plugins/agents-domain/) | 11 | TypeScript, Go, React, Next.js, Electron, mobile, WebSocket | `agents-domain` |
+| [agents-pro](plugins/agents-pro/) | 21 | security, architecture, creative, research, infrastructure | `agents-pro` |
+| [agents-github](plugins/agents-github/) | 7 | PR, issues, releases, multi-repo, workflows | `agents-github` |
+| [agents-sparc](plugins/agents-sparc/) | 5 | SPARC: spec → pseudo → architecture → refinement | `agents-sparc` |
 
 ---
 
@@ -198,21 +175,29 @@ SKILL.md (роутер)
 
 > Онбординг brownfield-проектов — структурированный анализ с multi-pass discovery и приоритетом источников. Код первым, документация последней.
 
-Три режима для проектов любого размера:
-
 | Режим | Для | Что происходит |
 |-------|-----|----------------|
 | `default` | <100K LOC | Один агент, 4 слоя последовательно (~15-30 мин) |
 | `--deep` | 100K-2M LOC | Команда агентов, параллельные модули + углубление (~1-2 часа) |
 | `--full` | 2M+ LOC | Deep + синтез: анализ пробелов, карта влияния (~2-4 часа) |
 
-**3 прохода**: Discovery (слои 1-4) → Deepening (по артефактам) → Synthesis (перекрёстная проверка)
-**3 уровня доверия**: Код (T1, высший) > Тесты (T2) > Документация (T3, низший)
-**4 уровня отслеживания**: Todos + state file + артефакт прогресса + Hindsight (возобновляемый)
+**3 прохода**: Discovery → Deepening → Synthesis
+**3 уровня доверия**: Код (T1) > Тесты (T2) > Документация (T3)
 
 Подробнее: [agents/discover/README.md](agents/discover/README.md)
 
 ---
+
+## Как это работает
+
+Каждый плагин использует **agentic RAG** — агент навигирует по иерархии секций, подгружая только нужный контент (~300 строк за раз), а не загружая всю базу целиком.
+
+```
+SKILL.md (роутер)
+  → sections/01-heuristics/_index.md → specific-law.md
+  → sections/02-cognitive/_index.md  → specific-law.md
+  → sections/05-code-patterns/       → конкретные CSS/HTML/JS правила
+```
 
 ## Альтернатива: только Skill (через skills.sh)
 
@@ -241,38 +226,7 @@ npx skills add ForgePlan/laws-of-ux-standalone -g
 
 ## Участие в разработке
 
-Хотите добавить плагин? См. **[CONTRIBUTING.md](CONTRIBUTING.md)**.
-
-```bash
-# Валидация перед отправкой
-./scripts/validate-all-plugins.sh your-plugin-name
-```
-
-**Чеклист:**
-1. Создать `plugins/your-plugin/` с `.claude-plugin/plugin.json`
-2. Добавить запись в `.claude-plugin/marketplace.json`
-3. Запустить скрипт валидации
-4. Создать PR
-
-## Структура плагина
-
-```
-plugins/your-plugin/
-├── .claude-plugin/plugin.json    # Обязательно: name, version, description
-├── commands/                     # Опционально: slash-команды
-├── agents/                       # Опционально: специализированные агенты
-├── skills/                       # Опционально: базы знаний (SKILL.md)
-├── hooks/                        # Опционально: хуки автоматизации
-└── README.md
-```
-
-## CI/CD
-
-Каждый PR и push в `main` автоматически проверяется:
-- Синтаксис и полнота `marketplace.json`
-- Обязательные поля `plugin.json`
-- Валидность `hooks.json`
-- Frontmatter в `SKILL.md`
+Хотите добавить плагин? См. **[CONTRIBUTING.md](CONTRIBUTING.md)** — структура плагина, CI/CD валидация и процесс подачи.
 
 ## Лицензия
 

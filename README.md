@@ -4,7 +4,7 @@
 
 Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/ForgePlan) — UX, workflow, engineering, and developer tools.
 
-**10 plugins** | **13 commands** | **60 agents** | **1 standalone agent** | **4 hook configs** | **4 knowledge bases** | [Usage Guide](docs/USAGE-GUIDE.md) | [Architecture](docs/ARCHITECTURE.md)
+**10 plugins** | **60+ agents** | **13 commands** | **4 knowledge bases** | [Usage Guide](docs/USAGE-GUIDE.md) | [Architecture](docs/ARCHITECTURE.md)
 
 ## Quick Start
 
@@ -24,6 +24,8 @@ Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/
 
 ## Where to Start?
 
+> **New here?** Pick the row that matches you. Each row is a complete setup — no need to read the full catalog.
+
 | Your role | Install these | Why |
 |-----------|--------------|-----|
 | Any developer | dev-toolkit + agents-core | Universal tools |
@@ -33,6 +35,30 @@ Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/
 | Everything | All 10 plugins | Complete ecosystem |
 
 ## Available Plugins
+
+### [dev-toolkit](plugins/dev-toolkit/)
+
+> [!TIP]
+> **Recommended first install** — works with any project and language, zero dependencies.
+
+Universal engineering toolkit — audit, sprint planning, and session context restore.
+
+| Component | What you get |
+|-----------|-------------|
+| `/audit` | Multi-expert code review (4 agents: logic, architecture, security, tests) |
+| `/sprint` | Wave-based sprint planner: break tasks into phases, execute with parallel agents |
+| `/recall` | Session context restore from git + CLAUDE.md + memory (Hindsight/mem0/forgeplan) |
+| **Dev Advisor** agent | Suggests audit after changes, reminds about tests |
+| **Safety hook** | Blocks `git push --force`, `rm -rf /`, `DROP TABLE` |
+| **Test reminder** | Detects new public functions without tests |
+
+**Supports:** JavaScript/TypeScript, Python, Rust, Go, Java, Ruby, PHP, C#
+
+```bash
+/plugin install dev-toolkit@ForgePlan-marketplace
+```
+
+---
 
 ### [laws-of-ux](plugins/laws-of-ux/)
 
@@ -63,70 +89,6 @@ Review HTML/CSS/JS/React/Vue code against psychological principles from [lawsofu
 
 ---
 
-### [forgeplan-workflow](plugins/forgeplan-workflow/)
-
-> Structured engineering workflow for [forgeplan](https://github.com/ForgePlan/forgeplan) users.
-
-Full dev cycle automation: route tasks, create PRDs, build, audit, create evidence, activate — all in one flow.
-
-| Component | What you get |
-|-----------|-------------|
-| `/forge-cycle` | Complete cycle: health → route → shape → build → evidence → activate |
-| `/forge-audit` | Multi-expert review (6 parallel agents) with structured report |
-| **Forge Advisor** agent | Suggests routing before coding, evidence after implementation |
-| **Quality hooks** | Safety hook + PRD check before code edits |
-| **Methodology KB** | Agentic RAG: workflow, artifacts, depth, R_eff scoring, quality gates |
-
-**Requires:** `forgeplan` CLI — private application, access through project admin
-
-```bash
-/plugin install forgeplan-workflow@ForgePlan-marketplace
-```
-
----
-
-### [forgeplan-orchestra](plugins/forgeplan-orchestra/)
-
-> Unified workflow: Forgeplan artifacts + [Orchestra](https://orch.so) task tracking + Claude Code AI execution.
-
-Bidirectional sync, Session Start Protocol with Inbox Pattern, and methodology knowledge base.
-
-| Component | What you get |
-|-----------|-------------|
-| `/sync` | Bidirectional sync: Forgeplan artifacts ↔ Orchestra tasks |
-| `/session` | Session Start Protocol: health + inbox + tasks + synthesis + next action |
-| **Orchestra Advisor** agent | Suggests sync on artifact create/activate |
-| **Unified Workflow KB** | Agentic RAG: architecture, setup, playbook, configs (Solo/Team/Medium) |
-
-**Requires:** `forgeplan` CLI + Orchestra MCP server (`orch`)
-
-```bash
-/plugin install forgeplan-orchestra@ForgePlan-marketplace
-```
-
----
-
-### [dev-toolkit](plugins/dev-toolkit/)
-
-> Universal engineering toolkit — works with **any project and language**. No dependencies.
-
-| Component | What you get |
-|-----------|-------------|
-| `/audit` | Multi-expert code review (4 agents: logic, architecture, security, tests) |
-| `/sprint` | Wave-based sprint planner: break tasks into phases, execute with parallel agents |
-| `/recall` | Session context restore from git + CLAUDE.md + memory (Hindsight/mem0/forgeplan) |
-| **Dev Advisor** agent | Suggests audit after changes, reminds about tests |
-| **Safety hook** | Blocks `git push --force`, `rm -rf /`, `DROP TABLE` |
-| **Test reminder** | Detects new public functions without tests |
-
-**Supports:** JavaScript/TypeScript, Python, Rust, Go, Java, Ruby, PHP, C#
-
-```bash
-/plugin install dev-toolkit@ForgePlan-marketplace
-```
-
----
-
 ### [fpf](plugins/fpf/)
 
 > [First Principles Framework](https://github.com/ailev/FPF) — thinking amplifier for structured reasoning. By Anatoly Levenchuk, enhanced by ForgePlan.
@@ -148,49 +110,64 @@ One command `/fpf` routes to the right thinking mode — decompose, evaluate, re
 
 ---
 
+### [forgeplan-workflow](plugins/forgeplan-workflow/)
+
+> Structured engineering workflow for [forgeplan](https://github.com/ForgePlan/forgeplan) users.
+
+Full dev cycle automation: route tasks, create PRDs, build, audit, create evidence, activate — all in one flow.
+
+| Component | What you get |
+|-----------|-------------|
+| `/forge-cycle` | Complete cycle: health → route → shape → build → evidence → activate |
+| `/forge-audit` | Multi-expert review (6 parallel agents) with structured report |
+| **Forge Advisor** agent | Suggests routing before coding, evidence after implementation |
+| **Quality hooks** | Safety hook + PRD check before code edits |
+| **Methodology KB** | Agentic RAG: workflow, artifacts, depth, R_eff scoring, quality gates |
+
+> [!WARNING]
+> Requires `forgeplan` CLI — private application, access through project admin.
+
+```bash
+/plugin install forgeplan-workflow@ForgePlan-marketplace
+```
+
+---
+
+### [forgeplan-orchestra](plugins/forgeplan-orchestra/)
+
+> Unified workflow: Forgeplan artifacts + [Orchestra](https://orch.so) task tracking + Claude Code AI execution.
+
+Bidirectional sync, Session Start Protocol with Inbox Pattern, and methodology knowledge base.
+
+| Component | What you get |
+|-----------|-------------|
+| `/sync` | Bidirectional sync: Forgeplan artifacts ↔ Orchestra tasks |
+| `/session` | Session Start Protocol: health + inbox + tasks + synthesis + next action |
+| **Orchestra Advisor** agent | Suggests sync on artifact create/activate |
+| **Unified Workflow KB** | Agentic RAG: architecture, setup, playbook, configs (Solo/Team/Medium) |
+
+> [!WARNING]
+> Requires `forgeplan` CLI + Orchestra MCP server (`orch`).
+
+```bash
+/plugin install forgeplan-orchestra@ForgePlan-marketplace
+```
+
+---
+
 ## Agent Packs
 
 Five specialized agent packs providing 55 ready-to-use agents for Claude Code.
 
-### [agents-core](plugins/agents-core/)
+Install any pack: `/plugin install <pack-name>@ForgePlan-marketplace`
 
-> Core development agents: debugger, code reviewer, error detective, performance engineer, production validator, plus complete dev team (coder, planner, researcher, reviewer, tester, TDD).
-
-```bash
-/plugin install agents-core@ForgePlan-marketplace
-```
-
-### [agents-domain](plugins/agents-domain/)
-
-> Language and framework specialist agents: TypeScript, Go, React, Next.js, Electron, embedded systems, mobile, WebSocket, and more.
-
-```bash
-/plugin install agents-domain@ForgePlan-marketplace
-```
-
-### [agents-pro](plugins/agents-pro/)
-
-> Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, and infrastructure engineers.
-
-```bash
-/plugin install agents-pro@ForgePlan-marketplace
-```
-
-### [agents-github](plugins/agents-github/)
-
-> GitHub operations agents: PR management, issue tracking, release automation, multi-repo coordination, project boards, workflow engineering.
-
-```bash
-/plugin install agents-github@ForgePlan-marketplace
-```
-
-### [agents-sparc](plugins/agents-sparc/)
-
-> SPARC development methodology: orchestrator with quality gates plus 4 phase specialists (specification, pseudocode, architecture, refinement).
-
-```bash
-/plugin install agents-sparc@ForgePlan-marketplace
-```
+| Pack | Agents | Focus | Install |
+|------|:------:|-------|---------|
+| [agents-core](plugins/agents-core/) | 11 | debugger, code-reviewer, planner, tester, TDD, production-validator | `agents-core` |
+| [agents-domain](plugins/agents-domain/) | 11 | TypeScript, Go, React, Next.js, Electron, mobile, WebSocket | `agents-domain` |
+| [agents-pro](plugins/agents-pro/) | 21 | security, architecture, creative, research, infrastructure | `agents-pro` |
+| [agents-github](plugins/agents-github/) | 7 | PR management, issues, releases, multi-repo, workflows | `agents-github` |
+| [agents-sparc](plugins/agents-sparc/) | 5 | SPARC methodology: spec → pseudo → architecture → refinement | `agents-sparc` |
 
 ---
 
@@ -210,7 +187,6 @@ Three modes for any project size:
 
 **3 passes**: Discovery (layers 1-4) → Deepening (per artifact) → Synthesis (cross-reference)
 **3 source tiers**: Code (T1, highest trust) > Tests (T2) > Docs (T3, lowest)
-**4-level tracking**: Todos + state file + progress artifact + Hindsight (resumable)
 
 See [agents/discover/README.md](agents/discover/README.md) for full documentation.
 
@@ -218,7 +194,7 @@ See [agents/discover/README.md](agents/discover/README.md) for full documentatio
 
 ## How It Works
 
-Each plugin uses **agentic RAG** — the agent navigates a section hierarchy, loading only relevant laws into context (~300 lines at a time) instead of dumping the entire knowledge base. This keeps responses fast and focused.
+Each plugin uses **agentic RAG** — the agent navigates a section hierarchy, loading only relevant content into context (~300 lines at a time) instead of dumping the entire knowledge base. This keeps responses fast and focused.
 
 ```
 SKILL.md (router)
@@ -254,38 +230,7 @@ Get the latest plugins:
 
 ## Contributing
 
-Want to add a plugin? See **[CONTRIBUTING.md](CONTRIBUTING.md)** for the guide.
-
-```bash
-# Validate before submitting
-./scripts/validate-all-plugins.sh your-plugin-name
-```
-
-**Quick checklist:**
-1. Create `plugins/your-plugin/` with `.claude-plugin/plugin.json`
-2. Add entry to `.claude-plugin/marketplace.json`
-3. Run validation script
-4. Submit PR
-
-## Plugin Structure
-
-```
-plugins/your-plugin/
-├── .claude-plugin/plugin.json    # Required: name, version, description
-├── commands/                     # Optional: slash commands
-├── agents/                       # Optional: specialized agents
-├── skills/                       # Optional: knowledge bases (SKILL.md)
-├── hooks/                        # Optional: automation hooks
-└── README.md
-```
-
-## CI/CD
-
-Every PR and push to `main` is automatically validated:
-- `marketplace.json` syntax and completeness
-- `plugin.json` required fields
-- `hooks.json` validity
-- `SKILL.md` frontmatter
+Want to add a plugin? See **[CONTRIBUTING.md](CONTRIBUTING.md)** for the plugin structure, CI/CD validation, and submission guide.
 
 ## License
 
