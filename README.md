@@ -4,7 +4,7 @@
 
 Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/ForgePlan) — UX, workflow, engineering, and developer tools.
 
-**10 plugins** | **13 commands** | **60 agents** | **4 hook configs** | **4 knowledge bases** | [Usage Guide](docs/USAGE-GUIDE.md) | [Architecture](docs/ARCHITECTURE.md)
+**10 plugins** | **13 commands** | **60 agents** | **1 standalone agent** | **4 hook configs** | **4 knowledge bases** | [Usage Guide](docs/USAGE-GUIDE.md) | [Architecture](docs/ARCHITECTURE.md)
 
 ## Quick Start
 
@@ -191,6 +191,28 @@ Five specialized agent packs providing 55 ready-to-use agents for Claude Code.
 ```bash
 /plugin install agents-sparc@ForgePlan-marketplace
 ```
+
+---
+
+## Standalone Agents
+
+### [discover](agents/discover/)
+
+> Brownfield codebase onboarding — structured analysis of existing projects with multi-pass discovery and tiered source priority. Code first, docs last.
+
+Three modes for any project size:
+
+| Mode | For | What happens |
+|------|-----|-------------|
+| `default` | <100K LOC | Single agent, 4 layers sequentially (~15-30 min) |
+| `--deep` | 100K-2M LOC | Team of agents, parallel modules + deepening (~1-2 hours) |
+| `--full` | 2M+ LOC | Deep + synthesis: gap analysis, impact mapping (~2-4 hours) |
+
+**3 passes**: Discovery (layers 1-4) → Deepening (per artifact) → Synthesis (cross-reference)
+**3 source tiers**: Code (T1, highest trust) > Tests (T2) > Docs (T3, lowest)
+**4-level tracking**: Todos + state file + progress artifact + Hindsight (resumable)
+
+See [agents/discover/README.md](agents/discover/README.md) for full documentation.
 
 ---
 
