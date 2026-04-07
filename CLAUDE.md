@@ -157,6 +157,22 @@ Hook bypass: временно убрать из `.claude/settings.json` (не р
 
 ---
 
+## Standalone Agents
+
+### Discover Agent (agents/discover/)
+
+Brownfield codebase onboarding — protocol v3.2.0.
+
+| Файл | Назначение |
+|------|-----------|
+| `agent.md` | Claude Code agent config — 3 modes, 3 passes, progress tracking |
+| `protocol.json` | Machine-readable protocol — layers, phases, rules, state schema |
+| `README.md` | Документация + примеры + manual workflow |
+
+**Не плагин** — standalone agent. Станет плагином после добавления MCP tools в ForgePlan CLI.
+
+---
+
 ## Quick Reference
 
 ```bash

@@ -4,7 +4,7 @@
 
 Официальный маркетплейс плагинов Claude Code от [ForgePlan](https://github.com/ForgePlan) — UX, воркфлоу, инженерные и dev-инструменты.
 
-**5 плагинов** | **13 команд** | **5 агентов** | **4 хука** | **4 базы знаний** | [Руководство](docs/USAGE-GUIDE-RU.md)
+**10 плагинов** | **13 команд** | **60 агентов** | **1 standalone агент** | **4 хука** | **4 базы знаний** | [Руководство](docs/USAGE-GUIDE-RU.md)
 
 ## Быстрый старт
 
@@ -145,6 +145,74 @@ SKILL.md (роутер)
   → sections/02-cognitive/_index.md  → specific-law.md
   → sections/05-code-patterns/       → конкретные CSS/HTML/JS правила
 ```
+
+## Пакеты агентов
+
+Пять специализированных пакетов с 55 готовыми агентами для Claude Code.
+
+### [agents-core](plugins/agents-core/)
+
+> Базовые агенты разработки: debugger, code-reviewer, error-detective, performance-engineer, production-validator + полная dev-команда (coder, planner, researcher, reviewer, tester, TDD).
+
+```bash
+/plugin install agents-core@ForgePlan-marketplace
+```
+
+### [agents-domain](plugins/agents-domain/)
+
+> Специалисты по языкам и фреймворкам: TypeScript, Go, React, Next.js, Electron, embedded systems, mobile, WebSocket и др.
+
+```bash
+/plugin install agents-domain@ForgePlan-marketplace
+```
+
+### [agents-pro](plugins/agents-pro/)
+
+> Профессиональные специалисты: security, architecture, creative tools, research, infrastructure.
+
+```bash
+/plugin install agents-pro@ForgePlan-marketplace
+```
+
+### [agents-github](plugins/agents-github/)
+
+> GitHub-операции: PR, issues, releases, multi-repo, project boards, workflow engineering.
+
+```bash
+/plugin install agents-github@ForgePlan-marketplace
+```
+
+### [agents-sparc](plugins/agents-sparc/)
+
+> SPARC методология: оркестратор с quality gates + 4 фазовых специалиста (specification, pseudocode, architecture, refinement).
+
+```bash
+/plugin install agents-sparc@ForgePlan-marketplace
+```
+
+---
+
+## Standalone агенты
+
+### [discover](agents/discover/)
+
+> Онбординг brownfield-проектов — структурированный анализ с multi-pass discovery и приоритетом источников. Код первым, документация последней.
+
+Три режима для проектов любого размера:
+
+| Режим | Для | Что происходит |
+|-------|-----|----------------|
+| `default` | <100K LOC | Один агент, 4 слоя последовательно (~15-30 мин) |
+| `--deep` | 100K-2M LOC | Команда агентов, параллельные модули + углубление (~1-2 часа) |
+| `--full` | 2M+ LOC | Deep + синтез: анализ пробелов, карта влияния (~2-4 часа) |
+
+**3 прохода**: Discovery (слои 1-4) → Deepening (по артефактам) → Synthesis (перекрёстная проверка)
+**3 уровня доверия**: Код (T1, высший) > Тесты (T2) > Документация (T3, низший)
+**4 уровня отслеживания**: Todos + state file + артефакт прогресса + Hindsight (возобновляемый)
+
+Подробнее: [agents/discover/README.md](agents/discover/README.md)
+
+---
 
 ## Альтернатива: только Skill (через skills.sh)
 
