@@ -21,6 +21,98 @@ Source Tier Priority (NEVER violate this order):
 
 **Pass 2 agents MUST update existing artifacts, not create duplicates.**
 
+**ALWAYS check for existing state file before starting — resume if exists.**
+
+---
+
+# PROGRESS TRACKING — MANDATORY
+
+You MUST track progress at 4 levels. This ensures you never lose position across restarts, team mode, or long runs.
+
+## On Start: Check for Existing Discovery
+
+```bash
+# FIRST THING: check if a previous discovery was interrupted
+cat .forgeplan/discovery-state.json 2>/dev/null
+```
+
+**If state file EXISTS** → RESUME mode:
+1. Read state file — find last incomplete phase
+2. If Hindsight MCP available: `memory_recall("discovery {project}")`
+3. Report to user: "Resuming discovery from {last_phase}"
+4. Create todos (TaskCreate) for REMAINING phases only
+5. Continue from last incomplete phase
+
+**If state file DOES NOT EXIST** → FRESH mode:
+1. Create state file:
+```bash
+cat > .forgeplan/discovery-state.json << 'EOF'
+{
+  "discovery_id": "DISC-001",
+  "project": "{project_name}",
+  "mode": "{default|deep|full}",
+  "started_at": "{ISO 8601}",
+  "pass_1": {
+    "status": "in_progress",
+    "layers": {
+      "1_birds_eye": { "status": "pending", "phases_done": [], "artifacts": [] },
+      "2_modules": { "status": "pending", "modules": {} },
+      "3_cross_cutting": { "status": "pending", "artifacts": [] },
+      "4_legacy_docs": { "status": "pending", "artifacts": [] }
+    }
+  },
+  "pass_2": { "status": "pending", "deepened_artifacts": [] },
+  "pass_3": { "status": "not_applicable" },
+  "total_artifacts": 0,
+  "last_updated": "{ISO 8601}"
+}
+EOF
+```
+2. Create todos for ALL phases (TaskCreate with blockedBy):
+   - Task: "Layer 1: Bird's Eye" (no blockers)
+   - Task: "Layer 2: Module Deep Dive" (blockedBy: Layer 1)
+   - Task: "Layer 3: Cross-Cutting" (blockedBy: Layer 1)
+   - Task: "Layer 4: Legacy Docs" (blockedBy: Layer 2, Layer 3)
+   - If --deep: Task: "Pass 2: Deepening" (blockedBy: Layer 4)
+   - If --full: Task: "Pass 3: Synthesis" (blockedBy: Pass 2)
+3. Create progress artifact:
+```bash
+forgeplan new note "Discovery Progress — {project_name}"
+# Body: markdown checklist with all phases (see protocol.json tracking.progress_artifact)
+```
+4. If Hindsight MCP available: `memory_retain("Starting discovery on {project}, mode: {mode}")`
+5. Begin Layer 1 Phase 1.1
+
+## On Each Phase Completion
+
+Every time you finish a phase (e.g., Phase 1.2 STRUCTURE):
+
+1. **TaskUpdate** → mark phase task as completed
+2. **State file** → update: add phase to `phases_done`, add artifact IDs, update `last_updated`
+3. **Progress artifact** → update body: change `- [ ] 1.2 STRUCTURE` to `- [x] 1.2 STRUCTURE → NOTE-002`
+4. Log to user: `Phase 1.2 complete → NOTE-002`
+
+## On Each Pass Completion
+
+When an entire pass finishes:
+
+1. All of "On Each Phase Completion" +
+2. **State file** → mark pass as `completed`
+3. **Summary Note** → `forgeplan new note "Pass {N} Summary — {project}"`
+4. If Hindsight: `memory_retain("Pass {N} complete: {count} artifacts. Key findings: {top_3}")`
+5. Report: `Pass {N} complete. {count} artifacts created.`
+
+## On Discovery Complete
+
+1. **Delete state file** — discovery is done, no resume needed
+```bash
+rm .forgeplan/discovery-state.json
+```
+2. **Progress artifact** → final update: all `[x]`, add completion timestamp
+3. If Hindsight: `memory_retain("Discovery complete on {project}: {mode}, {total} artifacts")`
+4. Final summary (see FINAL SUMMARY section below)
+5. `forgeplan health`
+
 ---
 
 # Discover Agent — Brownfield Codebase Onboarding

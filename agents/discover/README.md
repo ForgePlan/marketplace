@@ -283,9 +283,74 @@ A: Phase 2.5 (TESTS) will create an Evidence artifact noting "no tests found" �
 **Q: How does Pass 2 avoid duplicating Pass 1 artifacts?**
 A: Pass 2 agents UPDATE existing artifacts (via `forgeplan update`), not create new ones. They add depth to what Pass 1 discovered. New child Notes are created only for sub-components discovered during deepening.
 
+## Progress Tracking
+
+The agent tracks progress at 4 levels to survive restarts, work in team mode, and give visibility:
+
+```
+┌─────────────────────────────────────────────────────┐
+│ Level 1: Todos (TaskCreate)                         │
+│   Real-time spinner in Claude Code UI               │
+│   Lost on restart — recreated from state file       │
+├─────────────────────────────────────────────────────┤
+│ Level 2: State File (.forgeplan/discovery-state.json)│
+│   Machine-readable JSON — source of truth           │
+│   Survives restarts, readable by team agents        │
+│   Deleted when discovery completes                  │
+├─────────────────────────────────────────────────────┤
+│ Level 3: Progress Artifact (ForgePlan Note)         │
+│   Human-readable checklist in forgeplan list        │
+│   Markdown: [ ] pending, [x] done → ARTIFACT-ID    │
+│   Permanent record of discovery                     │
+├─────────────────────────────────────────────────────┤
+│ Level 4: Hindsight (optional)                       │
+│   Long-term memory via Hindsight MCP                │
+│   Retains summary at end of each pass               │
+│   Enables cross-session recall                      │
+└─────────────────────────────────────────────────────┘
+```
+
+### Resume After Interruption
+
+If a discovery session is interrupted (crash, timeout, user stopped):
+
+```bash
+# State file persists — agent detects it on next start
+cat .forgeplan/discovery-state.json
+# → Shows exactly where it stopped
+
+# Agent automatically resumes:
+# "Resuming discovery from Layer 2, module: users (Phase 2.3 DEPENDENCIES)"
+```
+
+### What the Progress Artifact Looks Like
+
+```markdown
+## Discovery: MyProject
+Mode: deep | Started: 2026-04-07T10:00
+
+### Pass 1: Discovery
+- [x] Layer 1: Bird's Eye
+  - [x] 1.1 DETECT → NOTE-001
+  - [x] 1.2 STRUCTURE → NOTE-002
+  - [x] 1.3 DATA STORES → NOTE-003
+  - [x] 1.4 INFRA → NOTE-004
+  - [x] 1.5 GIT OVERVIEW → NOTE-005
+  - [x] PRD created → PRD-001
+- [ ] Layer 2: Module Deep Dive
+  - [x] orders → RFC-001, SPEC-001
+  - [ ] users ← IN PROGRESS (Phase 2.3)
+  - [ ] payments
+- [ ] Layer 3: Cross-Cutting
+- [ ] Layer 4: Legacy Docs
+
+### Pass 2: Deepening
+- [ ] Not started
+```
+
 ## Protocol Reference
 
-The machine-readable protocol is in `protocol.json` (v3.0.0). It contains:
+The machine-readable protocol is in `protocol.json` (v3.1.0). It contains:
 - Source tier definitions with trust levels
 - Three modes (default, deep, full) with pass configurations
 - All 4 layers with phase details and output specifications
@@ -294,7 +359,8 @@ The machine-readable protocol is in `protocol.json` (v3.0.0). It contains:
 - Project type detection hints
 - Sampling strategy rules
 - Relation types (informs, implements, summarizes, contradicts, deepens)
-- 13 enforcement rules
+- Progress tracking (4 levels: todos, state file, artifact, hindsight)
+- 16 enforcement rules
 
 ## Related
 
