@@ -1,5 +1,5 @@
 {
-  "version": "3.1.0",
+  "version": "3.2.0",
   "name": "discover",
   "description": "Brownfield codebase onboarding with layered analysis, multi-pass deepening, and tiered source priority",
 
@@ -25,17 +25,17 @@
   "modes": {
     "default": {
       "description": "Single agent, sequential. For projects <100K LOC.",
-      "passes": ["pass_1"],
+      "passes": ["pass_1_discovery"],
       "estimated_time": "15-30 minutes"
     },
     "deep": {
       "description": "Orchestrator + team of agents. For projects 100K-2M LOC.",
-      "passes": ["pass_1", "pass_2"],
+      "passes": ["pass_1_discovery", "pass_2_deepening"],
       "estimated_time": "1-2 hours"
     },
     "full": {
       "description": "Full discovery with synthesis. For critical/enterprise projects.",
-      "passes": ["pass_1", "pass_2", "pass_3"],
+      "passes": ["pass_1_discovery", "pass_2_deepening", "pass_3_synthesis"],
       "estimated_time": "2-4 hours"
     }
   },
@@ -286,27 +286,32 @@
       {
         "id": "3.1",
         "name": "DEPENDENCY_GRAPH",
-        "instructions": "Build full module dependency graph from Pass 1+2 findings. Visualize: which module calls which. Identify: circular dependencies, hub modules (too many deps), orphan modules (no deps)."
+        "instructions": "Build full module dependency graph from Pass 1+2 findings. Visualize: which module calls which. Identify: circular dependencies, hub modules (too many deps), orphan modules (no deps).",
+        "artifact_kind": "note"
       },
       {
         "id": "3.2",
         "name": "GAP_ANALYSIS",
-        "instructions": "Find gaps: module A depends on B, but B has no RFC. External API X is called but not documented in any Spec. Database table Y is used but not in schema RFC. Create Problem artifacts for each gap."
+        "instructions": "Find gaps: module A depends on B, but B has no RFC. External API X is called but not documented in any Spec. Database table Y is used but not in schema RFC. Create Problem artifacts for each gap.",
+        "artifact_kind": "problem"
       },
       {
         "id": "3.3",
         "name": "CONTRADICTION_CHECK",
-        "instructions": "Cross-reference all artifacts. Does RFC for module A say it uses PostgreSQL but module B's RFC says MySQL? Does auth RFC say JWT but code shows sessions? Flag all contradictions."
+        "instructions": "Cross-reference all artifacts. Does RFC for module A say it uses PostgreSQL but module B's RFC says MySQL? Does auth RFC say JWT but code shows sessions? Flag all contradictions.",
+        "artifact_kind": "problem"
       },
       {
         "id": "3.4",
         "name": "IMPACT_ANALYSIS",
-        "instructions": "For each module: if it breaks, what cascade? Map blast radius using dependency graph. Identify single points of failure. Create Risk assessment."
+        "instructions": "For each module: if it breaks, what cascade? Map blast radius using dependency graph. Identify single points of failure. Create Risk assessment.",
+        "artifact_kind": "note"
       },
       {
         "id": "3.5",
         "name": "HEALTH_CHECK",
-        "instructions": "Run forgeplan health. Check: any orphan artifacts? Missing links? Incomplete PRD? Create summary with project knowledge completeness score."
+        "instructions": "Run forgeplan health. Check: any orphan artifacts? Missing links? Incomplete PRD? Create summary with project knowledge completeness score.",
+        "artifact_kind": "note"
       }
     ],
     "output": {
@@ -376,6 +381,8 @@
     "state_file": {
       "path": ".forgeplan/discovery-state.json",
       "description": "Machine-readable state. Source of truth for agent position. Survives session restarts. Readable by team agents.",
+      "write_rule": "In team mode (--deep/--full), ONLY the orchestrator writes to the state file. Sub-agents report completion to orchestrator via task output. Orchestrator performs all state file updates.",
+      "conflict_resolution": "If state file and progress artifact disagree on resume, state file wins. Update progress artifact to match state file before continuing.",
       "schema": {
         "discovery_id": "string — unique ID (e.g., DISC-001)",
         "project": "string — project name",
@@ -390,17 +397,18 @@
               "artifacts": ["NOTE-001", "NOTE-002"]
             },
             "2_modules": {
-              "status": "pending|in_progress|completed",
+              "status": "pending|in_progress|completed|skipped",
               "modules": {
                 "{module_name}": {
                   "status": "pending|in_progress|completed",
                   "current_phase": "2.3_DEPENDENCIES or null",
                   "artifacts": ["RFC-001", "SPEC-001"]
                 }
-              }
+              },
+              "note": "If 0 modules found, set status=skipped with note='No bounded contexts identified'"
             },
-            "3_cross_cutting": { "status": "pending|in_progress|completed", "artifacts": [] },
-            "4_legacy_docs": { "status": "pending|in_progress|completed|skipped", "artifacts": [] }
+            "3_cross_cutting": { "status": "pending|in_progress|completed", "phases_done": [], "artifacts": [] },
+            "4_legacy_docs": { "status": "pending|in_progress|completed|skipped", "phases_done": [], "artifacts": [] }
           }
         },
         "pass_2": { "status": "pending|in_progress|completed", "deepened_artifacts": [] },
@@ -458,9 +466,11 @@
       ],
       "on_phase_complete": [
         "1. TaskUpdate → completed for this phase",
-        "2. Update state file: mark phase completed, add artifact IDs",
+        "2. Update state file: mark phase completed, add artifact IDs, update phases_done array",
         "3. Update progress artifact: [ ] → [x] for this phase",
-        "4. Log: 'Phase {id} complete → {artifact_id}'"
+        "4. After Layer 1 Phase 1.2 (STRUCTURE): backfill progress artifact Layer 2 section with actual module names",
+        "5. If Layer 1 identifies 0 modules: set 2_modules.status='skipped' in state file, proceed to Layer 3",
+        "6. Log: 'Phase {id} complete → {artifact_id}'"
       ],
       "on_pass_complete": [
         "1. All of on_phase_complete +",
@@ -492,10 +502,14 @@
     "Ask user which modules to prioritize if >8 modules found",
     "Use sampling strategy for modules with >50 source files",
     "Create summary Note at the end of each pass with links to ALL created artifacts",
-    "Pass 2 agents MUST update existing artifacts, not create duplicates",
+    "Pass 2 agents MUST update existing artifacts with [DEEPENED] tag in body, not create duplicates",
     "Pass 3 synthesis MUST run forgeplan health as final check",
+    "ALWAYS run mkdir -p .forgeplan before creating state file",
     "ALWAYS check for .forgeplan/discovery-state.json before starting — resume if exists",
-    "ALWAYS update state file after each phase completion",
-    "ALWAYS maintain progress artifact checklist in sync with state file"
+    "ALWAYS update state file after each phase completion (including phases_done arrays for all layers)",
+    "ALWAYS maintain progress artifact checklist in sync with state file",
+    "On resume: if state file and progress artifact disagree, state file wins — update progress artifact to match",
+    "In team mode: ONLY orchestrator writes to state file — sub-agents report via task output",
+    "If Layer 1 finds 0 modules: set Layer 2 status to 'skipped' and proceed to Layer 3"
   ]
 }

@@ -47,9 +47,9 @@ When ForgePlan is installed on an existing (brownfield) project, AI agents tend 
 │    DB schema → Auth → Errors → Config → Integrations → Security    │
 │    Output: RFC (DB, Auth) + Problem (security) + Spec (APIs)       │
 │                                                                     │
-│  Layer 4: LEGACY DOCS (5 min — ALWAYS LAST, can be skipped)        │
+│  Layer 4: LEGACY DOCS (5 min — ALWAYS LAST in Pass 1, can skip)    │
 │    Scan docs/ → Cross-reference with code → Tag contradictions     │
-│    Output: Notes tagged [legacy-doc]                                │
+│    Output: Notes tagged [legacy-doc] + Problem (if contradictions)  │
 ├─────────────────────────────────────────────────────────────────────┤
 │ PASS 2: DEEPENING (--deep and --full)                               │
 │                                                                     │
@@ -80,7 +80,7 @@ Not all sources are equal. The agent follows strict trust tiers:
 | Tier | Source | Trust Level | Example |
 |------|--------|-------------|---------|
 | **T1** | Code, git, manifests, DB schemas | CL3 — Highest | `package.json`, `src/`, `git log` |
-| **T2** | Tests, JSDoc, CI configs, type definitions | CL2 — Medium | `__tests__/`, `.github/workflows/` |
+| **T2** | Tests, JSDoc, CI configs, OpenAPI specs, type definitions | CL2 — Medium | `__tests__/`, `.github/workflows/`, `openapi.yaml` |
 | **T3** | docs/, README, CHANGELOG, wiki, ADRs | CL1 — Lowest | `docs/architecture.md`, `README.md` |
 
 **Rule**: If documentation says X but code does Y — **code wins**. The agent creates a Problem artifact documenting the contradiction.
@@ -249,6 +249,25 @@ Pass 2 (--deep): Per-pipeline agents trace data flow
   → Data quality checks exist but only cover 30% of tables
 ```
 
+### React SPA with Monorepo (~150K LOC)
+
+```
+Pass 1: package.json (React 18, Turborepo) → packages/ (ui, app, api-client, shared)
+  Layer 2: ui/ (design system, 40 components) → app/ (12 features/pages) → api-client/ → shared/
+  Layer 3: Redux Toolkit store, REST API client (axios), Auth0 integration, Tailwind design system
+  Layer 4: Storybook docs (current), README (basic but accurate)
+
+Pass 2 (--deep): Per-package agents
+  → ui/ has 8 components with no tests (EVID updated)
+  → app/ dashboard feature has undocumented WebSocket connection
+  → api-client/ has 3 endpoints that return different types than documented
+
+Pass 3 (--full):
+  → Gap: shared/ has no RFC (used by all 3 other packages)
+  → Contradiction: README says "REST only" but WebSocket found in dashboard
+  → Impact: api-client/ breaking cascades to app/ and shared/
+```
+
 ## Large Projects (>50 source files per module)
 
 The agent uses a **sampling strategy** in Pass 1:
@@ -275,7 +294,7 @@ A: Use `--deep` when you need thorough module-level documentation. Use `--full` 
 A: Re-run specific passes. Changed a module? Re-run Pass 2 deepening for that module's RFC. Changed auth? Re-run Layer 3 Phase 3.2. The multi-pass structure makes partial re-discovery natural.
 
 **Q: Can I skip layers?**
-A: Layer 1 is mandatory — it's your map. Layers 2-3 can be done selectively (specific modules, specific concerns). Layer 4 (legacy docs) is the only layer that can be skipped entirely — but it's recommended for detecting doc/code drift.
+A: Layer 1 is mandatory — it's your map. The ordering Layers 1 → 2 → 3 → 4 is mandatory — you cannot start Layer 4 before completing Layers 1-3. Within Layer 2, you can choose which modules to analyze (selective focus), but each analyzed module must complete all phases. Layer 4 (legacy docs) is the only layer that can be skipped entirely — but it's recommended for detecting doc/code drift.
 
 **Q: What if the project has no tests?**
 A: Phase 2.5 (TESTS) will create an Evidence artifact noting "no tests found" — that's valuable information for planning.
@@ -350,7 +369,7 @@ Mode: deep | Started: 2026-04-07T10:00
 
 ## Protocol Reference
 
-The machine-readable protocol is in `protocol.json` (v3.1.0). It contains:
+The machine-readable protocol is in `protocol.json` (v3.2.0). It contains:
 - Source tier definitions with trust levels
 - Three modes (default, deep, full) with pass configurations
 - All 4 layers with phase details and output specifications
@@ -360,9 +379,9 @@ The machine-readable protocol is in `protocol.json` (v3.1.0). It contains:
 - Sampling strategy rules
 - Relation types (informs, implements, summarizes, contradicts, deepens)
 - Progress tracking (4 levels: todos, state file, artifact, hindsight)
-- 16 enforcement rules
+- 19 enforcement rules
 
 ## Related
 
-- [ForgePlan CLI](https://github.com/ForgePlan/forgeplan) — the tool that stores and manages artifacts
+- ForgePlan CLI — the tool that stores and manages artifacts (private repo, coming soon as public)
 - [ForgePlan Marketplace](https://github.com/ForgePlan/marketplace) — plugins and agents
