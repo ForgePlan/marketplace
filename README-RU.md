@@ -1,5 +1,9 @@
 [English](README.md) | [Русский](README-RU.md)
 
+<p align="center">
+  <img src="assets/cover-slim.png" alt="ForgePlan — From Raw Idea To Proven Decision" width="100%" />
+</p>
+
 # ForgePlan Marketplace
 
 Официальный маркетплейс плагинов Claude Code от [ForgePlan](https://github.com/ForgePlan) — UX, воркфлоу, инженерные и dev-инструменты.
