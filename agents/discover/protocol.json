@@ -1,5 +1,5 @@
 {
-  "version": "3.0.0",
+  "version": "3.1.0",
   "name": "discover",
   "description": "Brownfield codebase onboarding with layered analysis, multi-pass deepening, and tiered source priority",
 
@@ -370,6 +370,116 @@
     "deepens": "source adds detail to target (Pass 2 Note → Pass 1 RFC)"
   },
 
+  "tracking": {
+    "description": "Multi-level progress tracking — ensures agent never loses position across restarts, team mode, and long runs",
+
+    "state_file": {
+      "path": ".forgeplan/discovery-state.json",
+      "description": "Machine-readable state. Source of truth for agent position. Survives session restarts. Readable by team agents.",
+      "schema": {
+        "discovery_id": "string — unique ID (e.g., DISC-001)",
+        "project": "string — project name",
+        "mode": "string — default|deep|full",
+        "started_at": "ISO 8601 timestamp",
+        "pass_1": {
+          "status": "pending|in_progress|completed",
+          "layers": {
+            "1_birds_eye": {
+              "status": "pending|in_progress|completed",
+              "phases_done": ["1.1", "1.2"],
+              "artifacts": ["NOTE-001", "NOTE-002"]
+            },
+            "2_modules": {
+              "status": "pending|in_progress|completed",
+              "modules": {
+                "{module_name}": {
+                  "status": "pending|in_progress|completed",
+                  "current_phase": "2.3_DEPENDENCIES or null",
+                  "artifacts": ["RFC-001", "SPEC-001"]
+                }
+              }
+            },
+            "3_cross_cutting": { "status": "pending|in_progress|completed", "artifacts": [] },
+            "4_legacy_docs": { "status": "pending|in_progress|completed|skipped", "artifacts": [] }
+          }
+        },
+        "pass_2": { "status": "pending|in_progress|completed", "deepened_artifacts": [] },
+        "pass_3": { "status": "pending|in_progress|completed|not_applicable" },
+        "total_artifacts": "number",
+        "last_updated": "ISO 8601 timestamp"
+      }
+    },
+
+    "todos": {
+      "description": "Claude Code TaskCreate/TaskUpdate — runtime UX with spinner. Ephemeral (lost on restart), but provides real-time progress to user.",
+      "strategy": "Create all phase tasks upfront with blockedBy dependencies. Mark in_progress when starting, completed when done.",
+      "on_restart": "Recreate todos only for remaining phases (read state file first)."
+    },
+
+    "progress_artifact": {
+      "description": "ForgePlan Note with markdown checklist — human-readable progress visible in forgeplan list / forgeplan health.",
+      "artifact_kind": "note",
+      "title_template": "Discovery Progress — {project_name}",
+      "body_template": "## Discovery: {project_name}\nMode: {mode}\nStarted: {timestamp}\n\n### Pass 1: Discovery\n- [ ] Layer 1: Bird's Eye\n  - [ ] 1.1 DETECT\n  - [ ] 1.2 STRUCTURE\n  - [ ] 1.3 DATA STORES\n  - [ ] 1.4 INFRA\n  - [ ] 1.5 GIT OVERVIEW\n  - [ ] PRD created\n- [ ] Layer 2: Module Deep Dive\n  - [ ] {module_1}\n  - [ ] {module_2}\n  - [ ] ...\n- [ ] Layer 3: Cross-Cutting\n  - [ ] 3.1 DB Schema\n  - [ ] 3.2 Auth\n  - [ ] 3.3 Errors\n  - [ ] 3.4 Config\n  - [ ] 3.5 Integrations\n  - [ ] 3.6 Security\n- [ ] Layer 4: Legacy Docs\n\n### Pass 2: Deepening\n- [ ] Not started\n\n### Pass 3: Synthesis\n- [ ] Not started",
+      "update_rule": "Replace [ ] with [x] as phases complete. Add artifact IDs after each line."
+    },
+
+    "hindsight": {
+      "description": "Optional long-term memory via Hindsight MCP. Useful for multi-session discoveries.",
+      "when_available": "Check if mcp__hindsight__memory_retain is callable",
+      "retain_at": [
+        "discovery start (project name, mode, estimated size)",
+        "end of each pass (pass number, artifact count, key findings)",
+        "discovery complete (full summary, all artifact IDs)"
+      ],
+      "recall_at": [
+        "session start when state file exists",
+        "user says 'continue discovery' or 'resume'"
+      ],
+      "not_available_fallback": "State file + progress artifact are sufficient. Hindsight is bonus, not required."
+    },
+
+    "lifecycle": {
+      "on_fresh_start": [
+        "1. Check: does .forgeplan/discovery-state.json exist? If yes → go to on_resume",
+        "2. Create state file with status=pending for all passes/layers",
+        "3. Create todos (TaskCreate) for all phases with blockedBy dependencies",
+        "4. Create progress artifact: forgeplan new note 'Discovery Progress — {project}'",
+        "5. If Hindsight available: memory_retain('Starting discovery on {project}, mode: {mode}')",
+        "6. Begin Layer 1 Phase 1.1"
+      ],
+      "on_resume": [
+        "1. Read .forgeplan/discovery-state.json",
+        "2. If Hindsight available: memory_recall('discovery {project}')",
+        "3. Report to user: 'Resuming discovery from {last_incomplete_phase}'",
+        "4. Recreate todos (TaskCreate) for REMAINING phases only",
+        "5. Read progress artifact to verify alignment with state file",
+        "6. Continue from last incomplete phase"
+      ],
+      "on_phase_complete": [
+        "1. TaskUpdate → completed for this phase",
+        "2. Update state file: mark phase completed, add artifact IDs",
+        "3. Update progress artifact: [ ] → [x] for this phase",
+        "4. Log: 'Phase {id} complete → {artifact_id}'"
+      ],
+      "on_pass_complete": [
+        "1. All of on_phase_complete +",
+        "2. Update state file: mark pass as completed",
+        "3. If Hindsight available: memory_retain('Pass {N} complete: {artifact_count} artifacts, key findings: {top_3}')",
+        "4. Create pass summary Note: forgeplan new note 'Pass {N} Summary — {project}'",
+        "5. Report to user: 'Pass {N} complete. {artifact_count} artifacts created.'"
+      ],
+      "on_discovery_complete": [
+        "1. Delete state file (discovery is done, no resume needed)",
+        "2. Final update to progress artifact: all [x], add completion timestamp",
+        "3. If Hindsight available: memory_retain('Discovery complete: {mode}, {total_artifacts} artifacts, key: {summary}')",
+        "4. Create final summary Note with all artifact links",
+        "5. Run forgeplan health",
+        "6. Report to user with full summary"
+      ]
+    }
+  },
+
   "rules": [
     "ALWAYS complete Layer 1 before starting Layer 2",
     "ALWAYS complete Layers 1-3 before Layer 4 (docs)",
@@ -383,6 +493,9 @@
     "Use sampling strategy for modules with >50 source files",
     "Create summary Note at the end of each pass with links to ALL created artifacts",
     "Pass 2 agents MUST update existing artifacts, not create duplicates",
-    "Pass 3 synthesis MUST run forgeplan health as final check"
+    "Pass 3 synthesis MUST run forgeplan health as final check",
+    "ALWAYS check for .forgeplan/discovery-state.json before starting — resume if exists",
+    "ALWAYS update state file after each phase completion",
+    "ALWAYS maintain progress artifact checklist in sync with state file"
   ]
 }
