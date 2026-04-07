@@ -39,13 +39,15 @@ cat .forgeplan/discovery-state.json 2>/dev/null
 **If state file EXISTS** → RESUME mode:
 1. Read state file — find last incomplete phase
 2. If Hindsight MCP available: `memory_recall("discovery {project}")`
-3. Report to user: "Resuming discovery from {last_phase}"
-4. Create todos (TaskCreate) for REMAINING phases only
-5. Continue from last incomplete phase
+3. Read progress artifact — verify alignment with state file. **If they disagree, state file wins** — update progress artifact to match
+4. Report to user: "Resuming discovery from {last_phase}"
+5. Create todos (TaskCreate) for REMAINING phases only
+6. Continue from last incomplete phase
 
 **If state file DOES NOT EXIST** → FRESH mode:
 1. Create state file:
 ```bash
+mkdir -p .forgeplan
 cat > .forgeplan/discovery-state.json << 'EOF'
 {
   "discovery_id": "DISC-001",
@@ -157,16 +159,17 @@ Choose mode based on project size:
        │      │      │      │
        └──────┴──────┴──────┘
               │
-              ▼  (--deep)
+              ▼  (Pass 1 final)
+         Layer 4: Legacy docs
+         (ALWAYS LAST in Pass 1)
+              │
+              ▼  (--deep/--full)
          Pass 2: Deepening agents
          (one per RFC/Spec/Problem)
               │
-              ▼  (--full)
+              ▼  (--full only)
          Pass 3: Synthesis
          (gaps + impact + health)
-              │
-              ▼
-         Layer 4: Legacy docs (ALWAYS LAST)
               │
               ▼
          Summary report
@@ -344,7 +347,7 @@ forgeplan link RFC-xxx PRD-xxx --relation implements
 
 ---
 
-## Layer 3: CROSS-CUTTING CONCERNS
+## Layer 3: CROSS-CUTTING
 
 **Goal**: Analyze horizontal concerns that span all modules.
 
@@ -434,21 +437,23 @@ forgeplan link PROB-xxx NOTE-xxx --relation contradicts
 
 After Pass 1 completes, review all created artifacts. For each RFC, Spec, and Problem:
 
+**IMPORTANT**: All deepening agents add `[DEEPENED]` marker to the artifact body header. This marks artifacts that have been through Pass 2. In team mode, only the orchestrator writes to the state file — sub-agents report via task output.
+
 ### Deepening RFCs (Module architecture)
 Spawn sub-agent with prompt:
-> "Read ALL files in {module_path}/ (not just entry points). For RFC-XXX '{module_name}': document every public function with signature and purpose. Find hidden dependencies not visible from top-level imports. Identify design patterns used. Map internal data flow. Update RFC-XXX body via `forgeplan update RFC-XXX --body '...'`"
+> "Read ALL files in {module_path}/ (not just entry points). For RFC-XXX '{module_name}': document every public function with signature and purpose. Find hidden dependencies not visible from top-level imports. Identify design patterns used. Map internal data flow. Add `[DEEPENED]` marker at top of body. Update RFC-XXX body via `forgeplan update RFC-XXX --body '...'`"
 
 ### Deepening Specs (API surface)
 Spawn sub-agent with prompt:
-> "Read all endpoint handlers in {module_path}/. For SPEC-XXX '{module_name} API': document complete request/response schemas with types. Find undocumented endpoints. Add error response schemas. Verify OpenAPI/proto matches actual code. Update SPEC-XXX body."
+> "Read all endpoint handlers in {module_path}/. For SPEC-XXX '{module_name} API': document complete request/response schemas with types. Find undocumented endpoints. Add error response schemas. Verify OpenAPI/proto matches actual code. Add `[DEEPENED]` marker at top of body. Update SPEC-XXX body."
 
 ### Deepening Problems (Tech debt)
 Spawn sub-agent with prompt:
-> "For PROB-XXX '{description}': run git blame on identified hot files. Trace root cause through code. When was this introduced? What depends on it? Propose concrete fix with effort estimate. Update PROB-XXX body. If fix is clear, create: `forgeplan new solution '{fix description}'`"
+> "For PROB-XXX '{description}': run git blame on identified hot files. Trace root cause through code. When was this introduced? What depends on it? Propose concrete fix with effort estimate. Add `[DEEPENED]` marker at top of body. Update PROB-XXX body. If fix is clear, create: `forgeplan new solution '{fix description}'`"
 
 ### Deepening Evidence (Test baseline)
 Spawn sub-agent with prompt:
-> "For EVID-XXX '{module_name} test baseline': read ALL test files. Count assertions per test. Map what business logic is tested vs untested. Identify test patterns (mocks vs real DB). Update EVID-XXX body with specific numbers."
+> "For EVID-XXX '{module_name} test baseline': read ALL test files. Count assertions per test. Map what business logic is tested vs untested. Identify test patterns (mocks vs real DB). Add `[DEEPENED]` marker at top of body. Update EVID-XXX body with specific numbers."
 
 ### Pass 2 Summary
 ```bash
