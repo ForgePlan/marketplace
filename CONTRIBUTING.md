@@ -100,7 +100,38 @@ Add your plugin to `.claude-plugin/marketplace.json`:
 |-------|--------|-------|
 | Event | `PreToolUse`, `PostToolUse` | Top-level key |
 | `matcher` | Tool name or `\|`-joined list | e.g. `"Bash"`, `"Write\|Edit"` |
-| `type` | `"command"` | Only supported type |
+| `type` | `"command"` | **Only supported type — `"prompt"` is BANNED (see below)** |
 | `command` | Shell command | Use `${CLAUDE_PLUGIN_ROOT}` for paths |
 | `timeout` | Integer (seconds) | Recommended: 3-5 |
+
+### Why `"type": "prompt"` is banned
+
+Prompt-type hooks inject an LLM instruction into the agent ("Check the command and respond if X, else respond with empty string"). This is **non-deterministic** and causes two critical problems:
+
+1. **False blocks**: The LLM sometimes "thinks out loud" before returning empty, and its reasoning is interpreted by the harness as a stop signal. Result: agent halts on unrelated commands.
+2. **Token cost**: Every single tool call pays for an LLM round-trip, even when the hook should be silent.
+
+**Correct pattern — command hook with silent exit:**
+
+```bash
+#!/usr/bin/env bash
+# Hint about /sync only when forgeplan activate runs. Silent otherwise.
+
+INPUT=$(cat)
+CMD=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null || true)
+
+[ -z "$CMD" ] && exit 0
+
+case "$CMD" in
+  *"forgeplan activate"*)
+    echo '{"message":"Consider /sync to keep Orchestra in sync."}'
+    exit 0
+    ;;
+  *)
+    exit 0  # silent for all other commands
+    ;;
+esac
+```
+
+The CI check `Ban prompt-type hooks` enforces this rule — any `"type": "prompt"` in `hooks.json` fails the build.
 - [ ] README.md included in plugin directory

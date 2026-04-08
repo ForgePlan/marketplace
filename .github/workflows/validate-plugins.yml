@@ -103,6 +103,42 @@ jobs:
           done
           echo "All hooks validated"
 
+      - name: Ban prompt-type hooks
+        run: |
+          python3 << 'SCRIPT'
+          import json, os, sys
+          violations = []
+          for root, _, files in os.walk('plugins'):
+              for f in files:
+                  if f != 'hooks.json':
+                      continue
+                  path = os.path.join(root, f)
+                  with open(path) as fh:
+                      try:
+                          d = json.load(fh)
+                      except json.JSONDecodeError:
+                          continue
+                  def scan(obj, trail):
+                      if isinstance(obj, dict):
+                          if obj.get('type') == 'prompt':
+                              violations.append(f"{path}: {trail} uses type=prompt (BANNED)")
+                          for k, v in obj.items():
+                              scan(v, f"{trail}.{k}")
+                      elif isinstance(obj, list):
+                          for i, v in enumerate(obj):
+                              scan(v, f"{trail}[{i}]")
+                  scan(d, 'root')
+          if violations:
+              print('FAIL: prompt-type hooks are banned (non-deterministic, cause false blocks).')
+              print('      Use type=command with a bash/python script that exits 0 silently when not matching.')
+              print('      See CONTRIBUTING.md for details.')
+              print()
+              for v in violations:
+                  print(f'  {v}')
+              sys.exit(1)
+          print('OK: No prompt-type hooks found')
+          SCRIPT
+
       - name: Check SKILL.md frontmatter
         run: |
           set -o pipefail
