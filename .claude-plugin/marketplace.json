@@ -111,6 +111,29 @@
       ]
     },
     {
+      "name": "forgeplan-brownfield-pack",
+      "source": "./plugins/forgeplan-brownfield-pack",
+      "description": "Brownfield migration pack for forgeplan — ingest existing docs (Obsidian, MADR, ad-hoc markdown) and C4/DDD/autoresearch analysis output into a structured forgeplan graph. Implements ADR-009 orchestrator model: composes existing marketplace plugins (c4-architecture, autoresearch, ddd-expert, feature-dev) via mapping YAMLs + playbook recipes.",
+      "version": "1.0.0",
+      "author": {
+        "name": "ForgePlan"
+      },
+      "homepage": "https://github.com/ForgePlan/marketplace",
+      "license": "MIT",
+      "keywords": [
+        "forgeplan",
+        "brownfield",
+        "migration",
+        "ingest",
+        "orchestrator",
+        "c4",
+        "autoresearch",
+        "ddd",
+        "obsidian",
+        "madr"
+      ]
+    },
+    {
       "name": "agents-core",
       "source": "./plugins/agents-core",
       "description": "Core development agents: debugger, code reviewer, error detective, performance engineer, production validator, plus complete dev team (coder, planner, researcher, reviewer, tester, TDD).",
