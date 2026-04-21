@@ -1,0 +1,186 @@
+# ddd-to-forge.yaml — mapping rules for ddd-domain-expert plugin output
+# Empirically derived from Spike-3 (2026-04-21) on Forgeplan repo.
+# Input: DDD analysis report (markdown) produced by /ddd-domain-expert workflow.
+# Output: forge artifacts (Epic, PRD, Spec, Note, Problem, Glossary, Invariant,
+#         Hypothesis, Domain-Model) via `forgeplan ingest`.
+#
+# NOTE: some target kinds (glossary, invariant, hypothesis, domain-model) are
+# future EPIC-008 kinds — ingest must check availability and downgrade to
+# closest current kind (glossary→note, invariant→spec, hypothesis→problem,
+# domain-model→spec) with explicit warning until EPIC-008 Wave 1 ships.
+
+schema_version: "1.0"
+mapping_name: ddd-to-forge
+source_plugin: ddd-domain-expert
+source_spec_version: ">=1.0.0 <2.0.0"
+
+sources:
+  - path_pattern: "docs/architecture/ddd-analysis-*.md"
+    mapping: ddd_report_to_forge
+  - path_pattern: "docs/ddd/*.md"
+    mapping: ddd_report_to_forge
+
+# ─── Primary mapping: full DDD report → collection of forge artifacts
+mappings:
+
+  ddd_report_to_forge:
+    description: |
+      Single DDD analysis report expands into many artifacts.
+      One Epic (overall analysis), N PRDs per bounded context,
+      M Notes per glossary term, K Problems per category error.
+    extract_children:
+      - selector: "## 1. Bounded Contexts > ### *"
+        produces: epic_or_prd  # root epic if system-wide, else PRD per context
+        mapping: bounded_context_to_epic
+      - selector: "## 2. Aggregates > ### * Context > *"
+        produces: prd
+        mapping: aggregate_to_prd
+      - selector: "## 3. Ubiquitous Language Glossary > table rows"
+        produces: glossary
+        fallback_kind: note  # pre-EPIC-008
+        mapping: glossary_term_to_glossary_artifact
+      - selector: "## 4. Domain Events > numbered list items"
+        produces: note
+        mapping: domain_event_to_note
+      - selector: "## 5. Context Integration Patterns > table rows"
+        produces: note
+        mapping: integration_pattern_to_note
+      - selector: "## 6. Category Errors Found > **E* —"
+        produces: problem
+        mapping: category_error_to_problem
+
+  # ─── Bounded Context → Epic (for top-level system) or PRD (for sub-context)
+  bounded_context_to_epic:
+    target_kind: epic
+    extract:
+      title: "Bounded Context: $name (e.g. 'Trust & Scoring')"
+      body_sections:
+        - from: "**Responsibility**:"
+          to: "## Vision"
+        - from: "**Modules**: list"
+          to: "## Scope (In Scope — module paths)"
+        - from: "**Neighbors**: patterns"
+          to: "## Integration Patterns (Related Artifacts)"
+      synthesized:
+        goals: "[AUTO — review and make measurable]"
+        target_users: "[AUTO from module maintainers; review]"
+    source_ref:
+      format: "ddd-analysis-{spike}.md:{start_line}-{end_line}"
+    defaults:
+      status: draft
+      depth: deep
+      author: ddd-ingest
+
+  # ─── Aggregate → PRD (one per aggregate root)
+  aggregate_to_prd:
+    target_kind: prd
+    extract:
+      title: "Aggregate: $name (from $context)"
+      body_sections:
+        - from: "aggregate_root bullet body"
+          to: "## Problem (what this aggregate solves)"
+        - from: "Invariants:"
+          to: "## Functional Requirements (1 FR per invariant)"
+      synthesized:
+        non_goals: "[AUTO — aggregate boundary; review]"
+        acceptance_criteria: "[per-invariant: code/test reference]"
+    links:
+      - relation: refines
+        target: "{parent_bounded_context_epic_id}"
+    source_ref:
+      format: "ddd-analysis-{spike}.md:{start_line}-{end_line}"
+
+  # ─── Glossary term → future EPIC-008 glossary kind (fallback: note)
+  glossary_term_to_glossary_artifact:
+    target_kind: glossary  # EPIC-008 kind
+    fallback_kind: note    # pre-EPIC-008
+    extract:
+      title: "$term (e.g. 'R_eff')"
+      body_sections:
+        - from: "Definition column"
+          to: "## Definition"
+        - from: "Context column"
+          to: "## Bounded Context"
+        - from: "Code reference column"
+          to: "## Code Anchor"
+      synthesized:
+        aliases: "[]"
+        confidence: verified  # code-anchored
+    source_ref:
+      format: "ddd-analysis-{spike}.md:glossary-row-{row_n}"
+
+  # ─── Domain Event → Note (reference material)
+  domain_event_to_note:
+    target_kind: note
+    extract:
+      title: "Domain Event: $name (e.g. 'ArtifactActivated')"
+      body: full_bullet_content  # includes fields schema + source reference
+    source_ref:
+      format: "ddd-analysis-{spike}.md:events-{n}"
+    defaults:
+      expires_in_days: null  # reference material; keep
+
+  # ─── Integration Pattern → Note (reference material)
+  integration_pattern_to_note:
+    target_kind: note
+    extract:
+      title: "Integration: $pair (e.g. 'Lifecycle → Scoring — Customer-Supplier')"
+      body_sections:
+        - from: "Pattern column"
+          to: "## Pattern (DDD strategic)"
+        - from: "Notes column"
+          to: "## Rationale"
+    source_ref:
+      format: "ddd-analysis-{spike}.md:integration-row-{row_n}"
+
+  # ─── Category Error → Problem (triages into PROB artifacts per issue)
+  category_error_to_problem:
+    target_kind: problem
+    extract:
+      title: "Category Error: $summary (e.g. 'Artifact/ArtifactRecord split')"
+      body_sections:
+        - from: "**E? — body**"
+          to: "## Problem Statement"
+        - from: "Recommendation phrases"
+          to: "## Proposed Solution"
+        - from: "code references in body"
+          to: "## Signal (code locations)"
+      synthesized:
+        severity: "medium"  # upstream ddd-expert doesn't grade severity; human reviews
+        root_cause: "[inherited from Problem Statement last paragraph]"
+    source_ref:
+      format: "ddd-analysis-{spike}.md:category-errors-E{n}"
+
+# Rules applied to all ingested artifacts
+universal_rules:
+  - always_add_sources_section: true
+  - always_draft_status: true
+  - hash_for_idempotency: true
+  - on_source_removal: "mark artifact as stale"
+  - on_kind_fallback: "emit warning; include original target_kind in sources section"
+
+# Compat shim while EPIC-008 kinds are not yet shipped in forgeplan-core
+compat_notes:
+  pre_epic_008:
+    unsupported_kinds: [glossary, invariant, hypothesis, domain-model]
+    fallback_strategy: |
+      If target_kind is in unsupported_kinds:
+        - glossary → note (title prefixed "Glossary: ")
+        - invariant → spec (body header "## Invariant Rule")
+        - hypothesis → problem (body header "## Hypothesis (candidates)")
+        - domain-model → spec (body header "## Domain Model")
+      Record original kind in frontmatter `x-forgeplan-hints.intended_kind`
+      so ingest can re-materialize after EPIC-008 Wave 1 ships.
+
+# Example artifact counts from Spike-3 on Forgeplan repo (2026-04-21)
+example_counts:
+  source: "Forgeplan Rust workspace — spike-3 run 2026-04-21"
+  produces:
+    epic: 1                     # overall system DDD view
+    prd: 9                      # 1 per bounded context
+    prd_per_aggregate: 23       # 1 per aggregate root (Artifact, ArtifactRecord, GatesReport, PhaseState, EvidenceItem, Verdict, EvidenceType, ReffCi, AssuranceReport, ArtifactKind, Status, Link, Mode, Edge, BoundedContext, NewArtifact, VectorSearchHit, FpfChunk, ChangeLogEntry, Claim, DispatchPlan, ArtifactCandidate, AgentIdentity)
+    glossary_or_note: 23        # from ubiquitous language
+    note_per_event: 12          # domain events
+    note_per_integration: 10    # context pairs
+    problem: 6                  # category errors E1-E6
+  total_estimated: 84           # artifacts from one DDD analysis session
