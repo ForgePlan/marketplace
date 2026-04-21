@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.6.0"
+    "version": "1.7.0"
   },
   "plugins": [
     {
@@ -33,7 +33,7 @@
       "name": "forgeplan-workflow",
       "source": "./plugins/forgeplan-workflow",
       "description": "Structured engineering workflow for forgeplan users. Provides forge-cycle (full dev cycle), forge-audit (multi-expert review), methodology knowledge base, and quality gate hooks. Requires forgeplan CLI.",
-      "version": "1.4.0",
+      "version": "1.5.0",
       "author": {
         "name": "ForgePlan"
       },
