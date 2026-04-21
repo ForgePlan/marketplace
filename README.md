@@ -36,7 +36,8 @@ Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/
 | Frontend | + laws-of-ux + agents-domain | UX + framework agents |
 | Architect | + fpf + agents-pro + agents-sparc | Thinking + SPARC |
 | Forgeplan user | + forgeplan-workflow + forgeplan-orchestra | Full lifecycle |
-| Everything | All 10 plugins | Complete ecosystem |
+| Brownfield migration | + forgeplan-brownfield-pack | Ingest legacy docs + C4/DDD/research analyses |
+| Everything | All 11 plugins | Complete ecosystem |
 
 ## Available Plugins
 
@@ -155,6 +156,28 @@ Bidirectional sync, Session Start Protocol with Inbox Pattern, and methodology k
 
 ```bash
 /plugin install forgeplan-orchestra@ForgePlan-marketplace
+```
+
+---
+
+### [forgeplan-brownfield-pack](plugins/forgeplan-brownfield-pack/)
+
+> Brownfield migration pack — ingest legacy docs and agent analyses into a structured forgeplan graph.
+
+Implements the **orchestrator model** ([ADR-009](https://github.com/ForgePlan/forgeplan/blob/dev/.forgeplan/adrs/ADR-009-forgeplan-as-orchestrator-playbook-skill-agent-mapping-pack-marketplace-model.md)): forgeplan does not re-implement extraction. Instead, this pack composes existing marketplace plugins (`c4-architecture`, `autoresearch`, `ddd-expert`, `feature-dev`) with forgeplan's ingest engine via mapping YAMLs and playbook recipes.
+
+| Component | What you get |
+|-----------|-------------|
+| `mappings/c4-to-forge.yaml` | Maps C4 context markdown to forge artifacts (Epic, PRD, ADR, Evidence) |
+| `playbooks/` | (scaffolded) Recipes for brownfield discovery + migration — requires forgeplan runtime v0.25+ |
+| `skills/` | (scaffolded) Extraction-specific guidance — forge-classify, madr-detection |
+| `agents/` | (scaffolded) Brownfield-specific sub-agents |
+
+> [!WARNING]
+> **Alpha.** Mapping layer (c4-to-forge) validated at CL3 on Forgeplan repo (2026-04-20). Playbook runtime in active development (Forgeplan EPIC-007 / PRD-065). Requires `forgeplan` CLI v0.25+.
+
+```bash
+/plugin install forgeplan-brownfield-pack@ForgePlan-marketplace
 ```
 
 ---

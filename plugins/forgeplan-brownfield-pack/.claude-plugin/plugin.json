@@ -1,0 +1,36 @@
+{
+  "name": "forgeplan-brownfield-pack",
+  "version": "1.0.0",
+  "description": "Brownfield migration pack for forgeplan — ingest existing docs (Obsidian, MADR, ad-hoc markdown) and C4/DDD/autoresearch analysis output into a structured forgeplan graph. Implements ADR-009 orchestrator model: composes existing marketplace plugins (c4-architecture, autoresearch, ddd-expert, feature-dev) via mapping YAMLs + playbook recipes. Ships c4-to-forge mapping validated at CL3 on Forgeplan repo.",
+  "author": {
+    "name": "ForgePlan"
+  },
+  "homepage": "https://github.com/ForgePlan/marketplace",
+  "repository": "https://github.com/ForgePlan/marketplace",
+  "license": "MIT",
+  "keywords": [
+    "forgeplan",
+    "brownfield",
+    "migration",
+    "ingest",
+    "orchestrator",
+    "c4",
+    "autoresearch",
+    "ddd",
+    "obsidian",
+    "madr"
+  ],
+  "category": "workflow",
+  "requires": {
+    "cli": [{"name": "forgeplan", "version": ">=0.25.0", "optional": false, "reason": "Requires playbook runtime (EPIC-007 PRD-065) and ingest engine (PRD-066)"}],
+    "mcp": [],
+    "plugins": []
+  },
+  "supersedes": {},
+  "components": {
+    "commands": [],
+    "agents": [],
+    "skills": [],
+    "hooks": []
+  }
+}
