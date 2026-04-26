@@ -208,16 +208,25 @@ SKILL.md (роутер)
 Если нужна только база знаний без команд, агентов и хуков:
 
 ```bash
-npx skills add ForgePlan/laws-of-ux-standalone -g
+# Laws of UX:
+npx skills add ForgePlan/loux -g
+
+# First Principles Framework:
+npx skills add ForgePlan/fpf -g
 ```
+
+Standalone-репо **автоматически зеркалируются** из маркетплейса — тот же контент, короткая команда установки. Issues и PR — в этот маркетплейс-репо.
+
+> Старый алиас `ForgePlan/laws-of-ux-standalone` всё ещё работает, но устарел — используйте `ForgePlan/loux`.
+
+### Плагин vs Skill — что включено
 
 | | Плагин (маркетплейс) | Skill (npx) |
 |---|:---:|:---:|
-| 30 UX-законов | Да | Да |
-| 9 файлов code patterns | Да | Да |
-| Команда `/ux-review` | Да | Нет |
-| Команда `/ux-law` | Да | Нет |
-| UX Reviewer агент | Да | Нет |
+| База знаний (законы / FPF spec) | Да | Да |
+| Файлы code patterns | Да | Да |
+| Slash-команды (`/ux-review`, `/fpf`, ...) | Да | Нет |
+| Reviewer / advisor агенты | Да | Нет |
 | Auto-hint хуки | Да | Нет |
 
 ## Обновление

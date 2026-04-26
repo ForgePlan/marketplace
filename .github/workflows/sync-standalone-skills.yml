@@ -1,0 +1,128 @@
+name: Sync Standalone Skill Mirrors
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'plugins/fpf/skills/fpf-knowledge/**'
+      - 'plugins/laws-of-ux/skills/ux-laws/**'
+      - '.github/workflows/sync-standalone-skills.yml'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Which mirror(s) to sync'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - fpf
+          - loux
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - plugin: fpf
+            skill_path: plugins/fpf/skills/fpf-knowledge
+            target_repo: ForgePlan/fpf
+          - plugin: loux
+            skill_path: plugins/laws-of-ux/skills/ux-laws
+            target_repo: ForgePlan/loux
+
+    steps:
+      - name: Skip if not selected (manual run)
+        id: gate
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_TARGET: ${{ github.event.inputs.target }}
+          MATRIX_PLUGIN: ${{ matrix.plugin }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            if [ "$INPUT_TARGET" != "all" ] && [ "$INPUT_TARGET" != "$MATRIX_PLUGIN" ]; then
+              echo "Skipping $MATRIX_PLUGIN (manual target=$INPUT_TARGET)"
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout marketplace
+        if: steps.gate.outputs.skip != 'true'
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          path: marketplace
+          fetch-depth: 1
+
+      - name: Checkout target standalone repo
+        if: steps.gate.outputs.skip != 'true'
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: ${{ matrix.target_repo }}
+          token: ${{ secrets.STANDALONE_SYNC_TOKEN }}
+          path: target
+          fetch-depth: 1
+
+      - name: Sync skill content
+        if: steps.gate.outputs.skip != 'true'
+        env:
+          SKILL_PATH: ${{ matrix.skill_path }}
+        run: |
+          set -euo pipefail
+          src="marketplace/$SKILL_PATH"
+          dst="target"
+
+          if [ ! -d "$src" ]; then
+            echo "::error::Source skill path not found: $src"
+            exit 1
+          fi
+
+          # Sync SKILL.md (overwrite — marketplace is source of truth)
+          cp "$src/SKILL.md" "$dst/SKILL.md"
+
+          # Sync sections/ — mirror exactly (deletes removed files)
+          rm -rf "$dst/sections"
+          cp -R "$src/sections" "$dst/sections"
+
+          # README.md and .gitignore are preserved (standalone-specific)
+
+          echo "Synced from $src to $dst"
+
+      - name: Commit and push if changed
+        if: steps.gate.outputs.skip != 'true'
+        working-directory: target
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+          SOURCE_REPO: ${{ github.repository }}
+          EVENT_NAME: ${{ github.event_name }}
+          TARGET_REPO: ${{ matrix.target_repo }}
+        run: |
+          set -euo pipefail
+          git config user.name "forgeplan-bot"
+          git config user.email "noreply@github.com"
+
+          git add -A SKILL.md sections
+
+          if git diff --cached --quiet; then
+            echo "No changes — skipping commit"
+            exit 0
+          fi
+
+          short_sha="${SOURCE_SHA:0:7}"
+
+          git commit -m "chore: sync from marketplace@${short_sha}
+
+          Auto-synced by .github/workflows/sync-standalone-skills.yml
+          Source: https://github.com/${SOURCE_REPO}/commit/${SOURCE_SHA}
+
+          Triggered by: ${EVENT_NAME}"
+
+          git push origin HEAD
+          echo "Pushed sync commit to ${TARGET_REPO}"
