@@ -235,16 +235,25 @@ SKILL.md (router)
 If you only want the knowledge base without commands, agents, or hooks:
 
 ```bash
-npx skills add ForgePlan/laws-of-ux-standalone -g
+# Laws of UX:
+npx skills add ForgePlan/loux -g
+
+# First Principles Framework:
+npx skills add ForgePlan/fpf -g
 ```
+
+These standalone repos are **auto-mirrored** from the marketplace — same content, shorter install command. Issues and PRs go to this marketplace repo.
+
+> Legacy alias `ForgePlan/laws-of-ux-standalone` still works but is deprecated in favour of `ForgePlan/loux`.
+
+### Plugin vs Skill — what's included
 
 | | Plugin (marketplace) | Skill (npx) |
 |---|:---:|:---:|
-| 30 UX laws knowledge base | Yes | Yes |
-| 9 code pattern files | Yes | Yes |
-| `/ux-review` command | Yes | No |
-| `/ux-law` command | Yes | No |
-| UX Reviewer agent | Yes | No |
+| Knowledge base (laws / FPF spec) | Yes | Yes |
+| Code pattern files | Yes | Yes |
+| Slash commands (`/ux-review`, `/fpf`, ...) | Yes | No |
+| Reviewer / advisor agents | Yes | No |
 | Auto-hint hooks | Yes | No |
 
 ## Update
