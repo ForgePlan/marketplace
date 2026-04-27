@@ -76,6 +76,17 @@ Step 8: Commit
 | R_eff | Скоринг доказательств и quality gates |
 | Memory | Кросс-сессионная память через CLAUDE.md и Hindsight |
 
+### Hint Contract — контракт подсказок (v1.5.0+, требует Forgeplan v0.25.0+)
+
+Forgeplan v0.25.0 ввёл **5-правильный hint contract** — каждый CLI/MCP вывод emit'ит один из маркеров:
+- `Next: <command>` — основное действие
+- `Or: <command>` — альтернатива
+- `Wait: <condition>` — async retry
+- `Done.` — workflow complete
+- `Fix: <command>` — error remediation
+
+Этот плагин теперь учит агентов автоматически читать эти маркеры. Coverage в Forgeplan v0.25.0: **100%** (70/70 CLI команд). См. секцию `06-output-hints/agent-protocol.md` в методологии для полного протокола чтения.
+
 ## Лицензия
 
 MIT

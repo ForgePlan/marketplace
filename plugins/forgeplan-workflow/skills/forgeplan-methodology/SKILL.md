@@ -175,6 +175,7 @@ Match the user's question to a section and read only that file (lazy load, save 
 | Depth, routing, tactical vs deep | `sections/03-depth/calibration.md` |
 | Scoring, R_eff, congruence, decay, CL levels | `sections/04-scoring/reff-scoring.md` |
 | Quality gates, adversarial review, audits | `sections/05-quality/gates.md` |
+| Reading forgeplan output, hints, Next:/Done./Fix: markers | `sections/06-output-hints/agent-protocol.md` |
 
 ---
 
@@ -217,3 +218,19 @@ progress checkpoints on long tasks.
 Don't create all 10 artifact types for every task. Tactical = just do it. Standard = PRD + RFC. Deep+ only needs the full pipeline when the decision is irreversible or cross-team.
 
 The goal is to **think before coding**, not to generate documents nobody reads.
+
+---
+
+## Hint Protocol (PRD-071, v0.25.0+)
+
+Every Forgeplan CLI/MCP output emits **one** contract marker telling the agent what to do next:
+
+- `Next: <command>` — primary action (run as-is, real IDs, no placeholders)
+- `Or: <command>` — alternate when primary blocks
+- `Wait: <condition>` — async/TTL retry signal
+- `Done.` — workflow complete (terminal)
+- `Fix: <command>` — error remediation (paired with `Error:`)
+
+**Read these markers FIRST after every command** — they replace methodology recall. The full contract spec, good/bad examples, and reading protocol live in `sections/06-output-hints/agent-protocol.md`.
+
+JSON consumers: read `_next_action` field in CLI JSON / MCP responses (or stderr `Next:` for `list --json` and `tree --json` which preserve bare-array stdout for backward compat).

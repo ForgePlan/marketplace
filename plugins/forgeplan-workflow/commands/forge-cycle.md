@@ -7,6 +7,24 @@ You are executing the **forgeplan engineering cycle** — a structured workflow 
 
 Follow these steps in order. Do NOT skip steps. If a step fails, stop and report the issue.
 
+## Reading Forgeplan Output (v0.25.0+)
+
+After **every** `forgeplan` command in this cycle, read the contract marker:
+
+- `Next: <command>` → run it as the next step
+- `Fix: <command>` → run it to recover from error
+- `Or: <command>` → use only if primary `Next:` blocks
+- `Wait: <condition>` → retry after condition
+- `Done.` → step complete, move on
+
+JSON consumers read `_next_action` field. List/tree `--json` puts hint on stderr (bare array on stdout for jq compat).
+
+Full reference: [`forgeplan-methodology` skill section 06](../skills/forgeplan-methodology/sections/06-output-hints/agent-protocol.md).
+
+**Don't paraphrase or substitute placeholders** — execute the command exactly.
+
+---
+
 ## Step 1: Health Check
 
 Run `forgeplan health` to check the project state.
