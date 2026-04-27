@@ -1,7 +1,7 @@
 {
   "name": "dev-toolkit",
-  "version": "1.5.1",
-  "description": "Universal engineering toolkit: multi-expert audit, wave-based sprints, session context recall, card-based structured reports, and safety hooks. Works with any project and language.",
+  "version": "1.6.0",
+  "description": "Universal engineering toolkit: multi-expert audit, wave-based sprints, session context recall, card-based structured reports with auto-trigger hooks, and safety hooks. Works with any project and language.",
   "author": {
     "name": "ForgePlan"
   },
@@ -28,6 +28,6 @@
     "commands": ["audit", "sprint", "recall", "report"],
     "agents": ["dev-advisor"],
     "skills": ["forge-report"],
-    "hooks": ["PreToolUse:Bash", "PostToolUse:Write|Edit|MultiEdit"]
+    "hooks": ["SessionStart", "PreToolUse:Bash", "PostToolUse:Write|Edit|MultiEdit", "PostToolUse:.*", "Stop"]
   }
 }
