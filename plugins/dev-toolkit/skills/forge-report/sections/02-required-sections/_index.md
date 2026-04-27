@@ -1,24 +1,35 @@
 # 02-required-sections — Mandatory blocks for every report
 
-These sections appear in **every** template. Their job is to surface
-what's normally invisible: boundaries, risks, future state.
+These sections appear in **every** template under their canonical headings.
+Their job is to surface what's normally invisible: boundaries, risks, future state.
 
-## Files
+## The 6 required sections
 
-| File | Section | Why mandatory |
-|------|---------|---------------|
-| `tldr.md` | TL;DR | Reader scans first 3 lines |
-| `not-done.md` | What was NOT done | Confirms boundaries |
-| `reversibility.md` | What can be rolled back | Trust + safety |
-| `drift-risks.md` | What may decay over time | Future maintenance |
-| `next-steps.md` | What user does next | Pickup pointer |
+| # | Section heading (Russian) | What it answers | File |
+|---|---|---|---|
+| 1 | TL;DR (italic blockquote at top) | "What changed and what do I need to do?" | `tldr.md` |
+| 2 | `## ⚪ Что не сделано — намеренно` | "Did you stay in scope?" | `not-done.md` |
+| 3 | `## 🔄 Что можно откатить если передумаешь` | "Can I undo this safely?" | `reversibility.md` |
+| 4 | `## ⚠️ Что может поломаться со временем` | "What watches do I need on this?" | `drift-risks.md` |
+| 5 | `## ➡️ Что делать дальше` | "What's next, and who does it?" | `next-steps.md` |
+| 6 | `## 💰 Сколько это стоило` | "How much effort did this take?" | (in template skeleton) |
+
+Plus the type-specific body (Что создано / Что обновлено / Корневая причина / etc.) per template.
 
 ## Why "required" matters
 
-Optional sections get skipped, then forgotten. **Mandatory sections force the author to think about them**, even if the answer is "—" (none).
+Optional sections get skipped, then forgotten. **Mandatory sections force the author to think about them**, even if the answer is "Не сделано: —".
 
-A 5-line "Not done: nothing intentionally skipped" is more useful than silence — it confirms the author *thought* about boundaries.
+A 3-line "Не сделано: ничего намеренно не пропущено" is more useful than silence — it confirms the author *thought* about boundaries.
 
 ## Compactness rule
 
-Required sections should be compact. If a section needs >5 lines, consider splitting into a dedicated section under the type-specific body.
+Required sections should be compact:
+- TL;DR: 1-3 sentences
+- Не сделано: 1-3 cards
+- Откатить: 1-2 cards
+- Поломается: 1-3 cards
+- Что дальше: 2-5 numbered steps with addressee
+- Стоимость: 4-5 lines
+
+If a required section needs more — split into the type-specific body.

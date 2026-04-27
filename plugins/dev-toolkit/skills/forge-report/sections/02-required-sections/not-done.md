@@ -1,25 +1,27 @@
-# Not done (intentional) — Required section
+# `## ⚪ Что не сделано — намеренно` — Required section
 
 Explicitly list what was **not** done — and that this was on purpose.
 
 ## Why this matters
 
-Without an explicit "Not done" section:
+Without an explicit "Не сделано" section:
 - User worries "did Claude touch X by accident?"
 - Boundaries between scope and out-of-scope are unclear
 - Future Claude (different session) may assume task wasn't fully attempted
 
-A 1-line "⚪ Not done: deployment to prod (waiting for approval)" prevents 5 minutes of "did we deploy?".
+A 1-card "Не сделано: deployment to prod / Почему: waiting for approval" prevents 5 minutes of "did we deploy?".
 
-## Format
+## Card format
 
+```markdown
+## ⚪ Что не сделано — намеренно
+
+  Не сделано: <Item>
+  Почему:     <Reason — out of scope / deferred / user's job>
+  ───────────────────────────────────────────────────────────────
+  Не сделано: <Item>
+  Почему:     <Reason>
 ```
-═══ ⚪ Not done (intentional) ════════════════════════════════════
-  <Item — why skipped>
-  <Item — why skipped>
-```
-
-Use ⚪ icon (not ❌ — that's failure, ⚪ is intentional skip).
 
 ## What to include
 
@@ -33,14 +35,17 @@ Use ⚪ icon (not ❌ — that's failure, ⚪ is intentional skip).
 
 - Things you forgot (those are bugs, not "not done")
 - Trivially out-of-scope (don't list "didn't update README of unrelated repo")
-- Speculation about what user *might* want (don't list everything you imagined)
+- Speculation about what user *might* want
 
-## When OK to write "—"
+## When OK to write a single "—" card
 
-If literally nothing was intentionally skipped, write:
-```
-═══ ⚪ Not done (intentional) ════════════════════════════════════
-  — (full task scope completed)
+If literally nothing was intentionally skipped:
+
+```markdown
+## ⚪ Что не сделано — намеренно
+
+  Не сделано: —
+  Почему:     Полный объём задачи выполнен, ничего не отложено
 ```
 
 This still proves you thought about it.

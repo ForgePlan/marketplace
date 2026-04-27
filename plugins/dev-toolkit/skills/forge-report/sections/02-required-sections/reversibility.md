@@ -1,4 +1,4 @@
-# Reversibility — Required section
+# `## 🔄 Что можно откатить если передумаешь` — Required section
 
 Tell the reader: **what can be undone, what cannot, and how**.
 
@@ -12,33 +12,50 @@ Especially important after:
 - External system effects (PR, deploy, secret added, ticket created)
 - Long-running migrations / data transformations
 
-## Format
+## Card format
 
-```
-═══ 🔄 Reversibility ════════════════════════════════════════════
-  Reversible: <action — how to undo>
-  Reversible: <action — how to undo>
-  Irreversible: <action OR "none">
+```markdown
+## 🔄 Что можно откатить если передумаешь
+
+  Действие: <What to undo>
+  Команда:  <copy-paste command>
+  Время:    <how long the undo takes>
+  Риски:    <what might go wrong, or "Никаких">
+  ───────────────────────────────────────────────────────────────
+  Действие: <Another rollback>
+  ...
 ```
 
 ## Concrete examples
 
-```
-Reversible: rm -rf plugins/dev-toolkit/skills/forge-report (single dir)
-Reversible: gh pr close 25 (PR not yet merged)
-Reversible: git revert <commit-sha> (no downstream consumers yet)
-Irreversible: secret STANDALONE_SYNC_TOKEN created (can be rotated, not undone)
-Irreversible: PR #24 merged to main (history preserved, but production state changed)
+```markdown
+## 🔄 Что можно откатить если передумаешь
+
+  Действие: Удалить весь skill forge-report
+  Команда:  rm -rf plugins/dev-toolkit/skills/forge-report
+  Время:    Мгновенно
+  Риски:    /report команда станет бесполезной (но не сломается)
+  ───────────────────────────────────────────────────────────────
+  Действие: Откатить PR #25 целиком
+  Команда:  gh pr revert 25 --repo ForgePlan/marketplace
+  Время:    1 минута
+  Риски:    Никаких — единый коммит
+  ───────────────────────────────────────────────────────────────
+  Действие: Откатить bump версии
+  Команда:  Восстановить plugin.json и marketplace.json вручную
+  Время:    2 минуты
+  Риски:    Если кто-то уже установил v1.5.0 — у него будут несовпадения
 ```
 
-## Greybeards: include time window
+## Time windows
 
-For some "reversible" things, the window closes:
+Some "reversible" things have a window. Add explicit `Окно:` field:
 
-```
-Reversible until: 2026-05-15 (key rotation makes old auth uncallable)
-Reversible until: next migration runs
-Reversible until: customer first uses feature
+```markdown
+  Действие: Откатить миграцию схемы БД
+  Команда:  flyway undo
+  Окно:     До запуска следующей миграции (планируется 2026-05-15)
+  Риски:    После запуска новой — undo невозможен
 ```
 
 ## When reversibility is obvious
@@ -48,4 +65,4 @@ Skip this section only if **all** of:
 - No file changes
 - No external system effects
 
-In all other cases — include it, even if 1 line.
+In all other cases — include it, even if 1 card with "Действие: Никаких изменений делать не нужно".

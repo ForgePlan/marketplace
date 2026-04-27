@@ -1,25 +1,32 @@
-# TL;DR — Required first block
+# TL;DR — Required first block (italic blockquote at top)
 
 Full rules in `00-anchors/tldr-format.md`. Quick reference here:
 
 ## Format
 
+```markdown
+> _<What changed in human language>. <What user needs to do or "no action needed">.
+> <One risk or dependency if relevant.>_
 ```
-TL;DR: <what changed>. <action OR "no action">. <one risk if applicable>.
-```
 
-## Length: 1-3 lines, ≤80 characters per line.
+That's it. Italic prose inside a blockquote, 1-3 sentences.
 
-**Exception**: `incident-summary` may use up to 4 lines when symptom + root cause + fix + prevention all need stating.
+## Position
 
-## Position: very first block, before any heading.
+Very first block of the report, **before** any heading.
 
-## Three slots
+## Length
+
+- Most cases: 1-2 sentences (30-60 words)
+- Long incidents (`incident-summary`): up to 4 sentences
+- Over 80 words → split or simplify
+
+## Three slots inside
 
 | Slot | Content | Required? |
 |------|---------|-----------|
 | 1 | What changed | Yes |
-| 2 | What user does | Yes (or explicit "no action") |
+| 2 | What user does | Yes (or explicit "no action needed") |
 | 3 | Biggest risk / dependency | Optional, omit if none |
 
 ## When TL;DR can be skipped

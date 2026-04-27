@@ -2,88 +2,98 @@
 
 Use after: framework upgrade, dependency migration, restructure, rename, schema migration, big refactor.
 
-## Template
+## Skeleton
 
-```
-TL;DR: <from X to Y>. <N files changed>. <verification>. <rollback path>.
+```markdown
+> _<TL;DR — what migrated from/to, files touched, verification status,
+> rollback availability. 1-3 italic sentences.>_
 
-═══ 🔀 Migration scope ═══════════════════════════════════════════
-  From:        <old version / framework / structure>
-  To:          <new version / framework / structure>
-  Reason:      <why now — deprecation, perf, debt>
-  Strategy:    <big bang / gradual / dual-write / parallel>
+## 🔀 Что мигрировали
 
-═══ 📝 Affected ══════════════════════════════════════════════════
-  Files:       <count + key paths>
-  Tests:       <count> updated, <count> new
-  Docs:        <updated paths>
-  Schema/DB:   <changes if any>
+  Откуда:    <old version / framework / structure>
+  Куда:      <new version / framework / structure>
+  Причина:   <why now — deprecation, perf, debt>
+  Стратегия: <big bang / gradual / dual-write / parallel>
 
-═══ ✅ Verification ═════════════════════════════════════════════
-  <Check>                              <Result>     <Confidence>
-  All tests pass                       <result>     <label>
-  Functional smoke                     <result>     <label>
-  Performance vs baseline              <result>     <label>
-  Backward compatibility               <result>     <label>
+## 📈 Что затронули
 
-═══ ⚪ Not migrated (intentional) ════════════════════════════════
-  <Item — why skipped, when planned>
+  Файлы:    <count + key paths>
+  Тесты:    <count> обновлено, <count> новых
+  Документация: <updated paths>
+  Схема/БД: <changes if any>
 
-═══ 🔄 Rollback procedure ════════════════════════════════════════
-  Reversible: <how to roll back if needed — git revert, feature flag, schema down>
-  Window:     <until rollback becomes risky — e.g. "before next migration runs">
-  Irreversible: <list or "none">
+## ✅ Как проверили
 
-═══ ⚠️ Drift risks ═══════════════════════════════════════════════
-  <New code may introduce old patterns — add lint rule>
-  <Stale references in docs / comments>
+  Проверка:  <name>
+  Результат: <pass/fail + numbers>
+  Уверенность: High / Medium
+  ───────────────────────────────────────────────────────────────
+  Проверка:  All tests pass
+  Результат: 98/98 pass
+  Уверенность: High
+  ───────────────────────────────────────────────────────────────
+  Проверка:  Performance vs baseline
+  Результат: -8% latency (small sample)
+  Уверенность: Medium
+  ───────────────────────────────────────────────────────────────
+  Проверка:  Backward compat
+  Результат: <result>
+  Уверенность: <label>
 
-═══ 📈 Adoption signal ═══════════════════════════════════════════
-  How we'll know this migration succeeded:
-  - <metric / signal>
-  - <metric / signal>
+## ⚪ Что не мигрировано — намеренно
 
-═══ ➡️ Next steps ══════════════════════════════════════════════
-  1. <action>
-  2. <action>
+  Не мигрировали: <Item>
+  Почему:         <skipped this round / planned for later>
 
-💰 Cycle: <N files> · <N commits> · <~hours>
+## 🔄 Как откатить если что-то пошло не так
+
+  Действие: Полный rollback миграции
+  Команда:  git revert <commit-sha>
+  Время:    <how long>
+  Окно:     До <дата — когда rollback станет небезопасным>
+  Риски:    <if any>
+
+## ⚠️ Что может поломаться со временем
+
+  Риск:   Новый код может ввести старые паттерны
+  Когда:  Если разработчики не знают про миграцию
+  Что:    Recidivism — старые антипаттерны вернутся
+  Защита: Lint правило / документация / PR template
+  ───────────────────────────────────────────────────────────────
+  Риск:   Stale references в docs / комментариях
+  Когда:  Со временем
+  Что:    Документация введёт в заблуждение
+  Защита: Поиск по grep + обновление
+
+## 📊 Как поймём что миграция удалась
+
+  Сигнал 1: <metric / observable>
+  Сигнал 2: <metric / observable>
+
+## ➡️ Что делать дальше
+
+  Шаг 1: ТЕБЕ — <verify in prod>
+  Шаг 2: МНЕ — <follow-up cleanup>
+  Шаг 3: ПОТОМ — <next migration step if multi-phase>
+
+## 💰 Сколько это стоило
+
+  Время:        <hours>
+  Файлов:       <count>
+  Коммитов:     <count>
+  Стоимость:    <surprises / rework if any>
 ```
 
 ## Required minimums
 
-- ✅ Strategy named (big-bang, gradual, dual-write, parallel)
+- ✅ Blockquote TL;DR with from/to + verification status
+- ✅ Strategy named (big-bang / gradual / dual-write / parallel)
 - ✅ Rollback procedure even if "git revert" — never skip
 - ✅ Drift risks — migrations leave half-old/half-new state somewhere
-- ✅ Adoption signal — how to know it actually worked in production
-
-## Real-world example
-
-```
-TL;DR: Auth middleware migrated from express-jwt to jose. 14 files changed,
-       all tests green. Rollback: git revert (single commit). Drift risk:
-       legacy services still import old middleware path.
-
-═══ 🔀 Migration scope ═══════════════════════════════════════════
-  From:        express-jwt 6.x (deprecated, no maintenance)
-  To:          jose 5.x (active, ESM-native)
-  Reason:      CVE-2024-XXXXX in express-jwt, no patch
-  Strategy:    Big bang (single PR, all callers updated)
-
-═══ ✅ Verification ═════════════════════════════════════════════
-  Unit tests (auth)                    98/98 pass    🟢 High
-  E2E login flow                       pass          🟢 High
-  Performance JWT verify               -8% latency   🟡 Medium (small sample)
-  Backward compat (token format)       same JWT spec 🟢 High
-
-═══ 🔄 Rollback procedure ════════════════════════════════════════
-  Reversible: `git revert <commit>` then `npm install` — 5 min
-  Window:     Before rotating signing keys (planned 2026-05-15)
-  Irreversible: none until key rotation
-```
+- ✅ Adoption signal — how to know it actually worked
 
 ## Anti-patterns
 
-- ❌ "Migration complete!" without verification — false confidence.
-- ❌ No rollback plan — code stuck after first issue.
-- ❌ No drift risks — migration leaves zombie code paths.
+- ❌ "Migration complete!" without verification — false confidence
+- ❌ No rollback plan — code stuck after first issue
+- ❌ No drift risks — migration leaves zombie code paths

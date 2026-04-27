@@ -2,83 +2,100 @@
 
 Use after: choosing between alternatives, recording an ADR, fixing a roadmap, prioritising backlog.
 
-## Template
+## Skeleton
 
-```
-TL;DR: <decision in 1 sentence>. <why now>. <when to revisit>.
+```markdown
+> _<TL;DR — decision in one sentence, why now, when to revisit.
+> 1-3 italic sentences.>_
 
-═══ 🎯 Decision ════════════════════════════════════════════════════
-  What:        <chosen option>
-  Alternatives: <what was rejected and why>
-  Trigger:     <what forced this decision>
+## 🎯 Решение
 
-═══ 📊 Trade-offs ════════════════════════════════════════════════
-  | Option   | Pros           | Cons              | Score   |
-  |----------|----------------|-------------------|---------|
-  | <chosen> | <list>         | <list>            | ✅      |
-  | <other>  | <list>         | <list>            | ❌ <reason> |
+  Выбрали:    <chosen option>
+  Альтернативы: <what was rejected and why — 1-2 lines per option>
+  Триггер:    <what forced this decision>
 
-═══ ✅ Recorded as ════════════════════════════════════════════════
-  <ADR-NNN / NOTE-NNN / PRD-NNN>                       <where>
-  <related artefact>                                   <where>
+## 📊 Почему выбрали именно это
 
-═══ ⚪ Not decided yet (deferred) ════════════════════════════════
-  <open question>     <when to revisit>
+  Опция: <chosen>
+  Плюсы: <list>
+  Минусы: <list>
+  Оценка: Выбрана
+  ───────────────────────────────────────────────────────────────
+  Опция: <alternative>
+  Плюсы: <list>
+  Минусы: <list>
+  Оценка: Отклонена — <reason>
 
-═══ 🔄 Reversibility ════════════════════════════════════════════
-  Reversible: revert artefact files (rm/git revert) — decision uncommits
-  Reversible: supersede via new ADR/PRD with `supersedes` link
-  Irreversible: <if any external commitment was made>
+## ✅ Где зафиксировано
 
-═══ ⚠️ Drift risks ═══════════════════════════════════════════════
-  <If <X> changes>     →  <decision invalidates>
+  Что:    <ADR-NNN / NOTE-NNN / PRD-NNN>
+  Где:    <file path>
+  Связи:  <linked to PRD-X / blocks PRD-Y>
 
-═══ ➡️ Next steps / Activation triggers ═════════════════════════
-  This decision is documented but not "started". Activate when:
-  - <condition>
-  - <condition>
+## ⚪ Что не решено — отложили
 
-  Or, if action is immediate:
-  1. <action>
-  2. <action>
+  Открытый вопрос: <Question>
+  Когда вернёмся:  <Trigger or date>
 
-💰 Cycle: <N artefacts created> · <discussion turns> · <~minutes>
+## 🔄 Что можно откатить
+
+  Действие: Отменить решение через новый ADR/PRD с supersedes
+  Команда:  forgeplan new adr "<reverse decision>"
+  Время:    ~15 минут
+  Риски:    Если уже сделали что-то по этому решению — нужен rollback кода
+
+## ⚠️ Что может поломаться со временем
+
+  Риск:   Если изменится X
+  Когда:  При условии Y
+  Что:    Решение теряет силу
+  Защита: Пересмотреть decision
+
+## ➡️ Что делать дальше
+
+  Решение зафиксировано, но действие пока не запущено. Запускать когда:
+  - <triggering condition 1>
+  - <triggering condition 2>
+
+  Или, если действие нужно сразу:
+  Шаг 1: ТЕБЕ — <imperative action>
+  Шаг 2: МНЕ — <imperative action>
+
+## 💰 Сколько это стоило
+
+  Время:        <how long>
+  Артефактов:   <created count>
+  Обсуждений:   <turns>
 ```
 
 ## Required minimums
 
-- ✅ At least 2 alternatives in trade-off table (if only 1 considered → reframe as "no real choice")
-- ✅ "Recorded as" — link to durable artefact (ADR/NOTE/PRD), not just chat
+- ✅ Blockquote TL;DR with decision + revisit trigger
+- ✅ At least 2 alternatives in trade-off cards (if only 1 considered → reframe as "no real choice")
+- ✅ "Где зафиксировано" — link to durable artefact (ADR/NOTE/PRD), not just chat
 - ⚪ Drift risks — what would invalidate this decision?
-- ➡️ Activation triggers — when does decision become an action?
 
 ## Real-world example
 
-This very report (the conversation about saving 3 PRD drafts) is a `decision-summary`:
+This very report (the conversation about saving 3 PRD drafts as roadmap) is a `decision-summary`:
 
-```
-TL;DR: 3 PRD drafts (013/014/015) + NOTE-003 roadmap фиксированы. Drift risk:
-       PRD-015 устаревает к Q3 2026 без активации. Активировать по триггерам.
+```markdown
+> _Зафиксировал три PRD-черновика (013/014/015) и NOTE-003 с roadmap.
+> Активировать по триггерам, не вслепую. Главный риск: PRD-015 (cc-best)
+> станет неактуальным к Q3 2026 если откладывать._
 
-═══ 🎯 Decision ════════════════════════════════════════════════════
-  What:        Делать все 3 standalone skills, в порядке 014→013→015
-  Alternatives: Делать только 1 (узко) / Не делать (потеря momentum)
-  Trigger:     User explicit: "буду делать всё, но сперва зафиксировать"
+## 🎯 Решение
+  Выбрали:    Делать все 3 standalone skills, в порядке 014→013→015
+  Альтернативы: Делать только 1 / Не делать
+  Триггер:    User explicit: "буду делать всё, но сперва зафиксировать"
 
-═══ ✅ Recorded as ════════════════════════════════════════════════
-  PRD-013      .forgeplan/prds/PRD-013-...md         draft
-  PRD-014      .forgeplan/prds/PRD-014-...md         draft
-  PRD-015      .forgeplan/prds/PRD-015-...md         draft
-  NOTE-003     .forgeplan/notes/NOTE-003-...md       active
-
-═══ ➡️ Activation triggers ═══════════════════════════════════════
-  - Пользовательский запрос на standalone skill
-  - Adoption fpf/loux выше порога
-  - Свободное время + желание
+## ✅ Где зафиксировано
+  Что:    PRD-013, PRD-014, PRD-015 — drafts
+  Что:    NOTE-003 — strategic roadmap (active)
 ```
 
 ## When NOT to use
 
-- Decided alone, no alternatives existed → just announce inline.
-- Decision affects only this turn → context evaporates anyway.
-- Already recorded in ADR/PRD by tool — link, don't duplicate.
+- Decided alone, no alternatives existed → announce inline
+- Decision affects only this turn → context evaporates anyway
+- Already recorded by tool — link, don't duplicate

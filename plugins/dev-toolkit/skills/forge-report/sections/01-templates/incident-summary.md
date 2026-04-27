@@ -2,97 +2,98 @@
 
 Use after: production incident, failing test investigation, mysterious bug fix, broken pipeline.
 
-## Template
+## Skeleton
 
-```
-TL;DR: <symptom>. Root cause + fix: <one line>. <prevention or risk>.
-       (Incidents may use up to 4 lines if all 4 facts cannot compress.)
+```markdown
+> _<TL;DR — symptom, root cause, fix, prevention. Up to 4 italic sentences
+> for incidents because all 4 facts usually need stating.>_
 
-═══ 🔥 Symptom ═══════════════════════════════════════════════════
-  Observed:    <what user/system saw>
-  When:        <timestamp / commit / version>
-  Severity:    <P0 outage / P1 degraded / P2 cosmetic>
-  Discovered:  <how it surfaced — alert / user report / spotted>
+## 🔥 Что случилось
 
-═══ 🔍 Root cause ════════════════════════════════════════════════
+  Симптом:     <What user/system saw>
+  Когда:       <timestamp / commit / version>
+  Серьёзность: <P0 outage / P1 degraded / P2 cosmetic>
+  Как нашли:   <alert / user report / spotted>
+
+## 🔍 Корневая причина
+
   <One paragraph: what actually broke and why>
 
-  Confidence: <🟢High / 🟡Medium / 🔴Assumed>
-  Evidence: <log line / commit / test that confirms>
+  Уверенность: High / Medium / Assumed
+  Доказательство: <log line / commit / test that confirms>
 
-═══ ✅ Fix applied ═══════════════════════════════════════════════
-  <Where>                              <What changed>
-  <Where>                              <What changed>
+## ✅ Что починено
 
-═══ ✅ Verification ═════════════════════════════════════════════
-  <Check>                              <Result>
-  Failing test now passes              ✅
-  Symptom not reproducible             ✅
-  Related tests still green            ✅
+  Что:  <change applied>
+  Где:  <file:line>
+  Как:  <what was changed>
+  ───────────────────────────────────────────────────────────────
+  ...
 
-═══ ⚪ Not done (intentional) ════════════════════════════════════
-  <related issue not addressed in this incident — why deferred>
-  <broader refactor postponed for separate task>
+## ✅ Как проверили что работает
 
-═══ 🔄 Reversibility ════════════════════════════════════════════
-  Fix reversible: <git revert path>
-  Workaround reversible until: <date — when proper fix lands>
-  Irreversible: <if data was modified / migrated mid-incident>
+  Проверка: Failing test now passes
+  Результат: ✅
+  ───────────────────────────────────────────────────────────────
+  Проверка: Симптом не воспроизводится
+  Результат: ✅
+  ───────────────────────────────────────────────────────────────
+  Проверка: Соседние тесты всё ещё green
+  Результат: ✅
 
-═══ ⚠️ Drift risks ═══════════════════════════════════════════════
-  <If similar code path is added — same bug returns>
-  <Workaround that should be replaced with proper fix>
+## ⚪ Что не сделано — намеренно
 
-═══ 🛡️ Prevention ═══════════════════════════════════════════════
-  <Test added / lint rule / CI check / runbook update>
-  <If "none" — explain why prevention is impractical>
+  Не сделано: <related issue not addressed>
+  Почему:     <deferred to separate task>
 
-═══ ➡️ Next steps / Post-mortem follow-ups ═════════════════════
-  - <action>     <owner>     <due>
-  - <action>     <owner>     <due>
+## 🔄 Что можно откатить
 
-💰 Cycle: <time-to-detect> · <time-to-fix> · <N tool calls>
+  Действие: Откатить fix
+  Команда:  git revert <commit>
+  Время:    ~1 минута
+  Риски:    Симптом вернётся — нужен alternative fix наготове
+  ───────────────────────────────────────────────────────────────
+  Действие: Workaround активен до даты X
+  Когда:    <when proper fix lands>
+  Что:     После этой даты workaround нужно убрать
+
+## ⚠️ Что может поломаться со временем
+
+  Риск:   Похожий код может появиться в новых features
+  Когда:  Постоянно
+  Что:    Тот же баг вернётся
+  Защита: Lint правило / тест / runbook — см. «Профилактика»
+
+## 🛡️ Профилактика
+
+  Что добавили: <test / lint rule / CI check / runbook update>
+  Где:          <path>
+  Зачем:        <prevents recurrence>
+
+  Если ничего: <explain why prevention impractical>
+
+## ➡️ Что делать дальше — post-mortem
+
+  Шаг 1: <АДРЕСАТ> — <action>     <due date>
+  Шаг 2: <АДРЕСАТ> — <action>     <due date>
+
+## 💰 Сколько это стоило
+
+  Время до обнаружения: <minutes/hours>
+  Время до фикса:       <minutes/hours>
+  Действий:             <tool calls>
 ```
 
 ## Required minimums
 
+- ✅ Blockquote TL;DR — incidents may use up to 4 sentences (symptom + root cause + fix + prevention)
 - ✅ Confidence label on root cause (often we *think* we know, but didn't fully verify)
-- ✅ Verification step ≠ "code compiles" — must reproduce + fail-then-pass
-- ✅ Prevention is **mandatory** — even if it's "no test possible, added runbook entry"
+- ✅ Verification ≠ "code compiles" — must reproduce + fail-then-pass
+- ✅ Profilactica is **mandatory** — even if "no test possible, added runbook entry"
 - ⚪ If incident is partially understood → say so explicitly, don't pretend full RCA
-
-## Real-world example
-
-```
-TL;DR: sync-standalone-skills.yml упал с "Input required and not supplied: token".
-       Root cause: secret STANDALONE_SYNC_TOKEN не был добавлен в маркетплейс.
-       Fix: maintainer добавил PAT через `gh secret set`. Prevention: README
-       в PR описывает шаг.
-
-═══ 🔥 Symptom ═══════════════════════════════════════════════════
-  Observed:    Workflow run 24954866577 failed at "Checkout target repo"
-  When:        2026-04-26T10:53Z (auto-trigger after PR #24 merge)
-  Severity:    P2 (cosmetic — sync mechanism not yet in production use)
-
-═══ 🔍 Root cause ════════════════════════════════════════════════
-  actions/checkout step requires token input. Token is supplied via
-  ${{ secrets.STANDALONE_SYNC_TOKEN }}. Secret was not present in
-  ForgePlan/marketplace, so the expression evaluated to empty.
-
-  Confidence: 🟢 High
-  Evidence: gh run view 25020112103 shows "token: ***" but error
-            "Input required and not supplied: token"
-
-═══ ✅ Fix applied ═══════════════════════════════════════════════
-  ForgePlan/marketplace settings   Added secret STANDALONE_SYNC_TOKEN
-
-═══ ✅ Verification ═════════════════════════════════════════════
-  Re-trigger workflow              ✅ pass (run 25020766130)
-  Idempotency (no diff = no commit) ✅ confirmed
-```
 
 ## Anti-patterns
 
-- ❌ "Fixed it" without root cause — bug returns next sprint.
-- ❌ Verification = "deployed" — that's not verification, that's deployment.
-- ❌ No prevention → repeats.
+- ❌ "Fixed it" without root cause — bug returns next sprint
+- ❌ Verification = "deployed" — that's not verification
+- ❌ No prevention → repeats

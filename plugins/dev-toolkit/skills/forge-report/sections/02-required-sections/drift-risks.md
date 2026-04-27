@@ -1,4 +1,4 @@
-# Drift risks — Required section
+# `## ⚠️ Что может поломаться со временем` — Required section
 
 Describe what may **decay over time** — even though it works now.
 
@@ -13,21 +13,38 @@ Most production bugs are not "code is wrong" — they are "code was right when w
 
 A "drift risk" entry tells future-you: **"watch this".**
 
-## Format
+## Card format
 
-```
-═══ ⚠️ Drift risks ═════════════════════════════════════════════
-  <Risk>                              <When it bites>           <Mitigation>
-  <Risk>                              <When it bites>           <Mitigation>
+```markdown
+## ⚠️ Что может поломаться со временем
+
+  Риск:   <Specific risk, not theoretical>
+  Когда:  <Trigger — date, event, or condition>
+  Что:    <What breaks if trigger fires>
+  Защита: <How to prevent or recover>
+  ───────────────────────────────────────────────────────────────
+  ...
 ```
 
 ## Concrete examples
 
-```
-NOTE-003 references PRD-013/014/015     If PRD renamed              Update NOTE
-PAT STANDALONE_SYNC_TOKEN expires       2027-04 (fine-grained 1y)   Calendar reminder
-actions/checkout v4 uses Node 20        2026-09-16 (deprecation)    Bump to v5
-hardcoded URL https://api.x.com         If endpoint moves           Move to .env
+```markdown
+## ⚠️ Что может поломаться со временем
+
+  Риск:   NOTE-003 ссылается на PRD-013/014/015
+  Когда:  Если переименуешь PRD
+  Что:    Ссылки в NOTE будут битые
+  Защита: При rename PRD — обновить NOTE-003
+  ───────────────────────────────────────────────────────────────
+  Риск:   PAT STANDALONE_SYNC_TOKEN истекает
+  Когда:  2027-04 (fine-grained PAT, 1 год)
+  Что:    Auto-sync workflow перестанет работать
+  Защита: Календарный reminder за 2 недели
+  ───────────────────────────────────────────────────────────────
+  Риск:   actions/checkout@v4 использует Node.js 20
+  Когда:  2026-09-16 (deprecation date)
+  Что:    Workflow упадёт с warning, потом с ошибкой
+  Защита: Bump до v5 (см. NOTE-002)
 ```
 
 ## What counts as drift
@@ -43,11 +60,13 @@ hardcoded URL https://api.x.com         If endpoint moves           Move to .env
 
 ## When you can write "—"
 
-Truly stable change: pure isolated function, no external deps, no cross-refs. Then:
+Truly stable change: pure isolated function, no external deps, no cross-refs:
 
-```
-═══ ⚠️ Drift risks ═════════════════════════════════════════════
-  — (isolated change, no external dependencies)
+```markdown
+## ⚠️ Что может поломаться со временем
+
+  Риск:   —
+  Что:    Изменение изолированное, без внешних зависимостей
 ```
 
 But this should be **rare**. Most non-trivial work has some drift.

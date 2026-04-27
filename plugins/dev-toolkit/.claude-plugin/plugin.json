@@ -1,7 +1,7 @@
 {
   "name": "dev-toolkit",
-  "version": "1.5.0",
-  "description": "Universal engineering toolkit: multi-expert audit, wave-based sprints, session context recall, structured reports, and safety hooks. Works with any project and language.",
+  "version": "1.5.1",
+  "description": "Universal engineering toolkit: multi-expert audit, wave-based sprints, session context recall, card-based structured reports, and safety hooks. Works with any project and language.",
   "author": {
     "name": "ForgePlan"
   },

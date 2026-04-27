@@ -2,81 +2,90 @@
 
 Use after: code review, security audit, architecture review, dependency check, performance audit.
 
-## Template
+## Skeleton
 
-```
-TL;DR: <N findings, severity breakdown>. <action priority>. <biggest risk>.
+```markdown
+> _<TL;DR — what was audited, severity breakdown, top action.
+> 1-3 italic sentences.>_
 
-═══ 📊 Scope ═══════════════════════════════════════════════════════
-  Audited:   <files/modules/services>
-  Method:    <static analysis / manual review / tool used>
-  Duration:  <time spent>
-  Confidence: <High/Medium/Assumed — based on coverage>
+## 📊 Что и как проверено
 
-═══ ❌ Critical findings ═══════════════════════════════════════════
-  #N  <issue>                                          <where>
-       Impact: <what breaks>
-       Fix: <action>
+  Что проверял:  <files / modules / services>
+  Метод:         <static analysis / manual review / tool used>
+  Время:         <how long>
+  Уверенность:   <High / Medium / Assumed — based on coverage>
 
-═══ ⚠️ High-priority findings ════════════════════════════════════
-  #N  <issue>  →  <where>  →  <fix>
+## ❌ Критичные проблемы
 
-═══ 🔵 Medium / Low findings ═══════════════════════════════════
+  Проблема: <What's wrong>
+  Где:      <file:line>
+  Эффект:   <What breaks if not fixed>
+  Что делать: <action>
+  ───────────────────────────────────────────────────────────────
+  ...
+
+## ⚠️ Серьёзные (high-priority)
+
+  Проблема: <What's wrong>
+  Где:      <file:line>
+  Эффект:   <Impact>
+  Что делать: <action>
+
+## 📈 Средние и низкие
+
   <count by severity, link to detailed findings file if many>
 
-═══ ✅ Strengths noted ═══════════════════════════════════════════
-  <what's done well — bias against only listing problems>
+## ✅ Что сделано хорошо
 
-═══ ⚪ Out of scope (intentional) ═══════════════════════════════
-  <what was NOT audited and why — also serves as Not-done section>
+  <Aspect 1 — what's well-done, not just problems>
+  <Aspect 2>
 
-═══ 🔄 Reversibility ════════════════════════════════════════════
-  Findings recorded — reversible (delete report).
-  Recommended fixes — not yet applied (no state change).
-  Irreversible: none (audit is read-only).
+## ⚪ Что не проверял — намеренно
 
-═══ ⚠️ Drift risks ═════════════════════════════════════════════
-  Findings staleness: <when audit becomes outdated — code keeps changing>
-  Coverage gaps: <areas not audited may regress unnoticed>
+  Не проверял: <Item>
+  Почему:      <Out of scope / separate review needed>
 
-═══ ➡️ Next steps ══════════════════════════════════════════════
-  Immediate (P0): <fix critical>
-  This sprint (P1): <fix high>
-  Backlog (P2+): <medium/low → ticket>
+## 🔄 Что можно откатить
 
-💰 Cycle: <N files reviewed> · <N findings> · <~minutes>
+  Действие: Удалить этот аудит-отчёт
+  Команда:  rm <path>
+  Время:    Мгновенно
+  Риски:    Никаких — аудит read-only, ничего в коде не менялось
+
+## ⚠️ Что может поломаться со временем
+
+  Риск:   Findings устаревают по мере изменения кода
+  Когда:  Через 1-2 спринта
+  Что:    Этот отчёт станет неактуальным
+  Защита: Перепрогнать аудит при следующем major release
+  ───────────────────────────────────────────────────────────────
+  Риск:   Области не покрыты этим аудитом могут регрессировать
+  Когда:  Постоянно
+  Что:    Возможно скрытые проблемы в untouched зонах
+  Защита: Расширить scope в следующий раз — см. секцию «не проверял»
+
+## ➡️ Что делать дальше
+
+  Сейчас (P0):    <fix критичных>
+  Этот спринт (P1): <fix серьёзных>
+  В беклог (P2+): <medium/low в тикеты>
+
+## 💰 Сколько это стоило
+
+  Время:    <how long>
+  Файлов:   <reviewed count>
+  Findings: <total count>
 ```
 
 ## Required minimums
 
-- ✅ Severity breakdown in TL;DR (e.g. "5C/17H/16M/9L")
-- ✅ At least one **Strengths** item — pure-negative audits feel hostile and miss balance
+- ✅ Blockquote TL;DR with severity breakdown (e.g. "5 критичных, 17 серьёзных")
+- ✅ At least one item in **Что сделано хорошо** — pure-negative audits feel hostile
 - ✅ Confidence label on overall audit (small sample = lower confidence)
-- ⚪ Out-of-scope section is **mandatory** — defines audit boundary
-
-## Real-world example
-
-```
-TL;DR: 47 findings (5C/17H/16M/9L) in marketplace plugins. Critical: 3 hooks
-       allow injection. P0 fixes within 2 days. Strength: validation script
-       solid. Confidence: High (full plugin review).
-
-═══ ❌ Critical findings ═══════════════════════════════════════════
-  #1  prompt-type hooks bypass user consent              hooks.json (3 plugins)
-       Impact: arbitrary command execution
-       Fix: ban prompt type, require type=command
-
-═══ ✅ Strengths noted ═══════════════════════════════════════════
-  • CI validates plugin.json + hooks.json structure
-  • Hash-pinned actions in workflows (good supply chain hygiene)
-
-═══ ⚪ Out of scope (intentional) ═══════════════════════════════
-  • Agent prompts not audited (separate review needed)
-  • Performance audit (no perf SLOs defined yet)
-```
+- ⚪ "Что не проверял" is mandatory — defines audit boundary
 
 ## Anti-patterns
 
-- ❌ Listing only problems — appears hostile, misses what to preserve.
-- ❌ No severity → reader can't prioritise.
-- ❌ "Audited everything" — usually false; declare scope explicitly.
+- ❌ Listing only problems — appears hostile, misses what to preserve
+- ❌ No severity → reader can't prioritise
+- ❌ "Audited everything" — usually false; declare scope explicitly
