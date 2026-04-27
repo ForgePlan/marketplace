@@ -78,14 +78,14 @@ Step 8: Commit
 
 ### Hint Contract — контракт подсказок (v1.5.0+, требует Forgeplan v0.25.0+)
 
-Forgeplan v0.25.0 ввёл **5-правильный hint contract** — каждый CLI/MCP вывод emit'ит один из маркеров:
+Forgeplan v0.25.0 ввёл **hint contract из 5 правил** — каждый CLI/MCP вывод выдаёт один из маркеров:
 - `Next: <command>` — основное действие
-- `Or: <command>` — альтернатива
-- `Wait: <condition>` — async retry
-- `Done.` — workflow complete
-- `Fix: <command>` — error remediation
+- `Or: <command>` — резервный вариант
+- `Wait: <condition>` — асинхронный retry
+- `Done.` — workflow завершён
+- `Fix: <command>` — восстановление после ошибки
 
-Этот плагин теперь учит агентов автоматически читать эти маркеры. Coverage в Forgeplan v0.25.0: **100%** (70/70 CLI команд). См. секцию `06-output-hints/agent-protocol.md` в методологии для полного протокола чтения.
+Этот плагин теперь учит агентов автоматически читать эти маркеры. Покрытие в Forgeplan v0.25.0: **100%** (70/70 CLI команд). См. секцию `06-output-hints/agent-protocol.md` в методологии для полного протокола чтения.
 
 ## Лицензия
 

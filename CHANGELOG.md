@@ -5,25 +5,29 @@ All notable changes to the ForgePlan Marketplace will be documented in this file
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.7.0] — 2026-04-28
+## [1.7.0] - 2026-04-28
 
-### Changed — `forgeplan-workflow` 1.4.0 → 1.5.0
+Aligned `forgeplan-workflow` with Forgeplan v0.25.0 (PRD-071 unified hint contract). All plugins bumped to v1.5.0, marketplace catalog to v1.7.0.
 
-Aligned with Forgeplan v0.25.0 (PRD-071 unified hint contract).
+### Added
 
-- **New skill section** `06-output-hints/agent-protocol.md` — full agent reading protocol for the 5-rule hint contract (Next/Or/Wait/Done/Fix markers)
-- **`forgeplan-methodology` SKILL** — Query Router updated with new "hint protocol" topic; new top-level section "Hint Protocol" added
-- **`/forge-cycle` command** — new prelude step "Reading Forgeplan Output" instructing the agent to read contract markers after every command
-- **`forge-advisor` agent** — new behavior #5 "Hint Contract Awareness" — gently reminds when user/agent ignores `Next:`/`Fix:` markers
-- **README.md + README-RU.md** — feature mention of v1.5.0 hint contract awareness
+- `forgeplan-workflow`: new skill section `06-output-hints/agent-protocol.md` — full agent reading protocol for the 5-rule hint contract (Next/Or/Wait/Done/Fix markers)
+- `forgeplan-workflow`: new prelude step "Reading Forgeplan Output" in `/forge-cycle` command — instructs the agent to read contract markers after every command
+- `forgeplan-workflow`: new behavior #5 "Hint Contract Awareness" in `forge-advisor` agent — gently reminds when user/agent ignores `Next:`/`Fix:` markers (existing SPARC behavior renumbered to #6)
 
-### Why this matters
+### Changed
+
+- `forgeplan-workflow`: bumped to v1.5.0
+- Marketplace catalog: bumped to v1.7.0
+- `forgeplan-methodology` SKILL: Section router updated with new "hint protocol" topic; new top-level section "Hint Protocol" added
+- README.md + README-RU.md: feature mention of v1.5.0 hint contract awareness
+
+### Notes
 
 Without v1.5.0, users installing `forgeplan-workflow` get an agent that does NOT read the new hint markers — wastes Forgeplan v0.25.0's contract work. v1.5.0 closes the distribution gap.
 
-### Compatibility
-
-- Requires Forgeplan binary **≥ v0.25.0** for full benefit (older versions still work but agent will not see contract markers)
+Compatibility:
+- Requires Forgeplan binary >= v0.25.0 for full benefit (older versions still work but agent will not see contract markers)
 - Backward compat: existing `/forge-cycle`, `/forge-audit`, advisor behaviors unchanged
 
 ## [1.6.0] - 2026-04-04
