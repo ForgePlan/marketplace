@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.8.1"
+    "version": "1.9.0"
   },
   "plugins": [
     {
@@ -53,8 +53,8 @@
     {
       "name": "dev-toolkit",
       "source": "./plugins/dev-toolkit",
-      "description": "Universal engineering toolkit: multi-expert audit, wave-based sprints, session context recall, card-based structured reports, and safety hooks. Works with any project and language.",
-      "version": "1.5.1",
+      "description": "Universal engineering toolkit: multi-expert audit, wave-based sprints, session context recall, card-based structured reports with auto-trigger hooks, and safety hooks. Works with any project and language.",
+      "version": "1.6.0",
       "author": {
         "name": "ForgePlan"
       },
