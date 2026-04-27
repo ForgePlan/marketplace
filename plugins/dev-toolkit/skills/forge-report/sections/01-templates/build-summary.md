@@ -2,78 +2,120 @@
 
 Use after building: a feature, a plugin, a workflow, a set of files, a new repo.
 
-## Template
+## Skeleton
 
-```
-TL;DR: <what was built>. <verification status>. <one risk if any>.
+```markdown
+> _<TL;DR — what was built, current state, what user needs to do.
+> 1-3 italic sentences in a blockquote.>_
 
-═══ ✅ Created ═══════════════════════════════════════════════════
-  <Component>     <Where>                              <Status>
-  <Component>     <Where>                              <Status>
+## ✅ Что создано
 
-═══ 📝 Modified ═════════════════════════════════════════════════
-  <File>          <Type of change>                     <Lines: +/-/~>
+  Что:    <Artefact name in human language>
+  Где:    <path or URL>
+  Размер: <e.g. "21 файл (1 router + 4 индекса + 16 страниц)">
+  Зачем:  <Purpose for someone who didn't follow the work>
+  Статус: <Full sentence — "Готов. Прошёл проверку.">
+  ───────────────────────────────────────────────────────────────
+  Что:    <Next artefact>
+  Где:    <path>
+  Зачем:  <Purpose>
+  Статус: <Status>
 
-═══ ⚪ Not done (intentional) ════════════════════════════════════
-  <Item — why skipped>
+## 📈 Что обновлено
 
-═══ ✅ Verification ═════════════════════════════════════════════
-  <Check>         <Result>                             <Confidence>
-  CI              <pass/fail>                          <🟢/🟡>
-  Smoke test      <pass/fail>                          <🟢/🟡>
-  Lint            <pass/fail>                          <🟢>
+  Файл:  <path>
+  Было:  <old value>
+  Стало: <new value + brief reason>
+  ───────────────────────────────────────────────────────────────
+  PR:    <PR number / URL>
+  Что:   <one-line summary>
+  CI:    <result + duration>
+  Merge: <yes/no, who did it>
 
-═══ 🔄 Reversibility ════════════════════════════════════════════
-  Reversible: <list — git revert, rm files, etc.>
-  Irreversible: <list or "none">
+## ⚪ Что не сделано — намеренно
 
-═══ ⚠️ Drift risks ═════════════════════════════════════════════
-  <Risk>          <When it bites>                      <Mitigation>
+  Не сделано: <Item>
+  Почему:     <Reason — out of scope / deferred / user's job>
+  ───────────────────────────────────────────────────────────────
+  ...
 
-═══ ➡️ Next steps ══════════════════════════════════════════════
-  1. <action>
-  2. <action>
+## 🔄 Что можно откатить если передумаешь
 
-💰 Cycle: <N tool calls> · <N files> · <~minutes>
+  Действие: <What to undo>
+  Команда:  <copy-paste command>
+  Время:    <how long undo takes>
+  Риски:    <what might go wrong, or "Никаких">
+  ───────────────────────────────────────────────────────────────
+  ...
+
+## ⚠️ Что может поломаться со временем
+
+  Риск:   <Specific drift, not theoretical>
+  Когда:  <Trigger condition>
+  Что:    <What breaks>
+  Защита: <Prevention or recovery>
+
+## ➡️ Что делать дальше
+
+  Шаг 1: ТЕБЕ — <imperative action with context>
+  Шаг 2: ТЕБЕ — <imperative action>
+  Шаг 3: ПОТОМ — <when X happens, do Y>
+
+## 💰 Сколько это стоило
+
+  Время:        ~<wall clock>
+  Действий:     ~<tool call count>
+  Файлов:       <new + modified counts>
+  Стоимость:    <retries / rollbacks / surprises if any, or "Без откатов">
 ```
 
 ## Required minimums
 
-- ✅ At least one item in **Created** OR **Modified**
-- ✅ At least one **Verification** row
-- ✅ TL;DR mentions verification status
-- ⚪ Not-done section even if "nothing intentionally skipped" (then write "—")
+- ✅ Blockquote TL;DR at top, italic prose, 1-3 sentences
+- ✅ At least one card in **Что создано** OR **Что обновлено**
+- ✅ All 5 mandatory sections present (use one card with `Не сделано: —` if none apply)
+- ✅ Card fields use **full sentences**, not codes like `🟢 Pass`
 
 ## Real-world example
 
-```
-TL;DR: forge-report skill добавлен в dev-toolkit, 23 файла, плагин bumped
-       до v1.5.0. CI green. Drift risk: cc-best PRD ссылается на этот skill.
+```markdown
+> _Сделал новый skill `forge-report` для структурированных отчётов в плагине
+> `dev-toolkit`. Плюс slash command `/report` и правило в `~/.claude/CLAUDE.md`.
+> Всё работает, готово к использованию. Главное что нужно тебе — попробовать
+> на реальной задаче._
 
-═══ ✅ Created ═══════════════════════════════════════════════════
-  forge-report SKILL.md   plugins/dev-toolkit/skills/forge-report/   New
-  /report command         plugins/dev-toolkit/commands/report.md     New
-  5 templates             sections/01-templates/                     New
-  ...
+## ✅ Что создано
 
-═══ ✅ Verification ═════════════════════════════════════════════
-  CI                      pass (8s)                                  🟢 High
-  validate-plugins.sh     ALL PASSED                                 🟢 High
-  Smoke /report           manual test pending                        🔴 Assumed
+  Что:    Skill «forge-report» — шаблоны структурированных отчётов
+  Где:    plugins/dev-toolkit/skills/forge-report/
+  Размер: 21 файл (1 главный SKILL.md + 4 индекса + 16 страниц)
+  Зачем:  Чтобы Claude по завершении больших задач писал отчёты
+          в едином формате — TL;DR, что сделано, что не сделано,
+          что можно откатить, что в риске.
+  Статус: Готов. Прошёл два раунда проверки (5 проблем найдено и исправлено).
+  ───────────────────────────────────────────────────────────────
+  Что:    Slash-команда /report
+  Где:    plugins/dev-toolkit/commands/report.md
+  Зачем:  Если автотриггер не сработал — пишешь /report
+          и получаешь отчёт по последним действиям вручную.
+  Статус: Готов.
 
-═══ 🔄 Reversibility ════════════════════════════════════════════
-  Reversible: revert PR #25, rm plugins/dev-toolkit/skills/
-  Irreversible: none
+## 📈 Что обновлено
 
-═══ ➡️ Next steps ══════════════════════════════════════════════
-  1. Test /report on a real task
-  2. Update marketplace README
+  Файл:  plugins/dev-toolkit/.claude-plugin/plugin.json
+  Было:  версия 1.4.0
+  Стало: версия 1.5.0 (+1 команда, +1 skill)
 
-💰 Cycle: 31 calls · 23 files · 45 min
+## ➡️ Что делать дальше
+
+  Шаг 1: ТЕБЕ — открой новую сессию и дай задачу с 3+ файлами.
+                Если выйдет structured-отчёт — правило работает.
+  Шаг 2: ТЕБЕ — через неделю оцени навязчивость, поправим триггер.
+  Шаг 3: ПОТОМ — при активации PRD-014 добавить ссылку на forge-report.
 ```
 
 ## When NOT to use this template
 
-- Modified single file → just describe inline, no template needed.
-- Built something but didn't verify → use `incident-summary` (something broke).
-- Built + decided architecture → use `decision-summary` (decision is bigger).
+- Modified single file → describe inline, no template
+- Built something but didn't verify → use `incident-summary` (something went wrong)
+- Built + decided architecture → use `decision-summary` (decision is bigger)

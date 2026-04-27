@@ -1,58 +1,59 @@
-# Status Icons — Single Legend
+# Section Icons — One Per Heading, Not Per Row
 
-**Use these icons consistently across all reports. Don't invent new ones.**
+**Icons live in section headings only.** Decoration of every row makes reports visually noisy and hard to scan.
 
-| Icon | Meaning | Example |
-|------|---------|---------|
-| ✅ | Done — verified successful | `✅ PR #24 merged, CI green` |
-| 📝 | Modified — files edited (vs created) | `📝 README.md (line 42, 1 char)` |
-| ⏳ | Pending — in progress or queued | `⏳ Deploy starting, ETA 5m` |
-| ⚠️ | Risk / warning — works but watch out | `⚠️ Rate limit at 80% capacity` |
-| ❌ | Failed — explicit failure to record | `❌ Migration rollback required` |
-| 🔵 | Info — context, no action needed | `🔵 Total tokens used: 6078` |
-| ⚪ | Not done — intentional, not forgotten | `⚪ Skipped UI tests (no display in CI)` |
-| ➡️ | Next step — action user should take | `➡️ Run gh secret set TOKEN ...` |
+## The 7 section icons
 
-## Confidence labels (separate system)
+Use one of these **only as the second character of an `## h2` heading** (e.g. `## ✅ Что сделано`):
 
-Confidence uses a **distinct traffic-light set** to avoid colliding with status icons:
-
-| Icon | Meaning | Example |
-|------|---------|---------|
-| 🟢 | High — directly verified | `🟢 PR merged (gh pr view confirmed)` |
-| 🟡 | Medium — inferred, not tested | `🟡 Likely takes 2 min (similar to last sync)` |
-| 🔴 | Assumed — estimate or prediction | `🔴 4-6 hours to build (gut estimate)` |
-
-See `confidence-levels.md` for when to use each.
+| Icon | Section meaning | Example heading |
+|------|-----------------|-----------------|
+| ✅ | Things you created / accomplished | `## ✅ Что сделано` |
+| 📈 | Things you modified / updated | `## 📈 Что обновлено` |
+| ⚪ | Things explicitly not done (boundaries) | `## ⚪ Что не сделано — намеренно` |
+| 🔄 | Reversibility / rollback | `## 🔄 Что можно откатить если передумаешь` |
+| ⚠️ | Drift risks / future warnings | `## ⚠️ Что может поломаться со временем` |
+| ➡️ | Next steps for the reader | `## ➡️ Что делать дальше` |
+| 💰 | Cycle cost / metadata | `## 💰 Сколько это стоило` |
 
 ## Rules
 
-1. **One icon per row** — don't combine like `✅⚠️`.
-2. **Icon goes first** — `✅ Item` not `Item ✅`.
-3. **Don't redecorate** — no 🎉🚀🔥 unless there's a real reason.
-4. **No icon = neutral statement** — that's also fine.
+1. **Exactly one icon per heading.** No `## ✅⚠️ Done with risks`.
+2. **Never inside cards.** The card body is plain text; icons are reserved for the heading above.
+3. **No new icons.** If you want to invent ❌ or 🔥 — restructure into one of the 7 sections instead.
+4. **Plain bullet lists never get icons.** Use `-` or numbered `1.` for items, never `✅` for "this item is done".
 
-## Anti-patterns
+## Why row-level icons fail
 
-- ❌ Using `✅` for "I tried" — only for verified.
-- ❌ Using `⚠️` for everything mildly uncertain — reserve for real risk.
-- ❌ Mixing emojis for the same concept (`✓` vs `✅`).
+❌ Bad — visual noise, eye loses anchors:
+```
+## Что сделано
+  ✅ skill создан       
+  ✅ command добавлен   
+  ✅ PR замержен        
+  ⚠️ smoke не пройден   
+```
 
-## Why these 8 status + 3 confidence
+✅ Good — section icon labels the category, items inside are full sentences:
+```
+## ✅ Что сделано
+  Что: forge-report skill (готов, проверен)
+  Что: /report command (готов)
+  Что: PR #26 (замержен)
 
-Status icons cover state:
-- Result: ✅ ❌
-- Change: 📝
-- In motion: ⏳
-- Caution: ⚠️
-- Context: 🔵
-- Boundaries: ⚪
-- Action: ➡️
+## ⚠️ Что может поломаться
+  Риск: smoke test не сделан — нужна реальная задача для проверки
+```
 
-Confidence icons (🟢🟡🔴) live in a parallel "traffic-light" namespace — never mix them with status icons in the same column.
+## Confidence labels — separate system
 
-Adding more icons makes the legend forgettable. If you feel the urge to invent one — try harder with the existing 11.
+Confidence (🟢 High / 🟡 Medium / 🔴 Assumed) is documented in `confidence-levels.md`. Use confidence labels **inline in card values**, never as section headings or row decorations:
 
-## Section-header convention
+```
+  Статус: Готов и проверен на CI (🟢 high — gh pr view confirmed merged)
+```
 
-Some templates use icons as section markers, e.g. `═══ ✅ Created ═════`. In that context the icon **groups** items by category (here: completed items), it does NOT mean "this heading is verified". Treat the icon as a label, not a status.
+NOT:
+```
+  🟢 Статус: Готов
+```

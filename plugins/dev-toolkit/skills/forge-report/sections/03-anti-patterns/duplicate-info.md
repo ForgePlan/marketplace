@@ -10,27 +10,32 @@ Same fact repeated across multiple sections.
 
 ## Bad
 
-```
-TL;DR: Created PR #25 with forge-report skill. Awaiting CI.
+```markdown
+> _Created PR #25 with forge-report skill. Awaiting CI._
 
-═══ ✅ Created ═══════════════════════════════════════════════════
-  PR #25 with forge-report skill                       awaiting CI
+## ✅ Что сделано
+  Что: PR #25 с forge-report skill
+  Статус: Awaiting CI
 
-═══ ➡️ Next steps ══════════════════════════════════════════════
+## ➡️ Что делать дальше
   1. Wait for CI on PR #25 (forge-report skill)
-  2. Merge once CI passes for PR #25 with forge-report
+  2. Merge once CI passes for PR #25 with forge-report skill
 ```
 
 (Same fact "PR #25 / forge-report / CI" stated 4 times.)
 
 ## Good
 
-```
-TL;DR: PR #25 (forge-report skill) opened, CI running. ETA ~30s.
+```markdown
+> _PR #25 (forge-report skill) opened, CI running. ETA ~30s._
 
-═══ ➡️ Next steps ══════════════════════════════════════════════
-  1. Wait for CI green
-  2. Merge → branch auto-deletes
+## ✅ Что сделано
+  Что: forge-report skill в dev-toolkit
+  PR:  #25 (CI запущен)
+
+## ➡️ Что делать дальше
+  Шаг 1: МНЕ — дождаться CI
+  Шаг 2: МНЕ — merge
 ```
 
 (Each fact stated once. Context flows.)
@@ -48,5 +53,5 @@ Read your own report from top to bottom. Mark every fact. If a fact appears 3+ t
 ## Refactor pattern
 
 1. Identify the **canonical place** for each fact (usually first occurrence).
-2. Other places link or reference (`see ✅ Created above`).
+2. Other places link or reference (`см. ✅ Что сделано выше`).
 3. Delete pure repetition.
