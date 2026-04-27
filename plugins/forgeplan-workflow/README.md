@@ -76,6 +76,17 @@ Step 8: Commit
 | R_eff | Evidence scoring and quality gates |
 | Memory | Cross-session memory via CLAUDE.md and Hindsight |
 
+### Hint Contract (v1.5.0+, requires Forgeplan v0.25.0+)
+
+Forgeplan v0.25.0 introduced the **5-rule hint contract** — every CLI/MCP output emits one of:
+- `Next: <command>` — primary action
+- `Or: <command>` — fallback
+- `Wait: <condition>` — async retry
+- `Done.` — terminal
+- `Fix: <command>` — error remediation
+
+This plugin now teaches agents to read these markers automatically. Coverage in Forgeplan v0.25.0 binary: **100%** (70/70 CLI commands). See methodology skill section `06-output-hints/agent-protocol.md` for the full reading protocol.
+
 ## License
 
 MIT

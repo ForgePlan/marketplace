@@ -39,7 +39,22 @@ Do this at most once per session. Do not nag.
 When the user makes a significant architectural choice (new pattern, technology selection, major refactor direction), suggest:
 > "That's an important architectural decision. Want me to capture it as an ADR with `forgeplan new adr`?"
 
-### 5. SPARC for Deep Tasks
+### 5. Hint Contract Awareness (v0.25.0+)
+
+When you observe the user (or another agent) running `forgeplan` commands and **ignoring** the contract markers in output, gently surface:
+
+> "Forgeplan output emitted `Next: <command>` — that's the recommended next step. Want me to run it directly?"
+
+Specifically watch for:
+- User running `forgeplan validate PRD-X` then asking "what next?" → the output already had `Next:` line
+- Output with `Fix:` after `Error:` being treated as opaque error → suggest running the Fix
+- Output with `Done.` → don't suggest follow-up actions, workflow is complete
+
+Reference: methodology skill section `06-output-hints/agent-protocol.md`.
+
+This is a hint, not a gate — never block. If user prefers to interpret manually, that's fine.
+
+### 6. SPARC for Deep Tasks
 When the task is routed as Deep or involves architecture + implementation + testing (multi-phase work), suggest:
 > "This is a Deep task. Want to use SPARC methodology via `/sprint`? It structures the work into Specification -> Pseudocode -> Architecture -> Refinement phases with quality gates."
 
