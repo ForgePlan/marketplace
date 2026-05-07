@@ -5,6 +5,28 @@ All notable changes to the ForgePlan Marketplace will be documented in this file
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.16.0] - 2026-05-08
+
+Two new interactive design skills — top-down complement to the existing brownfield-pack extraction skills (which work bottom-up from code).
+
+### Added
+- `fpl-skills` v1.3.0 → **1.4.0** (minor — two new interactive skills):
+  - **`/ddd-decompose`** (~280 lines) — interview-driven Domain-Driven Design decomposition. Walks through identifying bounded contexts, ubiquitous language per context, aggregates, domain events, integration map. Outputs context map (Markdown + Mermaid) plus, when forgeplan CLI is available, Epic + per-context PRDs + Spec for cross-context contracts. Pairs with `/fpf-decompose` (general decomposition without DDD framing) and the `ddd-domain-expert` agent in `agents-pro` (advisory).
+  - **`/c4-diagram`** (~280 lines) — interactive C4 architecture diagram generator. Walks through L1 Context (system + actors), L2 Container (runtime units inside system), L3 Component (per-container detail, optional), L4 Code (rare). Outputs Mermaid diagrams plus written context per level. Maps cleanly to forgeplan via `c4-to-forge.yaml` from `forgeplan-brownfield-pack` — top-down design vs the brownfield bottom-up ingestion path.
+
+### Changed
+- `plugin.json` (fpl-skills): skills array `18 → 20` entries (+ddd-decompose, +c4-diagram). Description updated. Version 1.3.0 → 1.4.0.
+- `marketplace.json`: catalog version 1.15.0 → **1.16.0**; fpl-skills entry version 1.3.0 → 1.4.0.
+- `docs/USAGE-GUIDE.md` and `-RU.md`: Quick Reference adds `/ddd-decompose` and `/c4-diagram` rows in the fpl-skills section.
+
+### Notes
+The two new skills close a real gap. We had:
+- Bottom-up (brownfield): `forgeplan-brownfield-pack` extraction skills work from existing code → produce DDD/C4-style artifacts
+- Mappings only (forgeplan integration): `c4-to-forge.yaml` and `ddd-to-forge.yaml` ingest existing diagrams/contexts
+- Advisory agent: `ddd-domain-expert` and `architect-reviewer` in `agents-pro`
+
+What was missing — **top-down interactive design**. A new system needs DDD/C4 decomposition through structured questions, not by analysing code that doesn't exist yet. `/ddd-decompose` and `/c4-diagram` fill this. The interview pattern is consistent with `/shape` and `/refine` (one focused question per turn, surface contradictions immediately, cap output to a draft).
+
 ## [1.15.0] - 2026-05-08
 
 Reframed `autoresearch` (the metric-driven loop plugin by Udit Goenka) from "external mention" to **recommended companion** with a proper integration guide. Earlier docs treated it as a distant reference; in reality it composes naturally with `/forge-cycle` and the brownfield extraction skills.
