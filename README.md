@@ -8,7 +8,7 @@
 
 Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/ForgePlan) — UX, workflow, engineering, and developer tools.
 
-**10 plugins** | **60+ agents** | **13 commands** | **4 knowledge bases** | [Usage Guide](docs/USAGE-GUIDE.md) | [Architecture](docs/ARCHITECTURE.md)
+**12 plugins** | **60+ agents** | **15 commands** | **5 knowledge bases** | [Usage Guide](docs/USAGE-GUIDE.md) | [Architecture](docs/ARCHITECTURE.md)
 
 ## Quick Start
 
@@ -32,21 +32,47 @@ Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/
 
 | Your role | Install these | Why |
 |-----------|--------------|-----|
-| Any developer | dev-toolkit + agents-core | Universal tools |
-| Frontend | + laws-of-ux + agents-domain | UX + framework agents |
-| Architect | + fpf + agents-pro + agents-sparc | Thinking + SPARC |
-| Forgeplan user | + forgeplan-workflow + forgeplan-orchestra | Full lifecycle |
-| Brownfield migration | + forgeplan-brownfield-pack | Ingest legacy docs + C4/DDD/research analyses |
-| Everything | All 11 plugins | Complete ecosystem |
+| **Forgeplan user (recommended)** | **fpl-skills** | One install, 15 skills, full route → ship loop |
+| Any developer (no forgeplan) | dev-toolkit + agents-core | Universal tools, no CLI dependency |
+| Frontend | fpl-skills + laws-of-ux + agents-domain | UX + framework agents |
+| Architect | fpl-skills + fpf + agents-pro + agents-sparc | Thinking + SPARC |
+| Multi-session / team | fpl-skills + forgeplan-orchestra | Coordination + Inbox Pattern |
+| Brownfield migration | fpl-skills + forgeplan-brownfield-pack | Ingest legacy docs + C4/DDD/research analyses |
+| Everything | All 12 plugins | Complete ecosystem |
 
 ## Available Plugins
 
-### [dev-toolkit](plugins/dev-toolkit/)
+### [fpl-skills](plugins/fpl-skills/)
 
 > [!TIP]
-> **Recommended first install** — works with any project and language, zero dependencies.
+> **Flagship — recommended for forgeplan users.** Bundles 15 engineering skills built on top of forgeplan's artifact lifecycle. Replaces `dev-toolkit` (now soft-deprecated).
 
-Universal engineering toolkit — audit, sprint planning, and session context restore.
+Full **route → shape → build → audit → activate** loop in one install. Includes `/fpl-init` for one-command project bootstrap.
+
+| Component | What you get |
+|-----------|-------------|
+| `/fpl-init` | One-shot project bootstrap: forgeplan init, MCP wiring, CLAUDE.md, docs/agents/ |
+| `/research`, `/refine`, `/rfc` | Discovery → planning → formalisation |
+| `/sprint`, `/do`, `/autorun`, `/build`, `/team` | Execution (interactive, autopilot, multi-agent) |
+| `/audit`, `/diagnose` | Multi-expert review + 6-phase debug loop |
+| `/restore`, `/briefing`, `/setup`, `/bootstrap` | Session and project helpers |
+| **SessionStart hook** | Context-aware next-step hint (status, /fpl-init prompt for new repos) |
+
+> [!WARNING]
+> Requires the [`forgeplan`](https://github.com/ForgePlan/forgeplan) CLI on `$PATH`.
+
+```bash
+/plugin install fpl-skills@ForgePlan-marketplace
+```
+
+---
+
+### [dev-toolkit](plugins/dev-toolkit/) — deprecated
+
+> [!CAUTION]
+> **Superseded by [`fpl-skills`](plugins/fpl-skills/).** New installs should use `fpl-skills`. Existing dev-toolkit installs keep working — soft-sunset until catalog v2.0.
+
+Universal engineering toolkit — audit, sprint planning, and session context restore. No CLI dependency.
 
 | Component | What you get |
 |-----------|-------------|

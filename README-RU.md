@@ -8,7 +8,7 @@
 
 Официальный маркетплейс плагинов Claude Code от [ForgePlan](https://github.com/ForgePlan) — UX, воркфлоу, инженерные и dev-инструменты.
 
-**10 плагинов** | **60+ агентов** | **13 команд** | **4 базы знаний** | [Руководство](docs/USAGE-GUIDE-RU.md)
+**12 плагинов** | **60+ агентов** | **15 команд** | **5 баз знаний** | [Руководство](docs/USAGE-GUIDE-RU.md)
 
 ## Быстрый старт
 
@@ -32,20 +32,47 @@
 
 | Ваша роль | Установить | Зачем |
 |-----------|-----------|-------|
-| Любой разработчик | dev-toolkit + agents-core | Универсальные инструменты |
-| Фронтенд | + laws-of-ux + agents-domain | UX + агенты фреймворков |
-| Архитектор | + fpf + agents-pro + agents-sparc | Мышление + SPARC |
-| Пользователь Forgeplan | + forgeplan-workflow + forgeplan-orchestra | Полный цикл |
-| Всё сразу | Все 10 плагинов | Полная экосистема |
+| **Пользователь Forgeplan (рекомендуется)** | **fpl-skills** | Одна установка, 15 скиллов, полный цикл route → ship |
+| Любой разработчик (без forgeplan) | dev-toolkit + agents-core | Универсальные инструменты, без CLI зависимости |
+| Фронтенд | fpl-skills + laws-of-ux + agents-domain | UX + агенты фреймворков |
+| Архитектор | fpl-skills + fpf + agents-pro + agents-sparc | Мышление + SPARC |
+| Многосессионная работа / команда | fpl-skills + forgeplan-orchestra | Координация + Inbox Pattern |
+| Brownfield миграция | fpl-skills + forgeplan-brownfield-pack | Ингест legacy-доков + C4/DDD/research analyses |
+| Всё сразу | Все 12 плагинов | Полная экосистема |
 
 ## Доступные плагины
 
-### [dev-toolkit](plugins/dev-toolkit/)
+### [fpl-skills](plugins/fpl-skills/)
 
 > [!TIP]
-> **Рекомендуется первым** — работает с любым проектом и языком, без зависимостей.
+> **Флагман — рекомендуется пользователям forgeplan.** Бандл из 15 инженерных скиллов поверх forgeplan lifecycle. Заменяет `dev-toolkit` (мягко-deprecated).
 
-Универсальный инженерный тулкит — аудит, спринт-планирование и восстановление контекста сессии.
+Полный цикл **route → shape → build → audit → activate** в одной установке. `/fpl-init` разворачивает проект одной командой.
+
+| Компонент | Что получаете |
+|-----------|-------------|
+| `/fpl-init` | Развёртка проекта одной командой: forgeplan init, MCP wiring, CLAUDE.md, docs/agents/ |
+| `/research`, `/refine`, `/rfc` | Discovery → планирование → формализация |
+| `/sprint`, `/do`, `/autorun`, `/build`, `/team` | Execution (интерактивно, автопилот, multi-agent) |
+| `/audit`, `/diagnose` | Multi-expert ревью + 6-фазный debug loop |
+| `/restore`, `/briefing`, `/setup`, `/bootstrap` | Сессионные и проектные хелперы |
+| **SessionStart hook** | Context-aware подсказка следующего шага (статус, /fpl-init для новых репо) |
+
+> [!WARNING]
+> Требует CLI [`forgeplan`](https://github.com/ForgePlan/forgeplan) в `$PATH`.
+
+```bash
+/plugin install fpl-skills@ForgePlan-marketplace
+```
+
+---
+
+### [dev-toolkit](plugins/dev-toolkit/) — deprecated
+
+> [!CAUTION]
+> **Superseded by [`fpl-skills`](plugins/fpl-skills/).** Новые установки — на `fpl-skills`. Существующие `dev-toolkit` продолжают работать — soft-sunset до catalog v2.0.
+
+Универсальный инженерный тулкит — аудит, спринт-планирование и восстановление контекста сессии. Без зависимости от CLI.
 
 | Компонент | Что получаете |
 |-----------|-------------|
