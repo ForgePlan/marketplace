@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.9.1"
+    "version": "1.10.0"
   },
   "plugins": [
     {
@@ -77,8 +77,10 @@
     {
       "name": "dev-toolkit",
       "source": "./plugins/dev-toolkit",
-      "description": "Universal engineering toolkit: multi-expert audit, wave-based sprints, session context recall, card-based structured reports with auto-trigger hooks, and safety hooks. Works with any project and language.",
-      "version": "1.6.1",
+      "description": "[DEPRECATED — superseded by fpl-skills] Universal engineering toolkit: multi-expert audit, wave-based sprints, session context recall, card-based structured reports with auto-trigger hooks, and safety hooks. New users should install fpl-skills@ForgePlan-marketplace instead.",
+      "version": "1.6.2",
+      "deprecated": true,
+      "supersededBy": "fpl-skills",
       "author": {
         "name": "ForgePlan"
       },

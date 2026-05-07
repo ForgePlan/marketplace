@@ -1,7 +1,9 @@
 {
   "name": "dev-toolkit",
-  "version": "1.6.1",
-  "description": "Universal engineering toolkit: multi-expert audit, wave-based sprints, session context recall, card-based structured reports with auto-trigger hooks, and safety hooks. Works with any project and language.",
+  "version": "1.6.2",
+  "description": "[DEPRECATED — superseded by fpl-skills] Universal engineering toolkit: multi-expert audit, wave-based sprints, session context recall, card-based structured reports with auto-trigger hooks, and safety hooks. Works with any project and language. New users: install fpl-skills@ForgePlan-marketplace instead.",
+  "deprecated": true,
+  "supersededBy": "fpl-skills",
   "author": {
     "name": "ForgePlan"
   },

@@ -2,6 +2,22 @@
 
 # dev-toolkit
 
+> **⚠️ Deprecated — superseded by [`fpl-skills`](../fpl-skills/README.md).**
+>
+> `dev-toolkit` is in soft-sunset. Existing users keep working installs;
+> new projects should install `fpl-skills` instead. It bundles everything
+> dev-toolkit ships (`/audit`, `/sprint`, session-context recall, structured
+> reports) plus `/research`, `/refine`, `/diagnose`, `/autorun`, `/fpl-init`,
+> and 8 more skills built on top of forgeplan's artifact lifecycle.
+>
+> ```bash
+> /plugin install fpl-skills@ForgePlan-marketplace
+> ```
+>
+> See [`plugins/fpl-skills/README.md`](../fpl-skills/README.md) and
+> [`GETTING-STARTED.md`](../fpl-skills/GETTING-STARTED.md) for the migration.
+> No action required if you're happy with the current dev-toolkit feature set.
+
 Universal engineering toolkit -- works with any project. No dependencies.
 
 Four parallel code reviewers, wave-based task execution, and instant session restore. Drop it into Claude Code and go.
