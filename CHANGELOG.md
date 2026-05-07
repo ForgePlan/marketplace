@@ -5,6 +5,31 @@ All notable changes to the ForgePlan Marketplace will be documented in this file
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.14.0] - 2026-05-08
+
+Brownfield extraction pack ported from upstream forgeplan repo. The 12-skill methodology that's been ready in `/docs/brownfield-extraction-package/` is now installable.
+
+### Added
+- `forgeplan-brownfield-pack` v1.0.0 → **1.1.0** — full content port from `/Users/explosovebit/Work/ForgePlan/docs/brownfield-extraction-package/`:
+  - **12 extraction skills** in `skills/`, each with Claude Code frontmatter + the original methodology body:
+    `ubiquitous-language` (C1), `use-case-miner` (C2), `intent-inferrer` (C3), `invariant-detector` (C4), `causal-linker` (C5), `hypothesis-triangulator` (C6), `interview-packager` (C7), `scenario-writer` (C8), `kg-curator` (C9), `canonical-reproducer` (C10), `reproducibility-validator` (C11), `rag-packager` (C12).
+  - **2 orchestration playbooks** in `playbooks/`: `extract-business-logic.md` (full sequence), `phase-transitions.md` (quality gates between phases).
+  - **3 integration recipes** in `integration/`: `autoresearch-hooks.md`, `forgeplan-mcp-additions.md`, `rag-export-format.md`.
+  - **6 templates** in `templates/`: glossary, use-case, hypothesis, scenario, invariant, domain-model.
+  - **6 artifact-kind definitions** in `artifact-kinds/`.
+  - **5 examples** in `examples/` from the TripSales reference project.
+  - **4 methodology docs** in pack root: `METHODOLOGY.md`, `ARCHITECTURE.md`, `SKILLS-INVENTORY.md`, `GLOSSARY.md`.
+
+### Changed
+- `plugins/forgeplan-brownfield-pack/.claude-plugin/plugin.json`: skills array now lists all 12 (was empty); description rewritten to enumerate what's shipped; version 1.0.0 → 1.1.0; keywords updated (`extraction`, `factum-intent`, `domain-modeling`).
+- `plugins/forgeplan-brownfield-pack/README.md` and `-RU.md`: full rewrite to reflect actual contents — sections for each skill category, two-tier methodology summary, typical workflow chain, when-to-use / when-not-to-use, companion plugins. RU version written in plain Russian (less anglicism, terms like "разведка", "уверенно выведено", "ограниченный контекст").
+- Marketplace catalog: brownfield-pack description updated; metadata.version 1.13.0 → **1.14.0**.
+
+### Notes
+The pack alpha-status from v1.0.0 is now lifted to **production-ready for content**, but **playbook orchestration** still depends on forgeplan CLI v0.25+ runtime features (EPIC-007 / PRD-065 in upstream). Skills can be invoked individually now; full automated pipeline awaits the upstream playbook engine.
+
+The two-tier extraction methodology (Factum vs Intent) is the conceptual core. Every intent claim must carry a confidence tag (verified ✅ / strong-inferred 🟢 / inferred 🟡 / speculation 🟠 / unknown ⬜). This separation is enforced by skill `03-intent-inferrer` and validated downstream by `06-hypothesis-triangulator`.
+
 ## [1.13.0] - 2026-05-08
 
 Closes the lifecycle front-end gap (`/shape` skill) and adds two strategic docs (`PLAYBOOK`, `METHODOLOGIES`).

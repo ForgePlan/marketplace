@@ -2,98 +2,129 @@
 
 # forgeplan-brownfield-pack
 
-> Migrate existing brownfield documentation (MADR, ADR-tools, log4brains, Obsidian, ad-hoc markdown) and C4/DDD/autoresearch analysis output into a structured forgeplan graph — without data loss.
+> Turn a legacy codebase plus its accumulated documentation into a structured forgeplan graph — with explicit confidence labels for every business claim.
 
-A Claude Code marketplace pack implementing the **orchestrator model** from Forgeplan ADR-009: forgeplan does not re-implement extraction logic. Instead, this pack ships **playbooks**, **skills**, **agents**, and **mappings** that compose existing marketplace plugins (`c4-architecture`, `autoresearch`, `ddd-expert`, `feature-dev`) with forgeplan's ingest engine.
+A Claude Code marketplace pack for **brownfield extraction**: take inherited code, Obsidian vaults, MADR ADRs, Confluence dumps, etc., and produce a forgeplan artifact graph with PRDs, RFCs, ADRs, and Evidence — all backed by traceable sources and confidence tags.
 
-> **Status**: alpha. Mapping layer (c4-to-forge) is validated on the Forgeplan repo itself (CL3 spike, 2026-04-20). Playbook runtime in active development (Forgeplan EPIC-007 / PRD-065).
+> [!WARNING]
+> Requires `forgeplan` CLI v0.25+ and the playbook runtime (EPIC-007 / PRD-065 in forgeplan upstream). The skill content ships now; some playbook orchestration depends on forgeplan CLI features still rolling out.
 
 ## Quick Start
 
 ```bash
 /plugin install forgeplan-brownfield-pack@ForgePlan-marketplace
+/reload-plugins
 ```
 
-Then from within a brownfield project:
+## What's inside
 
-```
-/forge-migrate                     # interactive wizard
-# or
-/forge-migrate --from c4-context   # specific source
-```
+### 12 extraction skills (`skills/`)
 
-## What it provides
-
-### Mappings (idempotent translation rules)
-
-| Mapping | Source format | Target forge artifacts |
+| Skill | C# | Purpose |
 |---|---|---|
-| `c4-to-forge.yaml` | C4 Context / Container / Component markdown | Epic, PRDs, Notes |
-| `autoresearch-to-forge.yaml` | autoresearch 8-phase pipeline output | PRDs, Problems, Evidence |
-| `ddd-to-forge.yaml` | DDD bounded-context map | Epic, PRDs, Spec |
-| `madr-to-forge.yaml` | MADR-formatted ADR files | ADR (1:1) |
-| `adr-tools-to-forge.yaml` | adr-tools format | ADR (1:1) |
-| `log4brains-to-forge.yaml` | log4brains format | ADR (1:1) |
-| `obsidian-to-forge.yaml` | Obsidian vault with wikilinks | any kind + resolved `references` links |
+| `ubiquitous-language` | C1 | Build the domain glossary from code + comments + DB columns + queue names |
+| `use-case-miner` | C2 | Find user-facing scenarios in the code |
+| `intent-inferrer` | C3 | Generate 3+ hypotheses for *why* code is shaped a certain way (ADI abduction) |
+| `invariant-detector` | C4 | Detect rules that always hold (validation logic, branch guards) |
+| `causal-linker` | C5 | Connect scenarios → invariants → use-cases — the *why-chain* |
+| `hypothesis-triangulator` | C6 | Triangulate competing hypotheses with evidence (ADI deduction → induction) |
+| `interview-packager` | C7 | Package open questions for a domain owner — minimum-cost interview |
+| `scenario-writer` | C8 | Write Given/When/Then scenarios from extracted use-cases |
+| `kg-curator` | C9 | Curate the knowledge graph — add cross-links, deduplicate, retire stale items |
+| `canonical-reproducer` | C10 | Reproduce a key flow in a clean environment to validate extraction |
+| `reproducibility-validator` | C11 | Verify the canonical reproduction matches reality |
+| `rag-packager` | C12 | Package the result as a RAG-ready dataset |
 
-All mappings enforce **universal rules**:
-- **Idempotency**: re-runs dedupe by title slug, version-bump on change, never destructive
-- **Scope**: writes only to `.forgeplan/`, never `.git/` or source directories
-- **Safety**: dry-run by default, backup before apply
+### 2 orchestration playbooks (`playbooks/`)
 
-### Playbooks
+- `extract-business-logic.md` — full extraction sequence: discovery → Factum extraction → Intent inference → triangulation → reproduction → packaging
+- `phase-transitions.md` — when to advance from one phase to the next; quality gates between phases
 
-| Playbook | Orchestrates |
-|---|---|
-| `migrate-c4.yaml` | c4-architecture agent → c4-to-forge mapping → review |
-| `migrate-ddd.yaml` | ddd-expert agent → ddd-to-forge mapping → review |
-| `migrate-autoresearch.yaml` | autoresearch:learn → autoresearch-to-forge mapping → review |
-| `migrate-obsidian.yaml` | detect vault → per-file classify → obsidian-to-forge → resolve wikilinks |
-| `migrate-madr.yaml` | scan ADR directory → madr-to-forge → review |
+### 3 integration recipes (`integration/`)
 
-### Skills
+- `autoresearch-hooks.md` — wire the external `autoresearch@anthropic-marketplace` plugin into the brownfield flow
+- `forgeplan-mcp-additions.md` — additions to forgeplan MCP for brownfield-specific operations
+- `rag-export-format.md` — output format for the RAG packager
 
-| Skill | Purpose |
-|---|---|
-| `forge-classify` | Classify brownfield document into forge kind (PRD/ADR/KB/...) |
-| `forge-dialogue` | Ask user clarifying questions when confidence is low |
-| `madr-to-forge` | Apply MADR mapping with domain-specific reasoning |
+### 2 mappings (`mappings/`)
 
-### Agents
+- `c4-to-forge.yaml` — C4 Context/Container/Component → forgeplan Epic + PRDs + Notes (validated CL3 on Forgeplan repo, 2026-04-20)
+- `ddd-to-forge.yaml` — DDD bounded-context map → Epic + PRDs + Spec
 
-| Agent | Purpose |
-|---|---|
-| `forge-migrator` | Autonomous agent that runs full migration playbook and reports diff |
+### Templates and examples
 
-## Relationship to forgeplan core
+- `templates/` — frontmatter and structure for each artifact kind (glossary, use-case, hypothesis, scenario, invariant, domain-model)
+- `examples/` — real samples from the TripSales project (glossary, use-case, scenario, canonical orders extraction)
+- `artifact-kinds/` — definitions for each brownfield-specific artifact kind
 
-This pack **consumes** the forgeplan playbook runtime (EPIC-007 PRD-065) and ingest engine (PRD-066). It does not re-implement them. The pack produces forge artifacts via public `forgeplan_*` MCP tools and the `forgeplan ingest` command.
+### Methodology docs (root)
 
-When the playbook runtime ships (v0.25), install order is:
+- `METHODOLOGY.md` — two-tier Factum vs Intent extraction with confidence taxonomy
+- `ARCHITECTURE.md` — how the extraction skills compose
+- `SKILLS-INVENTORY.md` — quick map of skill numbers (C1-C12) to skill names
+- `GLOSSARY.md` — terms used by the pack
 
-```bash
-# 1. forgeplan CLI >= v0.25 with ingest engine
-forgeplan --version
+## Two-tier extraction at a glance
 
-# 2. this pack
-/plugin install forgeplan-brownfield-pack@ForgePlan-marketplace
+The methodology distinguishes:
 
-# 3. recommended companions (actual extraction agents)
-/plugin install c4-architecture@anthropic-marketplace
-/plugin install autoresearch@anthropic-marketplace
-/plugin install ddd-expert@anthropic-marketplace
+- **Tier 1 — Factum**: what the code actually does, provable by reading. Confidence 100%, verifiable via re-grep. Examples: ENUM values, conditional branches, return shapes.
+- **Tier 2 — Intent**: why the business chose this implementation. Variable confidence — every claim tagged: `verified` ✅ / `strong-inferred` 🟢 / `inferred` 🟡 / `speculation` 🟠 / `unknown` ⬜.
+
+This separation prevents the most common failure: presenting hypotheses as facts.
+
+## Workflow
+
+```
+forgeplan init                                  # if not already done
+# Run a brownfield discovery pass (Discover Agent in agents/discover/)
+
+# Then chain extraction skills (typical order):
+ubiquitous-language     → docs/glossary.md
+use-case-miner          → docs/use-cases/*.md
+intent-inferrer         → docs/hypotheses/*.md
+invariant-detector      → docs/invariants/*.md
+causal-linker           → cross-references in the knowledge graph
+hypothesis-triangulator → resolves which hypotheses survive evidence checks
+interview-packager      → packs open questions for a domain owner
+scenario-writer         → docs/scenarios/*.md (Given/When/Then)
+kg-curator              → cleans up the graph
+canonical-reproducer    → reproduces a key flow
+reproducibility-validator → confirms reproduction matches reality
+rag-packager            → packages everything for RAG retrieval
+
+# Output: forgeplan graph populated with PRDs, RFCs, ADRs, Evidence
 ```
 
-## Contributing a new mapping
+## When to use this pack
 
-1. Fork this plugin
-2. Add `mappings/<source>-to-forge.yaml`
-3. Add fixture in `fixtures/<source>/` (small, anonymized)
-4. Add playbook that wires the agent → your mapping
-5. PR with E2E test demonstrating no data loss on the fixture
+- Inherited a legacy codebase with no internal documentation.
+- Have a pile of legacy docs (Obsidian, MADR, Confluence) and want them in a structured forgeplan graph.
+- Need to extract business logic before a major rewrite.
+- Need a RAG dataset of business knowledge derived from existing code.
 
-See [forgeplan ADR-009](https://github.com/ForgePlan/forgeplan/blob/main/.forgeplan/adrs/ADR-009-forgeplan-as-orchestrator-playbook-skill-agent-mapping-pack-marketplace-model.md) for architecture rationale.
+## When NOT to use this pack
+
+- Greenfield project — use [`fpl-skills`](../fpl-skills/README.md) `/fpl-init` and `/forge-cycle` instead.
+- Code is already well-documented — extraction is overhead, just curate what you have.
+- You only need static documentation (Obsidian, Confluence) — this pack produces a forgeplan graph specifically.
+
+## Companion plugins
+
+| Plugin | Why pair it |
+|---|---|
+| [`fpl-skills`](../fpl-skills/README.md) | Required — provides `/fpl-init`, `/refine`, `/audit`, the lifecycle skills you'll use after extraction |
+| [`forgeplan-workflow`](../forgeplan-workflow/README.md) | Required for `/forge-cycle` — used during canonical reproduction phase |
+| [`agents-pro`](../agents-pro/README.md) | `ddd-domain-expert` agent helps with bounded-context modelling |
+| External: [`autoresearch@anthropic-marketplace`](https://github.com/anthropic) | If you have access — automates parts of the discovery phase |
+
+## See also
+
+- [`docs/PLAYBOOK.md`](../../docs/PLAYBOOK.md) — Use-case 4 (Brownfield migration)
+- [`docs/METHODOLOGIES.md`](../../docs/METHODOLOGIES.md) — Two-tier extraction methodology entry
+- [`METHODOLOGY.md`](METHODOLOGY.md) — full Factum vs Intent specification (in this pack)
+- [`SKILLS-INVENTORY.md`](SKILLS-INVENTORY.md) — quick C1-C12 reference
 
 ## License
 
-MIT — same as forgeplan-marketplace.
+MIT

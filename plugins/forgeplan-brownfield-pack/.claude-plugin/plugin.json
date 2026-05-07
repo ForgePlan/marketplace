@@ -1,7 +1,7 @@
 {
   "name": "forgeplan-brownfield-pack",
-  "version": "1.0.0",
-  "description": "Brownfield migration pack for forgeplan — ingest existing docs (Obsidian, MADR, ad-hoc markdown) and C4/DDD/autoresearch analysis output into a structured forgeplan graph. Implements ADR-009 orchestrator model: composes existing marketplace plugins (c4-architecture, autoresearch, ddd-expert, feature-dev) via mapping YAMLs + playbook recipes. Ships c4-to-forge mapping validated at CL3 on Forgeplan repo.",
+  "version": "1.1.0",
+  "description": "Brownfield extraction pack for forgeplan — turns legacy code + docs into a structured forgeplan graph. Ships 12 extraction skills (ubiquitous-language, use-case-miner, intent-inferrer, invariant-detector, causal-linker, hypothesis-triangulator, interview-packager, scenario-writer, kg-curator, canonical-reproducer, reproducibility-validator, rag-packager), 2 orchestration playbooks (extract-business-logic, phase-transitions), 3 integration recipes (autoresearch hooks, forgeplan MCP additions, RAG export), 2 mappings (c4-to-forge, ddd-to-forge), templates, examples, and methodology docs. Implements two-tier extraction (Factum vs Intent) with confidence taxonomy and ADI cycle.",
   "author": {
     "name": "ForgePlan"
   },
@@ -13,10 +13,12 @@
     "brownfield",
     "migration",
     "ingest",
-    "orchestrator",
+    "extraction",
+    "factum-intent",
+    "domain-modeling",
     "c4",
-    "autoresearch",
     "ddd",
+    "autoresearch",
     "obsidian",
     "madr"
   ],
@@ -30,7 +32,20 @@
   "components": {
     "commands": [],
     "agents": [],
-    "skills": [],
+    "skills": [
+      "canonical-reproducer",
+      "causal-linker",
+      "hypothesis-triangulator",
+      "intent-inferrer",
+      "interview-packager",
+      "invariant-detector",
+      "kg-curator",
+      "rag-packager",
+      "reproducibility-validator",
+      "scenario-writer",
+      "ubiquitous-language",
+      "use-case-miner"
+    ],
     "hooks": []
   }
 }
