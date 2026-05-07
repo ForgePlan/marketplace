@@ -269,3 +269,40 @@ If `RFC-INDEX.md` exists:
 - **Don't write "Implementation Log: TBD"** — just don't create the section yet.
 - **Don't dump API endpoints / full JSON schemas into the RFC** — those belong in `openapi.yaml` or a separate guide.
 - **Don't conflate RFC and ADR**: RFC is a broad proposal; ADR is a single decision. If the document is one decision on one page, it's an ADR.
+
+---
+
+## Forgeplan integration
+
+If the `forgeplan` CLI is on `$PATH`, prefer `forgeplan` over plain markdown for RFC/ADR creation — the CLI gives you state machine, validation, R_eff scoring, and semantic search out of the box.
+
+### Forgeplan-aware mode (recommended)
+
+```bash
+# Create
+forgeplan new rfc "<title>"        # → RFC-NNN with template (Status, Phases, Alternatives, Decision)
+forgeplan new adr "<title>"        # → ADR-NNN with template (Context, Decision, Consequences, Valid Until)
+forgeplan validate RFC-NNN         # check MUST sections
+forgeplan link RFC-NNN PRD-MMM --relation based_on   # wire to parent PRD
+
+# Read
+forgeplan get RFC-NNN              # canonical body (vs reading file directly)
+forgeplan list --kind rfc          # all RFCs
+
+# Update
+forgeplan update RFC-NNN body=<full new body>   # idempotent; keeps LanceDB in sync
+# (Direct Edit/Write on .forgeplan/rfcs/*.md desyncs the index — use update)
+
+# Lifecycle
+forgeplan activate RFC-NNN
+forgeplan supersede RFC-NNN --by RFC-MMM        # when a successor lands
+forgeplan deprecate ADR-NNN --reason "..."      # decision no longer applies
+```
+
+### Plain-markdown mode (fallback)
+
+If `forgeplan` CLI is missing, this skill falls back to plain markdown — write `docs/rfcs/RFC-NNN-...md` per project conventions. You lose the validation/scoring/search benefits.
+
+### Want this orchestrated for you?
+
+`/forge-cycle` (in [`forgeplan-workflow`](../../../../plugins/forgeplan-workflow/README.md)) creates the RFC as part of the Shape phase for Standard+ depth tasks.

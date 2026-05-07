@@ -423,3 +423,29 @@ completion (Mode B). See cleanup checklist in [`team`](../team/SKILL.md).
 - **Score 8/10 without consensus issues** — suspicious, ask for cross-validation.
 - **APPROVE at 50% completion** — violates the Phase 3 rule.
 - **Files passed by reference instead of content** — agents re-read and burn tokens.
+
+---
+
+## Forgeplan integration
+
+If the `forgeplan` CLI is on `$PATH`, this skill is **forgeplan-aware** — it recommends the right CLI calls but does not invoke them itself.
+
+### After `/audit` completes
+
+The audit produces severity-ranked findings (CRITICAL / HIGH / MEDIUM / LOW). Capture the verdict as Evidence:
+
+```bash
+forgeplan new evidence "<scope>: audit by N reviewers — X HIGH, Y MED resolved, Z LOW deferred"
+forgeplan link EVID-MMM PRD-NNN --relation informs
+# Add Structured Fields in the evidence body:
+#   verdict: supports | weakens | refutes
+#   congruence_level: 3      (CL3 same-context)
+#   evidence_type: code_review
+forgeplan score PRD-NNN            # R_eff updated
+```
+
+Without Evidence, an `/audit` pass disappears — `forgeplan score` won't reflect it, and `forgeplan health` may report blind spots on the audited artifact.
+
+### Want this orchestrated for you?
+
+Install [`forgeplan-workflow`](../../../../plugins/forgeplan-workflow/README.md) and use `/forge-audit` — it runs 6 parallel reviewers (logic, architecture, security, tests, performance, docs) and writes Evidence automatically.

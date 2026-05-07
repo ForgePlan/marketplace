@@ -458,6 +458,43 @@ Emit the **Sprint Complete** report — format in [`references/OUTPUT-FORMATS.md
 - [`build`](../build/SKILL.md) — when a research report with IMPLEMENTATION-PLAN.md already exists.
 - [`restore`](../restore/SKILL.md) — at session start, before a sprint.
 
+## Forgeplan integration
+
+If the `forgeplan` CLI is on `$PATH` (probe with `command -v forgeplan`), this skill is **forgeplan-aware** — it recommends the right CLI calls but does not invoke them itself, so you stay in control of artifact lifecycle.
+
+### Before `/sprint <task>`
+
+```bash
+forgeplan health                   # observe blind spots first
+forgeplan route "<task>"           # decide depth (Tactical/Standard/Deep/Critical)
+# Standard+:
+forgeplan new prd "<title>"        # shape: PRD with MUST sections
+forgeplan validate PRD-NNN         # gate before sprint
+forgeplan reason PRD-NNN           # ADI 3+ hypotheses (Deep+: required)
+```
+
+### After `/sprint` completes
+
+```bash
+forgeplan new evidence "<task>: tests pass / smoke OK / N waves merged"
+forgeplan link EVID-MMM PRD-NNN --relation informs
+forgeplan score PRD-NNN            # R_eff > 0?
+forgeplan activate PRD-NNN         # draft → active
+```
+
+Without these, the sprint output ships but the artifact graph stays empty — `forgeplan health` will surface a blind spot ("active sprint without linked evidence").
+
+### Want this orchestrated for you?
+
+Install [`forgeplan-workflow`](../../../../plugins/forgeplan-workflow/README.md) and run `/forge-cycle "<task>"` instead — it auto-routes, creates the PRD, delegates the build to skills like this one, creates evidence, activates, and prepares the commit. `/sprint` is the **executor**; `/forge-cycle` is the **orchestrator**.
+
+```
+/plugin install forgeplan-workflow@ForgePlan-marketplace
+/reload-plugins
+```
+
+---
+
 ## Decision Guide: full sprint vs lightweight wave
 
 ```

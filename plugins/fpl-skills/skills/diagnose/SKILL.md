@@ -216,3 +216,36 @@ If the bug uncovered a missing project rule (e.g. "always validate inputs at thi
 - ❌ **Test at the wrong seam.** A passing unit test that doesn't exercise the real bug pattern is false confidence.
 - ❌ **"Done" without re-running the original loop.** A green regression test ≠ a fixed bug. Re-run the original repro.
 - ❌ **Architectural recommendation before the fix.** You don't know enough yet. Recommend in Phase 6, not Phase 1.
+
+---
+
+## Forgeplan integration
+
+If the `forgeplan` CLI is on `$PATH`, this skill is **forgeplan-aware** — it recommends the right CLI calls but does not invoke them.
+
+### When `/diagnose <bug>` finds a fix
+
+A verified fix is Evidence-worthy. Capture it:
+
+```bash
+forgeplan new evidence "<bug>: root cause = <X>; fix = <Y>; verified by <test/repro>"
+# Body: include the diagnostic trace (what you tried, what worked).
+# Structured Fields:
+#   verdict: supports | refutes
+#   congruence_level: 3 (CL3 same-context)
+#   evidence_type: measurement | test_result
+forgeplan link EVID-MMM PRD-NNN --relation informs   # if linked to a feature PRD
+```
+
+If the bug surfaced a deeper architectural issue:
+
+```bash
+forgeplan new problem "<problem card>"   # category: bug, performance, security, ...
+forgeplan link PROB-NNN PRD-MMM --relation informs
+# Then create a `solution` portfolio if multiple options:
+forgeplan new solution "<solution portfolio for PROB-NNN>"
+```
+
+### Want this orchestrated for you?
+
+For complex diagnose tasks that warrant a full lifecycle (PRD → fix → evidence → activate), pair this skill with [`forgeplan-workflow`](../../../../plugins/forgeplan-workflow/README.md) — `/forge-cycle "fix <bug>"` will route, shape, build, and capture evidence in one flow.

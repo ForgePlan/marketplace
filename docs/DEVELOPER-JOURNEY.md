@@ -294,6 +294,55 @@ When you `forgeplan activate <id>`, the matching Orchestra task moves to Done. W
 
 ---
 
+## `/forge-cycle` — first time
+
+The 4 personas above use `fpl-skills` skills as **executors** and orchestrate `forgeplan` lifecycle calls manually (or rely on `/autorun` to do the orchestration). For users who want **a single command that runs the full methodology**, install [`forgeplan-workflow`](../plugins/forgeplan-workflow/README.md):
+
+```
+/plugin install forgeplan-workflow@ForgePlan-marketplace
+/reload-plugins
+```
+
+Then for any non-trivial task:
+
+```
+/forge-cycle "Add PDF export for artifacts"
+```
+
+This walks 8 steps end-to-end:
+
+```
+Step 1: Health check    → `forgeplan health` — surfaces blind spots before starting
+Step 2: Task            → confirms task description with you
+Step 3: Route           → `forgeplan route` decides depth (Tactical/Standard/Deep/Critical)
+Step 4: Shape           → creates PRD (and RFC/ADR if Deep), validates MUST sections
+Step 5: Build           → delegates to fpl-skills' /sprint or /do for implementation
+Step 6: Audit           → spawns reviewers, captures findings
+Step 7: Evidence        → `forgeplan new evidence` + link to PRD + score (R_eff)
+Step 8: Activate        → `forgeplan activate` once R_eff > 0
+                        → prepares the conventional commit with `Refs: PRD-NNN`
+```
+
+### When to use `/forge-cycle` vs `/sprint` vs `/autorun`
+
+| Command | Plugin | Best for |
+|---|---|---|
+| `/forge-cycle` | forgeplan-workflow | "Run the methodology end-to-end on this one task" — single entry point, full lifecycle. |
+| `/sprint` | fpl-skills | Wave-based execution with file ownership and per-wave teammates. Use when you've already routed/shaped manually. |
+| `/autorun` | fpl-skills | Overnight / unattended. Auto-delegates to `/forge-cycle` if `forgeplan-workflow` is installed; otherwise runs standalone. |
+| `/do` | fpl-skills | Interactive variant of `/autorun` — pauses at phase boundaries for review. |
+
+### Setup checklist for `/forge-cycle`
+
+- [ ] `forgeplan` CLI on `$PATH` (same as `/fpl-init` requirement)
+- [ ] `.forgeplan/` initialised (run `/fpl-init` first if not)
+- [ ] `forgeplan-workflow` plugin installed
+- [ ] Project has at least a draft `CLAUDE.md` so the skill knows the codebase
+
+After the first `/forge-cycle` run you'll have a real PRD + Evidence in `.forgeplan/`. Open the same project in [`@forgeplan/web`](FORGEPLAN-WEB.md) to see the artifact graph.
+
+---
+
 ## When to add more plugins
 
 Don't install everything upfront. Add as you hit the need:

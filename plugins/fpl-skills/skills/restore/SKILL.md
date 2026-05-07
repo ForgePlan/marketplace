@@ -177,3 +177,33 @@ End with 2–4 recommendations grounded in what you found:
 - **Don't recall before every message** — this is a session-start operation, not a health check.
 - **Don't invent memory that isn't there** — if Hindsight/MCP is unavailable, mark "memory: not configured" instead of hallucinating decisions.
 - **Don't dump the full `git log`** — 10–15 lines is enough; the rest is on demand.
+
+---
+
+## Forgeplan integration
+
+If the `forgeplan` CLI is on `$PATH`, add a **forgeplan health probe** to the parallel recall block — it surfaces context that `git status + git log` cannot.
+
+### Add to step 1 (parallel collection)
+
+```bash
+forgeplan health           # active artifacts, blind spots, stubs, stale items
+forgeplan list --status active --limit 5   # what's currently in flight
+forgeplan blocked          # artifacts waiting on dependencies (if relevant)
+```
+
+This complements the git snapshot:
+- `git log` tells you **what changed**.
+- `forgeplan health` tells you **what was decided** and **what's missing evidence**.
+
+### When `forgeplan health` reports issues during restore
+
+- **Active stubs** (PRDs/RFCs declared active but with empty MUST sections) → flag as a "do this first" item before the user resumes feature work.
+- **Orphan artifacts** (no incoming/outgoing links) → mention in the restore report; user may want to `forgeplan link` them or deprecate.
+- **Stale artifacts** (past `valid_until`) → suggest `forgeplan renew` or `forgeplan deprecate`.
+
+These signals are silent unless you probe — surfacing them at session-restore time prevents drift.
+
+### Want this orchestrated for you?
+
+`/session` (in [`forgeplan-orchestra`](../../../../plugins/forgeplan-orchestra/README.md)) runs an enhanced version of this probe + Inbox Pattern with Orchestra task signals. Use it when working in a multi-developer team.
