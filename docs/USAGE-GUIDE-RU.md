@@ -2,319 +2,369 @@
 
 # ForgePlan Marketplace — Руководство
 
+Reference manual для маркетплейса. **Если ты новенький — стартуй с [DEVELOPER-JOURNEY-RU.md](DEVELOPER-JOURNEY-RU.md)** — 30-минутный walkthrough от нуля до первой зашипованной фичи. Этот гайд для lookup-а, не для онбординга.
+
+## Содержание
+
+- [Установка](#установка)
+- [Рекомендуемые стеки (по персонам)](#рекомендуемые-стеки-по-персонам)
+- [Quick reference (все команды)](#quick-reference-все-команды)
+- [Daily workflow](#daily-workflow)
+- [Правила активации агентов](#правила-активации-агентов)
+- [Поведение хуков](#поведение-хуков)
+- [Справка по плагинам](#справка-по-плагинам)
+- [Troubleshooting](#troubleshooting)
+
+---
+
 ## Установка
 
-### Шаг 1: Подключить маркетплейс (один раз)
+### Шаг 1 — Подключить маркетплейс (один раз на машину)
 
 ```
 /plugin marketplace add ForgePlan/marketplace
 ```
 
-### Шаг 2: Установить нужные плагины
+> [!NOTE]
+> Имя маркетплейса case-sensitive в командах install: `ForgePlan-marketplace` (заглавные F и P).
 
-```bash
-# Универсальные (любой проект)
-/plugin install dev-toolkit@ForgePlan-marketplace    # /audit, /sprint, /recall
-/plugin install fpf@ForgePlan-marketplace             # /fpf (structured reasoning)
+### Шаг 2 — Выбрать стек и установить
 
-# Фронтенд
-/plugin install laws-of-ux@ForgePlan-marketplace      # /ux-review, /ux-law
-
-# Для пользователей Forgeplan
-/plugin install forgeplan-workflow@ForgePlan-marketplace  # /forge-cycle, /forge-audit
-/plugin install forgeplan-orchestra@ForgePlan-marketplace  # /sync, /session
-```
+См. [Рекомендуемые стеки](#рекомендуемые-стеки-по-персонам) ниже. Большинству нужен:
 
 ```
+/plugin install fpl-skills@ForgePlan-marketplace   # флагман — 15 команд, /fpl-init
 /reload-plugins
 ```
+
+### Шаг 3 — Развернуть проект
+
+В корне проекта:
+
+```
+/fpl-init
+```
+
+End-to-end развёртка: `forgeplan init`, MCP wiring, CLAUDE.md, docs/agents/. Walkthrough — [DEVELOPER-JOURNEY-RU.md](DEVELOPER-JOURNEY-RU.md).
 
 ### Обновление
 
 ```
 /plugin marketplace update ForgePlan-marketplace
-/plugin install <имя-плагина>@ForgePlan-marketplace   # переустановить каждый
+/plugin install <plugin>@ForgePlan-marketplace   # переустановить чтобы подтянуть новую версию
 /reload-plugins
 ```
 
 ---
 
-## Шпаргалка
+## Рекомендуемые стеки (по персонам)
 
-| Команда | Плагин | Что делает |
-|---------|--------|-----------|
-| `/recall` | dev-toolkit | Восстановить контекст (git + CLAUDE.md + память) |
-| `/sprint <задача>` | dev-toolkit | Адаптивный спринт: Tactical→Standard→Deep |
-| `/audit` | dev-toolkit | Мульти-экспертный код-ревью (4 агента) |
-| `/fpf <вопрос>` | fpf | Structured reasoning: decompose, evaluate, reason, lookup |
-| `/ux-review` | laws-of-ux | UX-аудит по 30 законам UX |
-| `/ux-law <имя>` | laws-of-ux | Справка по конкретному UX-закону |
-| `/forge-cycle` | forgeplan-workflow | Полный цикл (route→shape→build→evidence→activate) |
-| `/forge-audit` | forgeplan-workflow | Мульти-экспертный аудит (6 агентов) |
-| `/sync` | forgeplan-orchestra | Bidirectional sync Forgeplan ↔ Orchestra |
-| `/session` | forgeplan-orchestra | Session Start Protocol с Inbox Pattern |
+Зеркало матрицы «Where to Start?» из root [README-RU.md](../README-RU.md), с cross-link на per-persona Day 0 walkthroughs в [DEVELOPER-JOURNEY-RU.md](DEVELOPER-JOURNEY-RU.md).
+
+| Персона | Стек | Day 0 walkthrough |
+|---|---|---|
+| 🟢 Forgeplan user / соло-dev | `fpl-skills` | [Соло-разработчик](DEVELOPER-JOURNEY-RU.md#-соло-разработчик) |
+| 🎨 Frontend dev | `fpl-skills` + `laws-of-ux` + `agents-domain` | [Frontend-разработчик](DEVELOPER-JOURNEY-RU.md#-frontend-разработчик) |
+| 🏛 Архитектор / тех-лид | `fpl-skills` + `fpf` + `agents-sparc` + `agents-pro` | [Архитектор / тех-лид](DEVELOPER-JOURNEY-RU.md#-архитектор--тех-лид) |
+| 👥 Multi-session / команда | `fpl-skills` + `forgeplan-orchestra` | [Команда с Orchestra](DEVELOPER-JOURNEY-RU.md#-команда-с-orchestra) |
+| 🏚 Brownfield миграция | `fpl-skills` + `forgeplan-brownfield-pack` | (См. README brownfield-pack — playbook recipes) |
+| 🔧 Любой разработчик (без forgeplan) | `dev-toolkit` + `agents-core` | (Legacy стек — `dev-toolkit` soft-deprecated; предпочитай `fpl-skills` если можешь поставить forgeplan CLI) |
+
+> [!IMPORTANT]
+> `fpl-skills` требует CLI [`forgeplan`](https://github.com/ForgePlan/forgeplan) в `$PATH`. Если поставить не можешь — используй `dev-toolkit` (soft-deprecated, но поддерживается для обратной совместимости).
 
 ---
 
-## Ежедневный воркфлоу
+## Quick reference (все команды)
 
-### Утро — восстановить контекст
+15 команд в 5 плагинах. `fpl-skills` даёт основу; companion-плагины добавляют специализированные команды.
+
+### Из `fpl-skills` (флагман)
+
+| Команда | Что делает |
+|---|---|
+| `/fpl-init` | One-shot развёртка проекта — forgeplan init + MCP wiring + CLAUDE.md + docs/agents/. Idempotent. |
+| `/restore` | Восстановление контекста сессии: ветка, dirty state, recent commits, stash, снипеты памяти. |
+| `/briefing` | Обзор трекера — Orchestra/GitHub Issues/Linear/Jira или локальные TODO. |
+| `/research <тема>` | Глубокое многоагентное исследование (5 параллельно: code · docs · status · references · memory) → `research/reports/`. |
+| `/refine <план>` | Интервью-driven уточнение — терминология, противоречия, lazy-creates ADR. |
+| `/rfc <action>` | Create/read/update RFC и ADR (каноничная структура, фазы). |
+| `/sprint <фича>` | Wave-based execution со строгим file ownership; auto-detect Tactical/Standard/Deep. |
+| `/audit` | Multi-expert ревью (≥4 ревьюера — logic, architecture, types, security; +ux-reviewer если установлен). |
+| `/diagnose <баг>` | Дисциплинированный 6-фазный debug loop. Фаза 1 («построй feedback loop») — это весь скилл. |
+| `/autorun <задача>` | Автопилот-оркестратор — research → sprint → audit → report end-to-end, без пауз на approval. |
+| `/do <задача>` | Интерактивная версия `/autorun` (пауза на каждом шаге). |
+| `/build` | Исполнение готового IMPLEMENTATION-PLAN.md из research-отчёта (wave-by-wave). |
+| `/setup` | Интерактивный wizard — пишет `docs/agents/{issue-tracker,build-config,paths,domain}.md`. |
+| `/bootstrap` | Универсальный CLAUDE.md template (stack-detected) в текущий проект. |
+| `/team` | Фундамент multi-agent команд — TeamCreate vs sub-agents, file ownership, recipes. |
+
+### Из companion-плагинов
+
+| Команда | Плагин | Что делает |
+|---|---|---|
+| `/fpf` | fpf | Универсальный роутер: `/fpf decompose`, `/fpf evaluate`, `/fpf reason`, `/fpf lookup`. |
+| `/fpf-decompose` | fpf | Bounded contexts, роли, интерфейсы. |
+| `/fpf-evaluate` | fpf | F-G-R скоринг + ADI рассуждение. |
+| `/fpf-reason` | fpf | 3+ гипотезы → проверка → вывод. |
+| `/ux-review` | laws-of-ux | UX-аудит по 30 законам. |
+| `/ux-law <name>` | laws-of-ux | Поиск конкретного UX-закона. |
+| `/forge-cycle` | forgeplan-workflow | Узкий forgeplan-only цикл (альтернатива `/sprint` для forgeplan power-юзеров). |
+| `/forge-audit` | forgeplan-workflow | 6-агентный forgeplan-aware аудит. |
+| `/sync` | forgeplan-orchestra | Двунаправленная синхронизация Forgeplan ↔ Orchestra. |
+| `/session` | forgeplan-orchestra | Session Start Protocol с Inbox Pattern. |
+
+### Legacy команды (dev-toolkit, deprecated)
+
+| Команда | Что делает |
+|---|---|
+| `/recall` | Заменена на `/restore` в fpl-skills. |
+| `/audit`, `/sprint` | Те же имена что в fpl-skills — не ставь оба плагина одновременно. |
+| `/report` | Card-based структурный отчёт (всё ещё полезен; ещё не портирован в fpl-skills). |
+
+---
+
+## Daily workflow
+
+Полный lifecycle, прошитый сквозь команды `fpl-skills`:
 
 ```
-/recall
+Утро         → /restore (или /session если установлен Orchestra)
+             → /briefing
+Выбор задачи → forgeplan route "task"  (решение Tactical/Standard/Deep)
+Discovery    → /research <тема>        (gap analysis, prior art)
+             → /refine <план>          (уточнение)
+             → /rfc create             (если Standard+, формализуем)
+Execute      → /sprint <фича>          (интерактивно)
+             → /do <задача>            (интерактивно с checkpoints)
+             → /autorun <задача>       (ночной, без approval)
+Verify       → /audit                  (multi-expert ревью)
+             → /diagnose <баг>         (когда что-то сломалось)
+Ship         → forgeplan new evidence "..." && forgeplan link && forgeplan score
+             → forgeplan activate <id>
+             → gh pr create
+Конец дня    → memory_retain (если используешь Hindsight)
 ```
 
-Покажет: текущую ветку, незакоммиченные изменения, последние коммиты, здоровье проекта.
+Worked example (`добавить аутентификацию` end-to-end) — см. [DEVELOPER-JOURNEY-RU.md § Day 1](DEVELOPER-JOURNEY-RU.md#day-1--первая-фича-добавить-auth).
 
-### Перед задачей — подумать
+---
 
-```
-/fpf decompose наша платёжная система    # разбить на части
-/fpf evaluate Redis vs Memcached         # сравнить варианты
-/fpf reason почему тесты нестабильны     # structured debugging
-```
+## Правила активации агентов
 
-### Реализация — адаптивный спринт
+Большинство агентов активируются по контексту — вручную звать не нужно.
 
-```
-/sprint добавить аутентификацию
-```
+| Триггер | Агент | Плагин |
+|---|---|---|
+| Файлы изменены без тестов | `dev-advisor` (предлагает тесты) | dev-toolkit / fpl-skills |
+| `/sprint` детектит Deep задачу **и** установлен agents-sparc | `sparc-orchestrator` + `specification` + `pseudocode` + `architecture` + `refinement` | agents-sparc |
+| `/audit` запущен **и** frontend-файлы в changeset **и** установлен laws-of-ux | `ux-reviewer` | laws-of-ux |
+| Детектятся ключевые слова architecture/decision (например «decompose», «evaluate alternatives») | `fpf-advisor` (предлагает `/fpf`) | fpf |
+| `forgeplan new` или `forgeplan activate` запущен **и** установлен forgeplan-orchestra | `orchestra-advisor` (предлагает `/sync`) | forgeplan-orchestra |
+| Правка `.html`/`.css`/`.jsx`/`.tsx`/`.vue` | UX hint hook | laws-of-ux |
+| Детектятся ключевые слова routing/evidence | `forge-advisor` | forgeplan-workflow |
 
-Спринт сам определяет масштаб:
+Можешь и явно позвать конкретного агента:
 
-| Масштаб | Что происходит |
-|---------|---------------|
-| **Tactical** (typo, config) | 1 агент, быстрые волны, тест |
-| **Standard** (фича, 1-3 дня) | ADI checkpoint, 2 агента, lint + types + test |
-| **Deep** (модуль, архитектура) | Обязательный ADI, 3-4 агента, полный pipeline + release |
+> «Используй security-expert агента для review этого auth-кода»
+> «Спавни typescript-pro для этого рефакторинга»
+> «Запусти debugger агента на этот stack trace»
 
-### После кода — проверить
+Подробности SPARC методологии (когда `agents-sparc` активируется внутри `/sprint`) — см. [ARCHITECTURE-RU.md § SPARC](ARCHITECTURE-RU.md#layer-4-sparc-structured-coding).
+
+### Как `/audit` композит агентов
 
 ```
 /audit
+├─ logic            (встроенный)
+├─ architecture     (встроенный)
+├─ types            (встроенный)
+├─ security         (встроенный)
+├─ security-expert  (если установлен agents-pro)
+├─ ux-reviewer      (если установлен laws-of-ux И changeset frontend)
+└─ architect-review (если установлен agents-pro И изменения трогают архитектуру)
 ```
 
-4 агента параллельно: логика, архитектура, безопасность, тесты. Отчёт: CRITICAL/HIGH/MEDIUM/LOW с file:line.
-
-### Фронтенд — UX-проверка
-
-```
-/ux-review                    # сканирует все фронтенд-файлы
-/ux-law fitts                 # справка по закону Фиттса (44px цели)
-/ux-law hick                  # справка по закону Хика (макс 7 пунктов навигации)
-```
-
----
-
-## Что добавить в CLAUDE.md проекта
-
-```markdown
-## Команды
-
-| Команда | Когда |
-|---------|-------|
-| `/recall` | Начало сессии — восстановить контекст |
-| `/sprint <задача>` | Реализация фичи (авто-масштабирование) |
-| `/audit` | После кода — мульти-экспертный ревью |
-| `/fpf <вопрос>` | Архитектурные решения, сравнения, отладка |
-| `/ux-review` | После вёрстки — UX-аудит |
-```
-
-Если используете Forgeplan:
-
-```markdown
-## Forgeplan Workflow
-
-- `forgeplan route "задача"` перед кодом → определить depth
-- `/forge-cycle` → полный цикл (health→route→shape→build→evidence→activate)
-- `/sync` → sync артефактов Forgeplan ↔ задач Orchestra
-- `/session` → Session Start Protocol с Inbox triage
-```
-
----
-
-## Детали плагинов
-
-### dev-toolkit — Универсальный тулкит
-
-**Без зависимостей.** Работает с любым проектом и языком.
-
-- `/audit` — 4 ревьюера: логика, архитектура, безопасность, тесты
-- `/sprint` — Разбивает задачи на волны, адаптируется по сложности
-- `/recall` — Читает CLAUDE.md, git status, память (Hindsight/mem0 если есть)
-- Safety hook блокирует: `git push --force`, `git reset --hard`, `rm -rf /`
-- Напоминание о тестах при добавлении публичных функций
-
-### fpf — First Principles Framework
-
-**Без зависимостей.** На основе FPF Анатолия Левенчука.
-
-- `/fpf` — Универсальный роутер (decompose/evaluate/reason/lookup)
-- `/fpf decompose <система>` — Bounded contexts, роли, интерфейсы
-- `/fpf evaluate <A vs B>` — F-G-R scoring, ADI reasoning cycle
-- `/fpf reason <проблема>` — 3+ гипотезы → проверка → заключение
-- 224 секции FPF спецификации + 4 applied pattern гайда
-
-### laws-of-ux — UX-ревью фронтенда
-
-**Без зависимостей.** На основе lawsofux.com (Jon Yablonski).
-
-- `/ux-review` — Сканирует HTML/CSS/JS/React/Vue по 30 UX-законам
-- `/ux-law <имя>` — Справка по закону с frontend implications
-- 30 законов в 4 категориях: Эвристики, Когнитивные, Гештальт, Принципы
-- 9 файлов code patterns с примерами VIOLATION/CORRECT
-- Авто-подсказки при редактировании фронтенд-файлов
-
-### forgeplan-workflow — Структурированный цикл разработки
-
-**Требуется:** forgeplan CLI (приватное приложение, доступ через администратора).
-
-- `/forge-cycle` — 8 шагов: health→route→shape→build→test→evidence→activate→commit
-- `/forge-audit` — 6 параллельных ревьюеров
-- KB методологии: workflow, артефакты, глубина, R_eff scoring, quality gates
-- Safety hook + проверка PRD перед редактированием кода
-
-### forgeplan-orchestra — Unified Workflow
-
-**Требуется:** forgeplan CLI + Orchestra MCP server.
-
-- `/sync` — Bidirectional diff: артефакты Forgeplan ↔ задачи Orchestra
-- `/session` — Session Start Protocol: context→inbox→health→triage→synthesis
-- KB unified workflow: архитектура, setup, поля, playbook, конфигурации
-- Status↔Phase: Backlog=Shape, To Do=Validate, Doing=Code, Review=Evidence, Done=Done
+Базовые 4 ревьюера всегда работают. Дополнительные подключаются по установленным плагинам и содержимому changeset. Findings агрегируются, дедуплицируются и репортятся как CRITICAL / HIGH / MEDIUM / LOW с file:line ссылками.
 
 ---
 
 ## Поведение хуков
 
-При установке нескольких плагинов их хуки накапливаются — каждый срабатывает независимо.
+При установке нескольких плагинов их хуки стэкаются — каждый срабатывает независимо.
 
-### Что и когда срабатывает
+### Что когда срабатывает
 
-| Событие | Плагин | Хук | Что делает |
-|---------|--------|-----|-----------|
-| `PreToolUse:Bash` | dev-toolkit | safety-hook.sh | Блокирует опасные команды (force push, rm -rf /, DROP TABLE) |
-| `PreToolUse:Bash` | forgeplan-workflow | forge-safety-hook.sh | Делегирует dev-toolkit если установлен, иначе свои проверки |
-| `PreToolUse:Write` | forgeplan-workflow | pre-code-check.sh | Предупреждает, если нет активного PRD (кэш, TTL 5 мин) |
-| `PostToolUse:Write\|Edit` | dev-toolkit | test-hint.sh | Предлагает тесты при добавлении публичных функций |
-| `PostToolUse:Write\|Edit` | laws-of-ux | ux-hint.sh | Предлагает UX-ревью при изменении фронтенд-файлов |
-| `PostToolUse:Bash` | forgeplan-orchestra | forge-sync-hint.sh | Предлагает sync с Orchestra после forgeplan activate/new |
-
-### Если установлены и dev-toolkit, и forgeplan-workflow
-
-У обоих есть safety hook на `PreToolUse:Bash`. Хук dev-toolkit срабатывает первым. Хук forgeplan-workflow обнаруживает, что dev-toolkit установлен, и пропускает проверку (exit 0), чтобы избежать дублирования.
+| Event | Плагин | Хук | Что делает |
+|---|---|---|---|
+| `SessionStart` | fpl-skills | `session-start.sh` | Проверяет `.forgeplan/`, `docs/agents/`, `CLAUDE.md`; печатает context-aware подсказку (например «Run /fpl-init» для новых репо). |
+| `PreToolUse:Bash` | dev-toolkit | `safety-hook.sh` | Блокирует `git push --force`, `git reset --hard`, `rm -rf /`, `DROP TABLE`. |
+| `PreToolUse:Bash` | forgeplan-workflow | `forge-safety-hook.sh` | Делегирует в dev-toolkit hook если установлен; иначе запускает свои проверки. |
+| `PreToolUse:Write\|Edit` | forgeplan-workflow | `pre-code-check.sh` | Предупреждает если нет активного PRD (cached, 5-min TTL). |
+| `PostToolUse:Write\|Edit` | dev-toolkit | `test-hint.sh` | Предлагает тесты при добавлении новых публичных функций. |
+| `PostToolUse:Write\|Edit` | laws-of-ux | `ux-hint.sh` | Предлагает UX-ревью при правке frontend-файлов. |
+| `PostToolUse:Bash` | forgeplan-orchestra | `forge-sync-hint.sh` | Предлагает Orchestra sync после `forgeplan activate`/`new`. |
 
 ### Временное отключение хука
 
-Хуки нельзя отключить на одну сессию. Чтобы отключить хуки плагина, удалите его:
-```
-/plugin uninstall <имя-плагина>@ForgePlan-marketplace
-```
-
----
-
-## Рекомендуемые стеки
-
-| Стек | Плагины | Подходит для |
-|------|---------|-------------|
-| **Минимальный** | dev-toolkit | Любой проект, без зависимостей |
-| **Фронтенд** | dev-toolkit + laws-of-ux | Фронтенд/UI разработка |
-| **FPF Мыслитель** | dev-toolkit + fpf | Архитектура, решения, reasoning |
-| **Пользователь Forgeplan** | forgeplan-workflow + fpf | Пользователи forgeplan CLI |
-| **Полный стек** | все 5 плагинов | Power users ForgePlan с Orchestra |
-
----
-
-## Требования к зависимостям
-
-| Плагин | Обязательно | Опционально |
-|--------|-------------|-------------|
-| laws-of-ux | Нет | — |
-| dev-toolkit | Нет | Hindsight MCP (для /recall памяти), forgeplan CLI (для /sprint определения масштаба) |
-| fpf | Нет | forgeplan CLI (для предложений артефактов) |
-| forgeplan-workflow | forgeplan CLI | dev-toolkit (общие safety hooks) |
-| forgeplan-orchestra | forgeplan CLI + Orchestra MCP | Hindsight MCP (для /session recall памяти) |
-
----
-
-## Агенты-советники
-
-Каждый из 5 основных плагинов включает фонового агента-советника, который активируется автоматически:
-
-| Плагин | Советник | Что делает |
-|--------|----------|-----------|
-| dev-toolkit | `dev-advisor` | Предлагает `/audit` после изменений, напоминает о тестах, предупреждает о безопасности, рекомендует SPARC |
-| forgeplan-workflow | `forge-advisor` | Предлагает `forgeplan route` перед кодингом, evidence после реализации, SPARC для Deep задач |
-| fpf | `fpf-advisor` | Предлагает `/fpf decompose`, `evaluate`, `reason` для сложных решений |
-| laws-of-ux | `ux-reviewer` | Проверяет фронтенд-код по 30 законам UX при изменении UI-файлов |
-| forgeplan-orchestra | `orchestra-advisor` | Предлагает синхронизацию с Orchestra после `forgeplan activate/new` |
-
-Советников не нужно вызывать — они наблюдают за работой и предлагают действия когда это уместно.
-
----
-
-## Пакеты агентов
-
-5 плагинов с агентами предоставляют 55 специализированных агентов:
-
-| Пакет | Установка | Агентов | Назначение |
-|-------|-----------|:-------:|-----------|
-| **agents-core** | `/plugin install agents-core@ForgePlan-marketplace` | 11 | Ядро: debugger, code-reviewer, planner, tester, coder, researcher, reviewer |
-| **agents-domain** | `/plugin install agents-domain@ForgePlan-marketplace` | 11 | Языки: TypeScript, Go, React, Next.js, Electron, mobile |
-| **agents-pro** | `/plugin install agents-pro@ForgePlan-marketplace` | 21 | Security, архитектура, DDD, creative, research, инфраструктура |
-| **agents-github** | `/plugin install agents-github@ForgePlan-marketplace` | 7 | GitHub: PR, issues, релизы, multi-repo, project boards, workflows |
-| **agents-sparc** | `/plugin install agents-sparc@ForgePlan-marketplace` | 5 | SPARC методология: оркестратор + 4 фазовых специалиста |
-
----
-
-## Как работают агенты
-
-Claude вызывает агентов автоматически когда задача соответствует их экспертизе. Можно также запросить конкретного агента:
+Хуки нельзя отключить per-session. Чтобы остановить — uninstall плагин:
 
 ```
-"Используй security-expert для проверки этого кода"
-"Запусти typescript-pro для рефакторинга TypeScript"
-"Используй debugger для этой ошибки"
+/plugin uninstall <plugin-name>@ForgePlan-marketplace
 ```
-
-### SPARC Методология
-
-Когда `/sprint` определяет задачу как **Deep** и установлен `agents-sparc`, используются фазы SPARC:
-
-1. **Specification** — требования и критерии приёмки
-2. **Pseudocode** — алгоритмы и структуры данных
-3. **Architecture** — дизайн системы и файловая структура
-4. **Refinement** — TDD и реализация
-5. **Completion** — интеграция и PR
-
-Каждая фаза имеет **quality gate**. Следующая фаза получает полный вывод всех предыдущих — это предотвращает несогласованности.
-
-Три режима исполнения (определяются автоматически):
-- **Mode A** (Sequential): agents-sparc установлен → фазы по очереди
-- **Mode B** (Team-up): TeamCreate доступен → фазы как команда с зависимостями
-- **Mode C** (Inline): нет плагинов → Claude выполняет фазы сам
 
 ---
 
-## Решение проблем
+## Справка по плагинам
 
-### Плагины не загружаются
+Краткий обзор. Полные README — `plugins/<name>/README-RU.md`.
+
+### `fpl-skills` — Флагманский workflow-плагин
+
+15 инженерных скиллов поверх forgeplan lifecycle. **Заменяет `dev-toolkit` для пользователей forgeplan.** См. [plugins/fpl-skills/README-RU.md](../plugins/fpl-skills/README-RU.md).
+
+**Требует**: CLI forgeplan в `$PATH`.
+
+### `fpf` — First Principles Framework
+
+Структурное мышление для decompose / evaluate / reason / lookup. 224 секции FPF спеки + 4 applied patterns. Пара к `/refine` и `/diagnose`. См. [plugins/fpf/README-RU.md](../plugins/fpf/README-RU.md).
+
+**Требует**: ничего.
+
+### `laws-of-ux` — Frontend UX-ревью
+
+`/ux-review` по 30 законам UX. `ux-reviewer` агент авто-спавнится из `/audit` для frontend changeset. Auto-hint hook на правки `.html`/`.css`/`.jsx`/`.tsx`/`.vue`. См. [plugins/laws-of-ux/README-RU.md](../plugins/laws-of-ux/README-RU.md).
+
+**Требует**: ничего.
+
+### `forgeplan-workflow` — Forgeplan-only цикл
+
+`/forge-cycle` и `/forge-audit` — узкий forgeplan-only loop. Альтернативный entry point если broader bundle fpl-skills не нужен. См. [plugins/forgeplan-workflow/README-RU.md](../plugins/forgeplan-workflow/README-RU.md).
+
+**Требует**: CLI forgeplan.
+
+### `forgeplan-orchestra` — Multi-session координация
+
+`/sync` (Forgeplan ↔ Orchestra) и `/session` (Inbox Pattern). Для team / multi-session работы. См. [plugins/forgeplan-orchestra/README-RU.md](../plugins/forgeplan-orchestra/README-RU.md).
+
+**Требует**: CLI forgeplan + Orchestra MCP сервер.
+
+### `forgeplan-brownfield-pack` — Legacy ингест
+
+Mappings + playbooks для brownfield миграции (Obsidian, MADR, ad-hoc markdown → forgeplan граф). Композит `c4-architecture`, `autoresearch`, `ddd-expert`, `feature-dev`. См. [plugins/forgeplan-brownfield-pack/README-RU.md](../plugins/forgeplan-brownfield-pack/README-RU.md).
+
+**Требует**: CLI forgeplan v0.25+.
+
+### `dev-toolkit` — Универсальный тулкит (deprecated)
+
+> [!CAUTION]
+> Soft-deprecated, superseded by `fpl-skills`. Существующие установки продолжают работать; новые лучше на `fpl-skills` если есть CLI forgeplan.
+
+`/audit`, `/sprint`, `/recall`, `/report`, `dev-advisor` агент, safety hook, test reminder. См. [plugins/dev-toolkit/README-RU.md](../plugins/dev-toolkit/README-RU.md).
+
+**Требует**: ничего.
+
+### Agent packs (5 плагинов, 55 агентов)
+
+Специализированные сабагенты, которые `/audit`, `/sprint` и другие команды композят при необходимости.
+
+| Пак | Агентов | Фокус |
+|---|:---:|---|
+| `agents-core` | 11 | Debugger, code-reviewer, planner, tester, TDD, production-validator |
+| `agents-domain` | 11 | TypeScript, Go, React, Next.js, Electron, mobile, WebSocket |
+| `agents-pro` | 21 | Security, architecture, DDD, creative, research, infrastructure |
+| `agents-github` | 7 | PR, issues, releases, multi-repo, project boards, workflows |
+| `agents-sparc` | 5 | SPARC методология — orchestrator + 4 phase specialists |
+
+Ставь только то что используешь. `/audit` и `/sprint` автоматически подхватывают любые установленные паки.
+
+---
+
+## Troubleshooting
+
+### Плагины не подгружаются после install
 
 ```
 /reload-plugins
 /doctor          # проверить ошибки
 ```
 
-### Хуки шумят (сообщения на каждый edit)
+### Marketplace «not found» в CLI
 
-Обновите до v1.1.1+: хуки используют `type: "command"` (тихие скрипты).
+Точный регистр: `ForgePlan-marketplace` (заглавные F и P). CLI case-sensitive.
+
+```bash
+# Неверно:
+claude plugin marketplace update forgeplan-marketplace
+
+# Верно:
+claude plugin marketplace update ForgePlan-marketplace
+```
+
+### `/fpl-init` отказывается с «forgeplan CLI is required»
+
+Поставь CLI:
+
+```bash
+brew install ForgePlan/tap/forgeplan
+# Или:
+cargo install --git https://github.com/ForgePlan/forgeplan forgeplan-cli
+
+# Проверь:
+forgeplan --version
+```
+
+После установки — снова `/fpl-init`.
+
+### `/fpl-init` пишет «this is a plugin source — refuse»
+
+Ты внутри marketplace-репо или директории плагина. `/fpl-init` для проектных репо, не для plugin-authoring. Перейди в реальный проект и повтори.
+
+### `/fpl-init` already-initialized но хочу пере-сделать CLAUDE.md
+
+Удали `CLAUDE.md` (остальные baseline файлы оставь) и снова `/fpl-init`. Он детектит только отсутствующее и запускает только нужные шаги.
+
+### Установлены оба `dev-toolkit` и `fpl-skills` — дубль `/audit` и т.д.
+
+Плагины пересекаются на `/audit` и `/sprint`. Удали один:
+
+```
+/plugin uninstall dev-toolkit@ForgePlan-marketplace
+```
+
+Существующие пользователи dev-toolkit могут продолжать им пользоваться — но для новых проектов предпочитай `fpl-skills`.
+
+### `forgeplan health` показывает stubs / orphans / duplicates
+
+Это pre-existing артефакты в твоём `.forgeplan/`, требующие внимания. См. `forgeplan deprecate <id>` и `forgeplan supersede <id> --by <new-id>`. Не auto-fix-и без явной задачи.
+
+### Хуки слишком шумные
+
+Если вывод хука раздувает сессию:
+
+1. Обнови плагины до последней версии (`marketplace update` + reinstall).
+2. Если конкретный hook нежелателен — uninstall его plugin-родителя.
+
+Хуки не конфигурируются per-session — отключение = uninstall.
+
+### Нужно обновиться после bump каталога
 
 ```
 /plugin marketplace update ForgePlan-marketplace
-/plugin install <плагин>@ForgePlan-marketplace
+/plugin install fpl-skills@ForgePlan-marketplace   # переустановить чтобы получить новую версию
 /reload-plugins
 ```
 
-### Ошибка имени маркетплейса на macOS
+Для конкретных плагинов — замени `fpl-skills` на имя плагина.
 
-Используйте точный регистр: `ForgePlan/marketplace` (заглавные F и P). macOS APFS case-insensitive + Node.js fs.rename требует совпадения регистра.
+---
+
+## См. также
+
+- [DEVELOPER-JOURNEY-RU.md](DEVELOPER-JOURNEY-RU.md) — narrative-онбординг (стартуй здесь если новенький).
+- [ARCHITECTURE-RU.md](ARCHITECTURE-RU.md) — 4-layer ментальная модель (Orchestra, Forgeplan, FPF, SPARC).
+- [CONTRIBUTING.md](../CONTRIBUTING.md) — добавление нового плагина в маркетплейс.
+- [CHANGELOG.md](../CHANGELOG.md) — история релизов.
+- README плагинов в `plugins/<name>/README-RU.md`.
+- `plugins/fpl-skills/skills/bootstrap/resources/guides/CLAUDE-MD-GUIDE.ru.md` — CLAUDE.md best practices.
+- `plugins/fpl-skills/skills/bootstrap/resources/guides/FORGEPLAN-SETUP.md` — `.forgeplan/` setup contract.

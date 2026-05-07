@@ -157,15 +157,19 @@ Orchestra: Task "OAuth" Status=Review, Phase=Evidence
 
 ## Карта плагинов
 
-| Система | Плагин(ы) | Установка |
-|---------|----------|-----------|
-| Orchestra | forgeplan-orchestra | `/plugin install forgeplan-orchestra@ForgePlan-marketplace` |
-| Forgeplan | forgeplan-workflow | `/plugin install forgeplan-workflow@ForgePlan-marketplace` |
-| FPF | fpf | `/plugin install fpf@ForgePlan-marketplace` |
-| SPARC | agents-sparc | `/plugin install agents-sparc@ForgePlan-marketplace` |
-| Универсальные инструменты | dev-toolkit | `/plugin install dev-toolkit@ForgePlan-marketplace` |
-| UX | laws-of-ux | `/plugin install laws-of-ux@ForgePlan-marketplace` |
-| Агенты | agents-core, agents-domain, agents-pro, agents-github | `/plugin install agents-core@ForgePlan-marketplace` |
+| Система | Плагин(ы) | Заметки |
+|---------|----------|---------|
+| **Связующий слой** | **fpl-skills** | **Флагман**: 15 команд, композящих Forgeplan + FPF + SPARC + (опционально) UX. Включает `/fpl-init` для one-shot развёртки проекта. Заменяет dev-toolkit для пользователей forgeplan. |
+| Orchestra | forgeplan-orchestra | `/sync` и `/session` для multi-session координации. |
+| Forgeplan | forgeplan-workflow | `/forge-cycle` и `/forge-audit` — узкий forgeplan-only loop (альтернатива broader bundle fpl-skills). |
+| FPF | fpf | Структурное мышление: decompose / evaluate / reason / lookup. Пара к `/refine` и `/diagnose` из fpl-skills. |
+| SPARC | agents-sparc | 5 фазных агентов — `/sprint` активирует их при детекции Deep задачи. |
+| UX | laws-of-ux | `ux-reviewer` агент + `/ux-review` + auto-hint hook при правке frontend-файлов. |
+| Агенты | agents-core / agents-domain / agents-pro / agents-github | Специализированные сабагенты, которые `/audit`, `/sprint` и др. композят при необходимости. |
+| Универсальный тулкит (legacy) | dev-toolkit | Soft-deprecated, superseded by fpl-skills. Используй только если CLI forgeplan недоступен. |
+| Brownfield ингест | forgeplan-brownfield-pack | Mappings + playbooks для миграции legacy-доков (Obsidian, MADR) в forgeplan-граф. |
+
+Команда установки: `/plugin install <plugin-name>@ForgePlan-marketplace`.
 
 ---
 
@@ -173,8 +177,12 @@ Orchestra: Task "OAuth" Status=Review, Phase=Evidence
 
 | Роль | Плагины |
 |------|---------|
-| Любой разработчик | dev-toolkit + agents-core |
-| Фронтенд | dev-toolkit + laws-of-ux + agents-domain |
-| Архитектор | fpf + agents-pro + agents-sparc |
-| Пользователь Forgeplan | forgeplan-workflow + fpf + agents-core + agents-sparc |
-| Полный стек (все системы) | все 10 плагинов |
+| 🟢 Forgeplan user / соло-dev | `fpl-skills` |
+| 🎨 Frontend | `fpl-skills` + `laws-of-ux` + `agents-domain` |
+| 🏛 Архитектор / тех-лид | `fpl-skills` + `fpf` + `agents-sparc` + `agents-pro` |
+| 👥 Multi-session / команда | `fpl-skills` + `forgeplan-orchestra` |
+| 🏚 Brownfield миграция | `fpl-skills` + `forgeplan-brownfield-pack` |
+| 🔧 Любой разработчик (без forgeplan) | `dev-toolkit` + `agents-core` (legacy) |
+| Полный стек (все системы) | все 12 плагинов |
+
+Per-persona Day 0 walkthroughs — см. [DEVELOPER-JOURNEY-RU.md](DEVELOPER-JOURNEY-RU.md).

@@ -157,15 +157,19 @@ Orchestra: Task "OAuth" Status=Review, Phase=Evidence
 
 ## Plugin Map
 
-| System | Plugin(s) | Install |
-|--------|----------|---------|
-| Orchestra | forgeplan-orchestra | `/plugin install forgeplan-orchestra@ForgePlan-marketplace` |
-| Forgeplan | forgeplan-workflow | `/plugin install forgeplan-workflow@ForgePlan-marketplace` |
-| FPF | fpf | `/plugin install fpf@ForgePlan-marketplace` |
-| SPARC | agents-sparc | `/plugin install agents-sparc@ForgePlan-marketplace` |
-| Universal tools | dev-toolkit | `/plugin install dev-toolkit@ForgePlan-marketplace` |
-| UX | laws-of-ux | `/plugin install laws-of-ux@ForgePlan-marketplace` |
-| Agents | agents-core, agents-domain, agents-pro, agents-github | `/plugin install agents-core@ForgePlan-marketplace` |
+| System | Plugin(s) | Notes |
+|--------|----------|-------|
+| **Glue layer** | **fpl-skills** | **Flagship**: 15 commands composing Forgeplan + FPF + SPARC + (optional) UX. Includes `/fpl-init` for one-shot project bootstrap. Replaces dev-toolkit for forgeplan users. |
+| Orchestra | forgeplan-orchestra | `/sync` and `/session` for multi-session coordination. |
+| Forgeplan | forgeplan-workflow | `/forge-cycle` and `/forge-audit` — tighter forgeplan-only loop (alternative to fpl-skills' broader bundle). |
+| FPF | fpf | Structured reasoning: decompose / evaluate / reason / lookup. Pairs with fpl-skills' `/refine` and `/diagnose`. |
+| SPARC | agents-sparc | 5 phase agents — `/sprint` activates them when it detects a Deep task. |
+| UX | laws-of-ux | `ux-reviewer` agent + `/ux-review` + auto-hint hook on frontend file edits. |
+| Agents | agents-core / agents-domain / agents-pro / agents-github | Specialised subagents that `/audit`, `/sprint`, etc. compose when relevant. |
+| Universal toolkit (legacy) | dev-toolkit | Soft-deprecated, superseded by fpl-skills. Use only if forgeplan CLI is unavailable. |
+| Brownfield ingest | forgeplan-brownfield-pack | Mappings + playbooks for migrating legacy docs (Obsidian, MADR) into a forgeplan graph. |
+
+Install command: `/plugin install <plugin-name>@ForgePlan-marketplace`.
 
 ---
 
@@ -173,8 +177,12 @@ Orchestra: Task "OAuth" Status=Review, Phase=Evidence
 
 | Role | Plugins |
 |------|---------|
-| Any developer | dev-toolkit + agents-core |
-| Frontend | dev-toolkit + laws-of-ux + agents-domain |
-| Architect | fpf + agents-pro + agents-sparc |
-| Forgeplan user | forgeplan-workflow + fpf + agents-core + agents-sparc |
-| Full stack (all systems) | all 10 plugins |
+| 🟢 Forgeplan user / solo dev | `fpl-skills` |
+| 🎨 Frontend | `fpl-skills` + `laws-of-ux` + `agents-domain` |
+| 🏛 Architect / tech lead | `fpl-skills` + `fpf` + `agents-sparc` + `agents-pro` |
+| 👥 Multi-session / team | `fpl-skills` + `forgeplan-orchestra` |
+| 🏚 Brownfield migration | `fpl-skills` + `forgeplan-brownfield-pack` |
+| 🔧 Any developer (no forgeplan) | `dev-toolkit` + `agents-core` (legacy) |
+| Full stack (all systems) | all 12 plugins |
+
+For per-persona Day 0 walkthroughs see [DEVELOPER-JOURNEY.md](DEVELOPER-JOURNEY.md).
