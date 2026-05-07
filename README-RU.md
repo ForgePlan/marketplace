@@ -8,7 +8,9 @@
 
 Официальный маркетплейс плагинов Claude Code от [ForgePlan](https://github.com/ForgePlan) — UX, воркфлоу, инженерные и dev-инструменты.
 
-**12 плагинов** | **60+ агентов** | **15 команд** | **5 баз знаний** | [Руководство](docs/USAGE-GUIDE-RU.md)
+**12 плагинов** | **60+ агентов** | **15 команд** | **5 баз знаний** | [Developer Journey](docs/DEVELOPER-JOURNEY-RU.md) | [Руководство](docs/USAGE-GUIDE-RU.md)
+
+> **Экосистема ForgePlan**: этот маркетплейс + [CLI `forgeplan`](https://github.com/ForgePlan/forgeplan) (lifecycle артефактов) + [`@forgeplan/web`](https://github.com/ForgePlan/forgeplan-web) (браузерный viewer с time-travel + графом). Три sibling-продукта; ставь что нужно.
 
 ## Быстрый старт
 

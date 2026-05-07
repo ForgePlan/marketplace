@@ -362,6 +362,9 @@ forgeplan --version
 ## См. также
 
 - [DEVELOPER-JOURNEY-RU.md](DEVELOPER-JOURNEY-RU.md) — narrative-онбординг (стартуй здесь если новенький).
+- [MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS-RU.md](MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS-RU.md) — переход с `dev-toolkit` на `fpl-skills`.
+- [TRACKER-INTEGRATION-RU.md](TRACKER-INTEGRATION-RU.md) — recipes по трекерам (Orchestra, GitHub Issues, Linear, Jira, local).
+- [FORGEPLAN-WEB-RU.md](FORGEPLAN-WEB-RU.md) — `@forgeplan/web` браузерный viewer для time-travel и graph exploration.
 - [ARCHITECTURE-RU.md](ARCHITECTURE-RU.md) — 4-layer ментальная модель (Orchestra, Forgeplan, FPF, SPARC).
 - [CONTRIBUTING.md](../CONTRIBUTING.md) — добавление нового плагина в маркетплейс.
 - [CHANGELOG.md](../CHANGELOG.md) — история релизов.

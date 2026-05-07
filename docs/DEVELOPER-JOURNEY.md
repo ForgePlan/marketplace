@@ -385,6 +385,9 @@ forgeplan route       # decide depth; route to /sprint or /autorun
 - **`forgeplan` CLI reference** — see [forgeplan documentation](https://github.com/ForgePlan/forgeplan).
 - **Hook implementation details** — see [USAGE-GUIDE.md](USAGE-GUIDE.md) "Hook Behavior" section.
 - **Architecture mental model** — see [ARCHITECTURE.md](ARCHITECTURE.md).
+- **Migrating from `dev-toolkit`** — see [MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS.md](MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS.md).
+- **Tracker integration recipes** (Orchestra / GitHub / Linear / Jira) — see [TRACKER-INTEGRATION.md](TRACKER-INTEGRATION.md).
+- **Visual artifact graph + time-travel** — see [FORGEPLAN-WEB.md](FORGEPLAN-WEB.md) for the `@forgeplan/web` browser viewer.
 - **CLAUDE.md best practices** — see `plugins/fpl-skills/skills/bootstrap/resources/guides/CLAUDE-MD-GUIDE.ru.md`.
 - **`.forgeplan/` setup contract** — see `plugins/fpl-skills/skills/bootstrap/resources/guides/FORGEPLAN-SETUP.md`.
 
