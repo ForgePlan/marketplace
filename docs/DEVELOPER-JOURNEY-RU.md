@@ -385,6 +385,9 @@ forgeplan route       # решить depth; направить в /sprint или
 - **CLI `forgeplan` reference** — см. [forgeplan документацию](https://github.com/ForgePlan/forgeplan).
 - **Детали реализации хуков** — см. секцию «Hook Behavior» в [USAGE-GUIDE-RU.md](USAGE-GUIDE-RU.md).
 - **Архитектурная ментальная модель** — см. [ARCHITECTURE-RU.md](ARCHITECTURE-RU.md).
+- **Миграция с `dev-toolkit`** — см. [MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS-RU.md](MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS-RU.md).
+- **Recipes интеграции с трекерами** (Orchestra / GitHub / Linear / Jira) — см. [TRACKER-INTEGRATION-RU.md](TRACKER-INTEGRATION-RU.md).
+- **Визуальный граф артефактов + time-travel** — см. [FORGEPLAN-WEB-RU.md](FORGEPLAN-WEB-RU.md) про `@forgeplan/web` браузерный viewer.
 - **CLAUDE.md best practices** — см. `plugins/fpl-skills/skills/bootstrap/resources/guides/CLAUDE-MD-GUIDE.ru.md`.
 - **`.forgeplan/` setup contract** — см. `plugins/fpl-skills/skills/bootstrap/resources/guides/FORGEPLAN-SETUP.md`.
 

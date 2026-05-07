@@ -5,6 +5,22 @@ All notable changes to the ForgePlan Marketplace will be documented in this file
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.3] - 2026-05-07
+
+Operational docs overhaul — migration guide, tracker recipes, forgeplan-web walkthrough, plus a corrected `.forgeplan/` setup contract.
+
+### Added
+- `docs/MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS.md` and `-RU.md` — migration guide for users moving from `dev-toolkit` to `fpl-skills`. Covers the side-by-side mode (zero-risk default), clean-cut mode, slash command namespacing (`/dev-toolkit:audit` vs `/fpl-skills:audit`), `CLAUDE.md` reference updates, rollback plan, and explicit "what this migration does NOT change".
+- `docs/TRACKER-INTEGRATION.md` and `-RU.md` — per-tracker recipes for Orchestra, GitHub Issues, Linear, Jira, and local `TODO.md`. Each section provides `docs/agents/issue-tracker.md` template, MCP/CLI commands, `/briefing` integration notes, and triage label conventions.
+- `docs/FORGEPLAN-WEB.md` and `-RU.md` — guide to `@forgeplan/web` (the browser viewer at [github.com/ForgePlan/forgeplan-web](https://github.com/ForgePlan/forgeplan-web)). When to install, time-travel slider, graph viewer, integration with marketplace plugins, setup checklist (which pieces of `.gitignore` contract are mandatory for full functionality).
+
+### Changed
+- `plugins/fpl-skills/skills/bootstrap/resources/guides/FORGEPLAN-SETUP.md` — rewritten with the authoritative `.gitignore` contract: detailed effects-of-mistakes tables (config.yaml leak, notes/ ignore, session.yaml tracked, state/ ignore, memory/ ignore, literal API key in config.yaml), single-config-file model (`secrets.yaml` does not exist; only `config.yaml`), default fallback chain for `api_key_env`, agent-session anti-patterns (4 grouping mistakes), the two "memory" concepts disambiguation (forgeplan `memory/` vs Hindsight MCP).
+- `fpl-skills` v1.0.2 → 1.0.3 (patch — documentation accuracy + new resource references in plugin tree).
+
+### Notes
+The setup contract update reflects authoritative info: `memory/` is a first-class Forgeplan artifact kind (categories: fact / convention / constraint / observation / procedure) and **must be tracked**, not gitignored. There is no separate `secrets.yaml` — `config.yaml` uses `api_key_env: VAR_NAME` and the actual key lives in process env (12-factor pattern).
+
 ## [Unreleased]
 
 ### Added

@@ -362,6 +362,9 @@ For specific plugins, replace `fpl-skills` with the plugin name.
 ## See also
 
 - [DEVELOPER-JOURNEY.md](DEVELOPER-JOURNEY.md) — narrative onboarding (start here if you're new).
+- [MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS.md](MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS.md) — moving from `dev-toolkit` to `fpl-skills`.
+- [TRACKER-INTEGRATION.md](TRACKER-INTEGRATION.md) — per-tracker recipes (Orchestra, GitHub Issues, Linear, Jira, local).
+- [FORGEPLAN-WEB.md](FORGEPLAN-WEB.md) — `@forgeplan/web` browser viewer for time-travel and graph exploration.
 - [ARCHITECTURE.md](ARCHITECTURE.md) — 4-layer mental model (Orchestra, Forgeplan, FPF, SPARC).
 - [CONTRIBUTING.md](../CONTRIBUTING.md) — adding a new plugin to the marketplace.
 - [CHANGELOG.md](../CHANGELOG.md) — release history.
