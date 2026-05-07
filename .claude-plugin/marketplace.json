@@ -6,9 +6,33 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.9.1"
+    "version": "1.10.0"
   },
   "plugins": [
+    {
+      "name": "fpl-skills",
+      "source": "./plugins/fpl-skills",
+      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 15 engineering skills (research, refine, sprint, audit, diagnose, autorun + bootstrap, /fpl-init one-shot setup, and session helpers) that delegate artifact lifecycle to forgeplan. Canonical entry point — install fpl-skills + forgeplan and you have everything you need to run the full route → shape → build → audit → activate workflow.",
+      "version": "1.0.0",
+      "author": {
+        "name": "ForgePlan"
+      },
+      "homepage": "https://github.com/ForgePlan/marketplace",
+      "license": "MIT",
+      "keywords": [
+        "forgeplan",
+        "workflow",
+        "engineering",
+        "research",
+        "audit",
+        "sprint",
+        "diagnose",
+        "refine",
+        "autorun",
+        "bootstrap",
+        "methodology"
+      ]
+    },
     {
       "name": "laws-of-ux",
       "source": "./plugins/laws-of-ux",
@@ -53,8 +77,10 @@
     {
       "name": "dev-toolkit",
       "source": "./plugins/dev-toolkit",
-      "description": "Universal engineering toolkit: multi-expert audit, wave-based sprints, session context recall, card-based structured reports with auto-trigger hooks, and safety hooks. Works with any project and language.",
-      "version": "1.6.1",
+      "description": "[DEPRECATED — superseded by fpl-skills] Universal engineering toolkit: multi-expert audit, wave-based sprints, session context recall, card-based structured reports with auto-trigger hooks, and safety hooks. New users should install fpl-skills@ForgePlan-marketplace instead.",
+      "version": "1.6.2",
+      "deprecated": true,
+      "supersededBy": "fpl-skills",
       "author": {
         "name": "ForgePlan"
       },
