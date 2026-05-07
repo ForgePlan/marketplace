@@ -2,6 +2,21 @@
 
 # dev-toolkit
 
+> **⚠️ Deprecated — superseded by [`fpl-skills`](../fpl-skills/README-RU.md).**
+>
+> `dev-toolkit` в soft-sunset. Существующие пользователи продолжают работать на текущей версии;
+> новые проекты — ставь `fpl-skills`. Он включает всё что есть в dev-toolkit (`/audit`, `/sprint`,
+> session-context recall, structured reports) плюс `/research`, `/refine`, `/diagnose`, `/autorun`,
+> `/fpl-init` и ещё 8 скиллов поверх forgeplan lifecycle.
+>
+> ```bash
+> /plugin install fpl-skills@ForgePlan-marketplace
+> ```
+>
+> См. [`plugins/fpl-skills/README-RU.md`](../fpl-skills/README-RU.md), [`GETTING-STARTED.md`](../fpl-skills/GETTING-STARTED.md)
+> и [гайд миграции](../../docs/MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS-RU.md). Если текущий dev-toolkit
+> тебя устраивает — ничего делать не нужно.
+
 Универсальный инженерный инструментарий -- работает с любым проектом. Без зависимостей.
 
 Четыре параллельных ревьюера кода, волновое выполнение задач и мгновенное восстановление сессии. Установите в Claude Code и работайте.
