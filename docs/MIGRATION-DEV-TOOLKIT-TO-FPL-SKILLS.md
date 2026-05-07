@@ -21,15 +21,18 @@ A 15-minute, low-risk migration guide. Read it once, decide, then execute. **No 
 
 ## What stays the same
 
+As of `fpl-skills` **v1.1.0**, full feature parity:
+
 | | dev-toolkit | fpl-skills |
 |---|---|---|
 | `/audit` (multi-expert review) | ✅ | ✅ same name |
 | `/sprint` (wave-based execution) | ✅ | ✅ same name |
 | `/recall` (session restore) | ✅ `/recall` | ✅ renamed to `/restore` (see below) |
-| `/report` (structured report) | ✅ | ⏳ not yet ported — install `dev-toolkit` alongside if you rely on it |
-| Safety hooks (block destructive git/bash) | ✅ | ✅ |
-| Test reminder hook | ✅ | ✅ |
-| `dev-advisor` agent | ✅ | ⏳ not ported — fpl-skills has its own advisors |
+| `forge-report` skill (structured report templates) | ✅ | ✅ ported in v1.1.0 |
+| Safety hooks (block destructive git/bash) | ✅ | ✅ ported in v1.1.0 |
+| Test reminder hook | ✅ | ✅ ported in v1.1.0 |
+| `dev-advisor` agent | ✅ | ✅ ported in v1.1.0 |
+| `forge-report` auto-trigger hooks (SessionStart counter, PostToolUse counter) | ✅ | ✅ ported in v1.1.0 |
 
 ## What's different
 
@@ -129,7 +132,7 @@ Rewrite to fpl-skills form:
 - `/fpl-skills:sprint` — wave-based execution (Tactical/Standard/Deep)
 - `/fpl-skills:audit` — multi-expert review (≥4 reviewers)
 - `/fpl-skills:restore` — session-context restore (was `/recall` in dev-toolkit)
-- `/dev-toolkit:report` — card-based reports (kept; not yet ported to fpl-skills)
+- `forge-report` skill (invoke explicitly or via auto-trigger hooks; previously `/dev-toolkit:report` command)
 ```
 
 Quick `sed` for the common replacements:
@@ -147,7 +150,7 @@ rm CLAUDE.md.bak docs/**/*.md.bak
 git add -p && git commit -m "chore: migrate dev-toolkit slash command refs to fpl-skills"
 ```
 
-`/dev-toolkit:report` stays — `fpl-skills` hasn't ported the report skill yet. If you remove `dev-toolkit` and need `/report`, the [`forge-report`](https://github.com/ForgePlan/marketplace/tree/main/plugins/dev-toolkit/skills/forge-report) skill will move to fpl-skills in a future minor version.
+After fpl-skills v1.1.0 the `forge-report` skill is part of fpl-skills — invoke it directly by name (no `/report` command wrapper) or rely on the auto-trigger hooks that fire on SessionStart and PostToolUse.
 
 ### Step 5 — (Mode B only) Uninstall `dev-toolkit`
 

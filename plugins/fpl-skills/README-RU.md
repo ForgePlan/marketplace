@@ -95,7 +95,9 @@ Fix HIGH issues now? [y/n]
 | `/setup` | Интерактивный wizard конфигурации проекта (пишет `docs/agents/*.md`). |
 | `/bootstrap` | Универсальный CLAUDE.md template в новый или существующий проект (stack-aware). |
 | `/team` | Фундамент multi-agent команд — TeamCreate vs sub-agents, file ownership, recipes, cleanup. |
-| **SessionStart hook** | Проверяет `.forgeplan/`, `docs/agents/`, `CLAUDE.md`, печатает context-aware подсказку следующего шага. |
+| `forge-report` skill | Card-based шаблоны структурных отчётов (build/audit/decision/incident/migration). Auto-триггер если ≥2 из: ≥5 tool calls, ≥3 файла изменены, ≥3 TaskList items, cross-system effect. |
+| **`dev-advisor` агент** | Фоновый советник — предлагает `/audit` после изменений, напоминает про тесты для новых публичных функций, флагит security concerns. |
+| **Хуки**: SessionStart (`/fpl-init` подсказка + `forge-report` counter reset), PreToolUse:Bash (safety hook блокирует `rm -rf /`, `git push --force`, `DROP TABLE`), PostToolUse (test reminder, `forge-report` counter). |
 
 ## Интеграция с lifecycle
 

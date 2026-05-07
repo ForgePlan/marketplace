@@ -21,15 +21,18 @@
 
 ## Что остаётся как было
 
+Начиная с `fpl-skills` **v1.1.0** — полный feature parity:
+
 | | dev-toolkit | fpl-skills |
 |---|---|---|
 | `/audit` (multi-expert ревью) | ✅ | ✅ та же команда |
 | `/sprint` (wave-based execution) | ✅ | ✅ та же команда |
 | `/recall` (восстановление сессии) | ✅ `/recall` | ✅ переименована в `/restore` (см. ниже) |
-| `/report` (структурный отчёт) | ✅ | ⏳ ещё не портирована — оставь dev-toolkit рядом если нужна |
-| Safety hooks (блокировка деструктивных git/bash) | ✅ | ✅ |
-| Test reminder hook | ✅ | ✅ |
-| `dev-advisor` агент | ✅ | ⏳ не портирован — у fpl-skills свои advisors |
+| `forge-report` skill (шаблоны структурных отчётов) | ✅ | ✅ портирован в v1.1.0 |
+| Safety hooks (блокировка деструктивных git/bash) | ✅ | ✅ портирован в v1.1.0 |
+| Test reminder hook | ✅ | ✅ портирован в v1.1.0 |
+| `dev-advisor` агент | ✅ | ✅ портирован в v1.1.0 |
+| `forge-report` auto-trigger hooks (SessionStart counter, PostToolUse counter) | ✅ | ✅ портирован в v1.1.0 |
 
 ## Что меняется
 
@@ -129,7 +132,7 @@
 - `/fpl-skills:sprint` — wave-based execution (Tactical/Standard/Deep)
 - `/fpl-skills:audit` — multi-expert ревью (≥4 ревьюера)
 - `/fpl-skills:restore` — session-context restore (был `/recall` в dev-toolkit)
-- `/dev-toolkit:report` — card-based reports (оставь; ещё не портирована в fpl-skills)
+- `forge-report` skill (вызывай явно по имени или через auto-trigger хуки; раньше был `/dev-toolkit:report` command)
 ```
 
 Быстрый `sed` для типичных замен:
@@ -147,7 +150,7 @@ rm CLAUDE.md.bak docs/**/*.md.bak
 git add -p && git commit -m "chore: migrate dev-toolkit slash command refs to fpl-skills"
 ```
 
-`/dev-toolkit:report` остаётся — `fpl-skills` ещё не портировал report skill. Если удаляешь `dev-toolkit` и нужен `/report`, [`forge-report`](https://github.com/ForgePlan/marketplace/tree/main/plugins/dev-toolkit/skills/forge-report) переедет в fpl-skills в одной из будущих minor-версий.
+После fpl-skills v1.1.0 `forge-report` skill — часть fpl-skills. Вызывай напрямую по имени (без `/report` command-обёртки) или полагайся на auto-trigger hooks которые срабатывают на SessionStart и PostToolUse.
 
 ### Шаг 5 — (только Mode B) Удалить `dev-toolkit`
 

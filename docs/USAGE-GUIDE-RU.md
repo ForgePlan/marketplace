@@ -120,7 +120,7 @@ End-to-end развёртка: `forgeplan init`, MCP wiring, CLAUDE.md, docs/age
 |---|---|
 | `/recall` | Заменена на `/restore` в fpl-skills. |
 | `/audit`, `/sprint` | Те же имена что в fpl-skills — не ставь оба плагина одновременно. |
-| `/report` | Card-based структурный отчёт (всё ещё полезен; ещё не портирован в fpl-skills). |
+| `/report` | dev-toolkit slash-команда. Сам `forge-report` skill теперь в fpl-skills (вызывай по имени; auto-trigger через хуки). |
 
 ---
 
