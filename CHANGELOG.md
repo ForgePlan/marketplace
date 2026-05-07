@@ -5,6 +5,32 @@ All notable changes to the ForgePlan Marketplace will be documented in this file
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.17.0] - 2026-05-08
+
+Final piece of the methodology coverage trio: `/riper` orchestrator + AI-SDLC mapping doc + upstream methodologies bibliography.
+
+### Added
+- `fpl-skills` v1.4.0 → **1.5.0** (minor — one new skill):
+  - **`/riper`** (~250 lines) — RIPER methodology orchestrator (Research → Innovate → Plan → Execute → Review). Thin wrapper that walks a task through 5 phases by delegating to existing fpl-skills (`/research` → `/refine` or `/fpf-decompose` → `/rfc create` → `/sprint` or `/forge-cycle` → `/audit`). Tracks current phase visibly. Honest about being a vocabulary overlay on top of `/forge-cycle` — the two converge on the same forgeplan artifact graph; choose by team vocabulary preference.
+- `docs/AI-SDLC-MAPPING.md` and `-RU.md` (~200 lines each) — phase-by-phase reference table mapping common AI-SDLC phases (Concept → Research → Design → Specification → Build → Test → Release → Operate → Maintain) onto our marketplace commands. Worked example for "add magic-link auth" through all 9 phases. Honest about what we don't cover (production deployment, observability dashboards, compliance audits — typically the CI/CD and APM layers above us).
+- `docs/UPSTREAM-METHODOLOGIES.md` and `-RU.md` (~250 lines each) — bibliography of the upstream projects forgeplan integrates: Quint-code (DDR + Verification Gate), BMAD-METHOD (PRD validation + adversarial review), OpenSpec (artifact DAG + delta-specs), FPF (F-G-R + ADI + CL), Karpathy autoresearch (loop discipline), git-adr (Rust CLI reference), adr-tools (canonical ADR), ccpm (Claude Code patterns). For each: where the upstream lives, what forgeplan adopted, what forgeplan adapted, when to read it.
+
+### Changed
+- `plugin.json` (fpl-skills): skills array `20 → 21` entries (+riper, alphabetically inserted). Description updated to mention RIPER orchestrator. Version 1.4.0 → 1.5.0.
+- `marketplace.json`: catalog 1.16.0 → **1.17.0**; fpl-skills entry 1.4.0 → 1.5.0; description updated.
+- `docs/USAGE-GUIDE.md` and `-RU.md`: Quick Reference adds `/riper` row right after `/c4-diagram`.
+- Root `README.md` and `README-RU.md`: Documentation block extended to 8 entries — added "AI-SDLC mapping" and "Upstream methodologies" rows.
+
+### Notes
+With this release, the methodology coverage story is complete:
+- **Built into forgeplan CLI** — BMAD validate, OpenSpec DAG, FPF/ADI reason, DDR template, R_eff, Evidence Decay (documented in METHODOLOGIES)
+- **Marketplace skills** — `/shape`, `/refine`, `/ddd-decompose`, `/c4-diagram`, `/forge-cycle`, `/sprint`, `/audit`, `/research`, `/diagnose` etc.
+- **Vocabulary overlays** — `/riper` (RIPER terminology), AI-SDLC-MAPPING.md (AI-SDLC vocabulary)
+- **External companions** — autoresearch integration documented (AUTORESEARCH-INTEGRATION)
+- **Reference** — UPSTREAM-METHODOLOGIES bibliography
+
+The user picking "RIPER" or "AI-SDLC" terminology no longer hits a "not in our ecosystem" wall — they get either a wrapper command (`/riper`) or a mapping table (AI-SDLC) that translates to our canonical workflow.
+
 ## [1.16.0] - 2026-05-08
 
 Two new interactive design skills — top-down complement to the existing brownfield-pack extraction skills (which work bottom-up from code).

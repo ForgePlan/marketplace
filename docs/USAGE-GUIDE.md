@@ -90,6 +90,7 @@ Mirror of root [README.md](../README.md) "Where to Start?" matrix, with cross-li
 | `/shape <idea>` | Interview-from-scratch — turns a fuzzy idea into a draft PRD via 8-12 focused questions. Front-end of the lifecycle (write the plan WITH you). |
 | `/ddd-decompose` | Interview-driven Domain-Driven Design decomposition — bounded contexts, ubiquitous language, aggregates, domain events. Outputs context map (Markdown + Mermaid) plus optional Epic + per-context PRDs + Spec via forgeplan. |
 | `/c4-diagram` | Interactive C4 architecture diagram generator — Context, Container, Component levels with Mermaid. Maps to forgeplan via c4-to-forge.yaml. |
+| `/riper` | RIPER orchestrator (Research → Innovate → Plan → Execute → Review) — thin wrapper that delegates each phase to the right existing skill. Use when team uses RIPER terminology; otherwise prefer `/forge-cycle`. |
 | `/refine <plan>` | Interview-driven refinement of an existing plan — sharpens terminology, surfaces contradictions, lazy-creates ADRs. Polish what you already wrote. |
 | `/rfc <action>` | Create/read/update RFCs and ADRs (canonical structure, phase progress). |
 | `/sprint <feature>` | Wave-based execution with strict file ownership; auto-detects Tactical/Standard/Deep depth. |

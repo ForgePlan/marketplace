@@ -22,6 +22,8 @@ Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/
 | 🏛 [Architecture](docs/ARCHITECTURE.md) | 4-layer mental model — Orchestra (where) · Forgeplan (what) · FPF (how to think) · SPARC (how to code) |
 | 🔬 [Methodologies](docs/METHODOLOGIES.md) | What's built into forgeplan (BMAD, OpenSpec, ADI, F-G-R, DDR, Verification Gate) vs what's external |
 | 🔁 [Autoresearch integration](docs/AUTORESEARCH-INTEGRATION.md) | Combining `uditgoenka/autoresearch` (metric-driven loops) with `/forge-cycle` lifecycle |
+| 🧭 [AI-SDLC mapping](docs/AI-SDLC-MAPPING.md) | Phase-by-phase map for users coming from AI-SDLC vocabulary (Concept → Research → Design → Build → Test → Release → Operate → Maintain) |
+| 📚 [Upstream methodologies](docs/UPSTREAM-METHODOLOGIES.md) | Bibliography — pointers to Quint-code, BMAD, OpenSpec, FPF, Karpathy autoresearch, git-adr, ccpm, adr-tools |
 | 🚚 [Migration: dev-toolkit → fpl-skills](docs/MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS.md) | Switching plugins safely (side-by-side or clean-cut, with rollback plan) |
 | 🗂 [Tracker Integration](docs/TRACKER-INTEGRATION.md) | Recipes for Orchestra · GitHub Issues · Linear · Jira · local TODO |
 | 🌐 [Forgeplan Web](docs/FORGEPLAN-WEB.md) | Browser viewer — time-travel slider + artifact graph + health dashboard |
