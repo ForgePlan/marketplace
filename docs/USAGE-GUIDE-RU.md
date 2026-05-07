@@ -88,6 +88,8 @@ End-to-end развёртка: `forgeplan init`, MCP wiring, CLAUDE.md, docs/age
 | `/briefing` | Обзор трекера — Orchestra/GitHub Issues/Linear/Jira или локальные TODO. |
 | `/research <тема>` | Глубокое многоагентное исследование (5 параллельно: code · docs · status · references · memory) → `research/reports/`. |
 | `/shape <идея>` | Интервью с нуля — превращает сырую идею в черновик PRD через 8-12 направленных вопросов. Передняя сторона жизненного цикла (пишет план ВМЕСТЕ с тобой). |
+| `/ddd-decompose` | Интервью-разложение по Domain-Driven Design — ограниченные контексты, единый язык, агрегаты, доменные события. Выдаёт карту контекстов (Markdown + Mermaid) плюс опционально Epic + PRD по контексту + Spec через forgeplan. |
+| `/c4-diagram` | Интерактивный генератор C4-диаграмм архитектуры — уровни Context, Container, Component на Mermaid. Связывается с forgeplan через c4-to-forge.yaml. |
 | `/refine <план>` | Интервью для уточнения существующего плана — терминология, противоречия, попутные ADR. Шлифует то что уже написано. |
 | `/rfc <action>` | Create/read/update RFC и ADR (каноничная структура, фазы). |
 | `/sprint <фича>` | Wave-based execution со строгим file ownership; auto-detect Tactical/Standard/Deep. |
