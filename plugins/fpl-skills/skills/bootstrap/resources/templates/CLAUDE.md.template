@@ -23,9 +23,9 @@ Russian acceptable in commit body and this file when it adds clarity.
      "yes" in the current session. Don't dilute with non-critical rules. -->
 
 - **Destructive git** (`push --force`, `reset --hard`, branch/tag deletion, `rebase -i` on shared history) — only after explicit confirmation in the current session.
-- **No secrets in git** — `.env`, tokens, API keys, certificates. Run `git status` before `git add` and confirm no sensitive files staged.
+- **No secrets in git** — `.env`, tokens, API keys, certificates. Run `git status` before `git add` and confirm no sensitive files staged. Specifically: `.forgeplan/config.yaml` is tracked but must use `api_key_env: VAR_NAME`, never literal `api_key: "sk-..."`. If a literal key landed in any commit: rewrite, **revoke the leaked key**, force-push only the fix commit (with confirmation).
 - **No bypass of branch protection** — `main` (and `dev` if used) merges only via PR. No direct push.
-- **No `forgeplan` artifact direct edits** — `.forgeplan/{prds,rfcs,adrs,specs,evidence,notes}/*.md` are managed by the CLI/MCP only. Direct `Edit`/`Write`/`sed` desyncs the LanceDB index and state machine. Use `forgeplan update`/`new`/`link`/`activate`. Recovery: `forgeplan scan-import` rebuilds the index from markdown.
+- **No `forgeplan` artifact direct edits** — `.forgeplan/{prds,rfcs,adrs,specs,epics,evidence,problems,solutions,refresh,notes,memory}/*.md` and `.forgeplan/state/*.yaml` are managed by the CLI/MCP only. Direct `Edit`/`Write`/`sed` desyncs the LanceDB index, the state machine, and the canonical body. Use `forgeplan update`/`new`/`link`/`activate`/`deprecate` (or `mcp__forgeplan__forgeplan_*` MCP tools). Recovery: `forgeplan_update id=<ID> body=<full new body>` (idempotent) or `forgeplan scan-import` rebuilds LanceDB from markdown. Direct edit is OK only for non-forgeplan markdown (READMEs, this CLAUDE.md, src code).
 - **No long/expensive operations** (deploy, DB migrations, mass network/LLM calls, package publish) without explicit confirmation.
 {{IF_PUBLIC_PACKAGE}}- **No `{{PUBLISH_CMD}}` without confirmation** — this is a published package; releases go through changelog/version flow. Once published, a version cannot be deleted (only deprecated).
 {{/IF_PUBLIC_PACKAGE}}
@@ -392,16 +392,36 @@ If any step fails, fix it. Don't `--no-verify` the pre-commit hook.
 
 ## Storage layout
 
+`.forgeplan/` mixes tracked artifacts (the source of truth) with derived /
+runtime state. Get this right or risk leaking API keys / generating merge
+conflicts on every PR. Full setup contract:
+[`guides/FORGEPLAN-SETUP.md`](../bootstrap/resources/guides/FORGEPLAN-SETUP.md)
+(in the plugin source — open via `Read` for the complete reference).
+
 ```
-.forgeplan/                      ← decision artifacts (managed by CLI/MCP)
-├── prds/                        ← product requirements
-├── rfcs/                        ← architecture proposals
-├── adrs/                        ← decision records (with valid_until TTL)
-├── specs/                       ← API/interface contracts
-├── evidence/                    ← verifications linked to PRDs/ADRs
-├── notes/                       ← lightweight context not warranting a full artifact
-├── lance/                       ← ⚠️ gitignored (derived index — `forgeplan scan-import` rebuilds)
-└── .fastembed_cache/            ← ⚠️ gitignored (model weights)
+.forgeplan/                      ← managed by CLI/MCP, mostly tracked
+├── prds/                        ← TRACKED — product requirements
+├── rfcs/                        ← TRACKED — architecture proposals
+├── adrs/                        ← TRACKED — decisions (with valid_until TTL)
+├── specs/                       ← TRACKED — API / data-model contracts
+├── epics/                       ← TRACKED — groupings of PRD[]/RFC[]
+├── evidence/                    ← TRACKED — measurements / tests / audits
+├── problems/                    ← TRACKED — problem cards
+├── solutions/                   ← TRACKED — solution portfolios
+├── refresh/                     ← TRACKED — re-evaluation of stale ADRs
+├── notes/                       ← TRACKED — micro-decisions (90-day TTL)
+├── memory/                      ← TRACKED — typed memory (fact/convention/constraint/observation/procedure) — NOT Hindsight!
+├── state/                       ← TRACKED — lifecycle state machine YAML (one per artifact)
+├── config.yaml                  ← TRACKED — project config (uses api_key_env, never literal keys)
+├── .gitignore                   ← TRACKED — lists what NOT to track
+│
+├── lance/                       ← ❌ gitignored — LanceDB vector index (rebuild via `forgeplan scan-import`)
+├── .fastembed_cache/            ← ❌ gitignored — bge-m3 model cache (~600 MB)
+├── logs/                        ← ❌ gitignored — local audit/ops logs
+├── .lock                        ← ❌ gitignored — runtime mutex
+├── session.yaml                 ← ❌ gitignored — per-machine focus / claim TTLs (NOT shared)
+├── trash/                       ← ❌ gitignored — soft-deleted artifacts
+└── discovery/                   ← ❌ gitignored — ephemeral research findings
 
 docs/
 ├── agents/                      ← per-project metadata read by fpl-skills
@@ -412,15 +432,55 @@ docs/
 └── ...                          ← project-specific docs
 
 CONTEXT.md                       ← ubiquitous language / domain glossary
+.env                             ← ❌ gitignored — actual secrets (loaded via direnv or manual `source`)
 CLAUDE.md                        ← this file
 ```
 
-LLM provider keys (used by `forgeplan reason`, FPF semantic search) live in
-your shell environment (`$ANTHROPIC_API_KEY`, `$OPENAI_API_KEY`, etc.), not
-in any tracked file.
+### Secrets — 12-factor pattern
 
-**Fresh clone**: `git clone … && forgeplan init -y && forgeplan scan-import`.
-The `lance/` index is rebuilt from the canonical markdown.
+`config.yaml` is **tracked** but contains only the **name** of the env var holding the API key, never the key itself:
+
+```yaml
+llm:
+  provider: gemini
+  model: gemini-2.0-flash-thinking-exp-01-21
+  api_key_env: GEMINI_API_KEY    # ← env var NAME, not the key
+  max_tokens: 8192
+
+embedding:
+  model: bge-m3
+```
+
+The actual key (`GEMINI_API_KEY=AIza...`) lives in `.env` (gitignored), `~/.zshrc`, or CI secrets. Forgeplan reads it from process env at runtime.
+
+**Pre-commit check** — confirm no literal key slipped into `config.yaml`:
+
+```bash
+! grep -qE 'api_key:\s*["'"'"']?(sk-|AIza|ant-)[A-Za-z0-9_-]{20,}' .forgeplan/config.yaml \
+  && echo "✅ clean" || echo "❌ literal API key — revoke + rewrite to api_key_env"
+```
+
+If a literal key was committed: `git rm --cached`, rewrite to `api_key_env`, **revoke the leaked key** (it's already in git history), commit the fix.
+
+### Env var overrides
+
+Forgeplan accepts overrides without editing `config.yaml`:
+
+`FORGEPLAN_LLM_PROVIDER`, `FORGEPLAN_LLM_MODEL`, `FORGEPLAN_LLM_BASE_URL`, `FORGEPLAN_LLM_MAX_TOKENS`, `FORGEPLAN_LLM_API_KEY_ENV`, `FORGEPLAN_EMBEDDING_MODEL`, `FORGEPLAN_STORAGE_DRIVER`, `FORGEPLAN_STORAGE_PATH`, `FORGEPLAN_MEMORY_DRIVER`.
+
+Priority: env > config.yaml > built-in default.
+
+### Fresh clone protocol
+
+```bash
+git clone <repo>
+cd <repo>
+forgeplan init -y                    # creates lance/, .fastembed_cache/, etc.
+forgeplan scan-import                # rebuilds vector index from markdown
+# load .env if you have one:
+set -a && source .env && set +a      # or `direnv allow` if direnv is configured
+forgeplan health                     # verify clean state
+```
 
 ---
 
@@ -444,4 +504,5 @@ Replace these with the real constraints of *this* project. The whole point of th
 - `fpl-skills` plugin — installed via `/plugin install fpl-skills@ForgePlan-marketplace`.
 - Project decisions — `.forgeplan/adrs/` (open `*.md` directly for context; mutate via CLI/MCP only).
 - Authored guides — `guides/` if present (project-specific authoring conventions).
-- Team CLAUDE.md best practices — `~/.claude/skills/bootstrap/resources/guides/CLAUDE-MD-GUIDE.ru.md` (or in the plugin source) — explains why this file is structured the way it is.
+- CLAUDE.md best practices — `plugins/fpl-skills/skills/bootstrap/resources/guides/CLAUDE-MD-GUIDE.ru.md` — explains why this file is structured the way it is (U-curve attention, ≤7 red lines, primacy/reference/recency zones).
+- Forgeplan setup contract — `plugins/fpl-skills/skills/bootstrap/resources/guides/FORGEPLAN-SETUP.md` — canonical `.gitignore`, secrets layout, env var overrides, anti-patterns. Read before committing anything in `.forgeplan/`.
