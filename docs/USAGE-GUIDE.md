@@ -120,7 +120,7 @@ Mirror of root [README.md](../README.md) "Where to Start?" matrix, with cross-li
 |---|---|
 | `/recall` | Replaced by `/restore` in fpl-skills. |
 | `/audit`, `/sprint` | Same names as fpl-skills — don't install both plugins together. |
-| `/report` | Card-based structured report (still useful; not yet ported to fpl-skills). |
+| `/report` | dev-toolkit's slash command. The underlying `forge-report` skill is now in fpl-skills (invoke by name; auto-triggers via hooks). |
 
 ---
 

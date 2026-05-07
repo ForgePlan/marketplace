@@ -5,18 +5,21 @@
 > **⚠️ Deprecated — superseded by [`fpl-skills`](../fpl-skills/README.md).**
 >
 > `dev-toolkit` is in soft-sunset. Existing users keep working installs;
-> new projects should install `fpl-skills` instead. It bundles everything
-> dev-toolkit ships (`/audit`, `/sprint`, session-context recall, structured
-> reports) plus `/research`, `/refine`, `/diagnose`, `/autorun`, `/fpl-init`,
-> and 8 more skills built on top of forgeplan's artifact lifecycle.
+> new projects should install `fpl-skills` instead. As of `fpl-skills` v1.1.0,
+> **everything dev-toolkit ships is ported**: `/audit`, `/sprint`, session
+> context recall (renamed `/restore`), `forge-report` skill, `dev-advisor`
+> agent, safety hook, test-reminder hook. Plus `fpl-skills` adds 13 more
+> skills (`/research`, `/refine`, `/diagnose`, `/autorun`, `/fpl-init`, etc.)
+> on top of forgeplan's artifact lifecycle.
 >
 > ```bash
 > /plugin install fpl-skills@ForgePlan-marketplace
 > ```
 >
-> See [`plugins/fpl-skills/README.md`](../fpl-skills/README.md) and
-> [`GETTING-STARTED.md`](../fpl-skills/GETTING-STARTED.md) for the migration.
-> No action required if you're happy with the current dev-toolkit feature set.
+> Migration is one of two flavours — see
+> [`docs/MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS.md`](../../docs/MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS.md)
+> for the safe, low-risk procedure (and rollback plan). No action required
+> if you're happy with the current dev-toolkit feature set.
 
 Universal engineering toolkit -- works with any project. No dependencies.
 

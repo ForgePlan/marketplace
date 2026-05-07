@@ -5,6 +5,33 @@ All notable changes to the ForgePlan Marketplace will be documented in this file
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.0] - 2026-05-07
+
+Full feature parity with the legacy `dev-toolkit`. Migration guide can now claim "everything is ported".
+
+### Added
+- `fpl-skills` v1.0.3 → **1.1.0** (minor — feature additions):
+  - **Ported `forge-report` skill** from dev-toolkit. Card-based structured report templates (build/audit/decision/incident/migration), section anchors, required sections, anti-patterns. 23 markdown files in `skills/forge-report/sections/`.
+  - **Ported `dev-advisor` agent** from dev-toolkit. Background advisor that suggests `/audit` after multi-file changes, flags missing tests on new public functions, warns on security-sensitive edits.
+  - **Ported safety hook** (`PreToolUse:Bash`) — blocks `git push --force`, `git reset --hard`, `rm -rf /`, `DROP TABLE`.
+  - **Ported test-reminder hook** (`PostToolUse:Write|Edit|MultiEdit`) — suggests tests when new public functions are added.
+  - **Ported `forge-report` auto-trigger hooks** — `forge-report-session-start.sh` (resets counter) and `forge-report-counter.sh` (PostToolUse:.* counter that triggers the skill when criteria met).
+- Marketplace catalog metadata.version 1.10.3 → **1.11.0**.
+
+### Changed
+- Root README.md and README-RU.md: added a prominent **📚 Documentation** block as a table with all 8 user-facing docs (Developer Journey · Usage Guide · Architecture · Migration · Tracker Integration · Forgeplan Web · Changelog · Contributing). Stats line updated to "16 skills".
+- `plugins/dev-toolkit/README.md` and `-RU.md`: deprecation callout updated — now states all dev-toolkit components are ported as of fpl-skills v1.1.0. Restored the missing RU deprecation block (was lost in PR #36 squash merge).
+- `docs/MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS.md` and `-RU.md`: "What stays the same" table updated — `forge-report`, `dev-advisor`, hooks all marked "✅ ported in v1.1.0". Removed the "/dev-toolkit:report stays" caveat.
+- `docs/USAGE-GUIDE.md` and `-RU.md`: legacy `/report` row reframed — the underlying `forge-report` skill is now in fpl-skills.
+- `plugins/fpl-skills/README.md` and `-RU.md`: added rows for `forge-report` skill, `dev-advisor` agent, and the hook bundle.
+
+### Notes
+The migration-from-dev-toolkit story is now clean: install `fpl-skills`, get everything dev-toolkit had plus 13 more skills. No "feature gap" reasons to keep dev-toolkit installed.
+
+When both plugins are installed, hooks fire twice (e.g. safety hook from both plugins). The hook scripts are independent — no collision but doubled output. Migration guide flags this and recommends Mode A (side-by-side) → uninstall dev-toolkit once verified, or Mode B (clean cut) for users comfortable with one transition.
+
+A `migrate-from-dev-toolkit` skill that automates the migration steps is planned for v1.1.1 (next PR).
+
 ## [1.10.3] - 2026-05-07
 
 Operational docs overhaul — migration guide, tracker recipes, forgeplan-web walkthrough, plus a corrected `.forgeplan/` setup contract.

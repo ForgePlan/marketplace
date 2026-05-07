@@ -95,7 +95,9 @@ Fix HIGH issues now? [y/n]
 | `/setup` | Interactive wizard that configures the current project for fpl-skills (writes `docs/agents/*.md`). |
 | `/bootstrap` | Drops the universal CLAUDE.md template into a new or existing project (stack-aware). |
 | `/team` | Foundation for multi-agent teams — TeamCreate vs sub-agents, file ownership, recipes, cleanup. |
-| **SessionStart hook** | Probes `.forgeplan/`, `docs/agents/`, `CLAUDE.md` and prints a context-aware next-step hint. |
+| `forge-report` skill | Card-based structured report templates (build/audit/decision/incident/migration). Auto-triggers when ≥2 of: ≥5 tool calls, ≥3 files modified, ≥3 TaskList items, cross-system effect. |
+| **`dev-advisor` agent** | Background advisor — suggests `/audit` after changes, reminds about tests for new public functions, flags security concerns. |
+| **Hooks**: SessionStart (`/fpl-init` hint + `forge-report` counter reset), PreToolUse:Bash (safety hook blocks `rm -rf /`, `git push --force`, `DROP TABLE`), PostToolUse (test reminder, `forge-report` counter). |
 
 ## Lifecycle integration
 

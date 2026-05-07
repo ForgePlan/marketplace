@@ -8,9 +8,22 @@
 
 Официальный маркетплейс плагинов Claude Code от [ForgePlan](https://github.com/ForgePlan) — UX, воркфлоу, инженерные и dev-инструменты.
 
-**12 плагинов** | **60+ агентов** | **15 команд** | **5 баз знаний** | [Developer Journey](docs/DEVELOPER-JOURNEY-RU.md) | [Руководство](docs/USAGE-GUIDE-RU.md)
+**12 плагинов** | **60+ агентов** | **16 скиллов** | **5 баз знаний**
 
 > **Экосистема ForgePlan**: этот маркетплейс + [CLI `forgeplan`](https://github.com/ForgePlan/forgeplan) (lifecycle артефактов) + [`@forgeplan/web`](https://github.com/ForgePlan/forgeplan-web) (браузерный viewer с time-travel + графом). Три sibling-продукта; ставь что нужно.
+
+## 📚 Документация
+
+| Гайд | Когда читать |
+|---|---|
+| 🚀 [Developer Journey](docs/DEVELOPER-JOURNEY-RU.md) | **Стартуй здесь** — 30-минутный walkthrough от нуля до первой зашипованной фичи, с 4 persona Day 0 walkthroughs |
+| 📖 [Руководство](docs/USAGE-GUIDE-RU.md) | Reference manual: 16 команд, хуки, правила активации агентов, troubleshooting |
+| 🏛 [Архитектура](docs/ARCHITECTURE-RU.md) | 4-layer ментальная модель — Orchestra (где) · Forgeplan (что) · FPF (как думать) · SPARC (как кодить) |
+| 🚚 [Миграция: dev-toolkit → fpl-skills](docs/MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS-RU.md) | Безопасный переход (side-by-side или clean-cut, с rollback-планом) |
+| 🗂 [Интеграция трекеров](docs/TRACKER-INTEGRATION-RU.md) | Recipes для Orchestra · GitHub Issues · Linear · Jira · локальный TODO |
+| 🌐 [Forgeplan Web](docs/FORGEPLAN-WEB-RU.md) | Браузерный viewer — time-travel слайдер + граф артефактов + health dashboard |
+| 📜 [Changelog](CHANGELOG.md) | История релизов |
+| 🤝 [Contributing](CONTRIBUTING.md) | Добавление нового плагина в маркетплейс |
 
 ## Быстрый старт
 
