@@ -224,6 +224,56 @@ So you don't always need to invoke `/fpf-reason` directly — if you're using `/
 
 ---
 
+## Use-case — Metric-driven iteration (autoresearch + ForgePlan)
+
+**Scenario**: You have a task with a clear mechanical metric (perf number, test pass rate, bundle size, security findings count) and you want a goal-directed loop that improves the metric until target — with the result captured as proper Evidence.
+
+**Setup** (autoresearch is on a separate marketplace):
+```
+/plugin marketplace add uditgoenka/autoresearch
+/plugin install autoresearch@uditgoenka-autoresearch
+/plugin install fpl-skills@ForgePlan-marketplace
+/plugin install forgeplan-workflow@ForgePlan-marketplace
+/reload-plugins
+```
+
+**Three patterns** (full guide: [AUTORESEARCH-INTEGRATION.md](AUTORESEARCH-INTEGRATION.md)):
+
+### Pattern A — Autoresearch as Build phase of `/forge-cycle`
+
+```
+/forge-cycle "reduce checkout p95 latency below 200ms"
+  → Step 4 — shape: PRD with success criterion "p95 < 200ms"
+  → Step 5 — BUILD delegates to /autoresearch:plan (loop runs unattended)
+  → Step 7 — evidence: forgeplan new evidence with final p95 measurement
+              (verdict: supports, congruence_level: 3, evidence_type: measurement)
+  → Step 8 — activate when R_eff > 0
+```
+
+The PRD's success criterion **is** the autoresearch metric. The loop's final state becomes high-confidence Evidence (CL3 same-context).
+
+### Pattern B — Autoresearch standalone → Note + Evidence
+
+For lightweight improvements without a full PRD:
+
+```
+/autoresearch:debug "fix flaky auth test"
+forgeplan new note "fixed flaky auth test — race in token mock"
+forgeplan new evidence "/autoresearch:debug 47 iterations; final 100/100; sha=abc123"
+```
+
+### Pattern C — Security audit → Evidence
+
+`/autoresearch:security` produces a structured report directly suitable as Evidence:
+
+```
+/autoresearch:security        # read-only, or add --fix for confirmed Critical/High
+forgeplan new evidence "<scope>: autoresearch:security — 2 HIGH, 4 MED found, 1 HIGH auto-fixed"
+forgeplan link EVID-NNN ADR-MMM --relation informs
+```
+
+---
+
 ## Use-case 7 — Multi-session team coordination
 
 **Scenario**: You and your team work across sessions. Tasks live in Orchestra. You need an inbox-style triage every morning.

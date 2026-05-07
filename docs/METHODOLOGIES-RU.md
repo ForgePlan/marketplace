@@ -143,13 +143,30 @@
 
 ---
 
+## Рекомендуемый companion (отдельный маркетплейс, хорошо сочетается с нашим)
+
+### Autoresearch — итеративный цикл под мерой
+
+**Что это**: плагин-скилл для Claude Code (и OpenCode, Codex) от Udit Goenka, на основе [autoresearch Карпатого](https://github.com/karpathy/autoresearch). Превращает любую задачу с измеримой метрикой в целенаправленный цикл: **Modify → Verify → Keep/Discard → Repeat**. Пять команд в v2.0.03: `plan`, `debug`, `security`, `predict`, `reason`.
+
+**Источник**: [github.com/uditgoenka/autoresearch](https://github.com/uditgoenka/autoresearch) — отдельный маркетплейс, лицензия MIT.
+
+**Как сочетается с нами**:
+- Фаза Build в `/forge-cycle` может передавать управление в `/autoresearch:plan` когда у задачи чёткая механическая метрика (производительность, доля тестов, размер сборки, security findings)
+- Результаты autoresearch фиксируются через `forgeplan new evidence` с `congruence_level: 3` и `evidence_type: measurement` — качественный CL3 вход для R_eff
+- Скиллы извлечения brownfield (intent-inferrer, hypothesis-triangulator, canonical-reproducer) используют примитивы autoresearch как движок цикла
+
+**Гайд по интеграции**: [`docs/AUTORESEARCH-INTEGRATION-RU.md`](AUTORESEARCH-INTEGRATION-RU.md) — три способа интеграции, матрица решений, чего не делать, установка.
+
+**Установка**:
+```
+/plugin marketplace add uditgoenka/autoresearch
+/plugin install autoresearch@uditgoenka-autoresearch
+```
+
+---
+
 ## Внешние (упоминается, но не реализовано в этой экосистеме)
-
-### Autoresearch
-
-**Что это**: автоматизированный исследовательский инструмент в anthropic-marketplace (`autoresearch@anthropic-marketplace`).
-
-**Статус у нас**: `forgeplan-brownfield-pack` ссылается на хуки для Autoresearch (`integration/autoresearch-hooks.md`) и на запланированную карту соответствия (`autoresearch-to-forge.yaml`). Сам forgeplan автоматизированное исследование не реализует — он интегрируется с Autoresearch когда тот установлен отдельно.
 
 ### DDD — Domain-Driven Design
 
@@ -217,7 +234,7 @@
 | Laws of UX | Плагин `laws-of-ux` | `/ux-review`, `/ux-law <имя>` |
 | DDD | `agents-pro` + brownfield-pack | Только консультации — движка нет |
 | C4 | Карта в brownfield-pack | Только YAML-преобразование |
-| Autoresearch | Внешнее (anthropic-marketplace) | Ставится отдельно |
+| Autoresearch | Внешний companion (`uditgoenka/autoresearch`) | Ставится отдельно; см. [AUTORESEARCH-INTEGRATION-RU.md](AUTORESEARCH-INTEGRATION-RU.md) для способов интеграции |
 | RIPER | НЕТ в экосистеме | Вручную — связка `/research` → `/refine` → `/rfc` → `/sprint` → `/audit` |
 | AI-SDLC | НЕ названо так, приближение через `/autorun` | `/autorun "<задача>"` |
 
