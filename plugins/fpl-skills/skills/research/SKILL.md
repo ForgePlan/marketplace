@@ -446,3 +446,24 @@ TOPIC, KEYWORDS — same.
 - **Don't trust TODOs alone** — verify in code.
 - **Don't dump raw outputs from all 5 agents** — synthesis is the value.
 - **Don't `TeamDelete` silently** — ask the user first.
+
+---
+
+## Forgeplan integration
+
+If the `forgeplan` CLI is on `$PATH`, this skill is **forgeplan-aware** — it recommends the right CLI calls but does not invoke them.
+
+### After `/research <topic>` completes
+
+The skill writes a report to `research/reports/<topic>/REPORT.md`. To plug it into the artifact graph:
+
+- **Background context for an existing artifact** → `forgeplan new note "<takeaway from research>"` and link to the relevant PRD/RFC/ADR.
+- **New initiative warranting a PRD** → `forgeplan new prd "<title>"`, cite the report path in Sources, run `forgeplan validate PRD-NNN`.
+- **Architecture decision surfaced** → `forgeplan new adr "<decision>"`, fill Context/Decision/Consequences from the report.
+- **Comparison/evaluation captured** → `/refine` next to formalise → `forgeplan new rfc "<scope>"` if it leads to a deep change.
+
+Without an artifact link, the research is ephemeral — `forgeplan list` won't surface it; future readers won't find it via semantic search.
+
+### Want this orchestrated for you?
+
+Install [`forgeplan-workflow`](../../../../plugins/forgeplan-workflow/README.md). `/forge-cycle "<task>"` runs research as part of its Shape phase and creates the PRD automatically.

@@ -5,6 +5,25 @@ All notable changes to the ForgePlan Marketplace will be documented in this file
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.0] - 2026-05-07
+
+Closes a real architectural gap — until now, `fpl-skills` skills (`/sprint`, `/audit`, `/research`, `/refine`, `/rfc`, `/diagnose`, `/build`, `/do`, `/restore`, `/briefing`) didn't mention `forgeplan` at all. Documentation promised they "delegate artifact lifecycle to forgeplan" but the skill bodies didn't. After this release, every workflow skill is **forgeplan-aware**: it recommends the right CLI calls (route, new prd/evidence/note/adr, link, score, activate) at the right times and points the user at `/forge-cycle` for full orchestration.
+
+### Added
+- `fpl-skills` v1.1.1 → **1.2.0** (minor — feature: cross-skill forgeplan integration):
+  - **10 workflow skills now include a "Forgeplan integration" section**: `/sprint`, `/audit`, `/research`, `/refine`, `/rfc`, `/diagnose`, `/build`, `/do`, `/restore`, `/briefing`. Each section is tailored to what the skill produces — `/sprint` recommends `forgeplan route → new prd → new evidence → activate`; `/audit` writes Evidence; `/research` proposes Note vs PRD vs ADR depending on output; `/refine` adds ADR for surfaced decisions; `/rfc` prefers `forgeplan new rfc/adr` over plain markdown; `/diagnose` writes Evidence on verified fix; `/build` activates PRD on completion; `/do` mirrors `/autorun`'s probe-and-delegate pattern; `/restore` and `/briefing` add `forgeplan health`/`blocked`/`stale` to the recall block.
+  - Each section ends with a **"Want this orchestrated for you?"** callout pointing at `/forge-cycle` (in `forgeplan-workflow`) — the one-command alternative that does all the recommended CLI calls automatically.
+- `/autorun` integration block clarified: explicit table of "what happens with/without forgeplan-workflow installed".
+
+### Changed
+- `docs/DEVELOPER-JOURNEY.md` and `-RU.md`: new section **"`/forge-cycle` — first time"** (50+ lines each) — short walkthrough showing the 8-step cycle, decision matrix `/forge-cycle` vs `/sprint` vs `/autorun` vs `/do`, setup checklist, and integration with `@forgeplan/web` for visual exploration. Closes the onboarding gap for users who want the orchestrated path rather than manual coordination.
+- Marketplace catalog metadata.version 1.11.1 → **1.12.0**.
+
+### Notes
+**This is a documentation-and-design change, not a behaviour change for the CLI side**. Skills now *recommend* the right `forgeplan` calls inline; they don't *invoke* them. This keeps `fpl-skills` simple (executors) and `forgeplan-workflow` differentiated (orchestrator). Users who want automation install `forgeplan-workflow` and get `/forge-cycle`; users who prefer manual control install just `fpl-skills` and follow the inline recommendations.
+
+The architectural decision: **don't dilute `fpl-skills` skills with `forgeplan-workflow`'s logic**. Two plugins with overlapping orchestration would create dual-pathways and divergence. Instead, every skill points to the orchestrator as the canonical "automate this" answer.
+
 ## [1.11.1] - 2026-05-07
 
 Automated migration helper.

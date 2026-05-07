@@ -322,3 +322,34 @@ build research/reports/{dir} --phase 1
 - [`audit`](../audit/SKILL.md) — runs after the build.
 - [`rfc`](../rfc/SKILL.md) — update RFC.
 - [`do`](../do/SKILL.md) — chains research → build → audit.
+
+---
+
+## Forgeplan integration
+
+If the `forgeplan` CLI is on `$PATH` and the IMPLEMENTATION-PLAN.md references a PRD, this skill is **forgeplan-aware** — it recommends the right CLI calls but does not invoke them.
+
+### Before `/build`
+
+The IMPLEMENTATION-PLAN.md should already reference the parent PRD/RFC (created by `/research` → `/refine` → `/rfc`). If not, create one:
+
+```bash
+forgeplan route "<scope of the IMPLEMENTATION-PLAN>"
+forgeplan new prd "<title>"            # if Standard+ depth
+forgeplan validate PRD-NNN
+```
+
+### After `/build` completes
+
+```bash
+forgeplan new evidence "<plan>: N waves merged, M tests added, build/lint clean"
+forgeplan link EVID-MMM PRD-NNN --relation informs
+forgeplan score PRD-NNN
+forgeplan activate PRD-NNN              # draft → active
+```
+
+For `/build` runs that took multiple sessions (each adding a wave), append to the same Evidence rather than creating multiple — keeps the trail single-threaded.
+
+### Want this orchestrated for you?
+
+`/forge-cycle` (in [`forgeplan-workflow`](../../../../plugins/forgeplan-workflow/README.md)) handles the full build + evidence + activate flow when you start from a task description rather than an existing IMPLEMENTATION-PLAN.

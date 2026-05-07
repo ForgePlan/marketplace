@@ -209,3 +209,35 @@ Everything, including starred / reminders / saved. Default mode is compact and s
 - **Don't invent tasks** when no source is available — say "no data" honestly.
 - **Don't print 50 lines when 5 will do** — that's what `urgent` mode is for.
 - **Don't recommend generic actions** — a recommendation without a concrete task UID/link is useless.
+
+---
+
+## Forgeplan integration
+
+If the `forgeplan` CLI is on `$PATH`, daily briefings benefit from forgeplan-side signals beyond the tracker.
+
+### Add to the daily briefing
+
+Beyond the tracker (Orchestra/GitHub Issues/Linear/Jira/local TODO), include:
+
+```bash
+forgeplan list --status active --limit 5    # what's currently in flight
+forgeplan blocked                            # artifacts waiting on dependencies
+forgeplan stale                              # past valid_until — need renew/deprecate
+forgeplan blindspots                         # active artifacts with no evidence
+```
+
+### Why these belong in a briefing
+
+- **Active without evidence** = R_eff stays at 0 → activation gate fails silently. Briefing should flag.
+- **Blocked artifacts** = work that won't progress without unblocking. Triage daily.
+- **Stale ADRs** = decisions that may no longer apply. Renew or supersede before relying on them.
+
+Group the briefing output by:
+1. **Tracker signals** (assigned tasks, mentions, due-today)
+2. **Forgeplan signals** (active, blocked, stale, blindspots)
+3. **Synthesis** — recommended focus for the day, drawing from both
+
+### Want this orchestrated for you?
+
+`/session` (in [`forgeplan-orchestra`](../../../../plugins/forgeplan-orchestra/README.md)) is the team-grade variant — it adds Inbox Pattern over multi-source signals (forgeplan + Orchestra messages + git). Use when team coordination matters.

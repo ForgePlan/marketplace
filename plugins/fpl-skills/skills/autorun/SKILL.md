@@ -198,3 +198,27 @@ User can `TaskList` at any time to see live progress.
 - ❌ Don't run if `docs/agents/` is empty AND no project files exist. Refuse and route to `/setup`.
 - ❌ Don't generate a wave plan with file conflicts. If `sprint` produces one, regenerate before executing.
 - ❌ Don't merge or push without explicit user instruction in the original task. "implement X" doesn't mean "ship X".
+
+---
+
+## Forgeplan integration (clarified)
+
+The probe block at the start of this skill (step 2 — Detect environment) already lists `forgeplan-workflow` as a delegation target. To make the behaviour explicit:
+
+| Detected | What `/autorun` does |
+|---|---|
+| `forgeplan-workflow` plugin installed | **Delegates to `/forge-cycle "<task>"`** — full route → shape → build → evidence → activate. No pauses. |
+| `forgeplan` CLI but no `forgeplan-workflow` | Runs `research → sprint → audit → report` and **inserts manual `forgeplan` calls between phases** (route → new prd → new evidence → activate). All non-interactive. |
+| Neither | Runs the standard pipeline. Prints a single warning at the start: "no forgeplan integration; artifact graph will not be updated". |
+
+### Want full automation?
+
+For maximum forgeplan integration with zero per-phase pauses, install `forgeplan-workflow` then invoke `/autorun` — it will silently delegate to `/forge-cycle`:
+
+```
+/plugin install forgeplan-workflow@ForgePlan-marketplace
+/reload-plugins
+/autorun "<task>"
+```
+
+This is the recommended setup for overnight / unattended runs on forgeplan projects.

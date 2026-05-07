@@ -294,6 +294,55 @@ Orchestra `Status` ↔ Forgeplan `Phase` mapping автоматический:
 
 ---
 
+## `/forge-cycle` — первый раз
+
+4 персоны выше используют скиллы `fpl-skills` как **executors** и вручную координируют `forgeplan` lifecycle вызовы (или полагаются на `/autorun` для оркестровки). Для тех кто хочет **одну команду которая прогоняет всю методологию** — поставь [`forgeplan-workflow`](../plugins/forgeplan-workflow/README-RU.md):
+
+```
+/plugin install forgeplan-workflow@ForgePlan-marketplace
+/reload-plugins
+```
+
+Дальше для любой нетривиальной задачи:
+
+```
+/forge-cycle "Add PDF export for artifacts"
+```
+
+Это проходит 8 шагов end-to-end:
+
+```
+Step 1: Health check    → `forgeplan health` — выявляет blind spots до старта
+Step 2: Task            → подтверждает описание задачи с тобой
+Step 3: Route           → `forgeplan route` решает depth (Tactical/Standard/Deep/Critical)
+Step 4: Shape           → создаёт PRD (и RFC/ADR если Deep), валидирует MUST секции
+Step 5: Build           → делегирует /sprint или /do из fpl-skills для реализации
+Step 6: Audit           → спавнит ревьюеров, фиксирует findings
+Step 7: Evidence        → `forgeplan new evidence` + link к PRD + score (R_eff)
+Step 8: Activate        → `forgeplan activate` когда R_eff > 0
+                        → готовит conventional commit с `Refs: PRD-NNN`
+```
+
+### Когда `/forge-cycle` vs `/sprint` vs `/autorun`
+
+| Команда | Плагин | Лучше всего для |
+|---|---|---|
+| `/forge-cycle` | forgeplan-workflow | «Прогони методологию end-to-end по одной задаче» — единый entry point, полный lifecycle. |
+| `/sprint` | fpl-skills | Wave-based execution с file ownership и per-wave teammates. Используй когда уже сам route/shape сделал. |
+| `/autorun` | fpl-skills | Ночной / unattended. Auto-делегирует в `/forge-cycle` если установлен `forgeplan-workflow`; иначе работает standalone. |
+| `/do` | fpl-skills | Интерактивный вариант `/autorun` — пауза на границах фаз для review. |
+
+### Setup checklist для `/forge-cycle`
+
+- [ ] CLI `forgeplan` в `$PATH` (то же требование что для `/fpl-init`)
+- [ ] `.forgeplan/` инициализирован (запусти `/fpl-init` если нет)
+- [ ] Установлен плагин `forgeplan-workflow`
+- [ ] У проекта есть хотя бы черновой `CLAUDE.md` чтобы скилл знал кодовую базу
+
+После первого прогона `/forge-cycle` в `.forgeplan/` появятся реальные PRD + Evidence. Открой проект в [`@forgeplan/web`](FORGEPLAN-WEB-RU.md) чтобы увидеть граф артефактов.
+
+---
+
 ## Когда добавлять плагины
 
 Не ставь всё сразу. Добавляй по мере необходимости:

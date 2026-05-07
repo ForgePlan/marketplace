@@ -182,3 +182,38 @@ When the design tree is exhausted (every branch either resolved or explicitly de
 - ❌ **Letting contradictions slide.** If the new plan conflicts with CONTEXT.md or existing code, surface it on the spot.
 - ❌ **Going deep on leaves before trunk.** Cache TTL doesn't matter if the entity boundaries are still fuzzy.
 - ❌ **Open-ended Socratic prompts.** "What do you think?" wastes time. Provide a recommended answer with each question.
+
+---
+
+## Forgeplan integration
+
+If the `forgeplan` CLI is on `$PATH`, this skill is **forgeplan-aware** — it recommends the right CLI calls but does not invoke them.
+
+### During `/refine <plan>`
+
+Refinement often surfaces decisions worth recording. When you land on one:
+
+```bash
+forgeplan new adr "<key decision>"
+# Body: Context (why this came up) / Decision (what we picked) / Alternatives / Consequences
+forgeplan link ADR-NNN PRD-MMM --relation informs   # link to the parent PRD
+```
+
+If refinement clarifies terminology or invariants but isn't a "decision" — capture as a `note` instead:
+
+```bash
+forgeplan new note "<convention or constraint surfaced during refine>"
+```
+
+### After `/refine` completes
+
+If you refined an existing artifact (PRD/RFC):
+
+```bash
+forgeplan validate PRD-NNN          # confirm MUST sections still pass
+forgeplan reason PRD-NNN            # ADI hypotheses (Deep+: refresh after refinement)
+```
+
+### Want this orchestrated for you?
+
+Install [`forgeplan-workflow`](../../../../plugins/forgeplan-workflow/README.md). `/forge-cycle` includes refinement as the gate between Shape and Build.

@@ -444,3 +444,39 @@ Pipeline:
 - **Don't orchestrate trivial tasks** — if one skill is enough, call it directly.
 - **Don't skip RECALL** — research is often already done.
 - **Don't forget cleanup** — every step must close cleanly (TeamDelete, memory_retain).
+
+---
+
+## Forgeplan integration
+
+If the `forgeplan` CLI is on `$PATH`, this skill is **forgeplan-aware** — interactive variant of `/autorun`. Like `/autorun`, it probes for `forgeplan-workflow` and delegates if found.
+
+### Probe at start
+
+```bash
+command -v forgeplan
+ls ~/.claude/plugins/cache/marketplaces/ForgePlan-marketplace/plugins/forgeplan-workflow 2>/dev/null
+```
+
+| Detected | Behaviour |
+|---|---|
+| `forgeplan-workflow` plugin installed | Delegate to `/forge-cycle "<task>"` for full route → shape → build → evidence → activate. Keeps interactive checkpoints. |
+| `forgeplan` CLI but no `forgeplan-workflow` | Run the standard pipeline (research → sprint → audit) but **insert manual `forgeplan` calls between phases** — `forgeplan route` before research, `forgeplan new prd` before sprint, `forgeplan new evidence + activate` after audit. Pause for user confirmation at each. |
+| Neither | Standard pipeline without artifact lifecycle. Tell the user this once at the start. |
+
+### Why `/do` differs from `/autorun`
+
+- `/do` pauses at every phase boundary for user approval.
+- `/autorun` runs end-to-end without checkpoints.
+- Both are forgeplan-aware in the same way (probe → delegate → fallback).
+
+Use `/do` when you want to **review** the artifact lifecycle steps as they happen (and intervene if needed). Use `/autorun` when you trust the methodology to run unattended.
+
+### Want this orchestrated for you?
+
+If `forgeplan-workflow` is installed, `/do` already delegates to `/forge-cycle`. If not, install it:
+
+```
+/plugin install forgeplan-workflow@ForgePlan-marketplace
+/reload-plugins
+```
