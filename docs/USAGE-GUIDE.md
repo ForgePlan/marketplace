@@ -98,6 +98,7 @@ Mirror of root [README.md](../README.md) "Where to Start?" matrix, with cross-li
 | `/setup` | Interactive wizard — writes `docs/agents/{issue-tracker,build-config,paths,domain}.md`. |
 | `/bootstrap` | Drops the universal CLAUDE.md template (stack-detected) into the current project. |
 | `/team` | Foundation for multi-agent teams — TeamCreate vs sub-agents, file ownership, recipes. |
+| `/migrate-from-dev-toolkit` | Automates the dev-toolkit → fpl-skills migration. Probes state, scans CLAUDE.md for `/dev-toolkit:*` refs, offers Mode A (side-by-side) or Mode B (clean cut), executes the file-level steps. See [MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS.md](MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS.md). |
 
 ### From companion plugins
 

@@ -5,6 +5,25 @@ All notable changes to the ForgePlan Marketplace will be documented in this file
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.1] - 2026-05-07
+
+Automated migration helper.
+
+### Added
+- `fpl-skills` v1.1.0 → **1.1.1** (patch — new utility skill):
+  - **New skill: `migrate-from-dev-toolkit`** (`plugins/fpl-skills/skills/migrate-from-dev-toolkit/SKILL.md`) — automates the dev-toolkit → fpl-skills migration. Probes installed plugins + forgeplan CLI, scans CLAUDE.md and project docs for `/dev-toolkit:*` references, offers Mode A (side-by-side, zero-risk default) or Mode B (clean cut), runs file-level sed-replacements with `.bak.fpl-migrate` backups, tells the user which `/plugin install`/`uninstall` commands to type, verifies post-state.
+- Marketplace catalog metadata.version 1.11.0 → **1.11.1**.
+
+### Changed
+- `docs/MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS.md` and `-RU.md`: added `[!TIP]` block at the top recommending the new skill as the preferred automated path; the manual guide remains canonical for users who want to understand each step.
+- `docs/USAGE-GUIDE.md` and `-RU.md`: Quick Reference table now includes `/migrate-from-dev-toolkit` in the fpl-skills section.
+- `plugins/fpl-skills/README.md` and `-RU.md`: skill table extended with `/migrate-from-dev-toolkit` row (16 → 17 skills).
+
+### Notes
+The skill never invokes `/plugin install` or `/plugin uninstall` itself — those are host-level operations. It orchestrates the file-level work (CLAUDE.md updates, smoke-test prompts) and tells the user which `/plugin` commands to run. This keeps the migration auditable and reversible at every step.
+
+`/dev-toolkit:report` references are deliberately NOT auto-substituted — there's no `/report` command in fpl-skills (the underlying `forge-report` skill is invoked by name). The skill annotates these references with a migration note for human review.
+
 ## [1.11.0] - 2026-05-07
 
 Full feature parity with the legacy `dev-toolkit`. Migration guide can now claim "everything is ported".

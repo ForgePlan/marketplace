@@ -98,6 +98,7 @@ End-to-end развёртка: `forgeplan init`, MCP wiring, CLAUDE.md, docs/age
 | `/setup` | Интерактивный wizard — пишет `docs/agents/{issue-tracker,build-config,paths,domain}.md`. |
 | `/bootstrap` | Универсальный CLAUDE.md template (stack-detected) в текущий проект. |
 | `/team` | Фундамент multi-agent команд — TeamCreate vs sub-agents, file ownership, recipes. |
+| `/migrate-from-dev-toolkit` | Автоматизирует миграцию dev-toolkit → fpl-skills. Probe state, скан CLAUDE.md за `/dev-toolkit:*` ссылками, выбор Mode A (side-by-side) или Mode B (clean cut), исполнение file-level шагов. См. [MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS-RU.md](MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS-RU.md). |
 
 ### Из companion-плагинов
 
