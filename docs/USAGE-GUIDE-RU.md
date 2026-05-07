@@ -87,7 +87,8 @@ End-to-end развёртка: `forgeplan init`, MCP wiring, CLAUDE.md, docs/age
 | `/restore` | Восстановление контекста сессии: ветка, dirty state, recent commits, stash, снипеты памяти. |
 | `/briefing` | Обзор трекера — Orchestra/GitHub Issues/Linear/Jira или локальные TODO. |
 | `/research <тема>` | Глубокое многоагентное исследование (5 параллельно: code · docs · status · references · memory) → `research/reports/`. |
-| `/refine <план>` | Интервью-driven уточнение — терминология, противоречия, lazy-creates ADR. |
+| `/shape <идея>` | Интервью с нуля — превращает сырую идею в черновик PRD через 8-12 направленных вопросов. Передняя сторона жизненного цикла (пишет план ВМЕСТЕ с тобой). |
+| `/refine <план>` | Интервью для уточнения существующего плана — терминология, противоречия, попутные ADR. Шлифует то что уже написано. |
 | `/rfc <action>` | Create/read/update RFC и ADR (каноничная структура, фазы). |
 | `/sprint <фича>` | Wave-based execution со строгим file ownership; auto-detect Tactical/Standard/Deep. |
 | `/audit` | Multi-expert ревью (≥4 ревьюера — logic, architecture, types, security; +ux-reviewer если установлен). |
@@ -362,7 +363,9 @@ forgeplan --version
 
 ## См. также
 
-- [DEVELOPER-JOURNEY-RU.md](DEVELOPER-JOURNEY-RU.md) — narrative-онбординг (стартуй здесь если новенький).
+- [DEVELOPER-JOURNEY-RU.md](DEVELOPER-JOURNEY-RU.md) — повествовательное знакомство (стартуй здесь если новый).
+- [PLAYBOOK-RU.md](PLAYBOOK-RU.md) — какая команда для какой задачи.
+- [METHODOLOGIES-RU.md](METHODOLOGIES-RU.md) — что встроено в forgeplan (BMAD, OpenSpec, ADI, F-G-R, DDR) и что внешнее.
 - [MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS-RU.md](MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS-RU.md) — переход с `dev-toolkit` на `fpl-skills`.
 - [TRACKER-INTEGRATION-RU.md](TRACKER-INTEGRATION-RU.md) — recipes по трекерам (Orchestra, GitHub Issues, Linear, Jira, local).
 - [FORGEPLAN-WEB-RU.md](FORGEPLAN-WEB-RU.md) — `@forgeplan/web` браузерный viewer для time-travel и graph exploration.

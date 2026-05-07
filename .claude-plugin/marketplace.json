@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.12.0"
+    "version": "1.13.0"
   },
   "plugins": [
     {
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
       "description": "Flagship workflow plugin for the ForgePlan ecosystem. 17 engineering skills (research, refine, sprint, audit, diagnose, autorun, /fpl-init bootstrap, forge-report structured reports, /migrate-from-dev-toolkit automation + session helpers) + dev-advisor agent + 4 hooks (safety, test reminder, forge-report auto-trigger). Full feature parity with the legacy dev-toolkit plus 14 additional skills built on forgeplan's artifact lifecycle.",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "author": {
         "name": "ForgePlan"
       },

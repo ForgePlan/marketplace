@@ -5,6 +5,26 @@ All notable changes to the ForgePlan Marketplace will be documented in this file
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.0] - 2026-05-08
+
+Closes the lifecycle front-end gap (`/shape` skill) and adds two strategic docs (`PLAYBOOK`, `METHODOLOGIES`).
+
+### Added
+- `fpl-skills` v1.2.0 → **1.3.0** (minor — new skill + plugin description rework):
+  - **New skill `/shape <idea>`** — interview-from-scratch that turns a fuzzy idea into a draft PRD via 8-12 focused questions. Pairs with `/refine` (which polishes existing plans). Forgeplan-aware: writes the draft as a real PRD via `forgeplan new prd` if the CLI is available; falls back to plain markdown otherwise.
+- `docs/PLAYBOOK.md` and `-RU.md` — use-case matrix mapping situations ("empty project + idea", "brownfield migration", "night-run with full methodology", "interview-driven feature shaping", multi-session team work) to setup commands and workflows. RU version written in plain Russian, not English-translated.
+- `docs/METHODOLOGIES.md` and `-RU.md` — clarifies what's built into the forgeplan CLI (BMAD via `forgeplan validate`, OpenSpec as artifact DAG, ADI in `forgeplan reason`, DDR template for ADRs, R_eff scoring, Evidence Decay, Verification Gate, Pareto Front, Two-tier Factum/Intent extraction for brownfield) vs what's available as separate plugins (SPARC, FPF interactive, Laws of UX) vs what's external or not implemented (Autoresearch, DDD modelling engine, C4 modelling engine, RIPER, AI-SDLC). Includes a quick lookup table.
+
+### Changed
+- Root `README.md` and `README-RU.md`: documentation block now includes 5 entries (Developer Journey, Playbook, Usage Guide, Architecture, Methodologies) — added Playbook and Methodologies. Skill count stat updated to 18.
+- `docs/USAGE-GUIDE.md` and `-RU.md`: Quick Reference adds `/shape` row right before `/refine` (pairs them as front-end + polishing). See-also section adds Playbook and Methodologies.
+- Marketplace catalog metadata.version 1.12.0 → **1.13.0**.
+
+### Notes
+The `/shape` skill closes a real onboarding gap: previously, users with raw ideas had to either write a PRD draft themselves first (then call `/refine`) or commit to `/forge-cycle` automation immediately. Now the front-end interview is explicit and bounded (8-12 questions, capped to avoid drift into refinement territory).
+
+The METHODOLOGIES doc is corrective — earlier guides implied BMAD, OpenSpec, ADI etc. were "missing from the marketplace" but they're built into the forgeplan CLI itself. This doc surfaces them properly.
+
 ## [1.12.0] - 2026-05-07
 
 Closes a real architectural gap — until now, `fpl-skills` skills (`/sprint`, `/audit`, `/research`, `/refine`, `/rfc`, `/diagnose`, `/build`, `/do`, `/restore`, `/briefing`) didn't mention `forgeplan` at all. Documentation promised they "delegate artifact lifecycle to forgeplan" but the skill bodies didn't. After this release, every workflow skill is **forgeplan-aware**: it recommends the right CLI calls (route, new prd/evidence/note/adr, link, score, activate) at the right times and points the user at `/forge-cycle` for full orchestration.

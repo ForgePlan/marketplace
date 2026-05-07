@@ -87,7 +87,8 @@ Mirror of root [README.md](../README.md) "Where to Start?" matrix, with cross-li
 | `/restore` | Session-context recall: branch, dirty state, recent commits, stash, memory snippets. |
 | `/briefing` | Tracker overview — Orchestra/GitHub Issues/Linear/Jira or local TODO files. |
 | `/research <topic>` | Deep multi-agent research (5 parallel: code · docs · status · references · memory) → `research/reports/`. |
-| `/refine <plan>` | Interview-driven refinement — sharpens terminology, surfaces contradictions, lazy-creates ADRs. |
+| `/shape <idea>` | Interview-from-scratch — turns a fuzzy idea into a draft PRD via 8-12 focused questions. Front-end of the lifecycle (write the plan WITH you). |
+| `/refine <plan>` | Interview-driven refinement of an existing plan — sharpens terminology, surfaces contradictions, lazy-creates ADRs. Polish what you already wrote. |
 | `/rfc <action>` | Create/read/update RFCs and ADRs (canonical structure, phase progress). |
 | `/sprint <feature>` | Wave-based execution with strict file ownership; auto-detects Tactical/Standard/Deep depth. |
 | `/audit` | Multi-expert review (≥4 reviewers — logic, architecture, types, security; +ux-reviewer if installed). |
@@ -363,6 +364,8 @@ For specific plugins, replace `fpl-skills` with the plugin name.
 ## See also
 
 - [DEVELOPER-JOURNEY.md](DEVELOPER-JOURNEY.md) — narrative onboarding (start here if you're new).
+- [PLAYBOOK.md](PLAYBOOK.md) — use-case matrix (which command for which scenario).
+- [METHODOLOGIES.md](METHODOLOGIES.md) — what's built into forgeplan (BMAD, OpenSpec, ADI, F-G-R, DDR) vs external.
 - [MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS.md](MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS.md) — moving from `dev-toolkit` to `fpl-skills`.
 - [TRACKER-INTEGRATION.md](TRACKER-INTEGRATION.md) — per-tracker recipes (Orchestra, GitHub Issues, Linear, Jira, local).
 - [FORGEPLAN-WEB.md](FORGEPLAN-WEB.md) — `@forgeplan/web` browser viewer for time-travel and graph exploration.

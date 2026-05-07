@@ -16,9 +16,11 @@
 
 | Гайд | Когда читать |
 |---|---|
-| 🚀 [Developer Journey](docs/DEVELOPER-JOURNEY-RU.md) | **Стартуй здесь** — 30-минутный walkthrough от нуля до первой зашипованной фичи, с 4 persona Day 0 walkthroughs |
-| 📖 [Руководство](docs/USAGE-GUIDE-RU.md) | Reference manual: 16 команд, хуки, правила активации агентов, troubleshooting |
-| 🏛 [Архитектура](docs/ARCHITECTURE-RU.md) | 4-layer ментальная модель — Orchestra (где) · Forgeplan (что) · FPF (как думать) · SPARC (как кодить) |
+| 🚀 [Developer Journey](docs/DEVELOPER-JOURNEY-RU.md) | **Стартуй здесь** — 30-минутное знакомство от нуля до первой зашипованной функциональности, с 4 ролевыми walkthrough |
+| 📋 [Памятка по сценариям](docs/PLAYBOOK-RU.md) | Какую команду запустить под какую задачу (пустой проект, brownfield, ночной прогон, …) |
+| 📖 [Руководство](docs/USAGE-GUIDE-RU.md) | Справочник: 18 команд, хуки, правила активации агентов, разбор частых проблем |
+| 🏛 [Архитектура](docs/ARCHITECTURE-RU.md) | Четырёхслойная ментальная модель — Orchestra (где) · Forgeplan (что) · FPF (как думать) · SPARC (как кодить) |
+| 🔬 [Методологии](docs/METHODOLOGIES-RU.md) | Что встроено в forgeplan (BMAD, OpenSpec, ADI, F-G-R, DDR, Verification Gate) и что внешнее |
 | 🚚 [Миграция: dev-toolkit → fpl-skills](docs/MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS-RU.md) | Безопасный переход (side-by-side или clean-cut, с rollback-планом) |
 | 🗂 [Интеграция трекеров](docs/TRACKER-INTEGRATION-RU.md) | Recipes для Orchestra · GitHub Issues · Linear · Jira · локальный TODO |
 | 🌐 [Forgeplan Web](docs/FORGEPLAN-WEB-RU.md) | Браузерный viewer — time-travel слайдер + граф артефактов + health dashboard |
