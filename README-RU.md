@@ -21,6 +21,7 @@
 | 📖 [Руководство](docs/USAGE-GUIDE-RU.md) | Справочник: 18 команд, хуки, правила активации агентов, разбор частых проблем |
 | 🏛 [Архитектура](docs/ARCHITECTURE-RU.md) | Четырёхслойная ментальная модель — Orchestra (где) · Forgeplan (что) · FPF (как думать) · SPARC (как кодить) |
 | 🔬 [Методологии](docs/METHODOLOGIES-RU.md) | Что встроено в forgeplan (BMAD, OpenSpec, ADI, F-G-R, DDR, Verification Gate) и что внешнее |
+| 🔁 [Autoresearch — интеграция](docs/AUTORESEARCH-INTEGRATION-RU.md) | Сочетание `uditgoenka/autoresearch` (циклы под мерой) с жизненным циклом `/forge-cycle` |
 | 🚚 [Миграция: dev-toolkit → fpl-skills](docs/MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS-RU.md) | Безопасный переход (side-by-side или clean-cut, с rollback-планом) |
 | 🗂 [Интеграция трекеров](docs/TRACKER-INTEGRATION-RU.md) | Recipes для Orchestra · GitHub Issues · Linear · Jira · локальный TODO |
 | 🌐 [Forgeplan Web](docs/FORGEPLAN-WEB-RU.md) | Браузерный viewer — time-travel слайдер + граф артефактов + health dashboard |

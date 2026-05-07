@@ -224,6 +224,56 @@ brew install ForgePlan/tap/forgeplan
 
 ---
 
+## Сценарий — Итерации под мерой (autoresearch + ForgePlan)
+
+**Что**: у задачи есть чёткая механическая метрика (число производительности, доля тестов, размер сборки, число security findings), и нужен целенаправленный цикл который улучшает метрику до цели — а результат фиксируется как полноценное Evidence.
+
+**Настройка** (autoresearch — отдельный маркетплейс):
+```
+/plugin marketplace add uditgoenka/autoresearch
+/plugin install autoresearch@uditgoenka-autoresearch
+/plugin install fpl-skills@ForgePlan-marketplace
+/plugin install forgeplan-workflow@ForgePlan-marketplace
+/reload-plugins
+```
+
+**Три способа** (полный гайд: [AUTORESEARCH-INTEGRATION-RU.md](AUTORESEARCH-INTEGRATION-RU.md)):
+
+### Способ A — Autoresearch как фаза Build в `/forge-cycle`
+
+```
+/forge-cycle "снизить p95 чекаута до 200мс"
+  → Шаг 4 — shape: PRD с критерием успеха «p95 < 200мс»
+  → Шаг 5 — BUILD передаётся в /autoresearch:plan (цикл крутится без участия)
+  → Шаг 7 — evidence: forgeplan new evidence с финальным p95
+              (verdict: supports, congruence_level: 3, evidence_type: measurement)
+  → Шаг 8 — активация когда R_eff > 0
+```
+
+Критерий успеха PRD **и есть** метрика autoresearch. Финальное состояние цикла попадает в высокоуверенное Evidence (CL3 — тот же контекст).
+
+### Способ B — Autoresearch отдельно → Note + Evidence
+
+Для лёгких улучшений без полного PRD:
+
+```
+/autoresearch:debug "починить нестабильный auth-тест"
+forgeplan new note "починен нестабильный auth-тест — гонка в моке токена"
+forgeplan new evidence "/autoresearch:debug 47 итераций; финал 100/100; sha=abc123"
+```
+
+### Способ C — Security-аудит → Evidence
+
+`/autoresearch:security` выдаёт структурный отчёт напрямую пригодный как Evidence:
+
+```
+/autoresearch:security        # только-чтение, или --fix для подтверждённых Critical/High
+forgeplan new evidence "<scope>: autoresearch:security — найдено 2 HIGH, 4 MED, 1 HIGH автоматически исправлено"
+forgeplan link EVID-NNN ADR-MMM --relation informs
+```
+
+---
+
 ## Сценарий 7 — Командная работа через несколько сессий
 
 **Что**: вы работаете командой через разные сессии. Задачи в Orchestra. Каждое утро — разбор входящих сигналов.

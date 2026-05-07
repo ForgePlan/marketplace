@@ -5,6 +5,25 @@ All notable changes to the ForgePlan Marketplace will be documented in this file
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.15.0] - 2026-05-08
+
+Reframed `autoresearch` (the metric-driven loop plugin by Udit Goenka) from "external mention" to **recommended companion** with a proper integration guide. Earlier docs treated it as a distant reference; in reality it composes naturally with `/forge-cycle` and the brownfield extraction skills.
+
+### Added
+- `docs/AUTORESEARCH-INTEGRATION.md` and `-RU.md` (~280 lines each) — full integration guide covering the autoresearch v2.0.03 command set (`plan`, `debug`, `security`, `predict`, `reason`), three integration patterns (autoresearch as Build phase of `/forge-cycle`; autoresearch standalone → Note + Evidence; security audit → Evidence), brownfield mapping (which extraction skills delegate to which autoresearch command), setup instructions, decision matrix, anti-patterns. RU version in plain Russian.
+
+### Changed
+- `docs/METHODOLOGIES.md` and `-RU.md`: Autoresearch promoted from "External" section to a new "Recommended companion" section. Quick lookup table updated with link to the integration guide.
+- `docs/PLAYBOOK.md` and `-RU.md`: new use-case "Metric-driven iteration (autoresearch + ForgePlan)" with three patterns showing how PRD success criteria become autoresearch metrics, results captured as CL3 Evidence with `evidence_type: measurement`.
+- Root `README.md` and `README-RU.md`: Documentation block extended to 6 entries (added "Autoresearch integration" row).
+- `forgeplan-brownfield-pack` v1.1.0 → **1.2.0** (patch — description refreshed to mention autoresearch integration; no skill changes).
+- Marketplace catalog metadata.version 1.14.0 → **1.15.0**.
+
+### Notes
+The earlier framing in METHODOLOGIES called autoresearch "an external tool we don't implement". Technically true, but strategically misleading — the brownfield-pack `integration/autoresearch-hooks.md` already maps each of our 12 extraction skills to autoresearch commands, and autoresearch's loop pattern is exactly what `/forge-cycle` Build phase needs when a mechanical metric exists. This release surfaces that.
+
+Reframing matters because users who read METHODOLOGIES decide what to install. "External, not in our ecosystem" → likely skip. "Recommended companion, here's how it composes" → likely try.
+
 ## [1.14.0] - 2026-05-08
 
 Brownfield extraction pack ported from upstream forgeplan repo. The 12-skill methodology that's been ready in `/docs/brownfield-extraction-package/` is now installable.

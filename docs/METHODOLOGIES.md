@@ -143,13 +143,30 @@ Activates `ux-reviewer` automatically inside `/audit` when the changeset include
 
 ---
 
+## Recommended companion (separate marketplace, plays well with us)
+
+### Autoresearch — metric-driven iterative loop
+
+**What it is**: a Claude Code (and OpenCode / Codex) skill plugin by Udit Goenka, based on [Karpathy's autoresearch](https://github.com/karpathy/autoresearch). Turns any task with a measurable metric into a goal-directed loop: **Modify → Verify → Keep/Discard → Repeat**. Five commands in v2.0.03: `plan`, `debug`, `security`, `predict`, `reason`.
+
+**Source**: [github.com/uditgoenka/autoresearch](https://github.com/uditgoenka/autoresearch) — separate marketplace, MIT licence.
+
+**How it composes with us**:
+- `/forge-cycle` Build phase can delegate to `/autoresearch:plan` when the task has a clear mechanical metric (perf, test rate, bundle size, security findings)
+- Autoresearch results captured as `forgeplan new evidence` with `congruence_level: 3` + `evidence_type: measurement` — high-quality CL3 input to R_eff
+- Brownfield extraction skills (intent-inferrer, hypothesis-triangulator, canonical-reproducer) can use autoresearch primitives as their loop engine
+
+**Integration guide**: [`docs/AUTORESEARCH-INTEGRATION.md`](AUTORESEARCH-INTEGRATION.md) — three integration patterns, decision matrix, anti-patterns, setup.
+
+**Install**:
+```
+/plugin marketplace add uditgoenka/autoresearch
+/plugin install autoresearch@uditgoenka-autoresearch
+```
+
+---
+
 ## External (referenced but not implemented in this ecosystem)
-
-### Autoresearch
-
-**What it is**: an automated research tool published in the anthropic-marketplace (`autoresearch@anthropic-marketplace`).
-
-**Status in our ecosystem**: `forgeplan-brownfield-pack` references hooks for Autoresearch (`integration/autoresearch-hooks.md`) and a planned mapping (`autoresearch-to-forge.yaml`). Forgeplan itself does not implement automated research — it integrates with Autoresearch when you install it separately.
 
 ### DDD (Domain-Driven Design)
 
@@ -217,7 +234,7 @@ If you want to read the original BMAD spec → see `sources/BMAD-METHOD/` in the
 | Laws of UX | `laws-of-ux` plugin | `/ux-review`, `/ux-law <name>` |
 | DDD | `agents-pro` + brownfield pack | Advisory only — no engine |
 | C4 | brownfield pack mapping | YAML conversion only |
-| Autoresearch | external (anthropic-marketplace) | Install separately |
+| Autoresearch | external companion (`uditgoenka/autoresearch`) | Install separately; see [AUTORESEARCH-INTEGRATION.md](AUTORESEARCH-INTEGRATION.md) for integration patterns |
 | RIPER | NOT in ecosystem | Manual — chain `/research` → `/refine` → `/rfc` → `/sprint` → `/audit` |
 | AI-SDLC | NOT named, approximated by `/autorun` | `/autorun "<task>"` |
 
