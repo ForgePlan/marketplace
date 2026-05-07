@@ -230,18 +230,44 @@ spawn a sub-session — this skill IS the orchestrator):
 
 1. Run the stack-detection probes from
    [`bootstrap`](../bootstrap/SKILL.md) step 3.
-2. Render the universal template
-   (`../bootstrap/resources/templates/CLAUDE.md.template`) with the
-   detected `{{VAR}}`s and `{{IF_*}}` conditions.
-3. Write `./CLAUDE.md`.
+2. **Read the template file** at
+   `../bootstrap/resources/templates/CLAUDE.md.template`. This is
+   **mandatory**, not aspirational:
+   - Use `Read` to load the template literally. Don't summarize, don't
+     paraphrase, don't write a "better version from memory".
+   - If the file doesn't exist, **abort step 7** and surface the path
+     you tried. Do not invent a replacement CLAUDE.md.
+3. Substitute placeholders in the loaded text:
+   - Replace every `{{VAR}}` with the value detected in step 7.1.
+   - For each `{{IF_X}}…{{/IF_X}}` block: keep inner content if `X` is
+     true (e.g. `IF_LANG_TS` when TypeScript was detected), drop the
+     entire block (markers included) if false.
+   - Inline `{{IF_X}}…{{/IF_X}}` markers (used inside list items and
+     tables for one-line additions) follow the same rule.
+   - Replace `<PROJECT_NAME>` with `basename "$PWD"`.
+   - Anything you can't determine → leave the placeholder visible
+     (`{{VAR}}`) with a HTML comment line above it:
+     `<!-- /fpl-init: could not detect — fill manually -->`.
+     **Never guess** — a visible placeholder gets fixed once; a wrong
+     guess gets propagated.
+4. Write the rendered output verbatim to `./CLAUDE.md`. The structure
+   (red-lines section first, non-goals last, the section ordering) is
+   load-bearing — see `bootstrap/resources/guides/CLAUDE-MD-GUIDE.ru.md`
+   for why. Do not reorder, omit, or "improve" sections.
 
-Use **append mode** if `CLAUDE.md` exists but is missing the standard
-sections — the user may have a custom CLAUDE.md they care about. Default
-to append, never replace.
+Use **append mode** if `CLAUDE.md` already exists — the user may have a
+custom file they care about. Default to append, never replace. Append
+means adding a `## Reference` block pointing to fpl-skills, not pasting
+the whole template.
 
 Don't copy the optional `guides/` folder unless the user explicitly asked
 for it — that's `bootstrap`'s decision and most projects don't need
 those Russian author-guides.
+
+**Anti-pattern to avoid**: writing a thin 60-line CLAUDE.md "from
+scratch" because the template seems too verbose. The verbosity is the
+point — the U-curve attention model needs primacy/recency zones to be
+populated. A thin file silently strips guard rails.
 
 ### 8. Run `/setup` flow
 

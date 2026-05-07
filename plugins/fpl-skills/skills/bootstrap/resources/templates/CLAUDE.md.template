@@ -2,168 +2,446 @@
 
 <!-- Sections marked {{IF_*}} ... {{/IF_*}} are filled or removed by /bootstrap
      based on project stack detection. Single-line {{VAR}} placeholders are
-     filled directly. Edit freely after generation. -->
+     filled directly. Edit freely after generation.
+
+     Structure follows U-curve attention: primacy zone (red lines, project,
+     session start) in lines 1-80, reference zone (rules, tables) in 80-280,
+     recency zone (smoke test, non-goals) in 280-400. Keep total ≤400 lines.
+     See plugins/fpl-skills/skills/bootstrap/resources/guides/CLAUDE-MD-GUIDE.ru.md
+     for the full rationale. -->
 
 <One or two sentences: what this project is and what problem it solves.>
 
----
-
-## Stack
-
-- **Language**: {{LANG}}
-- **Package manager**: {{PKG_MANAGER}}
-- **Test framework**: {{TEST_FRAMEWORK}}
-- **Build/run**: {{BUILD_CMD}}
-
-{{IF_MONOREPO}}
-- **Workspace**: monorepo ({{WORKSPACE_TOOL}}). Per-workspace CLAUDE.md may exist under `apps/*/` and `packages/*/` — check both root and workspace conventions.
-{{/IF_MONOREPO}}
+Language: code/identifiers/commits in **English** (Conventional Commits).
+Russian acceptable in commit body and this file when it adds clarity.
 
 ---
 
 ## 🔴 Red lines
 
-- **Destructive git** (`push --force`, `reset --hard`, deleting shared branches/tags) — only on explicit user request.
-- **No secrets in git** (`.env`, tokens, keys, certs). Run `git status` before `git add` to confirm.
-- **No bypass of branch protection** — `main` and `dev` (or whichever default branch) are protected; merge only via PR.
-- **No rewriting other people's history** — if `git log` shows commits not yours, no `rebase` / `amend` / `reset` on that range.
-- **No `forgeplan` artifact direct edits** — `.forgeplan/{prds,rfcs,adrs}/*.md` are managed by the CLI/MCP only (ADR-003 from forgeplan).
-- **No long/expensive operations** (deploy, DB migrations, mass network calls, package publish) without explicit confirmation.
-{{IF_PUBLIC_PACKAGE}}
-- **No `{{PUBLISH_CMD}}` without confirmation** — this is a published package; releases go through the changelog/version flow.
+<!-- Cap at 7. Each line is an irreversible operation that needs explicit
+     "yes" in the current session. Don't dilute with non-critical rules. -->
+
+- **Destructive git** (`push --force`, `reset --hard`, branch/tag deletion, `rebase -i` on shared history) — only after explicit confirmation in the current session.
+- **No secrets in git** — `.env`, tokens, API keys, certificates. Run `git status` before `git add` and confirm no sensitive files staged.
+- **No bypass of branch protection** — `main` (and `dev` if used) merges only via PR. No direct push.
+- **No `forgeplan` artifact direct edits** — `.forgeplan/{prds,rfcs,adrs,specs,evidence,notes}/*.md` are managed by the CLI/MCP only. Direct `Edit`/`Write`/`sed` desyncs the LanceDB index and state machine. Use `forgeplan update`/`new`/`link`/`activate`. Recovery: `forgeplan scan-import` rebuilds the index from markdown.
+- **No long/expensive operations** (deploy, DB migrations, mass network/LLM calls, package publish) without explicit confirmation.
+{{IF_PUBLIC_PACKAGE}}- **No `{{PUBLISH_CMD}}` without confirmation** — this is a published package; releases go through changelog/version flow. Once published, a version cannot be deleted (only deprecated).
 {{/IF_PUBLIC_PACKAGE}}
+- **No rewriting other people's history** — if `git log` shows commits not yours in a range, no `rebase`/`amend`/`reset` over it.
 
 ---
 
-## ForgePlan workflow
+## What this project is
 
-This project uses [forgeplan](https://github.com/ForgePlan/forgeplan) for decision artifacts (PRD/RFC/ADR/Evidence) with R_eff (effective reliability) scoring.
+- **Type**: <one-liner — service / library / monorepo / cli>.
+- **Stack**: {{LANG}} · {{PKG_MANAGER}} · {{TEST_FRAMEWORK}}{{IF_MONOREPO}} · {{WORKSPACE_TOOL}}{{/IF_MONOREPO}}.
+- **Runtime**: {{MIN_RUNTIME}}.
+- **Status**: <draft / alpha / beta / GA — current state and what's next>.
 
-| Phase | Command | What it does |
+For deeper architecture context see `docs/` and `.forgeplan/adrs/` (auto-loaded relevant ADRs through `@imports` below).
+
+---
+
+## Session start
+
+Run in parallel at the start of a session — three sources of truth, never one:
+
+```bash
+forgeplan health                       # active artifacts, blind spots, stubs
+git status && git log --oneline -5     # local state and recent direction
+ls .forgeplan/adrs/                    # decisions in force
+```
+
+**Don't read at start** (open only when relevant):
+- Lockfiles ({{LOCKFILE}}) — only during dependency debugging.
+- Generated artifacts (`dist/`, `target/`, `build/`).
+- Full `CHANGELOG` / git history beyond the last 10–15 commits.
+- `guides/*.md` — open by topic, not "just in case".
+
+**Re-warm triggers** (mid-session top-ups):
+- Switching to a new package/area → read its `package.json` / module `README.md`.
+- Touching release/CI flow → read `.github/workflows/` and any `guides/GIT-FLOW*.md`.
+- Touching forgeplan artifacts → read the latest `forgeplan get <ID>` output, not the file.
+
+**Sufficiency criterion**: you can name (a) the active feature/PRD in flight, (b) the build/test command for the area you're touching, (c) the most recent ADR that applies. If you can't — re-warm before acting.
+
+`MEMORY.md` is auto-loaded every turn — no explicit `memory_recall` needed for the index. Call `memory_recall` only for records beyond what's already in scope.
+
+---
+
+## Forgeplan — single source of truth for decisions
+
+`.forgeplan/` holds artifacts (PRD/RFC/ADR/Spec/Evidence/Note) with lifecycle (`draft → active → superseded/deprecated/stale`) and R_eff scoring. CLI: `forgeplan`. MCP: declared in `.mcp.json`.
+
+```
+OBSERVE → ROUTE → SHAPE → BUILD → PROVE → SHIP
+```
+
+| Phase | Action | Command |
 |---|---|---|
-| Route | `forgeplan route "<task>"` | Determine depth (Tactical/Standard/Deep/Critical) |
-| Shape | `forgeplan new <kind> "<title>"` | Create artifact (prd/rfc/adr/spec/...) |
-| Validate | `forgeplan validate` | Check MUST sections, quality gates |
-| Reason | `forgeplan reason <id>` | (Deep+) Force 3+ hypotheses (FPF) |
-| Score | `forgeplan score <id>` | R_eff = weakest-link evidence score |
-| Activate | `forgeplan activate <id>` | Move draft → active (validation gate) |
-| Health | `forgeplan health` | Blind spots, orphans, active dashboard |
+| Observe | restore context, find blind spots | `forgeplan health` |
+| Route | decide depth | `forgeplan route "<task>"` |
+| Shape | create + validate artifacts | `forgeplan new <kind> "<title>"`; `forgeplan validate <id>` |
+| Reason | ADI hypotheses (Standard+, mandatory Deep+) | `forgeplan reason <id>` |
+| Build | code + tests | (per stack — see below) |
+| Prove | evidence + R_eff | `forgeplan new evidence "<desc>"`; `forgeplan link`; `forgeplan score` |
+| Ship | activate + PR + merge | `forgeplan activate <id>`; `gh pr create` |
 
-**Artifacts live in `.forgeplan/`** — never edit directly, use the CLI/MCP. Full methodology: see installed `forgeplan-workflow` plugin or [forgeplan docs](https://github.com/ForgePlan/forgeplan).
+**Depth**: Tactical (no artifact) / Standard (PRD+RFC) / Deep (PRD+Spec+RFC+ADR) / Critical (Epic + adversarial review).
 
-Run `forgeplan health` at the start of each working session — it surfaces stale artifacts and blind spots before they cost time.
+**Hint protocol** — every `forgeplan` output ends with one marker. Execute verbatim, don't paraphrase:
+
+| Marker | Meaning |
+|---|---|
+| `Next: <command>` | Run as-is for the next step. |
+| `Or: <command>` | Use only if `Next:` blocks. |
+| `Wait: <condition>` | Retry after condition holds. |
+| `Done.` | Step complete; move on. |
+| `Fix: <command>` | Error remediation, paired with `Error:`. |
+
+JSON consumers read `_next_action`. List/tree `--json` puts the hint on stderr (bare array on stdout for jq compat).
+
+**R_eff math**: `R_eff = min(evidence_scores)` — weakest link, **never** average. Each evidence gets `verdict_score - CL_penalty`, where Congruence Level (CL3 same-context = 0.0; CL2 related = 0.1; CL1 external = 0.4; CL0 opposed = 0.9). Active artifact with no evidence linked → R_eff = 0.0 by definition.
+
+### Routing — depth decision
+
+| Complexity | Depth | Artifacts | ADI required |
+|---|---|---|:---:|
+| Trivial, reversible within a day | Tactical | nothing or Note | — |
+| Feature 1–3 days, has a choice | Standard | PRD → RFC | recommended |
+| Irreversible, 1–2 weeks | Deep | PRD → Spec → RFC → ADR | **yes** |
+| Cross-team, strategy | Critical | Epic → PRD[] → Spec[] → RFC[] → ADR[] | **yes + adversarial review** |
+
+Pipeline is a guideline, not bureaucracy — don't create all 5 artifact kinds for every task. The "5 questions" filter:
+
+| Question | Artifact | Skip if |
+|---|---|---|
+| WHAT and why? | PRD / Brief | bug-fix, refactor |
+| HOW EXACTLY does it work? | Spec | no API / data model changes |
+| HOW DO WE BUILD IT? | RFC | architecture is obvious, < 1 day |
+| WHY exactly this? | ADR | decision is trivial and reversible |
+| GROUPING? | Epic | task is a single PRD |
+
+### Artifact IDs (slug + assigned number)
+
+Two-layer identity. **slug** (`prd-auth-system`) is canonical, immutable, written by `forgeplan new`. **Display number** (`PRD-074`) is assigned by CI on merge to the default branch. Until then the artifact shows as `PRD-74?` (the `?` marker = "predicted, not final").
+
+Three rules for commits and refs:
+
+1. **Before merge — slug only in `Refs:`**. Predicted/displayed numbers must not appear in commit messages.
+   - ✅ `Refs: prd-auth-system, FR-001..003`
+   - ❌ `Refs: PRD-74?, FR-001..003`
+   - ❌ `Refs: PRD-074, FR-001..003` (broken pointer — number isn't assigned yet)
+2. **After merge — both formats work**: `Refs: PRD-074` or `Refs: prd-auth-system`. The resolver maps both to the same artifact.
+3. **`assigned_number` is write-once**, set only by the CI bot. Manual edits to `assigned_number` in frontmatter violate the contract — the same red-line as direct artifact edits.
+
+`forgeplan new` warns if a slug already exists in the default branch and proposes an alt-slug.
+
+### EvidencePack — structured fields (mandatory for R_eff)
+
+Without these fields the parser sets CL0 (penalty 0.9) and score = 0:
+
+```markdown
+## Structured Fields
+
+verdict: supports            # supports / weakens / refutes
+congruence_level: 3          # CL3 = same context (best) … CL0 = opposed (worst)
+evidence_type: measurement   # measurement / test / benchmark / audit
+```
+
+### Lifecycle commands
+
+```bash
+forgeplan review <id>                   # pre-activation readiness check
+forgeplan activate <id>                 # draft → active (validation gate)
+forgeplan supersede <id> --by <new-id>  # active → superseded (terminal)
+forgeplan deprecate <id> --reason "..." # → deprecated (terminal)
+forgeplan renew <id> --reason --until   # stale → active (extend valid_until)
+forgeplan reopen <id> --reason          # stale/active → deprecated + new draft
+```
+
+State machine: `draft → active → {superseded | deprecated | stale}`; `stale → {active via renew | deprecated + new draft via reopen}`. `superseded` and `deprecated` are terminal.
+
+### Standard flow (Standard depth, end-to-end)
+
+```bash
+forgeplan health                                   # observe
+forgeplan route "implement <feature description>"  # decide depth
+forgeplan new prd "<title>"                        # shape
+$EDITOR .forgeplan/prds/PRD-NNN-*.md               # fill MUST sections
+forgeplan validate PRD-NNN                         # 0 MUST errors
+forgeplan reason PRD-NNN                           # ADI (Standard+)
+# ...write code + tests...
+forgeplan new evidence "PRD-NNN: <verification>"
+$EDITOR .forgeplan/evidence/EVID-MMM-*.md          # fill ## Structured Fields!
+forgeplan link EVID-MMM PRD-NNN --relation informs
+forgeplan score PRD-NNN                            # R_eff > 0?
+forgeplan activate PRD-NNN                         # draft → active
+gh pr create --base main                           # PR body: "Refs: prd-<slug>"
+```
+
+### Multi-agent (`dispatch → claim → release`)
+
+When 2–5 sub-agents work in the same workspace:
+
+```bash
+forgeplan dispatch --agents N --json   # planner: conflict-free buckets
+forgeplan claim <id> --agent <name> --ttl-minutes 30
+# ...work...
+forgeplan release <id>
+forgeplan claims                       # who's holding what right now
+```
+
+`dispatch` returns a plan; the **main thread / orchestrator** spawns workers via `Agent({subagent_type, prompt})` (multiple `Agent` blocks in one message run in parallel). `SendMessage` is **not** a spawner — it only addresses already-running processes.
+
+### Validator section aliases
+
+The validator accepts these synonyms when checking MUST sections:
+
+- `## Problem` = `## Motivation` = `## Problem Statement` = `## Background`
+- `## Goals` = `## Success Criteria` = `## Objectives`
+- `## Non-Goals` = `## Out of Scope` = `## Product Scope`
+- `## Related` = `## Related Artifacts` = `## Dependencies`
+- `## Target Users` = `## Target Audience` = `## Users`
 
 ---
 
-## Workflow skills (fpl-skills)
+## Permission zones (Forge Mode)
 
-| Command | When to use |
+| Zone | What | Mode | Examples |
+|---|---|---|---|
+| 🟢 Green | read-only, build, test, `forgeplan` | auto-allow | `{{TEST_CMD}}`, `forgeplan health`, `git status` |
+| 🟡 Yellow | files, `git add`/`commit` | acceptEdits | `Write`, `Edit`, `git commit` |
+| 🔴 Red | irreversible | **block via hook** | `git push --force`, `rm -rf /`, `{{PUBLISH_CMD}}`, `DROP TABLE` |
+
+Wire a `.claude/hooks/safety-hook.sh` that returns exit code 2 on 🔴 patterns. Whitelist exceptions in `.claude/settings.local.json`. `/fpl-init` offers to add a default safety hook on bootstrap.
+
+---
+
+## Agent teams (when to delegate)
+
+Spawn sub-agents instead of doing the work in the main thread when:
+
+- **Independent investigations**: research, code search, log analysis. Multiple `Agent` calls in one message run in parallel.
+- **Wave-based execution** (`/sprint`): each wave's tasks are claimed by separate agents with `addBlockedBy` declaring inter-wave deps.
+- **Adversarial review** (`/audit`): minimum 4 reviewers (logic, architecture, types, security) — must find issues, 0 findings = re-review.
+- **Long-running work** with checkpoints — `/do` (interactive) or `/autorun` (overnight).
+
+Agent packs ship subagent types ready to use:
+
+| Pack | What it gives |
 |---|---|
-| `/restore` | Start of a new session — recover context (git + memory). |
-| `/briefing` | Daily — overdue tasks, mentions, today's focus. |
-| `/research <topic>` | Unfamiliar area, gap analysis, "what do we have on X". |
-| `/refine <plan>` | Plan is rough — sharpen terminology, surface contradictions. |
+| `agents-core` | 11 baseline subagents — debugger, code-reviewer, planner, tester, researcher… |
+| `agents-domain` | 11 stack specialists — typescript-pro, golang-pro, nextjs, fullstack… |
+| `agents-pro` | 21 expert agents — security, architecture, prompt engineering, ML… |
+| `agents-github` | 7 GitHub agents — PR/issue/release/workflow management |
+| `agents-sparc` | 5 SPARC-methodology agents — Specification → Pseudocode → Architecture → Refinement → Completion |
+
+Install only the packs you actually use. `/audit`, `/sprint`, `/research` will pick up whichever packs are present.
+
+---
+
+## fpl-skills — workflow commands
+
+| Command | Use case |
+|---|---|
+| `/restore` | Start of a new session — recover context from git + memory. |
+| `/briefing` | Daily — open tasks, mentions, today's focus from your tracker. |
+| `/research <topic>` | Unfamiliar area, gap analysis, "what do we already have on X". |
+| `/refine <plan>` | Plan is rough — sharpen terminology, surface contradictions, lazy-create CONTEXT.md/ADRs. |
 | `/rfc create` | Formalise a refined plan into a structured RFC. |
 | `/sprint <feature>` | Multi-wave implementation with strict file ownership. |
-| `/audit` | Multi-expert review of code/architecture (≥4 reviewers). |
-| `/diagnose <bug>` | Hard / non-deterministic / performance bug. |
+| `/audit` | Multi-expert review (≥4 reviewers — logic, architecture, types, security). |
+| `/diagnose <bug>` | Hard / non-deterministic / performance bug — 6-phase debug loop. |
 | `/autorun <task>` | Overnight or unattended runs (no approval pauses). |
 | `/do <task>` | Interactive variant of /autorun (pauses at checkpoints). |
+| `/setup` | (Re-)run the docs/agents/ wizard when project structure changes. |
+
+`/fpl-init` already ran on this project — that's why you're seeing this CLAUDE.md.
 
 ---
 
 ## Project context (auto-loaded)
 
+@docs/agents/issue-tracker.md
 @docs/agents/build-config.md
 @docs/agents/paths.md
-@docs/agents/issue-tracker.md
+@docs/agents/domain.md
 @CONTEXT.md
 
-These files are written by `/setup`. Edit them when project structure changes — fpl-skills will pick up the changes automatically.
-
----
-
-## Session start checklist
-
-1. `forgeplan health` — see active artifacts, blind spots.
-2. `git status && git log --oneline -5` — see local state.
-3. (Optional) `/restore` if returning after a long break.
-4. (Optional) `/briefing` for tracker overview.
-
-**Don't read at start** (only when relevant):
-- Lockfiles ({{LOCKFILE}})
-- Generated artifacts (`dist/`, `target/`, `build/`)
-- Full CHANGELOG / git history beyond last 10–15 commits
+These files are written by `/setup`. Edit them when project structure changes — fpl-skills picks up the changes automatically.
 
 ---
 
 ## Build & test
 
 ```bash
-# Install
-{{INSTALL_CMD}}
-
-# Build
-{{BUILD_CMD}}
-
-# Test
-{{TEST_CMD}}
-
-# Lint / typecheck
-{{LINT_CMD}}
+{{INSTALL_CMD}}     # install
+{{BUILD_CMD}}       # build
+{{TEST_CMD}}        # test
+{{LINT_CMD}}        # lint / typecheck
 ```
 
-Run the **full** check before commit, not just the happy path.
+Run the **full** check (build + test + lint) before commit, not the happy path only.
 
-{{IF_PRE_COMMIT_HOOK}}
-Pre-commit hook runs lint + tests. Don't skip with `--no-verify` unless explicitly asked.
+{{IF_PRE_COMMIT_HOOK}}Pre-commit hook runs lint + tests automatically. Don't skip with `--no-verify` unless explicitly asked — investigate what failed instead.
 {{/IF_PRE_COMMIT_HOOK}}
 
 ---
 
 ## Git workflow
 
-- **Branches**: `feature/*` / `fix/*` / `docs/*` → `dev` (or `develop`) → `main`.
-- **Commits** — Conventional Commits (`feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`). Body in present tense, _why_ not _what_. Reference artifact IDs: `Refs: PRD-NNN, RFC-NNN`.
-- **PR titles** include artifact ID when applicable: `[PRD-042] add OAuth2`.
-- **Merge**: merge commit (NOT squash) — preserves full history.
-- **After release `release/v* → main`**: open `chore/sync-main-to-dev` PR to keep dev current.
+- **Branches**: `feat/*` / `fix/*` / `chore/*` / `docs/*` → `dev` (or default branch) → `main`. No direct commits to `main`.
+- **Commits** — Conventional Commits (`feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`). Body in imperative present tense, _why_ over _what_. Reference artifact IDs: `Refs: PRD-NNN, ADR-NNN`.
+- **PR titles**: include artifact ID where applicable: `feat(scope): add OAuth2 (PRD-042)`.
+- **Merge strategy**: merge commit (preserves history). Squash only when explicitly requested for noisy WIP branches.
+- **No `git add .` / `git add -A`** — stage specific files. Prevents accidentally committing `.env`, lockfile changes, or stray editor files.
+- **Sync after release**: when `release/v* → main` merges, open `chore/sync-main-to-dev` to keep `dev` current.
 
 ---
 
 ## Code conventions
 
 - **Naming**: files `kebab-case`{{IF_LANG_TS}}, identifiers `camelCase`, types/classes `PascalCase`{{/IF_LANG_TS}}{{IF_LANG_PY}}, identifiers `snake_case`, classes `PascalCase`{{/IF_LANG_PY}}{{IF_LANG_RS}}, identifiers `snake_case`, types `PascalCase`{{/IF_LANG_RS}}{{IF_LANG_GO}}, identifiers `camelCase` for unexported / `PascalCase` for exported{{/IF_LANG_GO}}.
-- **Comments**: only where the _why_ isn't obvious from the code. Don't restate _what_ — the code shows that.
-- **Tests**: every public function gets at least a happy-path test plus the edge cases that matter for its callers.
-{{IF_LANG_TS}}
-- **TypeScript**: strict mode on; no `any` (use `unknown` + narrowing); no `as` casts unless verified at a boundary; `!` non-null assertions only after a guard.
+- **Comments**: only where _why_ isn't obvious from the code. Don't restate _what_ — well-named identifiers do that. No comments on tasks/PRs ("added for #123") — that belongs in the commit message.
+- **Tests**: every public function gets at least a happy-path test plus the edge cases that matter for callers.
+- **Errors**: validate at boundaries (user input, external APIs). Trust internal code — don't add defensive checks for impossible states.
+- **No premature abstraction**: three similar lines beat a wrong abstraction. Wait until you have three real call sites before extracting.
+
+{{IF_LANG_TS}}### TypeScript
+
+- Strict mode on (`strict: true` in `tsconfig.json`).
+- No `any` — use `unknown` + narrowing. If `any` is unavoidable, comment why.
+- No `as` casts unless verified at a system boundary.
+- `!` non-null assertions only after a guard expression.
+- ESM only when `"type": "module"` — no `require()`. File extensions optional under `moduleResolution: bundler`.
 {{/IF_LANG_TS}}
-{{IF_LANG_RS}}
-- **Rust**: `cargo fmt` + `cargo check` + `cargo test` + `cargo clippy -- -D warnings` before every commit (in that order).
+
+{{IF_LANG_RS}}### Rust
+
+- `cargo fmt` + `cargo check` + `cargo test` + `cargo clippy -- -D warnings` before every commit (in that order).
+- Prefer `?` over `.unwrap()` in non-test code. `.unwrap()` requires a comment when used.
+- Lifetimes: explicit when the elision rules don't disambiguate.
 {{/IF_LANG_RS}}
-{{IF_LANG_PY}}
-- **Python**: type hints on all public APIs; `mypy --strict` clean; format with `ruff format` (or `black`).
+
+{{IF_LANG_PY}}### Python
+
+- Type hints on all public APIs.
+- `mypy --strict` clean before commit.
+- Format with `ruff format` (or `black` if the project predates ruff).
+- `ruff check` for lint.
 {{/IF_LANG_PY}}
-{{IF_LANG_GO}}
-- **Go**: `gofmt` + `go vet` + `go test ./...` before every commit; `golangci-lint run` if configured.
+
+{{IF_LANG_GO}}### Go
+
+- `gofmt` + `go vet` + `go test ./...` before every commit.
+- `golangci-lint run` if configured in `.golangci.yml`.
+- Explicit error checks — no `_ = ...` for errors without a comment.
 {{/IF_LANG_GO}}
+
+---
+
+## AI-agent rules
+
+> Rules for AI agents working on this codebase non-interactively (`/autorun`, hooks).
+
+- Default to **non-destructive** operations. When unsure, list intended changes and ask once.
+- For each red-line action above (`git push --force`, `forgeplan` artifact direct-edit, `{{PUBLISH_CMD}}` etc.) — refuse and surface the rule.
+- When `forgeplan health` reports stubs/orphans/duplicates — note them, don't auto-fix unless that's the explicit task.
+- Match scope to request: a bug fix doesn't need surrounding cleanup; one-shot operations don't need helpers.
+- Don't write feature flags, backwards-compat shims, or "for future use" abstractions unless asked.
+- **Terminology precision**: don't sprinkle specialised terms ("hexagonal", "monadic", "idempotent", "bounded context") unless you can map the technical meaning to the current context. Buzzword-matching sounds smart but misleads. Name the pattern in plain words first; cross-reference the official term only if you're sure.
+- **Forgeplan non-interactive hygiene**: always invoke `forgeplan init -y` (no interactive prompt). After every spawned `Agent({…})`, the orchestrator owns the writeback to `forgeplan` (claim/release, evidence linking) — sub-agents should not call `forgeplan activate` directly unless the orchestrator explicitly delegated it.
+- **Auto-loaded files**: `MEMORY.md` is loaded every turn — don't waste tokens on `memory_recall` for facts already in the index. The auto-loaded `@docs/agents/*.md` imports below mean those files are also already in scope.
+
+---
+
+## Unified workflow (Forgeplan × Tracker × Memory)
+
+Three systems, three concerns:
+
+- **Forgeplan** = WHAT to do and WHY (artifacts, quality, evidence).
+- **Tracker** (Orchestra / GitHub Issues / Linear / Jira / local TODO) = WHO does it and WHEN.
+- **Memory** (Hindsight MCP / `MEMORY.md`) = context between sessions.
+
+Synchronisation rules:
+
+1. New artifact created → matching task in your tracker (if available).
+2. `forgeplan activate <id>` → mark the tracker task Done.
+3. PR merged → update tracker + retain non-obvious decisions in long-term memory (`memory_retain` for Hindsight, or append to `MEMORY.md`).
+4. Tracker offline → record what to sync in `TODO.md` and reconcile later.
+
+Task naming convention in the tracker: `[ARTIFACT-ID] description` when an artifact exists; plain description + tags otherwise.
+
+---
+
+## Smoke test (before PR)
+
+1. `{{BUILD_CMD}}` — clean build, no warnings.
+2. `{{TEST_CMD}}` — all tests pass.
+3. `{{LINT_CMD}}` — no lint errors.
+4. `forgeplan health` — no new orphans/stubs/duplicates introduced.
+5. `git status` — only intended files staged; no `.env`, no editor files, no lockfile drift.
+6. `git diff --stat origin/main..HEAD` — diff size matches the PR's scope claim.
+
+If any step fails, fix it. Don't `--no-verify` the pre-commit hook.
+
+---
+
+## Storage layout
+
+```
+.forgeplan/                      ← decision artifacts (managed by CLI/MCP)
+├── prds/                        ← product requirements
+├── rfcs/                        ← architecture proposals
+├── adrs/                        ← decision records (with valid_until TTL)
+├── specs/                       ← API/interface contracts
+├── evidence/                    ← verifications linked to PRDs/ADRs
+├── notes/                       ← lightweight context not warranting a full artifact
+├── lance/                       ← ⚠️ gitignored (derived index — `forgeplan scan-import` rebuilds)
+└── .fastembed_cache/            ← ⚠️ gitignored (model weights)
+
+docs/
+├── agents/                      ← per-project metadata read by fpl-skills
+│   ├── issue-tracker.md
+│   ├── build-config.md
+│   ├── paths.md
+│   └── domain.md
+└── ...                          ← project-specific docs
+
+CONTEXT.md                       ← ubiquitous language / domain glossary
+CLAUDE.md                        ← this file
+```
+
+LLM provider keys (used by `forgeplan reason`, FPF semantic search) live in
+your shell environment (`$ANTHROPIC_API_KEY`, `$OPENAI_API_KEY`, etc.), not
+in any tracked file.
+
+**Fresh clone**: `git clone … && forgeplan init -y && forgeplan scan-import`.
+The `lance/` index is rebuilt from the canonical markdown.
 
 ---
 
 ## Non-goals
 
-<Explicitly capture what this project does NOT do. Helps Claude avoid scope creep:
-- example: "Doesn't handle authentication — that's a separate service."
-- example: "Doesn't persist state to disk — in-memory only."
-- example: "Doesn't support runtimes older than {{MIN_RUNTIME}}.">
+<!-- Recency zone — last thing the model reads. Use it as a filter against
+     scope creep. Each entry is a hard "no", not a "maybe later". -->
+
+- <example: "Doesn't handle authentication — that's a separate service.">
+- <example: "Doesn't persist state to disk — in-memory only.">
+- <example: "Doesn't support runtimes older than {{MIN_RUNTIME}}.">
+- <example: "Doesn't expose a public API — internal use only.">
+
+Replace these with the real constraints of *this* project. The whole point of this section is to stop the agent from proposing features that fall outside scope.
 
 ---
 
 ## References
 
-- `forgeplan` CLI — install: `brew install ForgePlan/tap/forgeplan` or `cargo install --git https://github.com/ForgePlan/forgeplan forgeplan-cli`
-- `fpl-skills` plugin — this set of `/`-commands; install: `/plugin install fpl-skills@ForgePlan-marketplace`
-- Project docs — `docs/`
-- Decisions — `.forgeplan/adrs/`
-- Authored guides — `guides/` (project-specific authoring conventions)
+- `forgeplan` CLI — `brew install ForgePlan/tap/forgeplan` or `cargo install --git https://github.com/ForgePlan/forgeplan forgeplan-cli`.
+- `fpl-skills` plugin — installed via `/plugin install fpl-skills@ForgePlan-marketplace`.
+- Project decisions — `.forgeplan/adrs/` (open `*.md` directly for context; mutate via CLI/MCP only).
+- Authored guides — `guides/` if present (project-specific authoring conventions).
+- Team CLAUDE.md best practices — `~/.claude/skills/bootstrap/resources/guides/CLAUDE-MD-GUIDE.ru.md` (or in the plugin source) — explains why this file is structured the way it is.
