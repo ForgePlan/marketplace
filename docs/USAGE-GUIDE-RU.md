@@ -96,8 +96,8 @@ End-to-end развёртка: `forgeplan init`, MCP wiring, CLAUDE.md, docs/age
 | `/sprint <фича>` | Wave-based execution со строгим file ownership; auto-detect Tactical/Standard/Deep. |
 | `/audit` | Multi-expert ревью (≥4 ревьюера — logic, architecture, types, security; +ux-reviewer если установлен). |
 | `/diagnose <баг>` | Дисциплинированный 6-фазный debug loop. Фаза 1 («построй feedback loop») — это весь скилл. |
-| `/autorun <задача>` | Автопилот-оркестратор — research → sprint → audit → report end-to-end, без пауз на approval. |
-| `/do <задача>` | Интерактивная версия `/autorun` (пауза на каждом шаге). |
+| `/autorun <задача>` | Автопилот-оркестратор — полный конвейер end-to-end с **lifecycle артефактов forgeplan**: probe → health → route → shape (PRD, RFC, ADR для Deep) → build (research → sprint → audit) → evidence → activate. Без пауз. Если установлен `forgeplan-workflow` — делегирует в `/forge-cycle`; если CLI `forgeplan` отсутствует — работает без артефактов и предупреждает в начале. |
+| `/do <задача>` | Интерактивная версия `/autorun` — тот же lifecycle артефактов (PRD, Evidence, Activate по фазам), но **пауза на approval перед каждой фазой**. Явно объявляет каждое создание артефакта. Использовать когда хочется ревьюить каждый артефакт-шаг до его выполнения. |
 | `/build` | Исполнение готового IMPLEMENTATION-PLAN.md из research-отчёта (wave-by-wave). |
 | `/setup` | Интерактивный wizard — пишет `docs/agents/{issue-tracker,build-config,paths,domain}.md`. |
 | `/bootstrap` | Универсальный CLAUDE.md template (stack-detected) в текущий проект. |

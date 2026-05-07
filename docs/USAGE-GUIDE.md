@@ -96,8 +96,8 @@ Mirror of root [README.md](../README.md) "Where to Start?" matrix, with cross-li
 | `/sprint <feature>` | Wave-based execution with strict file ownership; auto-detects Tactical/Standard/Deep depth. |
 | `/audit` | Multi-expert review (≥4 reviewers — logic, architecture, types, security; +ux-reviewer if installed). |
 | `/diagnose <bug>` | 6-phase disciplined debug loop. Phase 1 ("build a feedback loop") is the entire skill. |
-| `/autorun <task>` | Autopilot orchestrator — research → sprint → audit → report end-to-end, no approval pauses. |
-| `/do <task>` | Interactive variant of `/autorun` (pauses for approval at each step). |
+| `/autorun <task>` | Autopilot orchestrator — full pipeline end-to-end with **forgeplan artifact lifecycle**: probe → health → route → shape (PRD, RFC, ADR if Deep) → build (research → sprint → audit) → evidence → activate. No approval pauses. If `forgeplan-workflow` installed, delegates to `/forge-cycle`; if `forgeplan` CLI is absent, runs without artifacts and warns at start. |
+| `/do <task>` | Interactive variant of `/autorun` — same artifact lifecycle (PRD, Evidence, Activate per phase) but **pauses for approval at each phase**. Announces each artifact creation explicitly. Use when you want to review each artifact step before it happens. |
 | `/build` | Execute an existing IMPLEMENTATION-PLAN.md from a research report (wave-by-wave). |
 | `/setup` | Interactive wizard — writes `docs/agents/{issue-tracker,build-config,paths,domain}.md`. |
 | `/bootstrap` | Drops the universal CLAUDE.md template (stack-detected) into the current project. |

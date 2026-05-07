@@ -99,7 +99,7 @@ After `/shape`:
 /autorun "implement <task>"
 ```
 
-**What happens under the hood**:
+**What happens under the hood (with `forgeplan-workflow` installed — recommended)**:
 ```
 /autorun
   ├── detects forgeplan-workflow installed
@@ -119,6 +119,12 @@ After `/shape`:
 ```
 
 Red lines (push to main, secrets writes, deploys) **stop autopilot** and ask for explicit approval.
+
+**Without `forgeplan-workflow` (only `forgeplan` CLI installed)**:
+
+`/autorun` (and `/do`) still create the artifact lifecycle inline — they call `forgeplan health` / `forgeplan route` / `forgeplan new prd` / `forgeplan new evidence` / `forgeplan activate` between phases of the standard pipeline (research → sprint → audit). Same artifacts, fewer pre-orchestration features. **Do NOT assume `/do` or `/autorun` skips artifact creation when `forgeplan-workflow` isn't installed** — they don't, since v1.5.1.
+
+If `forgeplan` CLI is also absent — both skills warn at the start ("no forgeplan integration; pipeline runs without artifact lifecycle") and run the skill chain only.
 
 ---
 

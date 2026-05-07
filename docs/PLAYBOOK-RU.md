@@ -120,6 +120,12 @@ brew install ForgePlan/tap/forgeplan
 
 Красные линии (push в main, запись секретов, развёртывание в продакшен) **останавливают автопилот** и просят явное одобрение.
 
+**Без `forgeplan-workflow` (только CLI `forgeplan`)**:
+
+`/autorun` (и `/do`) всё равно создают артефакт-lifecycle inline — вызывают `forgeplan health` / `forgeplan route` / `forgeplan new prd` / `forgeplan new evidence` / `forgeplan activate` между фазами стандартного конвейера (research → sprint → audit). Те же артефакты, меньше предварительной оркестрации. **Не считай что `/do` или `/autorun` пропускают создание артефактов при отсутствии `forgeplan-workflow`** — нет, начиная с v1.5.1 не пропускают.
+
+Если CLI `forgeplan` тоже отсутствует — оба скилла предупреждают в начале («нет forgeplan-интеграции; конвейер без lifecycle артефактов») и работают только как цепочка скиллов.
+
 ---
 
 ## Сценарий 4 — Унаследованный проект (brownfield)

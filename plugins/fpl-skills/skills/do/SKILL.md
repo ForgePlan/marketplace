@@ -43,6 +43,13 @@ auto-detect through project files (glob, `package.json`, etc.).
 
 ## Workflow
 
+> [!IMPORTANT]
+> **Forgeplan artifact lifecycle is part of `/do`'s job.** If `forgeplan` CLI is on `$PATH`, this skill **creates artifacts at each phase** of the pipeline (PRD before build, Evidence after audit, activate at the end) and announces each artifact creation explicitly. If the CLI is absent, artifact creation is skipped and you're warned at the start of Phase 3 ("no forgeplan integration; pipeline will run without artifact lifecycle").
+>
+> If `forgeplan-workflow` plugin is also installed, `/do` delegates the whole pipeline to `/forge-cycle` (which is the same orchestration with forgeplan's native phase names).
+>
+> **`/do` is not just a skill chain — it's a skill chain plus artifact lifecycle.** Don't expect it to silently skip artifact creation when forgeplan is available. If you don't want artifacts, call the individual skill directly (`/sprint`, `/audit` etc.).
+
 ### Phase 1: UNDERSTAND — classification
 
 Parse `$ARGUMENTS` into one or more categories:
@@ -166,39 +173,76 @@ Step 5: CLEANUP
 **For**: "add", "implement", "реализуй"
 
 ```
+Step 0: FORGEPLAN PROBE
+  → command -v forgeplan
+  → If found: forgeplan health (surface blind spots first)
+  → If found: forgeplan route "<task>" → decide depth (Tactical/Standard/Deep)
+  → If absent: warn "no artifact lifecycle; pipeline runs without forgeplan"
+
 Step 1: RESEARCH (like Template A, focused on implementation context)
   → What exists, what's needed, reference patterns
 
-Step 2: PLAN
+Step 2: SHAPE — create artifact (if forgeplan present and depth ≥ Standard)
+  → forgeplan new prd "<title>" → PRD-NNN draft
+  → ANNOUNCE: "Created PRD-NNN, filling MUST sections from research"
+  → Fill Problem, Goals, FR from research output
+  → forgeplan validate PRD-NNN (must be 0 errors)
+  → If Deep: forgeplan reason PRD-NNN (3+ ADI hypotheses, mandatory before activation)
+  → If Deep: forgeplan new rfc "<implementation>" + link based_on PRD-NNN
+
+Step 3: PLAN
   → Plan from research → via [`sprint`](../sprint/SKILL.md) Step 2
   → File ownership map
   → Task breakdown (5-6 per teammate)
   → Dependencies
+  → Reference PRD-NNN / RFC-NNN in the plan
 
-Step 3: APPROVAL CHECKPOINT
-  → Show plan
+Step 4: APPROVAL CHECKPOINT
+  → Show plan + which artifacts will be created/activated
   → Wait approval
 
-Step 4: WAVE-SPRINT execute
+Step 5: WAVE-SPRINT execute
   → [`sprint`](../sprint/SKILL.md) Step 4 — wave-by-wave
   → Backend, frontend, tests teammates with research context
 
-Step 5: VERIFY
+Step 6: VERIFY
   → typecheck, build, tests (project-specific commands)
 
-Step 6: DOC (optional, if the task included docs)
+Step 7: EVIDENCE — capture verification (if forgeplan present)
+  → forgeplan new evidence "<task>: tests pass, smoke OK, audit clean"
+  → ANNOUNCE: "Created EVID-MMM, linking to PRD-NNN"
+  → Set Structured Fields in evidence body:
+       verdict: supports
+       congruence_level: 3
+       evidence_type: test_result
+  → forgeplan link EVID-MMM PRD-NNN --relation informs
+  → forgeplan score PRD-NNN (R_eff > 0?)
+
+Step 8: ACTIVATE — close the lifecycle (if forgeplan present and R_eff > 0)
+  → forgeplan activate PRD-NNN (draft → active)
+  → ANNOUNCE: "PRD-NNN activated; cycle complete"
+
+Step 9: DOC (optional, if the task included docs)
   → Update TODO with [x]
   → memory_retain decisions
   → Update RFC (Implementation Log + Insights)
 
-Step 7: CLEANUP
+Step 10: CLEANUP
 ```
+
+If `forgeplan-workflow` plugin is installed, **steps 0, 2, 7, 8 are handled by `/forge-cycle`** — `/do` delegates the whole pipeline. Otherwise these steps run as `forgeplan` CLI calls inline.
 
 ### Template D: AUDIT (code review)
 
 **For**: "ревью", "review", "аудит"
 
 ```
+Step 0: FORGEPLAN PROBE
+  → command -v forgeplan
+  → If found AND PR/branch references an artifact (Refs: PRD-NNN):
+       resolve the linked PRD/ADR for context
+  → If absent: skip artifact link step
+
 Step 1: SCOPE
   → Determine review target (branch diff, files, PR)
   → git diff main...HEAD for branch
@@ -209,11 +253,21 @@ Step 2: AUDIT
 Step 3: SYNTHESIZE
   → Cross-validate, prioritize Critical > High > Medium > Low
 
-Step 4: DELIVER
-  → Present audit report
+Step 4: EVIDENCE — capture audit verdict (if forgeplan present)
+  → forgeplan new evidence "<scope>: audit by N reviewers — X HIGH, Y MED resolved/deferred"
+  → ANNOUNCE: "Created EVID-MMM, linking to PRD-NNN" (if a target artifact was found)
+  → Structured Fields:
+       verdict: supports / weakens (depending on findings)
+       congruence_level: 3
+       evidence_type: code_review
+  → If a target PRD/ADR was found: forgeplan link EVID-MMM PRD-NNN --relation informs
+  → forgeplan score (target artifact)  → R_eff updated
+
+Step 5: DELIVER
+  → Present audit report + reference to EVID-MMM
   → memory_retain key issues
 
-Step 5: CLEANUP
+Step 6: CLEANUP
 ```
 
 ### Template E: RESEARCH → BUG HUNT (bug investigation)
@@ -221,30 +275,51 @@ Step 5: CLEANUP
 **For**: "bug", "doesn't work", "investigate"
 
 ```
+Step 0: FORGEPLAN PROBE
+  → command -v forgeplan
+  → If found: surface any related Problem cards
+       forgeplan list --kind problem | grep <bug-keyword>
+
 Step 1: RESEARCH (focused on the bug area)
   → memory_recall known issues
   → Read KNOWN-ISSUES.md
   → Understand architecture around the bug
 
-Step 2: BUG HUNT TEAM
-  → Spawn 3-5 teammates, each with its own hypothesis:
+Step 2: PROBLEM (if forgeplan present and bug is non-trivial)
+  → forgeplan new problem "<bug as a problem card>"
+  → ANNOUNCE: "Created PROB-NNN to track this investigation"
+  → Body: symptom, frequency, impact, observed behaviour vs expected
+
+Step 3: BUG HUNT TEAM (with ADI cycle)
+  → Spawn 3-5 teammates, each with its own hypothesis (this IS abduction):
     · hypothesis-input: validation, parsing
     · hypothesis-state: race condition, mutation
     · hypothesis-config: env mismatch
     · hypothesis-timing: async, ordering
   → See [`team`](../team/SKILL.md), Recipe 3.
+  → Each teammate predicts (deduction) + checks (induction) — full ADI
 
-Step 3: SYNTHESIZE
+Step 4: SYNTHESIZE
   → Which hypothesis is confirmed? Root cause?
 
-Step 4: FIX (if simple)
+Step 5: FIX (if simple)
   → Apply fix, add test, verify
 
-Step 5: DOCUMENT
+Step 6: EVIDENCE — capture verification (if forgeplan present)
+  → forgeplan new evidence "<bug>: root cause = X; fix verified by <test/repro>"
+  → ANNOUNCE: "Created EVID-MMM, linking to PROB-NNN"
+  → Structured Fields:
+       verdict: supports
+       congruence_level: 3
+       evidence_type: measurement OR test_result
+  → forgeplan link EVID-MMM PROB-NNN --relation informs
+  → forgeplan deprecate PROB-NNN --reason "fixed in EVID-MMM" (closes the problem)
+
+Step 7: DOCUMENT
   → Update KNOWN-ISSUES.md
   → memory_retain root cause + fix
 
-Step 6: CLEANUP
+Step 8: CLEANUP
 ```
 
 ### Template F: LIGHTWEIGHT STATUS CHECK

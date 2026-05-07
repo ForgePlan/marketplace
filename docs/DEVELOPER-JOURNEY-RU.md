@@ -323,14 +323,18 @@ Step 8: Activate        → `forgeplan activate` когда R_eff > 0
                         → готовит conventional commit с `Refs: PRD-NNN`
 ```
 
-### Когда `/forge-cycle` vs `/sprint` vs `/autorun`
+### Когда `/forge-cycle` vs `/sprint` vs `/autorun` vs `/do`
 
-| Команда | Плагин | Лучше всего для |
-|---|---|---|
-| `/forge-cycle` | forgeplan-workflow | «Прогони методологию end-to-end по одной задаче» — единый entry point, полный lifecycle. |
-| `/sprint` | fpl-skills | Wave-based execution с file ownership и per-wave teammates. Используй когда уже сам route/shape сделал. |
-| `/autorun` | fpl-skills | Ночной / unattended. Auto-делегирует в `/forge-cycle` если установлен `forgeplan-workflow`; иначе работает standalone. |
-| `/do` | fpl-skills | Интерактивный вариант `/autorun` — пауза на границах фаз для review. |
+Все четыре оркестрируют один и тот же lifecycle артефактов forgeplan (PRD → сборка → Evidence → активация). Разница — в **терминологии**, **интерактивности** и **требованиях к плагинам**:
+
+| Команда | Плагин | Паузы? | Создаёт артефакты? | Лучше всего для |
+|---|---|---|---|---|
+| `/forge-cycle` | forgeplan-workflow | На каждом шаге | ✅ Да | «Прогони методологию end-to-end» — единый entry point, полный lifecycle, родная терминология фаз |
+| `/autorun` | fpl-skills | Нет (автопилот) | ✅ Да (встроенные вызовы forgeplan если CLI есть, или делегирует в `/forge-cycle` если установлен `forgeplan-workflow`) | Ночной / unattended прогон |
+| `/do` | fpl-skills | На каждой фазе | ✅ Да (тот же lifecycle что и `/autorun`, с явными объявлениями каждого артефакта) | Когда хочется отревьюить каждую фазу до её исполнения; тот же lifecycle что у `/autorun` но интерактивно |
+| `/sprint` | fpl-skills | На утверждении плана | 🟡 Только если сам вызовешь `forgeplan new prd` до / `forgeplan new evidence` после | Wave-based execution когда route/shape уже сделал вручную |
+
+**Замечание**: `/autorun` и `/do` обновлены в v1.5.1 — создание артефактов теперь **явное и встроенное** в их pipeline-шаблоны (раньше было легко пропустить). Если обновлялся со старой версии — переустанови: `/plugin install fpl-skills@ForgePlan-marketplace`.
 
 ### Setup checklist для `/forge-cycle`
 

@@ -323,14 +323,18 @@ Step 8: Activate        → `forgeplan activate` once R_eff > 0
                         → prepares the conventional commit with `Refs: PRD-NNN`
 ```
 
-### When to use `/forge-cycle` vs `/sprint` vs `/autorun`
+### When to use `/forge-cycle` vs `/sprint` vs `/autorun` vs `/do`
 
-| Command | Plugin | Best for |
-|---|---|---|
-| `/forge-cycle` | forgeplan-workflow | "Run the methodology end-to-end on this one task" — single entry point, full lifecycle. |
-| `/sprint` | fpl-skills | Wave-based execution with file ownership and per-wave teammates. Use when you've already routed/shaped manually. |
-| `/autorun` | fpl-skills | Overnight / unattended. Auto-delegates to `/forge-cycle` if `forgeplan-workflow` is installed; otherwise runs standalone. |
-| `/do` | fpl-skills | Interactive variant of `/autorun` — pauses at phase boundaries for review. |
+All four orchestrate the same forgeplan artifact lifecycle (PRD → build → Evidence → activate). They differ in **vocabulary**, **interactivity**, and **plugin requirements**:
+
+| Command | Plugin | Pauses? | Creates artifacts? | Best for |
+|---|---|---|---|---|
+| `/forge-cycle` | forgeplan-workflow | At each step | ✅ Yes | "Run the methodology end-to-end on this one task" — single entry point, full lifecycle, native phase names |
+| `/autorun` | fpl-skills | No (autopilot) | ✅ Yes (inline forgeplan calls if CLI present, or delegates to `/forge-cycle` if `forgeplan-workflow` installed) | Overnight / unattended runs |
+| `/do` | fpl-skills | At each phase | ✅ Yes (same artifact lifecycle as `/autorun`, with explicit announcements per artifact) | Reviewing each phase before it runs; same lifecycle as `/autorun` but interactive |
+| `/sprint` | fpl-skills | At plan approval | 🟡 Only if you call `forgeplan new prd` yourself before / `forgeplan new evidence` after | Wave-based execution when you've already routed/shaped manually |
+
+**Note**: `/autorun` and `/do` were updated in v1.5.1 to make artifact creation **inline and explicit** in their pipeline templates (was easy to miss before). If you upgraded from an older version, re-install: `/plugin install fpl-skills@ForgePlan-marketplace`.
 
 ### Setup checklist for `/forge-cycle`
 

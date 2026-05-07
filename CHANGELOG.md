@@ -5,6 +5,29 @@ All notable changes to the ForgePlan Marketplace will be documented in this file
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.17.1] - 2026-05-08
+
+Fixes a real-world report from a developer using the marketplace: `/do` "refused to create artifacts for a big task". Investigation showed the gap was in skill prose — Pipeline Templates listed only the skill chain (research → sprint → audit) without the **forgeplan artifact lifecycle steps**. The "Forgeplan integration" section at the bottom of each skill described the right behaviour, but it was easy to miss.
+
+This patch makes artifact creation **inline and explicit** in the templates themselves.
+
+### Changed
+- `fpl-skills` v1.5.0 → **1.5.1** (patch — bug fix in skill prose):
+  - **`/do`** Pipeline Templates rewritten:
+    - Top of Workflow now has an `[!IMPORTANT]` block stating: "Forgeplan artifact lifecycle is part of `/do`'s job. If forgeplan CLI is present, this skill creates artifacts at each phase and announces each creation explicitly."
+    - **Template C (feature implementation)** — added Step 0 (Forgeplan probe), Step 2 (Shape — `forgeplan new prd` + validate + reason), Step 7 (Evidence with structured fields), Step 8 (Activate). Before: 7 steps, no forgeplan calls. After: 11 steps with explicit artifact lifecycle.
+    - **Template D (audit)** — added Step 0 (probe + resolve linked PRD/ADR), Step 4 (Evidence with verdict + CL3 + evidence_type=code_review).
+    - **Template E (bug investigation)** — added Step 0 (probe), Step 2 (Problem card), Step 6 (Evidence + close Problem).
+  - **`/autorun`** Workflow section rewritten:
+    - Top has matching `[!IMPORTANT]` block.
+    - "Run the pipeline" subsection (Step 3) now shows the **8-step pipeline with forgeplan calls** at each stage (Probe → Health → Route → Shape → Build → Audit → Evidence → Activate → Report) instead of the prior 3-bullet skill chain.
+    - For research-only / review-only / status tasks: explicit fallback (drop steps 3-7, optionally still create a Note).
+
+### Notes
+**This is a documentation/prose fix, not a code change.** Skills are markdown — what they "do" is what their SKILL.md describes. The previous prose described the right behaviour in a footer; agents reading the skill might apply it or skip it depending on attention. Putting the artifact steps inline in the pipeline templates makes them load-bearing.
+
+The developer's expectation ("`/do` should do everything itself") is now matched: when forgeplan CLI is available, `/do` creates PRDs, evidence, and activates artifacts at the right phases. If the CLI is absent, a clear warning is logged at the start.
+
 ## [1.17.0] - 2026-05-08
 
 Final piece of the methodology coverage trio: `/riper` orchestrator + AI-SDLC mapping doc + upstream methodologies bibliography.

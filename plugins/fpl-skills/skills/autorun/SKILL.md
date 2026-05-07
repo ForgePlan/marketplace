@@ -64,18 +64,65 @@ Decisions:
 
 ## Workflow
 
+> [!IMPORTANT]
+> **Forgeplan artifact lifecycle is part of `/autorun`'s job.** If `forgeplan` CLI is on `$PATH`, this skill **creates artifacts at each phase** of the pipeline (PRD before build, Evidence after audit, activate at the end). If `forgeplan-workflow` is also installed, the whole pipeline delegates to `/forge-cycle` (functionally equivalent, with native phase names). If `forgeplan` is absent, artifact creation is skipped and a single warning is logged in the final report ("ran without artifact lifecycle").
+>
+> **Don't assume `/autorun` silently skips artifact creation.** It doesn't. The pipeline below shows where each forgeplan call lands.
+
 ### 1. Read context
 `@docs/agents/*.md` are auto-loaded by frontmatter imports. Check `CONTEXT.md` and recent `git log` for any in-flight intent.
 
 ### 2. Classify the task
 Same categories as [`do`](../do/SKILL.md): research / docs / feature / review / bug / refactor / status. Pick template silently — do NOT show plan to user, do NOT ask for approval.
 
-### 3. Run the pipeline
-Delegate to the right skill(s). Pass the **autopilot directive** (see below) in every spawn prompt so the called skill skips its own approval steps.
+### 3. Run the pipeline (artifact-aware by default)
 
-If the task is a feature/refactor: `research` → `sprint` (with `team`) → `audit` → report.
-If the task is research only: `research` → report.
-If the task is review only: `audit` → report.
+For **feature** / **refactor** / **bug** tasks (the most common autorun cases), the full pipeline with forgeplan integration:
+
+```
+0. Probe       command -v forgeplan; ls forgeplan-workflow plugin
+               If forgeplan-workflow installed: delegate whole flow to /forge-cycle
+               If forgeplan CLI only: continue with inline calls below
+               If neither: log warning, continue without artifact lifecycle
+
+1. Health      forgeplan health    (surface blind spots before starting)
+
+2. Route       forgeplan route "<task>"   (decide depth: Tactical/Standard/Deep)
+
+3. Shape       For Standard+:
+                 forgeplan new prd "<title>"
+                 fill MUST sections from research output
+                 forgeplan validate PRD-NNN
+               For Deep:
+                 forgeplan reason PRD-NNN          (3+ ADI hypotheses, mandatory)
+                 forgeplan new rfc "<approach>"    (link based_on PRD-NNN)
+                 forgeplan new adr "<key decision>" (if architectural)
+
+4. Build       /research → /sprint with /team → ADI on blockers
+               (skill chain as before)
+
+5. Audit       /audit (4-6 reviewers in parallel)
+
+6. Evidence    forgeplan new evidence "<task>: tests pass / smoke OK"
+               Set Structured Fields:
+                 verdict: supports
+                 congruence_level: 3
+                 evidence_type: test_result OR code_review
+               forgeplan link EVID-MMM PRD-NNN --relation informs
+               forgeplan score PRD-NNN          (R_eff > 0?)
+
+7. Activate    forgeplan activate PRD-NNN       (only if R_eff > 0; else stop with reason)
+
+8. Report      Use `forge-report` skill if available; otherwise inline template
+```
+
+For **research only** / **review only** / **status** tasks — drop steps 3-7 (no implementation, no PRD needed). Optionally still create a Note for research findings:
+
+```
+forgeplan new note "<takeaway from research/audit>"
+```
+
+If `forgeplan-workflow` plugin is installed, **steps 0-3 and 6-8 are handled by `/forge-cycle`** automatically — `/autorun` calls `/forge-cycle "<task>"` once, lets it orchestrate the artifact lifecycle, and treats steps 4-5 as the Build phase delegated back to `/sprint` and `/audit`.
 
 ### 4. File ownership + blockedBy
 
