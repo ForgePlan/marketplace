@@ -1,7 +1,7 @@
 {
   "name": "fpl-skills",
-  "version": "1.1.0",
-  "description": "Flagship workflow plugin for the ForgePlan ecosystem. 16 engineering skills (research, refine, sprint, audit, diagnose, autorun, /fpl-init bootstrap, forge-report structured reports, plus session helpers) + dev-advisor agent + 4 hooks (safety, test reminder, forge-report auto-trigger). Full feature parity with the legacy dev-toolkit plus 13 additional skills built on forgeplan's artifact lifecycle.",
+  "version": "1.1.1",
+  "description": "Flagship workflow plugin for the ForgePlan ecosystem. 17 engineering skills (research, refine, sprint, audit, diagnose, autorun, /fpl-init bootstrap, forge-report structured reports, /migrate-from-dev-toolkit automation, plus session helpers) + dev-advisor agent + 4 hooks (safety, test reminder, forge-report auto-trigger). Full feature parity with the legacy dev-toolkit plus 14 additional skills built on forgeplan's artifact lifecycle.",
   "author": {
     "name": "ForgePlan"
   },
@@ -48,6 +48,7 @@
       "do",
       "forge-report",
       "fpl-init",
+      "migrate-from-dev-toolkit",
       "refine",
       "research",
       "restore",

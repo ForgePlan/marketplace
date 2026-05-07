@@ -7,6 +7,9 @@ A 15-minute, low-risk migration guide. Read it once, decide, then execute. **No 
 > [!IMPORTANT]
 > Don't tell Claude "migrate me from dev-toolkit to fpl-skills" without first reading this guide. Claude can do most of the steps but the **scope of changes** is the part that matters — once you understand it, the actual execution is mechanical.
 
+> [!TIP]
+> **Prefer the automated skill.** As of `fpl-skills` v1.1.1, the [`/migrate-from-dev-toolkit`](../plugins/fpl-skills/skills/migrate-from-dev-toolkit/SKILL.md) skill walks you through this guide's steps interactively: probes state, scans `CLAUDE.md` for `/dev-toolkit:*` references, asks Mode A or Mode B once, executes the file-level changes with backups. The skill never invokes `/plugin install` itself — it tells you which commands to type. Use the skill if you're comfortable with that flow; this guide remains the authoritative manual procedure for everything the skill does.
+
 ---
 
 ## TL;DR
