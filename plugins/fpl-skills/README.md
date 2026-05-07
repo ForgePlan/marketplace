@@ -1,15 +1,12 @@
 # fpl-skills
 
-Flagship workflow plugin for the [ForgePlan](https://github.com/ForgePlan/forgeplan) ecosystem. 14 engineering skills designed to give you a complete, opinionated workflow on top of forgeplan's artifact lifecycle.
-
-> This repository (CC-templates) is the **lab** where the plugin is authored.
-> The published plugin lives in [`ForgePlan/marketplace/plugins/fpl-skills/`](https://github.com/ForgePlan/marketplace).
-> Snapshot via `./scripts/build-fpl-skills.sh --apply`.
+Flagship workflow plugin for the [ForgePlan](https://github.com/ForgePlan/forgeplan) ecosystem. 15 engineering skills designed to give you a complete, opinionated workflow on top of forgeplan's artifact lifecycle.
 
 ## Skills
 
 | Skill | What it does |
 |---|---|
+| `/fpl-init` | One-command project bootstrap. Probes forgeplan, runs `forgeplan init`, wires `.mcp.json` + `.claude/settings.json`, runs `/bootstrap` + `/setup`, prints next steps. Start here on a new repo. |
 | `/research` | Deep research with 5 parallel agents (code · docs · status · references · memory). |
 | `/refine` | Interview-driven refinement of plans/RFCs — sharpens terminology, surfaces contradictions, lazy-creates CONTEXT.md/ADRs. |
 | `/rfc` | Create / read / update RFCs and ADRs (canonical structure, phase progress, ADR format). |
@@ -24,8 +21,6 @@ Flagship workflow plugin for the [ForgePlan](https://github.com/ForgePlan/forgep
 | `/setup` | Interactive wizard that configures the current project for fpl-skills (writes `docs/agents/*.md`). |
 | `/bootstrap` | Drops the universal CLAUDE.md template into a new or existing project (stack-aware). |
 | `/team` | Foundation for multi-agent teams — TeamCreate vs sub-agents, file ownership, recipes, cleanup. |
-
-`/fpl-init` (Phase 3) — one-command project bootstrap: probes forgeplan, runs `forgeplan init`, wires `.mcp.json`, runs `/bootstrap` + `/setup`, prints next steps.
 
 ## Install
 
@@ -53,18 +48,18 @@ For full project bootstrap (a new project from zero), see [`GETTING-STARTED.md`]
 ## Repository layout
 
 ```
-CC-templates/                      ← this repo (the lab)
+plugins/fpl-skills/
 ├── .claude-plugin/plugin.json     ← plugin manifest
 ├── hooks/
 │   ├── hooks.json                 ← SessionStart hook
 │   └── scripts/session-start.sh
-├── skills/                        ← 14 skills (canonical source)
-├── guides/                        ← author's notes (NOT shipped in plugin)
-├── scripts/
-│   └── build-fpl-skills.sh        ← snapshot lab → marketplace
-├── INDEX.md                       ← artifact index
+├── skills/                        ← 15 skills (canonical source)
+│   ├── fpl-init/                  ← one-shot setup (start here)
+│   ├── bootstrap/                 ← CLAUDE.md template + stack detection
+│   ├── setup/                     ← docs/agents/ wizard
+│   └── ...                        ← research, refine, sprint, audit, …
 ├── README.md                      ← this file
-└── CLAUDE.md                      ← project memory for Claude Code
+└── GETTING-STARTED.md             ← human-readable bootstrap walkthrough
 ```
 
 ## License

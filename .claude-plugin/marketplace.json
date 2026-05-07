@@ -12,7 +12,7 @@
     {
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
-      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 14 engineering skills (research, refine, sprint, audit, diagnose, autorun + bootstrap and session helpers) that delegate artifact lifecycle to forgeplan. Canonical entry point — install fpl-skills + forgeplan and you have everything you need to run the full route → shape → build → audit → activate workflow.",
+      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 15 engineering skills (research, refine, sprint, audit, diagnose, autorun + bootstrap, /fpl-init one-shot setup, and session helpers) that delegate artifact lifecycle to forgeplan. Canonical entry point — install fpl-skills + forgeplan and you have everything you need to run the full route → shape → build → audit → activate workflow.",
       "version": "1.0.0",
       "author": {
         "name": "ForgePlan"
