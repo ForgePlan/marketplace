@@ -185,6 +185,20 @@
 
 **Статус**: как у DDD — есть только карта `c4-to-forge.yaml` в `forgeplan-brownfield-pack` (переводит C4-документы в артефакты forgeplan). Своего C4-агента или скилла моделирования нет.
 
+### MADR (Markdown Architectural Decision Records)
+
+**Что это**: формат markdown-шаблона для ADR ([adr.github.io/madr](https://adr.github.io/madr/)).
+
+**Статус**: только ингест. Карта `madr-to-forge.yaml` в `forgeplan-brownfield-pack` конвертирует MADR 3.x/4.x ADR-файлы (в `docs/adr/`, `docs/decisions/` и т.д.) в forgeplan `adr` — с нормализацией статусов (proposed → draft, accepted → active, rejected → deprecated, superseded → superseded) и извлечением ссылок supersedes/superseded by.
+
+Для новых ADR используй `forgeplan new adr` (DDR-шаблон для Deep+).
+
+### Obsidian (импорт волта)
+
+**Что это**: markdown-first инструмент управления знаниями ([obsidian.md](https://obsidian.md/)). Волт использует `[[wikilinks]]`, `#теги`, frontmatter и иерархии папок (PARA, Johnny.Decimal, Zettelkasten).
+
+**Статус**: только ингест. Карта `obsidian-to-forge.yaml` в `forgeplan-brownfield-pack` обходит Obsidian-волт (определяется по маркеру `.obsidian/`) и ингестит ноты как Note/Epic/PRD/ADR/Hypothesis по 4-уровневому приоритету сигналов: frontmatter `kind:` → тег (`#prd`, `#adr`, ...) → паттерн папки → fallback в Note. MOC-файлы превращаются в Epic; project-ноты в PRD; теггированные decision-ноты в ADR (с делегацией в `madr-to-forge` если структура MADR-shaped).
+
 ---
 
 ## Не в этой экосистеме (упоминается, но не в forgeplan и не в маркетплейсе)
@@ -234,7 +248,9 @@
 | Laws of UX | Плагин `laws-of-ux` | `/ux-review`, `/ux-law <имя>` |
 | DDD | `agents-pro` + brownfield-pack | Только консультации — движка нет |
 | C4 | Карта в brownfield-pack | Только YAML-преобразование |
-| Autoresearch | Внешний companion (`uditgoenka/autoresearch`) | Ставится отдельно; см. [AUTORESEARCH-INTEGRATION-RU.md](AUTORESEARCH-INTEGRATION-RU.md) для способов интеграции |
+| MADR | Карта в brownfield-pack | Только ингест через `madr-to-forge.yaml` |
+| Obsidian | Карта в brownfield-pack | Только ингест через `obsidian-to-forge.yaml` |
+| Autoresearch | Внешний companion (`uditgoenka/autoresearch`) | Ставится отдельно; ингест через `autoresearch-to-forge.yaml`. См. [AUTORESEARCH-INTEGRATION-RU.md](AUTORESEARCH-INTEGRATION-RU.md). |
 | RIPER | НЕТ в экосистеме | Вручную — связка `/research` → `/refine` → `/rfc` → `/sprint` → `/audit` |
 | AI-SDLC | НЕ названо так, приближение через `/autorun` | `/autorun "<задача>"` |
 

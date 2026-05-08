@@ -46,10 +46,15 @@
 - `forgeplan-mcp-additions.md` — дополнения forgeplan MCP под специфические brownfield-операции
 - `rag-export-format.md` — формат вывода для RAG packager
 
-### 2 карты соответствия (`mappings/`)
+### 5 карт соответствия (`mappings/`)
 
-- `c4-to-forge.yaml` — C4 Context/Container/Component → Epic + PRD + Notes в forgeplan (проверена CL3 на репозитории Forgeplan, 2026-04-20)
-- `ddd-to-forge.yaml` — карта ограниченных контекстов DDD → Epic + PRD + Spec
+Все пять используют schema-v1.0; каждая создаёт артефакты forgeplan с секцией `## Sources` для трассировки.
+
+- `c4-to-forge.yaml` — C4 Context/Container/Component → Epic + PRD + Notes (проверена CL3 на репозитории Forgeplan, 2026-04-20)
+- `ddd-to-forge.yaml` — карта ограниченных контекстов DDD → Epic + PRD + Spec (Spike-3, 2026-04-21)
+- `madr-to-forge.yaml` — MADR 3.x/4.x markdown ADR → forgeplan `adr` (1:1) с нормализацией статусов и извлечением ссылок supersedes/superseded by
+- `obsidian-to-forge.yaml` — Obsidian-волт (маркер `.obsidian/`) → Note/Epic/PRD/ADR/Hypothesis с 4-уровневым приоритетом сигналов (frontmatter → тег → папка → fallback) и ленивым резолвом wikilinks
+- `autoresearch-to-forge.yaml` — выводы autoresearch v2.x (7 режимов: glossary/use-case/invariant/intent/triangulate/gherkin/canonical) → соответствующие kind-ы forgeplan. Companion (обратное направление) к `integration/autoresearch-hooks.md`.
 
 ### Шаблоны и примеры
 

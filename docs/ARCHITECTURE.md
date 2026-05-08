@@ -167,7 +167,7 @@ Orchestra: Task "OAuth" Status=Review, Phase=Evidence
 | UX | laws-of-ux | `ux-reviewer` agent + `/ux-review` + auto-hint hook on frontend file edits. |
 | Agents | agents-core / agents-domain / agents-pro / agents-github | Specialised subagents that `/audit`, `/sprint`, etc. compose when relevant. |
 | Universal toolkit (legacy) | dev-toolkit | Soft-deprecated, superseded by fpl-skills. Use only if forgeplan CLI is unavailable. |
-| Brownfield ingest | forgeplan-brownfield-pack | Mappings + playbooks for migrating legacy docs (Obsidian, MADR) into a forgeplan graph. |
+| Brownfield ingest | forgeplan-brownfield-pack | 5 mappings (c4, ddd, madr, obsidian, autoresearch) + 12 extraction skills + 2 playbooks for migrating legacy code + docs into a forgeplan graph. |
 
 Install command: `/plugin install <plugin-name>@ForgePlan-marketplace`.
 

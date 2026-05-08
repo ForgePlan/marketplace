@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.18.0"
+    "version": "1.18.1"
   },
   "plugins": [
     {
@@ -141,7 +141,7 @@
       "name": "forgeplan-brownfield-pack",
       "source": "./plugins/forgeplan-brownfield-pack",
       "description": "Brownfield extraction pack: 12 extraction skills + 2 playbooks + 3 integrations + 5 mappings (c4, ddd, madr, obsidian, autoresearch) + templates + examples. Two-tier extraction (Factum vs Intent) with confidence taxonomy and ADI cycle. Turns legacy code + docs into a structured forgeplan graph. Documents integration with autoresearch (uditgoenka/autoresearch) for metric-driven extraction loops.",
-      "version": "1.3.0",
+      "version": "1.3.1",
       "author": {
         "name": "ForgePlan"
       },

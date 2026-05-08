@@ -185,6 +185,20 @@ If you want full DDD modelling — combine the agent + brownfield pack + your ow
 
 **Status**: similar to DDD — we ship `c4-to-forge.yaml` mapping in `forgeplan-brownfield-pack` (translates C4 docs into forgeplan artifacts) but no C4-specific agent or modelling skill.
 
+### MADR (Markdown Architectural Decision Records)
+
+**What it is**: a markdown ADR template format ([adr.github.io/madr](https://adr.github.io/madr/)).
+
+**Status**: ingest-only. `madr-to-forge.yaml` mapping in `forgeplan-brownfield-pack` converts MADR 3.x/4.x ADR files (in `docs/adr/`, `docs/decisions/`, etc.) into forgeplan `adr` artifacts, with status normalization (proposed → draft, accepted → active, rejected → deprecated, superseded → superseded) and supersession-link extraction.
+
+For new ADRs, use `forgeplan new adr` (DDR template for Deep+).
+
+### Obsidian (vault import)
+
+**What it is**: a markdown-first knowledge management tool ([obsidian.md](https://obsidian.md/)). Vaults use `[[wikilinks]]`, `#tags`, frontmatter, and folder hierarchies (PARA, Johnny.Decimal, Zettelkasten).
+
+**Status**: ingest-only. `obsidian-to-forge.yaml` mapping in `forgeplan-brownfield-pack` walks an Obsidian vault (detected by `.obsidian/` directory marker) and ingests notes as Note/Epic/PRD/ADR/Hypothesis based on a 4-tier signal priority: frontmatter `kind:` → tag (`#prd`, `#adr`, ...) → folder pattern → default to Note. MOC files map to Epic; Project notes to PRD; tagged decision notes to ADR (delegating to `madr-to-forge` if MADR-shaped).
+
 ---
 
 ## Not in this ecosystem (mentioned but not part of forgeplan or marketplace)
@@ -234,7 +248,9 @@ If you want to read the original BMAD spec → see `sources/BMAD-METHOD/` in the
 | Laws of UX | `laws-of-ux` plugin | `/ux-review`, `/ux-law <name>` |
 | DDD | `agents-pro` + brownfield pack | Advisory only — no engine |
 | C4 | brownfield pack mapping | YAML conversion only |
-| Autoresearch | external companion (`uditgoenka/autoresearch`) | Install separately; see [AUTORESEARCH-INTEGRATION.md](AUTORESEARCH-INTEGRATION.md) for integration patterns |
+| MADR | brownfield pack mapping | `madr-to-forge.yaml` ingest only |
+| Obsidian | brownfield pack mapping | `obsidian-to-forge.yaml` ingest only |
+| Autoresearch | external companion (`uditgoenka/autoresearch`) | Install separately; ingest via `autoresearch-to-forge.yaml`. See [AUTORESEARCH-INTEGRATION.md](AUTORESEARCH-INTEGRATION.md). |
 | RIPER | NOT in ecosystem | Manual — chain `/research` → `/refine` → `/rfc` → `/sprint` → `/audit` |
 | AI-SDLC | NOT named, approximated by `/autorun` | `/autorun "<task>"` |
 

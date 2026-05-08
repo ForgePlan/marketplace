@@ -173,4 +173,5 @@ forgeplan --version          # forgeplan CLI
 - Karpathy's original — [github.com/karpathy/autoresearch](https://github.com/karpathy/autoresearch)
 - [METHODOLOGIES.md](METHODOLOGIES.md) — autoresearch listed as recommended companion
 - [PLAYBOOK.md](PLAYBOOK.md) — use-case "metric-driven iteration"
-- [`plugins/forgeplan-brownfield-pack/integration/autoresearch-hooks.md`](../plugins/forgeplan-brownfield-pack/integration/autoresearch-hooks.md) — per-skill mapping for the 12 brownfield skills
+- [`plugins/forgeplan-brownfield-pack/integration/autoresearch-hooks.md`](../plugins/forgeplan-brownfield-pack/integration/autoresearch-hooks.md) — **outbound** direction: per-skill mapping for the 12 brownfield skills (skill → autoresearch command + mode)
+- [`plugins/forgeplan-brownfield-pack/mappings/autoresearch-to-forge.yaml`](../plugins/forgeplan-brownfield-pack/mappings/autoresearch-to-forge.yaml) — **inbound** direction: autoresearch outputs (journals + per-mode artifacts in `.autoresearch/`) → forge artifact kinds. Companion to the hooks file above.
