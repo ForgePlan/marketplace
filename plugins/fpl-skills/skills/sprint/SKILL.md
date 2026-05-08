@@ -298,6 +298,25 @@ Options:
 4. teammates = all the work
 ```
 
+### 4a-bis. Forgeplan dispatch (artifact-driven sprints)
+
+If the wave plan is **artifact-driven** — each task references a forgeplan ID (PRD-NNN, RFC-NNN, SPEC-NNN, etc.) — wire the dispatcher and claim-loop in. If the plan is purely chat-driven (no artifact IDs), skip this sub-step and proceed to 4b.
+
+```bash
+# Probe and dispatch — once, before Wave 1 spawn.
+command -v forgeplan && forgeplan dispatch -n {agents-per-wave} --json
+```
+
+`forgeplan dispatch` returns a parallel-safe grouping (PRD-057 dispatcher with Jaccard file-overlap detection at threshold 0.3). Use it as a **second opinion** on your wave plan:
+
+| Dispatch says | Your plan says | Action |
+|---|---|---|
+| Group A: [PRD-001, PRD-003] | Same wave | ✅ go |
+| Group A: [PRD-001, PRD-003] | Different waves | OK — your split is more conservative; go |
+| Group A: [PRD-001, PRD-003] | Same wave, but PRD-001 and PRD-003 share files in your file-ownership table | ⚠️ stop — your file map disagrees with Jaccard. Re-check the ownership table before spawning |
+
+Pass each agent the artifact ID they own — see 4b teammate prompt addendum below.
+
 ### 4b. Team-lead prompt
 
 ```
@@ -327,6 +346,11 @@ For each Wave (sequential):
    d) Requirements
    e) "Follow CLAUDE.md project rules"
    f) "Report back: files created/modified, LOC, issues"
+   g) Forgeplan-aware (only if task references an artifact ID like PRD-NNN/RFC-NNN/SPEC-NNN):
+      - BEFORE starting work: run `forgeplan claim {artifact-id} --agent {kebab-name}`
+        — soft signal "I'm working on this" (PRD-057). Skip if claim already held by self.
+      - AFTER completing: report the artifact ID + LOC summary so team-lead can
+        emit `forgeplan new evidence` post-wave (see step 4b-bis below).
 
 3. WAIT for all wave agents to complete.
 
@@ -348,6 +372,20 @@ After ALL waves:
 4. Shutdown teammates.
 5. Signal completion.
 ```
+
+### 4b-bis. Per-artifact evidence emission (artifact-driven sprints)
+
+If the sprint is artifact-driven (per 4a-bis), team-lead emits **one evidence per completed artifact** at wave-close — not per teammate, not per wave.
+
+```bash
+# After each artifact is complete (all teammates working on it reported done):
+forgeplan new evidence "{artifact-id}: {what shipped} — {tests/smoke status}"
+forgeplan link EVID-MMM {artifact-id} --relation informs
+```
+
+Why per-artifact and not per-teammate: a single artifact may be built by 2-3 teammates across waves (Wave 1: scaffolding + Wave 2: integration). Evidence describes the *artifact's* state, not who pushed which line.
+
+For chat-driven sprints (no artifact IDs), skip — emit one summary evidence at sprint-end via the existing post-sprint section below.
 
 ### 4c. Dynamic teammates
 
@@ -460,7 +498,7 @@ Emit the **Sprint Complete** report — format in [`references/OUTPUT-FORMATS.md
 
 ## Forgeplan integration
 
-If the `forgeplan` CLI is on `$PATH` (probe with `command -v forgeplan`), this skill is **forgeplan-aware** — it recommends the right CLI calls but does not invoke them itself, so you stay in control of artifact lifecycle.
+If the `forgeplan` CLI is on `$PATH` (probe with `command -v forgeplan`), this skill is **forgeplan-aware**. The **dispatch + claim + evidence loop** is wired into Step 4 (4a-bis, 4b.g, 4b-bis) for artifact-driven sprints; the recommendations below are for human-orchestrated runs.
 
 ### Before `/sprint <task>`
 
@@ -473,10 +511,21 @@ forgeplan validate PRD-NNN         # gate before sprint
 forgeplan reason PRD-NNN           # ADI 3+ hypotheses (Deep+: required)
 ```
 
+### During `/sprint` (artifact-driven mode — see 4a-bis)
+
+```bash
+forgeplan dispatch -n {agents-per-wave} --json   # parallel-safe grouping (PRD-057)
+# Per teammate, in their spawn prompt:
+forgeplan claim {artifact-id} --agent {kebab-name}   # soft signal "I'm working on this"
+# Per artifact at wave-close, by team-lead:
+forgeplan new evidence "{artifact-id}: ..."
+forgeplan link EVID-MMM {artifact-id} --relation informs
+```
+
 ### After `/sprint` completes
 
 ```bash
-forgeplan new evidence "<task>: tests pass / smoke OK / N waves merged"
+forgeplan new evidence "<task>: tests pass / smoke OK / N waves merged"   # for chat-driven sprints, or sprint-level summary
 forgeplan link EVID-MMM PRD-NNN --relation informs
 forgeplan score PRD-NNN            # R_eff > 0?
 forgeplan activate PRD-NNN         # draft → active
