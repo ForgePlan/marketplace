@@ -109,10 +109,16 @@ Skip every "Proceed?" / "Continue to next wave?" / "Запускаем?" prompt 
 Resolve blockers via ADI (Abduct → Induct → Deduce), 3 rounds max per blocker.
 Only stop on red-line actions (see /autorun red lines). Surface state and exit cleanly when red line hit.
 
-FORGEPLAN-AWARE — if forgeplan CLI is on $PATH and the task has artifact IDs:
-- /sprint will use `forgeplan dispatch -n N --json` for parallel-safe wave plan (4a-bis).
-- Each teammate runs `forgeplan claim <ID> --agent <name>` before starting (4b.g).
-- Team-lead emits `forgeplan new evidence` per completed artifact at wave-close (4b-bis).
+FORGEPLAN-AWARE — UNCONDITIONAL when forgeplan CLI is on $PATH (PRD-020):
+- /sprint derives SESSION_ID="SESSION-$(date -u +%Y-%m-%d-%H%M%S)" once per sprint (§4a-bis).
+  Used as fallback artifact-id when task has no real PRD-NNN/RFC-NNN/SPEC-NNN.
+- Every teammate runs `forgeplan claim ${ARTIFACT_ID:-$SESSION_ID} --agent <name>` before starting (§4b.g).
+  No "skip if no artifact-ID" branch — every teammate registers in the graph.
+- `forgeplan dispatch -n N --json` is artifact-aware: only useful when real artifact-IDs
+  with affected_files are in the plan. For chat-driven sprints, dispatch logs "skipped"
+  but session-claim wiring still applies.
+- Team-lead emits `forgeplan new evidence` at wave-close (§4b-bis) for both real artifacts
+  and SESSION-IDs. Chat-driven sprints now emit ≥1 evidence per sprint (was 0 in v1.6.0).
 - See sprint SKILL.md sections 4a-bis / 4b.g / 4b-bis for the wired pattern.
 ```
 

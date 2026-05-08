@@ -298,16 +298,25 @@ Options:
 4. teammates = all the work
 ```
 
-### 4a-bis. Forgeplan dispatch (artifact-driven sprints)
+### 4a-bis. Forgeplan dispatch + session derivation
 
-If the wave plan is **artifact-driven** — each task references a forgeplan ID (PRD-NNN, RFC-NNN, SPEC-NNN, etc.) — wire the dispatcher and claim-loop in. If the plan is purely chat-driven (no artifact IDs), skip this sub-step and proceed to 4b.
+**Always run** when forgeplan CLI is on `$PATH` — even for chat-driven sprints (no artifact IDs). The dispatcher needs `affected_files` on real artifacts to be useful, but the **session-id derivation** below applies to every sprint regardless.
 
 ```bash
-# Probe and dispatch — once, before Wave 1 spawn.
-command -v forgeplan && forgeplan dispatch -n {agents-per-wave} --json
+# Step 1 — derive session-id once for this sprint (used as fallback artifact-id below)
+SESSION_ID="SESSION-$(date -u +%Y-%m-%d-%H%M%S)"
+
+# Step 2 — dispatch only if real artifact-IDs are in the plan (otherwise dispatch returns no parallel-safe candidates with empty file-ownership)
+if grep -qE 'PRD-[0-9]+|RFC-[0-9]+|SPEC-[0-9]+' <<< "{wave-plan-text}"; then
+  command -v forgeplan && forgeplan dispatch -n {agents-per-wave} --json
+else
+  echo "dispatch skipped — no artifact IDs in plan; will use $SESSION_ID for claim-loop"
+fi
 ```
 
-`forgeplan dispatch` returns a parallel-safe grouping (PRD-057 dispatcher with Jaccard file-overlap detection at threshold 0.3). Use it as a **second opinion** on your wave plan:
+The `SESSION-YYYY-MM-DD-HHMMSS` synthetic ID is **load-bearing** — it's what teammates claim in §4b.g when no real artifact-ID is present. Without it, chat-driven sprints would leave `forgeplan claims` empty and `forgeplan activity` would have no agent attribution.
+
+`forgeplan dispatch` (when called) returns a parallel-safe grouping (PRD-057 dispatcher with Jaccard file-overlap detection at threshold 0.3). Use it as a **second opinion** on your wave plan:
 
 | Dispatch says | Your plan says | Action |
 |---|---|---|
@@ -346,11 +355,17 @@ For each Wave (sequential):
    d) Requirements
    e) "Follow CLAUDE.md project rules"
    f) "Report back: files created/modified, LOC, issues"
-   g) Forgeplan-aware (only if task references an artifact ID like PRD-NNN/RFC-NNN/SPEC-NNN):
-      - BEFORE starting work: run `forgeplan claim {artifact-id} --agent {kebab-name}`
-        — soft signal "I'm working on this" (PRD-057). Skip if claim already held by self.
-      - AFTER completing: report the artifact ID + LOC summary so team-lead can
+   g) Forgeplan-aware — UNCONDITIONAL claim/release loop (PRD-020):
+      Each teammate uses `${ARTIFACT_ID:-$SESSION_ID}` — real artifact when present, derived
+      `SESSION-YYYY-MM-DD-HHMMSS` (set in §4a-bis) as fallback for chat-driven sprints.
+      - BEFORE starting work: run `forgeplan claim ${ARTIFACT_ID:-$SESSION_ID} --agent {kebab-name} --note "{wave-N task}"`
+        — soft signal "I'm working on this" (PRD-057). Skip ONLY if claim already held by same agent name.
+      - AFTER completing: report the artifact ID (or session ID) + LOC summary so team-lead can
         emit `forgeplan new evidence` post-wave (see step 4b-bis below).
+      - On failure / abort: `forgeplan release ${ARTIFACT_ID:-$SESSION_ID} --agent {kebab-name}` to free the slot.
+      Why unconditional: PRD-018 operating contract + PRD-020 close the gap where chat-driven
+      sprints (no artifact ID in the task) bypassed the artifact graph entirely. Now every
+      teammate is visible in `forgeplan claims` for the duration of their work.
 
 3. WAIT for all wave agents to complete.
 
@@ -373,19 +388,26 @@ After ALL waves:
 5. Signal completion.
 ```
 
-### 4b-bis. Per-artifact evidence emission (artifact-driven sprints)
+### 4b-bis. Per-artifact evidence emission (UNCONDITIONAL — PRD-020)
 
-If the sprint is artifact-driven (per 4a-bis), team-lead emits **one evidence per completed artifact** at wave-close — not per teammate, not per wave.
+Team-lead emits **one evidence per completed artifact** at wave-close — not per teammate, not per wave. Same pattern for both modes; only the linked artifact differs.
 
 ```bash
-# After each artifact is complete (all teammates working on it reported done):
+# Artifact-driven (real PRD-NNN/RFC-NNN/SPEC-NNN in plan):
 forgeplan new evidence "{artifact-id}: {what shipped} — {tests/smoke status}"
 forgeplan link EVID-MMM {artifact-id} --relation informs
+
+# Chat-driven (no real artifact-ID — using SESSION_ID from §4a-bis):
+forgeplan new evidence "{SESSION_ID}: {sprint description} — {what shipped} — {tests/smoke status}"
+# No link needed — SESSION-IDs are ephemeral, evidence stands alone with descriptive title.
+# Optionally link to a NOTE if the work warrants persistent reference:
+#   forgeplan new note "Sprint outcome: {description}"
+#   forgeplan link EVID-MMM NOTE-NNN --relation informs
 ```
 
 Why per-artifact and not per-teammate: a single artifact may be built by 2-3 teammates across waves (Wave 1: scaffolding + Wave 2: integration). Evidence describes the *artifact's* state, not who pushed which line.
 
-For chat-driven sprints (no artifact IDs), skip — emit one summary evidence at sprint-end via the existing post-sprint section below.
+Why unconditional (vs v1.6.0 conditional): PRD-020 closed the gap where chat-driven sprints emitted no evidence at all. Now every sprint produces ≥1 evidence in the artifact graph, making `forgeplan activity` and `forgeplan health` reflect actual project work even when scope started without explicit artifact IDs.
 
 ### 4c. Dynamic teammates
 

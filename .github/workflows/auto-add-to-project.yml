@@ -26,8 +26,7 @@ jobs:
       - uses: actions/add-to-project@5afcf98fcd03f1c2f92c3c83f58ae24323cc57fd # v2.0.0
         with:
           project-url: 'https://github.com/orgs/ForgePlan/projects/5'
-          # GITHUB_TOKEN works only if org Actions settings allow project writes.
-          # If it fails, create a fine-grained PAT (Org -> Projects: read+write) and
-          # store as ADD_TO_PROJECT_PAT secret, then change line below to:
-          # github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # GITHUB_TOKEN cannot reach org-level ProjectV2 — verified empirically by PR #53 CI run
+          # (error: "Could not resolve to a ProjectV2 with the number 5"). Switched to fine-grained
+          # PAT with Organization → Projects (read+write) scope. Secret is repo-level.
+          github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
