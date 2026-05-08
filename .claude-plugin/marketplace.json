@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.22.2"
+    "version": "1.23.0"
   },
   "plugins": [
     {
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
       "description": "Flagship workflow plugin for the ForgePlan ecosystem. 22 engineering skills (research, refine, sprint, audit, diagnose, autorun, /fpl-init bootstrap, forge-report structured reports, /shape interview-from-scratch, /migrate-from-dev-toolkit automation, /ddd-decompose, /c4-diagram, /riper RIPER orchestrator, /gh-project project-agnostic GitHub Projects v2 integration, plus session helpers) + dev-advisor agent + 4 hooks. /fpl-init injects a 13-line forgeplan operating contract into project CLAUDE.md (idempotent v1 marker). SessionStart hook surfaces concrete next-action when forgeplan health is non-clean (orphans/stubs/dups/stale). UNCONDITIONAL claim/dispatch wiring (PRD-020): /sprint + /autorun derive synthetic SESSION-YYYY-MM-DD-HHMMSS for chat-driven mode — every teammate registers in the artifact graph regardless of whether task references PRD-NNN. /gh-project bridges forgeplan artifacts with a GitHub Projects v2 board via per-project config (no hardcoded project numbers). Full feature parity with the legacy dev-toolkit plus 19 additional skills built on forgeplan's artifact lifecycle.",
-      "version": "1.9.2",
+      "version": "1.10.0",
       "author": {
         "name": "ForgePlan"
       },
@@ -56,8 +56,8 @@
     {
       "name": "forgeplan-workflow",
       "source": "./plugins/forgeplan-workflow",
-      "description": "Structured engineering workflow for forgeplan users. Provides /forge-cycle (full dev cycle with unconditional per-SPARC-phase claim/release per PRD-020) and /forge-audit (multi-expert review with claim+evidence wrapping), methodology knowledge base, and quality gate hooks. Requires forgeplan CLI.",
-      "version": "1.6.0",
+      "description": "Structured engineering workflow for forgeplan users. Provides /forge-cycle (full dev cycle with unconditional per-SPARC-phase claim/release per PRD-020, MCP-first per PRD-021) and /forge-audit (multi-expert review with claim+evidence wrapping, MCP-first), methodology knowledge base, and quality gate hooks. Requires forgeplan CLI.",
+      "version": "1.7.0",
       "author": {
         "name": "ForgePlan"
       },

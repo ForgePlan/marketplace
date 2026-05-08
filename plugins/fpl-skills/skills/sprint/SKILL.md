@@ -29,6 +29,22 @@ in-session.
 
 ---
 
+## Tool selection (MCP vs shell — PRD-021)
+
+`/sprint` uses forgeplan for `claim`, `dispatch`, `new evidence`, `link`. Two paths:
+
+| Path | When | How |
+|---|---|---|
+| **MCP-first** (preferred) | `mcp__forgeplan__*` tools present in deferred-tools list (forgeplan MCP server wired and reachable) | Call `mcp__forgeplan__forgeplan_claim`, `forgeplan_dispatch`, `forgeplan_new`, `forgeplan_link` directly. Returns typed dicts + `_next_action` server hint to relay. |
+| **Shell fallback** | MCP tools absent (server not started, or `.mcp.json` not configured) | `forgeplan claim ...` / `forgeplan dispatch ...` via Bash. Same semantics, less structured I/O. |
+| Neither available | `command -v forgeplan` fails | Warn, skip artifact ops, run sprint as chat-driven coordination only |
+
+**How to probe**: list available tools via `ToolSearch query="select:mcp__forgeplan__forgeplan_health"`. If schema returns — MCP path active. Else shell. Probe once per sprint, not per teammate.
+
+**Teammate sub-agents inherit**: when team-lead spawns teammates, include the probe result + the appropriate command syntax in the teammate prompt (see §4b.g below).
+
+---
+
 ## When to use
 
 - Big feature / RFC needing 5-8+ agents and 2-5 waves.
@@ -300,13 +316,27 @@ Options:
 
 ### 4a-bis. Forgeplan dispatch + session derivation
 
-**Always run** when forgeplan CLI is on `$PATH` — even for chat-driven sprints (no artifact IDs). The dispatcher needs `affected_files` on real artifacts to be useful, but the **session-id derivation** below applies to every sprint regardless.
+**Always run** when forgeplan is reachable (MCP or shell) — even for chat-driven sprints. The dispatcher needs `affected_files` on real artifacts to be useful, but the **session-id derivation** below applies to every sprint regardless.
+
+**MCP-first path** (per Tool Selection preamble):
+
+```python
+# pseudocode — actual call via mcp__forgeplan__forgeplan_dispatch tool
+SESSION_ID = "SESSION-" + datetime.utcnow().strftime("%Y-%m-%d-%H%M%S")
+
+if has_real_artifact_ids(wave_plan):
+    result = mcp__forgeplan__forgeplan_dispatch(agents={agents-per-wave})
+    # result is typed dict with _next_action hint
+    relay_to_report(result.get("_next_action"))
+else:
+    log(f"dispatch skipped — no artifact IDs in plan; using {SESSION_ID}")
+```
+
+**Shell fallback** (when MCP tools absent):
 
 ```bash
-# Step 1 — derive session-id once for this sprint (used as fallback artifact-id below)
 SESSION_ID="SESSION-$(date -u +%Y-%m-%d-%H%M%S)"
 
-# Step 2 — dispatch only if real artifact-IDs are in the plan (otherwise dispatch returns no parallel-safe candidates with empty file-ownership)
 if grep -qE 'PRD-[0-9]+|RFC-[0-9]+|SPEC-[0-9]+' <<< "{wave-plan-text}"; then
   command -v forgeplan && forgeplan dispatch -n {agents-per-wave} --json
 else
@@ -355,17 +385,26 @@ For each Wave (sequential):
    d) Requirements
    e) "Follow CLAUDE.md project rules"
    f) "Report back: files created/modified, LOC, issues"
-   g) Forgeplan-aware — UNCONDITIONAL claim/release loop (PRD-020):
+   g) Forgeplan-aware — UNCONDITIONAL claim/release loop (PRD-020 + PRD-021 MCP-first):
       Each teammate uses `${ARTIFACT_ID:-$SESSION_ID}` — real artifact when present, derived
       `SESSION-YYYY-MM-DD-HHMMSS` (set in §4a-bis) as fallback for chat-driven sprints.
-      - BEFORE starting work: run `forgeplan claim ${ARTIFACT_ID:-$SESSION_ID} --agent {kebab-name} --note "{wave-N task}"`
-        — soft signal "I'm working on this" (PRD-057). Skip ONLY if claim already held by same agent name.
+
+      **MCP-first** (when teammate sees `mcp__forgeplan__forgeplan_claim` in their tool list):
+      - BEFORE starting work: call `mcp__forgeplan__forgeplan_claim(id="${ARTIFACT_ID:-$SESSION_ID}", agent="{kebab-name}", note="{wave-N task}")`
+        — capture the response's `_next_action` for inclusion in final report.
       - AFTER completing: report the artifact ID (or session ID) + LOC summary so team-lead can
-        emit `forgeplan new evidence` post-wave (see step 4b-bis below).
-      - On failure / abort: `forgeplan release ${ARTIFACT_ID:-$SESSION_ID} --agent {kebab-name}` to free the slot.
+        emit `mcp__forgeplan__forgeplan_new(kind="evidence", title="...")` post-wave.
+      - On failure / abort: `mcp__forgeplan__forgeplan_release(id="${ARTIFACT_ID:-$SESSION_ID}", agent="{kebab-name}")` to free the slot.
+
+      **Shell fallback** (MCP tools not present):
+      - BEFORE: `forgeplan claim ${ARTIFACT_ID:-$SESSION_ID} --agent {kebab-name} --note "{wave-N task}"`
+      - AFTER: report ID + LOC for team-lead to emit `forgeplan new evidence ...`
+      - On failure: `forgeplan release ${ARTIFACT_ID:-$SESSION_ID} --agent {kebab-name}`
+
       Why unconditional: PRD-018 operating contract + PRD-020 close the gap where chat-driven
-      sprints (no artifact ID in the task) bypassed the artifact graph entirely. Now every
-      teammate is visible in `forgeplan claims` for the duration of their work.
+      sprints (no artifact ID in the task) bypassed the artifact graph entirely. PRD-021 adds
+      MCP-first preference: when MCP tools are available, prefer them — they return typed dicts
+      and methodology hints (`_next_action`) that can be relayed verbatim to user reports.
 
 3. WAIT for all wave agents to complete.
 
@@ -388,19 +427,43 @@ After ALL waves:
 5. Signal completion.
 ```
 
-### 4b-bis. Per-artifact evidence emission (UNCONDITIONAL — PRD-020)
+### 4b-bis. Per-artifact evidence emission (UNCONDITIONAL — PRD-020, MCP-first PRD-021)
 
 Team-lead emits **one evidence per completed artifact** at wave-close — not per teammate, not per wave. Same pattern for both modes; only the linked artifact differs.
 
-```bash
+**MCP-first path** (when `mcp__forgeplan__forgeplan_new` is available):
+
+```python
 # Artifact-driven (real PRD-NNN/RFC-NNN/SPEC-NNN in plan):
+evid = mcp__forgeplan__forgeplan_new(
+    kind="evidence",
+    title=f"{artifact_id}: {what_shipped} — {tests_smoke_status}"
+)
+mcp__forgeplan__forgeplan_link(
+    source=evid["id"],
+    target=artifact_id,
+    relation="informs"
+)
+# Relay evid["_next_action"] to your final report
+
+# Chat-driven (using SESSION_ID from §4a-bis):
+evid = mcp__forgeplan__forgeplan_new(
+    kind="evidence",
+    title=f"{SESSION_ID}: {sprint_description} — {what_shipped}"
+)
+# No link needed — SESSION-IDs are ephemeral
+```
+
+**Shell fallback** (MCP tools absent):
+
+```bash
+# Artifact-driven:
 forgeplan new evidence "{artifact-id}: {what shipped} — {tests/smoke status}"
 forgeplan link EVID-MMM {artifact-id} --relation informs
 
-# Chat-driven (no real artifact-ID — using SESSION_ID from §4a-bis):
-forgeplan new evidence "{SESSION_ID}: {sprint description} — {what shipped} — {tests/smoke status}"
-# No link needed — SESSION-IDs are ephemeral, evidence stands alone with descriptive title.
-# Optionally link to a NOTE if the work warrants persistent reference:
+# Chat-driven:
+forgeplan new evidence "{SESSION_ID}: {sprint description} — {what shipped}"
+# Optionally link to a NOTE for persistent reference:
 #   forgeplan new note "Sprint outcome: {description}"
 #   forgeplan link EVID-MMM NOTE-NNN --relation informs
 ```

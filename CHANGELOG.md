@@ -5,6 +5,79 @@ All notable changes to the ForgePlan Marketplace will be documented in this file
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.23.0] - 2026-05-08
+
+**MCP-first wiring across fpl-skills ecosystem (Phase 1)** — implements `mcp__forgeplan__*` tool preference in /sprint, /autorun, /forge-cycle, /forge-audit; bumps operating contract `:v1` → `:v2` with idempotent migration via `/fpl-init`; setup guide gains `/mcp` smoke step. Refs PRD-021 (Deep depth, conf 90%, validated PASS).
+
+### The motivation
+
+User directive: «mcp да должен быть в скиллах и во всей нашей экосистеме» («MCP should be in the skills and in our whole ecosystem»). PRD-018 contract `:v1` had a forward-compat note ("prefer `mcp__forgeplan__*` tools when wired"), but until v1.9.2 (PR #57) the MCP server didn't actually start due to bad `args` config. Post-v1.9.2 fix: ~60 `mcp__forgeplan__*` tools available, full lifecycle empirically validated end-to-end (EVID-033). PRD-021 makes this default behaviour in all 4 high-traffic multi-agent skills.
+
+### Phase 1 scope (this PRD ships)
+
+4 high-traffic skills + operating contract migration + setup guide. Phase 2 (PRD-022) will cover remaining ~18 skills.
+
+### Added
+- `fpl-skills` v1.9.2 → **1.10.0** (minor — new MCP-first behaviour with shell fallback):
+  - **Operating contract `:v2` block + idempotent migration** in `/fpl-init` step 7-bis:
+    - New marker `<!-- forgeplan-operating-contract:v2 -->` keys idempotency
+    - `:v1` block detected → user prompted to upgrade (one yes/no, default yes)
+    - Python migration replaces `:v1` block with `:v2` preserving surrounding content
+    - `:v2` content adds explicit "Tool selection" preamble: prefer `mcp__forgeplan__*` when present, fallback to shell, warn if neither
+    - Workflow commands now use MCP-style names (`forgeplan_search`, `forgeplan_claim`, `forgeplan_dispatch`, `forgeplan_new`, `forgeplan_link`, `forgeplan_score`, `forgeplan_activate`, `forgeplan_health`)
+  - **`/sprint` SKILL.md**:
+    - New top-level **"Tool selection (MCP vs shell — PRD-021)"** preamble with probe pattern + decision table
+    - §4a-bis dispatch: MCP-first variant (`mcp__forgeplan__forgeplan_dispatch`) + shell fallback
+    - §4b.g teammate-prompt: both MCP and shell variants — teammate selects MCP if `mcp__forgeplan__forgeplan_claim` is in their tool list
+    - §4b-bis evidence: MCP-first via `mcp__forgeplan__forgeplan_new` + `forgeplan_link`; shell fallback preserved
+    - `_next_action` field from MCP responses gets relayed to user reports
+  - **`/autorun` SKILL.md** autopilot directive: MCP-first preference baked in, propagates to delegated skills (sprint inherits)
+
+- `forgeplan-workflow` v1.6.0 → **1.7.0** (minor — MCP-first in /forge-cycle + /forge-audit):
+  - **`/forge-cycle` Step 5 Build**:
+    - New "Tool selection (MCP vs shell)" subsection with probe instructions
+    - SPARC pipeline (specification/pseudocode/architecture/refinement) shows both MCP variants (`mcp__forgeplan__forgeplan_claim` + `forgeplan_release`) and shell fallback
+    - Direct-implementation path (Standard/Tactical without SPARC) also gets MCP-first treatment
+  - **`/forge-audit` Step 1 + Step 5**:
+    - Step 1 claim slot: MCP-first with `ttl_minutes=60`; shell fallback
+    - Step 5 evidence emission: `mcp__forgeplan__forgeplan_new` + `forgeplan_link` + optional `forgeplan_score` re-compute on parent; shell fallback
+
+- **`docs/SETUP-GUIDE-NEW-REPO.md`** Step 7 (Smoke test):
+  - New §7.0 "MCP server reachable (PRD-021)" — instructs user to run `/mcp` after Claude Code restart, verify `forgeplan · ✓ connected`, troubleshoot if `failed` (typical cause: stale `args: ["mcp"]` — re-run `/fpl-init` auto-fixes)
+
+### Changed
+- `marketplace.json`: catalog 1.22.2 → **1.23.0** (minor — new behavior across two plugins); fpl-skills 1.9.2 → 1.10.0; forgeplan-workflow 1.6.0 → 1.7.0; descriptions updated to mention PRD-021.
+- `plugin.json` (fpl-skills): version 1.9.2 → 1.10.0.
+- `plugin.json` (forgeplan-workflow): version 1.6.0 → 1.7.0; description mentions MCP-first per PRD-021.
+
+### Notes
+
+**What this fundamentally changes**: previously skills called `forgeplan` via shell only. Even after MCP server worked (post-v1.9.2), agents kept calling shell because that's what the prose said. PRD-021 updates skill prose so agents *actively prefer* the structured MCP path when available.
+
+**`_next_action` methodology-as-protocol**: every MCP response includes a `_next_action` field where the forgeplan server itself populates the next correct workflow step ("Add structured fields, then forgeplan_link", "All passed! → forgeplan_activate", etc.). Skills relay this verbatim — server-driven methodology rather than skill-prose-encoded methodology.
+
+**Backward compat**: shell fallback preserved everywhere. If MCP tools absent (server not running, or pre-v1.9.2 broken config still in place), skills work identically to v1.9.2 behaviour. No regression for shell-only environments.
+
+**Migration**: existing user CLAUDE.md `:v1` blocks unchanged unless user re-runs `/fpl-init` and confirms upgrade. Fully idempotent — no surprise mutations.
+
+### Phase 2 (deferred to PRD-022)
+
+Remaining ~18 forgeplan-aware skills get MCP-first wiring in a follow-up PR:
+- /research, /audit, /diagnose, /refine, /build, /restore (single-agent flows)
+- /shape, /rfc, /riper (authoring flows — benefit most from `forgeplan_new` + `forgeplan_validate`)
+- /briefing, /forge-report, /do, /team (reports + orchestration)
+- /c4-diagram, /ddd-decompose, /migrate-from-dev-toolkit (specialised)
+- /bootstrap, /setup, /gh-project (init + integration)
+
+Phase 1 covers ~80% of forgeplan-traffic by user action volume; Phase 2 covers the long tail.
+
+### PRD-021 — Acceptance criteria status
+
+- [x] AC-1..AC-6 verified by design (skill prose includes both MCP and shell paths with probe-based selection)
+- [x] AC-7: `./scripts/validate-all-plugins.sh` passes
+- [x] AC-8: setup guide updated with `/mcp` smoke step
+- [ ] AC-9 (PRD-022 stub for Phase 2): deferred to next session
+
 ## [1.22.2] - 2026-05-08
 
 **Fix `/fpl-init` MCP server config** — `args: ["mcp"]` produced a hanging command (`forgeplan mcp` is a parent command waiting for subcommand), causing Claude Code to report `failed to reconnect to forgeplan` for every project bootstrapped with v1.6.0+ of `/fpl-init`. Switched to `args: ["serve"]` — the direct stdio MCP server entry-point.

@@ -15,11 +15,24 @@ Identify the project's language, framework, and structure:
 - Locate the main source directories and test directories.
 - Note the project's architecture pattern if detectable.
 
-**Claim the audit slot** so concurrent audits (or multi-agent races) are visible:
+**Claim the audit slot** so concurrent audits (or multi-agent races) are visible. **MCP-first preference per PRD-021**: probe deferred-tools list for `mcp__forgeplan__forgeplan_claim`; if present use MCP, else shell.
 
-```bash
+**MCP-first**:
+```python
 # If user invoked with explicit artifact-ID (e.g. "/forge-audit PRD-018"), use it.
 # Otherwise derive a synthetic SESSION-id with audit prefix.
+ARTIFACT_ID = artifact_arg or f"AUDIT-{datetime.utcnow().strftime('%Y-%m-%d-%H%M%S')}"
+result = mcp__forgeplan__forgeplan_claim(
+    id=ARTIFACT_ID,
+    agent="forge-audit/v1",
+    note="Multi-expert audit in progress",
+    ttl_minutes=60
+)
+# Relay result["_next_action"] to user report
+```
+
+**Shell fallback**:
+```bash
 ARTIFACT_ID="${1:-AUDIT-$(date -u +%Y-%m-%d-%H%M%S)}"
 forgeplan claim "$ARTIFACT_ID" --agent forge-audit/v1 --note "Multi-expert audit in progress" --ttl-minutes 60
 ```
@@ -109,16 +122,33 @@ For every CRITICAL and HIGH finding:
 - Provide a concrete code fix or clear remediation steps.
 - Explain why it matters (impact if left unfixed).
 
-## Step 5: Create Evidence + Release claim (UNCONDITIONAL — PRD-020)
+## Step 5: Create Evidence + Release claim (UNCONDITIONAL + MCP-FIRST — PRD-020 + PRD-021)
 
 Always emit at least one evidence artifact recording the audit, then release the claim from Step 1. Evidence is no longer "optional" — it's the audit trail PRD-018 requires. User-confirmation only applies to *content* edits, not to whether evidence gets created.
 
-```bash
+**MCP-first**:
+```python
 # Evidence — always created (links to ARTIFACT_ID from Step 1)
-EVID_ID=$(forgeplan new evidence "Code audit ${ARTIFACT_ID} - $(date -u +%Y-%m-%d): <verdict-summary>" --json | jq -r '.id')
-forgeplan link "$EVID_ID" "$ARTIFACT_ID" --relation informs
+evid = mcp__forgeplan__forgeplan_new(
+    kind="evidence",
+    title=f"Code audit {ARTIFACT_ID} - {today}: {verdict_summary}"
+)
+mcp__forgeplan__forgeplan_link(
+    source=evid["id"],
+    target=ARTIFACT_ID,
+    relation="informs"
+)
+# Optionally re-score the parent artifact via MCP
+mcp__forgeplan__forgeplan_score(id=ARTIFACT_ID)
 
 # Release the audit claim
+mcp__forgeplan__forgeplan_release(id=ARTIFACT_ID, agent="forge-audit/v1")
+```
+
+**Shell fallback**:
+```bash
+EVID_ID=$(forgeplan new evidence "Code audit ${ARTIFACT_ID} - $(date -u +%Y-%m-%d): <verdict-summary>" --json | jq -r '.id')
+forgeplan link "$EVID_ID" "$ARTIFACT_ID" --relation informs
 forgeplan release "$ARTIFACT_ID" --agent forge-audit/v1
 ```
 

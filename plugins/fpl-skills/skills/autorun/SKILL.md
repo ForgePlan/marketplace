@@ -109,17 +109,23 @@ Skip every "Proceed?" / "Continue to next wave?" / "Запускаем?" prompt 
 Resolve blockers via ADI (Abduct → Induct → Deduce), 3 rounds max per blocker.
 Only stop on red-line actions (see /autorun red lines). Surface state and exit cleanly when red line hit.
 
-FORGEPLAN-AWARE — UNCONDITIONAL when forgeplan CLI is on $PATH (PRD-020):
+FORGEPLAN-AWARE — UNCONDITIONAL with MCP-FIRST preference (PRD-020 + PRD-021):
+
+TOOL SELECTION: probe Claude Code's deferred-tools list once at autorun start.
+- If `mcp__forgeplan__*` tools present → MCP path (preferred): typed dicts + `_next_action` server hints to relay verbatim to user reports.
+- Else if `forgeplan` shell on $PATH → shell fallback (same semantics).
+- Else → warn once, run pipeline as chat-coordination only (no artifact ops).
+
 - /sprint derives SESSION_ID="SESSION-$(date -u +%Y-%m-%d-%H%M%S)" once per sprint (§4a-bis).
   Used as fallback artifact-id when task has no real PRD-NNN/RFC-NNN/SPEC-NNN.
-- Every teammate runs `forgeplan claim ${ARTIFACT_ID:-$SESSION_ID} --agent <name>` before starting (§4b.g).
+- Every teammate (MCP or shell) runs `forgeplan_claim id="${ARTIFACT_ID:-$SESSION_ID}" agent="<name>"` before starting (§4b.g).
   No "skip if no artifact-ID" branch — every teammate registers in the graph.
-- `forgeplan dispatch -n N --json` is artifact-aware: only useful when real artifact-IDs
-  with affected_files are in the plan. For chat-driven sprints, dispatch logs "skipped"
-  but session-claim wiring still applies.
-- Team-lead emits `forgeplan new evidence` at wave-close (§4b-bis) for both real artifacts
-  and SESSION-IDs. Chat-driven sprints now emit ≥1 evidence per sprint (was 0 in v1.6.0).
-- See sprint SKILL.md sections 4a-bis / 4b.g / 4b-bis for the wired pattern.
+- `forgeplan_dispatch agents=N` (MCP) or `forgeplan dispatch -n N --json` (shell) is artifact-aware:
+  only useful when real artifact-IDs with affected_files are in the plan.
+- Team-lead emits `forgeplan_new kind=evidence` (MCP) or `forgeplan new evidence` (shell) at wave-close (§4b-bis)
+  for both real artifacts and SESSION-IDs. Chat-driven sprints now emit ≥1 evidence per sprint.
+- Relay `_next_action` field from MCP responses to user reports (server-driven methodology hint).
+- See sprint SKILL.md sections "Tool selection" / 4a-bis / 4b.g / 4b-bis for the full wired pattern.
 ```
 
 ---

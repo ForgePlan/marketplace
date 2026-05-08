@@ -71,50 +71,69 @@ If depth is Critical, also create ADR with `forgeplan new adr "<title>"` for the
 
 Implement the code changes according to the PRD requirements.
 
-**Forgeplan-aware spawning (UNCONDITIONAL — PRD-020)**: every sub-agent claims the artifact before starting and releases on completion. For Tactical work without a created PRD, derive `SESSION_ID="SESSION-$(date -u +%Y-%m-%d-%H%M%S)"` and use it as the artifact-id below. This makes every SPARC phase visible in `forgeplan claims` for the duration of work.
+**Forgeplan-aware spawning (UNCONDITIONAL + MCP-FIRST — PRD-020 + PRD-021)**: every sub-agent claims the artifact before starting and releases on completion. For Tactical work without a created PRD, derive `SESSION_ID="SESSION-$(date -u +%Y-%m-%d-%H%M%S)"` and use it as the artifact-id below.
 
-**For Deep+ tasks with agents-sparc installed**, use the SPARC methodology with per-phase claim/release:
+### Tool selection (MCP vs shell)
 
-```bash
-ARTIFACT_ID="${PRD_ID:-SESSION-$(date -u +%Y-%m-%d-%H%M%S)}"
+Probe once at start of Step 5: list available tools via `ToolSearch query="select:mcp__forgeplan__forgeplan_claim"`. If schema returns — **MCP path** (preferred); else **shell fallback**. MCP returns typed dicts + `_next_action` server hint for relay.
+
+**For Deep+ tasks with agents-sparc installed**, SPARC methodology with per-phase claim/release:
+
+**MCP-first**:
+```python
+ARTIFACT_ID = PRD_ID or f"SESSION-{datetime.utcnow().strftime('%Y-%m-%d-%H%M%S')}"
 
 # Phase 1 — Specification
-forgeplan claim "$ARTIFACT_ID" --agent sparc-specification/v1 --note "Step 5 — Specification phase"
+mcp__forgeplan__forgeplan_claim(id=ARTIFACT_ID, agent="sparc-specification/v1", note="Step 5 — Specification phase")
 # spawn `specification` agent for requirements and acceptance criteria
-forgeplan release "$ARTIFACT_ID" --agent sparc-specification/v1
+mcp__forgeplan__forgeplan_release(id=ARTIFACT_ID, agent="sparc-specification/v1")
 
 # Phase 2 — Pseudocode
-forgeplan claim "$ARTIFACT_ID" --agent sparc-pseudocode/v1 --note "Step 5 — Pseudocode phase"
+mcp__forgeplan__forgeplan_claim(id=ARTIFACT_ID, agent="sparc-pseudocode/v1", note="Step 5 — Pseudocode phase")
 # spawn `pseudocode` agent for algorithm design
-forgeplan release "$ARTIFACT_ID" --agent sparc-pseudocode/v1
+mcp__forgeplan__forgeplan_release(id=ARTIFACT_ID, agent="sparc-pseudocode/v1")
 
 # Phase 3 — Architecture
-forgeplan claim "$ARTIFACT_ID" --agent sparc-architecture/v1 --note "Step 5 — Architecture phase"
-# spawn `architecture` agent for system design and diagrams
-forgeplan release "$ARTIFACT_ID" --agent sparc-architecture/v1
+mcp__forgeplan__forgeplan_claim(id=ARTIFACT_ID, agent="sparc-architecture/v1", note="Step 5 — Architecture phase")
+# spawn `architecture` agent
+mcp__forgeplan__forgeplan_release(id=ARTIFACT_ID, agent="sparc-architecture/v1")
 
 # Phase 4 — Refinement
-forgeplan claim "$ARTIFACT_ID" --agent sparc-refinement/v1 --note "Step 5 — Refinement phase"
-# spawn `refinement` agent for TDD and implementation
-forgeplan release "$ARTIFACT_ID" --agent sparc-refinement/v1
+mcp__forgeplan__forgeplan_claim(id=ARTIFACT_ID, agent="sparc-refinement/v1", note="Step 5 — Refinement phase")
+# spawn `refinement` agent for TDD + implementation
+mcp__forgeplan__forgeplan_release(id=ARTIFACT_ID, agent="sparc-refinement/v1")
 
 # Phase 5 — Completion: integration and docs (no separate claim)
 ```
 
-Use `sparc-orchestrator` to coordinate phases. Fall back to direct implementation if agents-sparc is not installed — but **still claim the artifact** before direct work and release after.
-
-**For Standard/Tactical tasks**, implement directly with claim wrapping:
-
+**Shell fallback**:
 ```bash
 ARTIFACT_ID="${PRD_ID:-SESSION-$(date -u +%Y-%m-%d-%H%M%S)}"
-forgeplan claim "$ARTIFACT_ID" --agent forge-cycle/v1 --note "Step 5 — direct implementation"
+
+forgeplan claim "$ARTIFACT_ID" --agent sparc-specification/v1 --note "Step 5 — Specification phase"
+# spawn `specification` agent
+forgeplan release "$ARTIFACT_ID" --agent sparc-specification/v1
+
+# (repeat pattern for pseudocode, architecture, refinement)
+```
+
+Use `sparc-orchestrator` to coordinate phases. Fall back to direct implementation if agents-sparc is not installed — but **still claim the artifact** before direct work and release after.
+
+**For Standard/Tactical tasks**, implement directly with claim wrapping (MCP-first; shell fallback otherwise):
+
+```python
+# MCP-first
+ARTIFACT_ID = PRD_ID or f"SESSION-{datetime.utcnow().strftime('%Y-%m-%d-%H%M%S')}"
+mcp__forgeplan__forgeplan_claim(id=ARTIFACT_ID, agent="forge-cycle/v1", note="Step 5 — direct implementation")
 # Write clean, well-structured code following project conventions.
 # Add or update tests to cover the new functionality.
 # Run the project's test suite and ensure all tests pass.
-forgeplan release "$ARTIFACT_ID" --agent forge-cycle/v1
+mcp__forgeplan__forgeplan_release(id=ARTIFACT_ID, agent="forge-cycle/v1")
 ```
 
-**Why unconditional (PRD-020)**: prior to v1.6.0 of forgeplan-workflow, /forge-cycle spawned SPARC agents directly via Task tool with zero forgeplan claim wiring. That left the artifact graph silent during the most important phase (build), defeating the audit trail PRD-018 set up in CLAUDE.md. Now every SPARC phase is visible.
+**Why MCP-first (PRD-021)**: typed dicts + `_next_action` field on every response = methodology-as-protocol. Server tells client what's the correct Shape→Validate→Code→Evidence→Activate next-step. Skills relay these hints to reports instead of hardcoding next steps in prose.
+
+**Why unconditional (PRD-020)**: prior to v1.6.0 of forgeplan-workflow, /forge-cycle spawned SPARC agents directly via Task tool with zero forgeplan claim wiring. Now every SPARC phase is visible in `forgeplan_claims`.
 
 ## Step 6: Run Tests
 
