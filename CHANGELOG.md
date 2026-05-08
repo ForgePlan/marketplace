@@ -5,6 +5,46 @@ All notable changes to the ForgePlan Marketplace will be documented in this file
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.20.0] - 2026-05-08
+
+**Forgeplan operating contract enforcement** — closes the gap where skills described forgeplan integration but didn't enforce it across sessions. Refs PRD-018 (planned and validated via `/forge-cycle` autonomous run).
+
+The frustration this fixes: agents read SKILL.md only when a skill triggers; between skill invocations they fall back to general heuristics and skip artifact-graph operations (`forgeplan search`, `new evidence`, `link`, `activate`). User had to manually remind every session. Now the contract lives in CLAUDE.md (auto-loaded into every session context) plus the SessionStart hook surfaces concrete next-action when health is non-clean.
+
+### Added
+- `fpl-skills` v1.6.0 → **1.7.0** (minor — two new behaviours, both forgeplan-CLI-gated, fully backward-compatible):
+  - **`/fpl-init` step 7-bis: operating contract injection into project CLAUDE.md**
+    - When `/fpl-init` runs in a project with forgeplan CLI on `$PATH`, it offers (one yes/no prompt, defaults to yes per step-3 plan approval) to append a 13-line `## Forgeplan operating contract` section to project CLAUDE.md.
+    - Section structure: **Before** (`forgeplan search` + `list -s draft`) → **During** (multi-agent: `claim` + `dispatch`) → **After** (`new evidence` + `link` + `score` + `activate`). Plus a forward-compat note about preferring `mcp__forgeplan__*` tools when available.
+    - Idempotent via marker `<!-- forgeplan-operating-contract:v1 -->`. Re-running `/fpl-init` detects the marker and skips re-injection silently.
+    - Step 11 (Report) gains an "Operating contract" line.
+  - **SessionStart hook: `forgeplan health --json` next-action surfacing**
+    - `plugins/fpl-skills/hooks/scripts/session-start.sh` now runs `timeout 2 forgeplan health --json` (gracefully degrading on absence/error) and surfaces a 2-line next-action when the artifact graph is non-clean (orphans, stubs, possible-duplicates, or stale evidence).
+    - Output format: `⚠ forgeplan health: <N orphans / N stubs (id-list) / N possible-dup pairs / N stale evidence> — close before new work` + `→ <first concrete CLI from forgeplan's own next_actions array>`.
+    - Healthy projects print no extra line. CLI absent → no extra line. Python3 used for JSON parsing (already a hook dependency); 2-second timeout caps the cost.
+
+### Changed
+- `marketplace.json`: catalog 1.19.0 → **1.20.0**; fpl-skills entry 1.6.0 → 1.7.0; description updated to mention contract injection + hook.
+- `plugin.json` (fpl-skills): version 1.6.0 → 1.7.0.
+
+### Notes
+**Why CLAUDE.md and not skill prose**: skill descriptions live in SKILL.md and load only when their skill triggers. Between triggers, agents work from system context where skill rules don't reach. CLAUDE.md is auto-loaded into every session by Claude Code — the contract sits in the always-on context. This is the strongest enforcement lever the marketplace can pull without changing forgeplan-core.
+
+**Forward-compat to option B (MCP wiring)**: contract mentions `mcp__forgeplan__*` tools as preferred when available. When option B lands (separate PR — `.mcp.json` config + `mcp__forgeplan__*` callsites in skills), no contract change needed.
+
+**Out of scope (deferred)**:
+- Refactoring all 22 forgeplan-aware skills to share a single `FORGEPLAN-PROBE.md` reference (option C from prior discussion). With contract in CLAUDE.md, the per-skill probe-section refactor has diminishing returns.
+- Auto-detecting forgeplan and injecting without asking. The contract injection requires explicit user yes — agent autonomy stops at modifying user-owned files.
+
+### PRD-018 — Acceptance criteria status
+
+- [x] AC-1: `/fpl-init` in fresh repo offers contract injection — implemented via step 7-bis prose.
+- [x] AC-2: Contract section appears in CLAUDE.md with the four-phase template — verified template in skill prose.
+- [x] AC-3: Re-running `/fpl-init` skips on marker presence — idempotency guard documented.
+- [x] AC-4: SessionStart in repo with stubs prints concrete warning + tip — parser tested with simulated non-clean JSON.
+- [x] AC-5: SessionStart in repo without forgeplan CLI prints baseline only — `command -v forgeplan` guard.
+- [x] AC-6: `./scripts/validate-all-plugins.sh` passes — verified pre-commit.
+
 ## [1.19.0] - 2026-05-08
 
 `/sprint` and `/autorun` now wire the **forgeplan dispatch + claim + evidence loop** for artifact-driven sprints. Tasks taken from forgeplan as artifacts (PRD-NNN/RFC-NNN/SPEC-NNN), parallel-safe grouping computed by PRD-057 dispatcher, soft-claim per teammate, evidence emitted per artifact at wave-close.

@@ -41,4 +41,48 @@ else
   echo "   Quick start: /restore (recover context) · /briefing (today's tasks) · /research <topic>"
 fi
 
+# ─── forgeplan health next-action surfacing ───────────────────────────────
+# When forgeplan is present and the artifact graph is non-clean (orphans,
+# stubs, dups, or stale), print one concrete next-action line. Fail silently
+# on any error — the hook must never block session start.
+if [ "$HAS_FORGEPLAN_DIR" = "yes" ] && command -v forgeplan >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1; then
+  HEALTH_JSON=$(timeout 2 forgeplan health --json 2>/dev/null || echo "")
+  if [ -n "$HEALTH_JSON" ]; then
+    NEXT_ACTION=$(printf '%s' "$HEALTH_JSON" | python3 -c '
+import json, sys
+try:
+    d = json.load(sys.stdin)
+    if d.get("verdict") == "healthy":
+        sys.exit(0)
+    parts = []
+    orphans = d.get("orphans") or []
+    if orphans:
+        suffix = "s" if len(orphans) != 1 else ""
+        parts.append(str(len(orphans)) + " orphan" + suffix)
+    stubs = d.get("active_stubs") or []
+    if stubs:
+        ids = [s["id"] for s in stubs[:3]]
+        more = "..." if len(stubs) > 3 else ""
+        parts.append(str(len(stubs)) + " stub(s) (" + ", ".join(ids) + more + ")")
+    dups = d.get("possible_duplicates") or []
+    if dups:
+        parts.append(str(len(dups)) + " possible-dup pair(s)")
+    stale = d.get("stale_count", 0) or 0
+    if stale > 0:
+        parts.append(str(stale) + " stale evidence")
+    if parts:
+        print("   ⚠ forgeplan health: " + " / ".join(parts) + " — close before new work")
+        nxt = d.get("next_actions") or []
+        if nxt:
+            line = nxt[0]
+            if "`" in line:
+                line = line.split("`")[1]
+            print("   → " + line[:90])
+except Exception:
+    pass
+' 2>/dev/null)
+    [ -n "$NEXT_ACTION" ] && printf '%s\n' "$NEXT_ACTION"
+  fi
+fi
+
 exit 0
