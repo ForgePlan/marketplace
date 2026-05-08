@@ -128,7 +128,7 @@ Reference: [gh project field-create](https://cli.github.com/manual/gh_project_fi
 
 [GitHub docs reference](https://docs.github.com/en/issues/planning-and-tracking-with-projects/automating-your-project/adding-items-automatically).
 
-### Вариант 2 — `actions/add-to-project@v1` workflow
+### Вариант 2 — `actions/add-to-project@v2` workflow (SHA-pinned)
 
 Когда нужно больше контроля: AND/OR/NOT label-фильтры, multi-repo source, кастомные триггеры.
 
@@ -267,7 +267,8 @@ Configuration is in `.forgeplan/state/gh-project.yaml` (per-project, not committ
 | Workflow срабатывает но item не на доске | Token не может писать в проект | Переключиться с `GITHUB_TOKEN` на PAT-секрет |
 | `/gh-project link-prd` падает с "missing field 'Forgeplan-ID'" | Поле не создано на доске | Запустить `gh project field-create` команду из warning'а `/gh-project init` |
 | `gh auth refresh` говорит "fine-grained tokens cannot be refreshed" | Используется fine-grained PAT | Сгенерировать новый PAT вручную с нужными scopes |
-| Item уже на доске, дубль создаётся | Старый `actions/add-to-project@v0` имел bug | Обновить до `@v1` |
+| `Unable to resolve action @v1` | Нет floating `v1` тега — только `v1.0.x` версии и `v2`/`v2.0.0` | Использовать `@v2` (latest major) или SHA-pin `@<sha> # v2.0.0` |
+| Item уже на доске, дубль создаётся | Старый `actions/add-to-project@v0` имел bug | Обновить до `@v2` (SHA-pinned) |
 
 ---
 

@@ -6,10 +6,12 @@
 #    https://github.com/orgs/ForgePlan/projects/5  (org-level)
 #    https://github.com/users/explosivebit/projects/3  (user-level)
 # 3. Ensure repo or org has a secret named ADD_TO_PROJECT_PAT or use GITHUB_TOKEN
-#    if your org allows GITHUB_TOKEN to write to projects (org settings → Actions).
+#    if your org allows GITHUB_TOKEN to write to projects (org settings -> Actions).
 #    PAT scopes (classic): project, repo (for private repos)
-#    PAT scopes (fine-grained): Organization → Projects (read+write), Repository → Issues + PRs (read)
-# 4. Optional — narrow scope by labels: see `labeled` filter below.
+#    PAT scopes (fine-grained): Organization -> Projects (read+write), Repository -> Issues + PRs (read)
+# 4. Optional - narrow scope by labels: see `labeled` filter below.
+# 5. Bump the SHA below when a new actions/add-to-project major version ships.
+#    Get current SHA: gh api repos/actions/add-to-project/git/ref/tags/v2.x.x --jq '.object.sha'
 #
 # Reference: https://github.com/actions/add-to-project
 
@@ -22,7 +24,7 @@ on:
     types: [opened, reopened, ready_for_review]
 
 permissions:
-  # Read-only on this repo's issues/PRs; write on the project.
+  # Read-only on this repo's issues/PRs; project write is on the action's token side.
   contents: read
   issues: read
   pull-requests: read
@@ -32,7 +34,8 @@ jobs:
     name: Add issue/PR to project
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/add-to-project@v1
+      # SHA-pinned to v2.0.0 (security best practice — never trust floating major tags).
+      - uses: actions/add-to-project@5afcf98fcd03f1c2f92c3c83f58ae24323cc57fd # v2.0.0
         with:
           project-url: '{{PROJECT_URL}}'
           # If GITHUB_TOKEN can't write to your project, replace with secrets.ADD_TO_PROJECT_PAT

@@ -128,7 +128,7 @@ Configured in the project UI, no Actions file needed.
 
 [GitHub docs reference](https://docs.github.com/en/issues/planning-and-tracking-with-projects/automating-your-project/adding-items-automatically).
 
-### Option 2 — `actions/add-to-project@v1` workflow
+### Option 2 — `actions/add-to-project@v2` workflow (SHA-pinned)
 
 When you need more control: AND/OR/NOT label filters, multi-repo source, custom triggers.
 
@@ -267,7 +267,8 @@ Configuration is in `.forgeplan/state/gh-project.yaml` (per-project, not committ
 | Workflow fires but item not on board | Token can't write to project | Switch from `GITHUB_TOKEN` to PAT-secret |
 | `/gh-project link-prd` fails with "missing field 'Forgeplan-ID'" | Field not created on board | Run the `gh project field-create` command from `/gh-project init` warning |
 | `gh auth refresh` says "fine-grained tokens cannot be refreshed" | Using fine-grained PAT | Generate new PAT manually with required scopes |
-| Item already on board, duplicate created | Old `actions/add-to-project@v0` had a bug | Upgrade to `@v1` |
+| `Unable to resolve action @v1` | No floating `v1` tag — only `v1.0.x` versions and `v2`/`v2.0.0` | Use `@v2` (latest major) or pin SHA `@<sha> # v2.0.0` |
+| Item already on board, duplicate created | Old `actions/add-to-project@v0` had a bug | Upgrade to `@v2` (SHA-pinned) |
 
 ---
 
