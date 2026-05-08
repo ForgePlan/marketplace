@@ -46,7 +46,13 @@ fi
 # stubs, dups, or stale), print one concrete next-action line. Fail silently
 # on any error — the hook must never block session start.
 if [ "$HAS_FORGEPLAN_DIR" = "yes" ] && command -v forgeplan >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1; then
-  HEALTH_JSON=$(timeout 2 forgeplan health --json 2>/dev/null || echo "")
+  # `timeout` is GNU coreutils — present on Linux + homebrew macOS, missing on bare macOS.
+  # Fall back to running forgeplan directly when timeout is absent.
+  if command -v timeout >/dev/null 2>&1; then
+    HEALTH_JSON=$(timeout 2 forgeplan health --json 2>/dev/null || echo "")
+  else
+    HEALTH_JSON=$(forgeplan health --json 2>/dev/null || echo "")
+  fi
   if [ -n "$HEALTH_JSON" ]; then
     NEXT_ACTION=$(printf '%s' "$HEALTH_JSON" | python3 -c '
 import json, sys
