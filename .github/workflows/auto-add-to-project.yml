@@ -1,0 +1,33 @@
+# Auto-add issues + PRs from forgeplan-marketplace to ForgePlan/projects/5.
+# Filled-in copy of docs/templates/auto-add-to-project.yml — keep them in sync.
+# If you fork this repo or set up a new ForgePlan project, copy the template
+# from docs/templates/auto-add-to-project.yml and replace {{PROJECT_URL}}.
+
+name: Auto-add to project
+
+on:
+  issues:
+    types: [opened, reopened]
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
+jobs:
+  add-to-project:
+    name: Add issue/PR to ForgePlan project 5
+    runs-on: ubuntu-latest
+    steps:
+      # SHA-pinned to v2.0.0 — matches repo convention (see validate-plugins.yml).
+      # Update SHA when bumping version: gh api repos/actions/add-to-project/git/ref/tags/v2.x.x --jq '.object.sha'
+      - uses: actions/add-to-project@5afcf98fcd03f1c2f92c3c83f58ae24323cc57fd # v2.0.0
+        with:
+          project-url: 'https://github.com/orgs/ForgePlan/projects/5'
+          # GITHUB_TOKEN works only if org Actions settings allow project writes.
+          # If it fails, create a fine-grained PAT (Org -> Projects: read+write) and
+          # store as ADD_TO_PROJECT_PAT secret, then change line below to:
+          # github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
