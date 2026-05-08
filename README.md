@@ -24,6 +24,7 @@ Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/
 | 🔁 [Autoresearch integration](docs/AUTORESEARCH-INTEGRATION.md) | Combining `uditgoenka/autoresearch` (metric-driven loops) with `/forge-cycle` lifecycle |
 | 🧭 [AI-SDLC mapping](docs/AI-SDLC-MAPPING.md) | Phase-by-phase map for users coming from AI-SDLC vocabulary (Concept → Research → Design → Build → Test → Release → Operate → Maintain) |
 | 📚 [Upstream methodologies](docs/UPSTREAM-METHODOLOGIES.md) | Bibliography — pointers to Quint-code, BMAD, OpenSpec, FPF, Karpathy autoresearch, git-adr, ccpm, adr-tools |
+| 🛠 [Setup Guide for new repo](docs/SETUP-GUIDE-NEW-REPO.md) | End-to-end bootstrap (~20 min): forgeplan + Claude Code plugins + GitHub Projects v2 + auto-add workflow + convention. Use when adding a new ForgePlan repo to the ecosystem. |
 | 🚚 [Migration: dev-toolkit → fpl-skills](docs/MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS.md) | Switching plugins safely (side-by-side or clean-cut, with rollback plan) |
 | 🗂 [Tracker Integration](docs/TRACKER-INTEGRATION.md) | Recipes for Orchestra · GitHub Issues · Linear · Jira · local TODO |
 | 🌐 [Forgeplan Web](docs/FORGEPLAN-WEB.md) | Browser viewer — time-travel slider + artifact graph + health dashboard |
