@@ -272,40 +272,83 @@ scratch" because the template seems too verbose. The verbosity is the
 point — the U-curve attention model needs primacy/recency zones to be
 populated. A thin file silently strips guard rails.
 
-### 7-bis. Inject forgeplan operating contract into CLAUDE.md
+### 7-bis. Inject forgeplan operating contract into CLAUDE.md (v2 — MCP-first)
 
-If forgeplan CLI is on `$PATH` (probed in step 2), append the **operating contract** to CLAUDE.md. This makes forgeplan-aware behaviour the default for every session in the project — without it, agents revert to general heuristics and skip artifact-graph operations under context pressure (the failure mode this section fixes).
+If forgeplan CLI is on `$PATH` (probed in step 2), append the **operating contract** to CLAUDE.md. This makes forgeplan-aware behaviour the default for every session in the project — without it, agents revert to general heuristics and skip artifact-graph operations under context pressure.
 
-**Idempotency check** — read CLAUDE.md and look for the version marker `<!-- forgeplan-operating-contract:v1 -->`. If present, skip silently and continue to step 8. If absent, ask the user once:
+**Idempotency check** — read CLAUDE.md and look for **either** marker:
+
+| Marker found | Action |
+|---|---|
+| `<!-- forgeplan-operating-contract:v2 -->` | ✓ Latest version present — skip silently, continue to step 8 |
+| `<!-- forgeplan-operating-contract:v1 -->` (only) | Old version present (PRD-018 era; pre-MCP). Prompt user to **upgrade to v2** (one yes/no). On yes: replace `:v1` block with `:v2` block. On no: leave alone, continue. |
+| Neither present | Prompt user once (default yes per step-3 plan approval) to inject `:v2` block fresh |
 
 ```
-Inject the 13-line forgeplan operating contract into CLAUDE.md? It tells future
-agents to use forgeplan as source-of-truth on every non-trivial task — search
-before creating, claim before working, evidence after finishing. [y/n]
+Inject the 14-line forgeplan operating contract into CLAUDE.md (v2 — MCP-first)?
+It tells future agents to use forgeplan as source-of-truth on every non-trivial
+task — search before creating, claim before working, evidence after finishing,
+preferring mcp__forgeplan__* tools over shell when MCP server is wired. [y/n]
 ```
 
-Default to `y` (per the step-3 plan approval). If user says no — skip; do not warn again.
+If user says no — skip; do not warn again.
 
-If yes — append (NOT replace) the following block to `./CLAUDE.md`:
+If yes — append the following `:v2` block (or replace `:v1` block if upgrading):
 
 ```markdown
-<!-- forgeplan-operating-contract:v1 -->
+<!-- forgeplan-operating-contract:v2 -->
 ## Forgeplan operating contract (this project)
 
-Forgeplan is the source of truth for artifacts in this project. On every non-trivial task you MUST:
+Forgeplan is the source of truth for artifacts in this project. On every non-trivial task you MUST follow this workflow.
 
-**Before** — `forgeplan search "<topic>"` then `forgeplan list -s draft`. Find related artifacts before creating new ones (avoid duplicates; reuse existing).
-**During** (multi-agent / artifact-driven) — `forgeplan claim <ID> --agent <name>` per teammate before they start; `forgeplan dispatch -n N --json` for parallel-safe wave grouping.
-**After** — `forgeplan new evidence "<summary>"` + `forgeplan link EVID-MMM <ARTIFACT-ID> --relation informs` + `forgeplan score <ARTIFACT-ID>` + `forgeplan activate <ARTIFACT-ID>` if R_eff > 0.
+**Tool selection** — if Claude Code's deferred-tools list contains `mcp__forgeplan__*` tools (forgeplan MCP server wired in `.mcp.json` and reachable), **prefer the MCP path** over shell. MCP returns typed dicts and includes a `_next_action` field on every response — relay that to your reports. If MCP tools are absent, fall back to shell `forgeplan` CLI. If neither works (`command -v forgeplan` fails), warn once at session start and proceed without artifact ops.
 
-Prefer `mcp__forgeplan__*` tools over shell when forgeplan MCP is wired in `.mcp.json`. If `command -v forgeplan` fails, warn once at session start and proceed without artifact ops.
+**Before** — `forgeplan_search` (or shell `forgeplan search`) then `forgeplan_list status=draft`. Find related artifacts before creating new ones.
+**During** (multi-agent / artifact-driven) — `forgeplan_claim id=<ID> agent=<name>` per teammate before they start; `forgeplan_dispatch agents=N` for parallel-safe wave grouping.
+**After** — `forgeplan_new kind=evidence title=...` + `forgeplan_link source=EVID-MMM target=<ARTIFACT-ID> relation=informs` + `forgeplan_score id=<ARTIFACT-ID>` + `forgeplan_activate id=<ARTIFACT-ID>` if R_eff > 0.
 
-This is enforcement, not recommendation. Skipping leaves the artifact graph empty — `forgeplan health` will flag orphans / missing evidence / stale stubs.
+This is enforcement, not recommendation. Skipping leaves the artifact graph empty — `forgeplan_health` will flag orphans / missing evidence / stale stubs.
 ```
 
-The marker `<!-- forgeplan-operating-contract:v1 -->` is **load-bearing**: re-running `/fpl-init` keys off this marker to avoid double-appending. If the contract evolves to v2, change the marker and add a migration note rather than mutating the v1 block in place.
+The marker `<!-- forgeplan-operating-contract:v2 -->` is **load-bearing**: re-running `/fpl-init` keys off this marker to detect already-current state. The `:v1` → `:v2` upgrade path preserves user-customised content above/below the contract block by replacing only the marker-delimited region.
 
-**Verify**: `grep -q 'forgeplan-operating-contract:v1' CLAUDE.md` returns 0. Echo "✓ operating contract injected" or "✓ contract already present, skipped" depending on path taken.
+**Migration implementation** (Python — same pattern as `.mcp.json` merge):
+
+```bash
+python3 - <<'PY'
+import re, pathlib
+
+V2_BLOCK = '''<!-- forgeplan-operating-contract:v2 -->
+## Forgeplan operating contract (this project)
+
+Forgeplan is the source of truth for artifacts in this project. On every non-trivial task you MUST follow this workflow.
+
+**Tool selection** — if Claude Code's deferred-tools list contains `mcp__forgeplan__*` tools (forgeplan MCP server wired in `.mcp.json` and reachable), **prefer the MCP path** over shell. MCP returns typed dicts and includes a `_next_action` field on every response — relay that to your reports. If MCP tools are absent, fall back to shell `forgeplan` CLI. If neither works (`command -v forgeplan` fails), warn once at session start and proceed without artifact ops.
+
+**Before** — `forgeplan_search` (or shell `forgeplan search`) then `forgeplan_list status=draft`. Find related artifacts before creating new ones.
+**During** (multi-agent / artifact-driven) — `forgeplan_claim id=<ID> agent=<name>` per teammate before they start; `forgeplan_dispatch agents=N` for parallel-safe wave grouping.
+**After** — `forgeplan_new kind=evidence title=...` + `forgeplan_link source=EVID-MMM target=<ARTIFACT-ID> relation=informs` + `forgeplan_score id=<ARTIFACT-ID>` + `forgeplan_activate id=<ARTIFACT-ID>` if R_eff > 0.
+
+This is enforcement, not recommendation. Skipping leaves the artifact graph empty — `forgeplan_health` will flag orphans / missing evidence / stale stubs.'''
+
+p = pathlib.Path("CLAUDE.md")
+txt = p.read_text() if p.exists() else ""
+
+if "<!-- forgeplan-operating-contract:v2 -->" in txt:
+    print("v2 already present, no change")
+elif "<!-- forgeplan-operating-contract:v1 -->" in txt:
+    # Replace v1 block (marker through end of contract section)
+    pattern = r'<!-- forgeplan-operating-contract:v1 -->.*?(?=\n---|\n## (?!Forgeplan)|\Z)'
+    new_txt = re.sub(pattern, V2_BLOCK, txt, count=1, flags=re.DOTALL)
+    p.write_text(new_txt)
+    print("upgraded :v1 → :v2")
+else:
+    p.write_text(txt.rstrip() + "\n\n" + V2_BLOCK + "\n")
+    print("v2 injected fresh")
+PY
+```
+
+**Verify**: `grep -q 'forgeplan-operating-contract:v2' CLAUDE.md` returns 0. Echo "✓ operating contract v2 injected" / "✓ upgraded v1 → v2" / "✓ v2 already present, skipped" depending on path taken.
 
 ### 8. Run `/setup` flow
 

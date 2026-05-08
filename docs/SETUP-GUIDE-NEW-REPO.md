@@ -186,6 +186,18 @@ gh label create "adr" --color "B60205" --description "Architecture Decision Reco
 
 ## Шаг 7 — Smoke test
 
+### 7.0 — MCP server reachable (PRD-021)
+
+В Claude Code (рестарт после `/fpl-init` обязателен — он зашиппит `.mcp.json`):
+
+```
+/mcp
+```
+
+Должен показать `forgeplan · ✓ connected` (не `✘ failed`). Также через `ToolSearch` должен резолвиться `mcp__forgeplan__forgeplan_health` — это значит ~60 forgeplan MCP-тулзов подгружаются и доступны skills'ам.
+
+**Если `/mcp` показывает `failed`**: смотри troubleshooting ниже — типичная причина битый `args` в `.mcp.json` (должно быть `["serve"]`, не `["mcp"]`). Re-run `/fpl-init` — он автоматически детектит и upgrade'ит к корректному shape.
+
 ### 7.1 — Открыть тестовый issue
 
 ```bash
