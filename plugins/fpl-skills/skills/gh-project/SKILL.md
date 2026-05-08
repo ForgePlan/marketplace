@@ -64,7 +64,7 @@ Field IDs cached for speed — `gh project item-edit` requires IDs not names. If
 
 - One-time per repo: `/gh-project init` (interactive — asks project number, owner, verifies fields).
 - After opening a PR: `/gh-project add-pr` (without args, picks up current PR via `gh pr view`).
-- After `forgeplan new prd` for a Standard+ PRD: `/gh-project link-prd PRD-NNN` (creates issue, adds to board, sets Forgeplan-ID + Type).
+- After `forgeplan new prd` for a Standard+ PRD: `/gh-project link-prd PRD-NNN` (creates issue, adds to board, sets Forgeplan-ID + Kind).
 - After forgeplan artifact transition (`activate`, `deprecate`, `supersede`): `/gh-project sync-status PRD-NNN` (writes Status to board).
 - Anytime: `/gh-project list` (current board items, filtered).
 
@@ -111,7 +111,7 @@ One-time per repo. Interactive prompts:
 2. **Ask**: project number (e.g. `5`), owner (e.g. `ForgePlan`).
 3. **Verify** with `gh project view <num> --owner <owner> --format json`. If 404 → error with link to `gh project list --owner <owner>` for discovery.
 4. **List fields** with `gh project field-list <num> --owner <owner> --format json`.
-5. **Map** fields to expected slots (Status, Type, Forgeplan-ID, Plugin, Priority).
+5. **Map** fields to expected slots (Status, Kind, Forgeplan-ID, Plugin, Priority).
 6. **Warn on missing recommended fields** — print exact `gh project field-create ...` command for each missing one. Don't auto-create (user-owned schema).
 7. **Cache** project node-id, field IDs, single-select option IDs into `.forgeplan/state/gh-project.yaml`.
 8. **Append** `.forgeplan/state/gh-project.yaml` to `.gitignore` if not already there.
@@ -135,13 +135,13 @@ OWNER=$(yq '.project_owner' <<<"$CONFIG")
 gh project item-add "$PROJ_NUM" --owner "$OWNER" --url "$PR_URL"
 ```
 
-If PR title starts with `fix(`, set Type=`Bug`; with `feat(` → `Feature`; with `docs(` → `Docs`; with `chore(`/`audit(`/`refactor(` → `Chore`. All optional — skill prompts user once and remembers PR-title-to-Type mapping for the session.
+If PR title starts with `fix(`, set Kind=`Bug`; with `feat(` → `Feature`; with `docs(` → `Docs`; with `chore(`/`audit(`/`refactor(` → `Chore`. All optional — skill prompts user once and remembers PR-title-to-Kind mapping for the session.
 
-Status defaults to `In Review` (PRs go straight to review, not backlog).
+Status defaults to `In review` (PRs go straight to review, not backlog).
 
 ### `/gh-project link-prd <PRD-NNN>`
 
-For Standard+ PRDs only. Creates GH issue + adds to board + sets Forgeplan-ID and Type fields.
+For Standard+ PRDs only. Creates GH issue + adds to board + sets Forgeplan-ID and Kind fields.
 
 ```bash
 PRD_ID="$1"
@@ -187,6 +187,21 @@ Find issue on board by Forgeplan-ID field match. If no item exists → suggest `
 ### `/gh-project list [--filter status=<X>]`
 
 `gh project item-list <num> --owner <owner> --format json | jq '...'` filtered by Status. Pretty-print to stdout.
+
+---
+
+## Server reality vs documented convention
+
+**Quirks discovered during empirical setup of `orgs/ForgePlan/projects/5` on 2026-05-08** (PRD-019 EVID-031):
+
+| Convention says | Server reality | Mitigation |
+|---|---|---|
+| Field name `Type` | Reserved word — `gh project field-create --name "Type"` returns `Name has already been taken` | Use `Kind` (matches forgeplan internal terminology `kind: prd|rfc|adr`) |
+| Status options include `Cancelled` | GitHub default Status has 5 options: `Backlog`, `Ready`, `In progress`, `In review`, `Done` | Either add `Cancelled` via project UI, or remap `forgeplan deprecated → Done` |
+| Status capitalization `In Progress` / `In Review` | Server stores lowercase `In progress` / `In review` | Use exact server-strings in `sync-status` calls |
+| Priority options include `P3` | GitHub default Priority has 3: `P0`, `P1`, `P2` | Either add `P3` via project UI, or document P0-P2 only |
+
+`/gh-project init` MUST detect and report these via `gh project field-list --format json` parsing. The cached `.forgeplan/state/gh-project.yaml` stores actual server-side option IDs and labels — the canonical source after init.
 
 ---
 

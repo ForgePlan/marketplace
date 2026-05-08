@@ -5,6 +5,40 @@ All notable changes to the ForgePlan Marketplace will be documented in this file
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.22.1] - 2026-05-08
+
+**Convention drift fix** — `/gh-project` skill prose + bilingual guides now match `orgs/ForgePlan/projects/5` server reality discovered during empirical setup (Step 4-6 of post-PRD-020 verification, EVID-031).
+
+### Fixed
+- `fpl-skills` v1.9.0 → **1.9.1** (patch — docs/prose only, no code or behavior change):
+  - **`Type` → `Kind`**: `Type` is a reserved word in GitHub Projects v2 (`gh project field-create --name "Type"` returns `Name has already been taken`). Renamed to `Kind` throughout `plugins/fpl-skills/skills/gh-project/SKILL.md`, `docs/GITHUB-PROJECTS.md`, `docs/GITHUB-PROJECTS-RU.md`. Field name matches forgeplan's internal `kind: prd|rfc|adr` terminology — semantically cleaner.
+  - **Status options lowercase**: server stores `In progress` / `In review` (lowercase compound noun); docs previously wrote `In Progress` / `In Review`. Now matches server.
+  - **`Cancelled` status note**: GitHub default Status field has 5 options (`Backlog`, `Ready`, `In progress`, `In review`, `Done`) — no `Cancelled`. Convention table now notes "add via UI or remap `deprecated`→`Done`".
+  - Added new section **"Server reality vs documented convention"** to `gh-project/SKILL.md` summarising 4 quirks (Type→Kind, Cancelled missing, lowercase Status, P3 missing) with mitigations.
+
+### Added
+- **`docs/SETUP-GUIDE-NEW-REPO.md`** (~300 lines) — comprehensive end-to-end setup guide for bringing **any** new or existing repo into the ForgePlan ecosystem. Bilingual prose (RU primary, EN technical terms). Covers:
+  - Pre-requisites (host-level, one-time): forgeplan CLI, gh CLI scopes, Claude Code, ForgePlan marketplace plugin install
+  - Step 1: create repo + GitHub Projects v2 board
+  - Step 2: `/fpl-init` 11-step bootstrap (forgeplan init + CLAUDE.md + docs/agents/)
+  - Step 3: field schema setup with `gh project field-create` x4 (Kind/Forgeplan-ID/Plugin/Priority)
+  - Step 4: `/gh-project init` to write `.forgeplan/state/gh-project.yaml` with cached IDs
+  - Step 5: auto-add workflow copy + edit + PAT secret (when GITHUB_TOKEN insufficient)
+  - Step 6: labels creation (forgeplan/prd/rfc/adr)
+  - Step 7: smoke tests (test issue, chat-driven /sprint, /forge-cycle)
+  - Step 8: daily flow examples (Standard+ feature, Tactical fix, audit)
+  - Reference + Troubleshooting (6 common failure modes with fixes) + printable Checklist
+  - All lessons learned from `orgs/ForgePlan/projects/5` setup empirical run baked in (no `Type` reserved-word hits, correct lowercase status, PAT setup if GITHUB_TOKEN denied).
+
+### Changed
+- `marketplace.json`: catalog 1.22.0 → **1.22.1**; fpl-skills 1.9.0 → 1.9.1.
+- `plugin.json` (fpl-skills): version 1.9.0 → 1.9.1.
+
+### Notes
+**No behavior change** — only doc text and skill prose. Existing `.forgeplan/state/gh-project.yaml` files (created post-`/gh-project init` with actual server-side IDs cached) already had correct field IDs and option labels. This patch makes the *human-facing* docs match what the skill *actually does* at runtime.
+
+**Discovery process**: post-PRD-020 verification run did empirical `gh project field-create` calls. 3 of 4 needed fields created cleanly; `Type` returned reserved-word error. Lookup of actual `gh project field-list` output revealed lowercase status options + missing P3/Cancelled. Documented in Hindsight Group 5 (`forge-marketplace` bank).
+
 ## [1.22.0] - 2026-05-08
 
 **Unconditional `forgeplan claim/dispatch/evidence` wiring across `/sprint`, `/autorun`, `/forge-cycle`, `/forge-audit`** — closes the gap discovered in v1.21.0 audit (T4+T5 FAIL CONFIRMED) where chat-driven sprints and SPARC pipelines bypassed the artifact graph entirely. Refs PRD-020 (Deep depth, conf 90%, validated PASS).

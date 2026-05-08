@@ -30,7 +30,7 @@ The integration is **project-agnostic**. The marketplace's board is `https://git
 
 ### What goes on the board
 
-| Source | Goes to board | Type field | Default Status |
+| Source | Goes to board | Kind field | Default Status |
 |---|---|---|---|
 | Forgeplan PRD (Standard+) | ✅ via `/gh-project link-prd` (creates GH issue, adds to board) | `PRD` | `Backlog` (or `Ready` if validated) |
 | Forgeplan RFC (Standard+) | ✅ same | `RFC` | `Backlog` |
@@ -38,7 +38,7 @@ The integration is **project-agnostic**. The marketplace's board is `https://git
 | Forgeplan PRD/RFC (Tactical) | ❌ — Tactical = no artifact ceremony; PR alone is enough | n/a | n/a |
 | Forgeplan Evidence | ❌ — internal artifact; no separate board card | n/a | n/a |
 | Forgeplan Note | ❌ — too granular; reference material | n/a | n/a |
-| GitHub PR (any) | ✅ auto-added by workflow | `Feature` / `Bug` / `Docs` / `Chore` (parsed from title) | `In Review` |
+| GitHub PR (any) | ✅ auto-added by workflow | `Feature` / `Bug` / `Docs` / `Chore` (parsed from title) | `In review` |
 | GitHub Issue (any opened) | ✅ auto-added by workflow | `Bug` (default) — relabel manually | `Backlog` |
 
 **Why Tactical isn't on the board**: Tactical scope = "just do it" (per `forgeplan route`). Adding it to the board creates noise — the eventual PR is enough signal.
@@ -49,10 +49,10 @@ The integration is **project-agnostic**. The marketplace's board is `https://git
 |---|---|---|
 | Artifact `draft`, not yet validated | `Backlog` | After `forgeplan new` |
 | Artifact `draft`, `forgeplan validate` PASS | `Ready` | After validate |
-| Artifact `active` (post-`forgeplan activate`) | `In Progress` (if work ongoing) or `Done` (if shipped) | After activate + judgement |
+| Artifact `active` (post-`forgeplan activate`) | `In progress` (if work ongoing) or `Done` (if shipped) | After activate + judgement |
 | Artifact `superseded` | `Done` | After `forgeplan supersede` |
 | Artifact `deprecated` | `Cancelled` | After `forgeplan deprecate` |
-| PR opened | `In Review` | Auto-add workflow |
+| PR opened | `In review` | Auto-add workflow |
 | PR merged | `Done` | Built-in workflow on PR close (configure in project UI) |
 
 ### Label conventions
@@ -66,7 +66,7 @@ Issues created via `/gh-project link-prd` are labelled with:
 | `active` | When `forgeplan activate` runs (added by `/gh-project sync-status`) |
 | `closed` | When superseded or deprecated |
 
-PRs are auto-labelled by their conventional-commit title prefix (`fix(...)`, `feat(...)`, `docs(...)`, `chore(...)`, `audit(...)`, `refactor(...)`). The auto-add workflow doesn't depend on labels, but the `/gh-project add-pr` operation reads the title prefix to set the Type field.
+PRs are auto-labelled by their conventional-commit title prefix (`fix(...)`, `feat(...)`, `docs(...)`, `chore(...)`, `audit(...)`, `refactor(...)`). The auto-add workflow doesn't depend on labels, but the `/gh-project add-pr` operation reads the title prefix to set the Kind field.
 
 ---
 
@@ -76,8 +76,8 @@ Create these fields **once** on your project board (or verify with `/gh-project 
 
 | Field | Type | Options | Required by skill? |
 |---|---|---|---|
-| **Status** | single-select (built-in) | `Backlog`, `Ready`, `In Progress`, `In Review`, `Done`, `Cancelled` | yes |
-| **Type** | single-select | `PRD`, `RFC`, `ADR`, `Feature`, `Bug`, `Docs`, `Chore` | yes |
+| **Status** | single-select (built-in) | `Backlog`, `Ready`, `In progress`, `In review`, `Done` (note: `Cancelled` not in default GitHub schema; add via UI or remap `deprecated`→`Done`) | yes |
+| **Kind** | single-select | `PRD`, `RFC`, `ADR`, `Feature`, `Bug`, `Docs`, `Chore` | yes |
 | **Forgeplan-ID** | text | n/a | yes (for `link-prd` and `sync-status`) |
 | **Plugin** | single-select | `fpl-skills`, `forgeplan-workflow`, `forgeplan-orchestra`, `forgeplan-brownfield-pack`, `fpf`, `laws-of-ux`, `agents-core`, `agents-domain`, `agents-pro`, `agents-github`, `agents-sparc`, `marketplace` | optional but recommended |
 | **Priority** | single-select | `P0`, `P1`, `P2`, `P3` | optional |
@@ -85,7 +85,7 @@ Create these fields **once** on your project board (or verify with `/gh-project 
 ### Why these specifically
 
 - **Status** is the single most-viewed field in any board. Six options cover every artifact lifecycle phase.
-- **Type** distinguishes architectural artifacts (PRD/RFC/ADR) from execution work (Feature/Bug/Docs/Chore).
+- **Kind** distinguishes architectural artifacts (PRD/RFC/ADR) from execution work (Feature/Bug/Docs/Chore).
 - **Forgeplan-ID** is the back-pointer into the artifact graph — the load-bearing field. Without it, board cards are disconnected from `.forgeplan/`.
 - **Plugin** scopes work to specific marketplace components, useful when many plugins evolve in parallel.
 - **Priority** is genuinely team-specific. GitHub provides no canonical meaning ([per docs discussion](https://github.com/orgs/community/discussions/54055)). P0/P1/P2/P3 is one common scheme.
@@ -95,9 +95,9 @@ Create these fields **once** on your project board (or verify with `/gh-project 
 If `/gh-project init` reports missing fields, here are the commands it suggests:
 
 ```bash
-# Single-select example (Type field with several options)
+# Single-select example (Kind field with several options)
 gh project field-create 5 --owner ForgePlan \
-  --name "Type" \
+  --name "Kind" \
   --data-type SINGLE_SELECT \
   --single-select-options "PRD,RFC,ADR,Feature,Bug,Docs,Chore"
 
@@ -206,13 +206,13 @@ forgeplan validate PRD-024                         # PASS
 # Linking to board
 /gh-project link-prd PRD-024
 # → creates GH issue "PRD-024: magic-link auth for admin panel"
-# → adds to board with Type=PRD, Forgeplan-ID=PRD-024, Status=Backlog
+# → adds to board with Kind=PRD, Forgeplan-ID=PRD-024, Status=Backlog
 
 # Implementing
 git checkout -b feat/magic-link-auth
 # ... work ...
 gh pr create --title "feat(auth): magic-link admin login (PRD-024)"
-# → workflow auto-adds PR to board, Type=Feature, Status=In Review
+# → workflow auto-adds PR to board, Kind=Feature, Status=In Review
 
 # Activating
 forgeplan activate PRD-024
@@ -228,7 +228,7 @@ forgeplan route "fix typo in README" → Tactical
 git checkout -b fix/readme-typo
 # ... fix ...
 gh pr create --title "fix(docs): typo in README"
-# → workflow auto-adds PR to board, Type=Docs, Status=In Review
+# → workflow auto-adds PR to board, Kind=Docs, Status=In Review
 # → no PRD, no /gh-project link-prd, no manual cards
 ```
 
