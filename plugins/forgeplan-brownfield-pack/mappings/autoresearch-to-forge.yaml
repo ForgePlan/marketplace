@@ -1,0 +1,289 @@
+# autoresearch-to-forge.yaml — mapping rules для autoresearch (uditgoenka/autoresearch) outputs
+# Source: https://github.com/uditgoenka/autoresearch
+# Input: autoresearch journal JSON files + per-mode markdown artifacts in `.autoresearch/` or `docs/autoresearch/`.
+# Output: forge artifacts — kind depends on autoresearch mode.
+#
+# autoresearch's 7 extraction modes map to forge artifact kinds as follows:
+#   /autoresearch:learn --mode=glossary    → forge glossary (fallback: note)
+#   /autoresearch:learn --mode=use-case    → forge use-case (fallback: prd)
+#   /autoresearch:learn --mode=invariant   → forge invariant (fallback: spec)
+#   /autoresearch:learn --mode=canonical   → forge spec (canonical reproduction)
+#   /autoresearch:reason --mode=intent     → forge note (intent inference)
+#   /autoresearch:predict --mode=triangulate → forge hypothesis (fallback: problem)
+#   /autoresearch:scenario --template=gherkin → forge scenario (fallback: note)
+#
+# This mapping is the inverse companion to integration/autoresearch-hooks.md —
+# that file says "skill C* → autoresearch command", this file says "autoresearch
+# output → forge artifact".
+
+schema_version: "1.0"
+mapping_name: autoresearch-to-forge
+source_plugin: autoresearch
+source_spec_version: ">=2.0.0 <3.0.0"  # autoresearch v2.0.03+ (per integration doc)
+
+# ─── Sources: autoresearch emits both JSON journals and per-artifact .md files
+sources:
+  # JSON journal — one per session, lists artifacts_created / artifacts_updated
+  - path_pattern: ".autoresearch/journal-*.json"
+    mapping: autoresearch_journal_dispatcher
+  - path_pattern: "docs/autoresearch/journal-*.json"
+    mapping: autoresearch_journal_dispatcher
+
+  # Direct mode-specific .md files (when journal isn't available)
+  - path_pattern: ".autoresearch/glossary/*.md"
+    mapping: glossary_md_to_glossary
+  - path_pattern: ".autoresearch/use-cases/*.md"
+    mapping: use_case_md_to_use_case
+  - path_pattern: ".autoresearch/invariants/*.md"
+    mapping: invariant_md_to_invariant
+  - path_pattern: ".autoresearch/intents/*.md"
+    mapping: intent_md_to_note
+  - path_pattern: ".autoresearch/hypotheses/*.md"
+    mapping: hypothesis_md_to_hypothesis
+  - path_pattern: ".autoresearch/scenarios/*.feature"
+    mapping: gherkin_feature_to_scenario
+  - path_pattern: ".autoresearch/canonical/*.md"
+    mapping: canonical_md_to_spec
+
+mappings:
+
+  # ─── Journal dispatcher: routes per-artifact entries to mode-specific mappings
+  autoresearch_journal_dispatcher:
+    target_kind: dispatch  # virtual — fans out to per-artifact mappings
+    extract:
+      session_metadata:
+        - field: command           # "autoresearch:learn", etc.
+        - field: mode              # "glossary" | "use-case" | "invariant" | ...
+        - field: timestamp
+        - field: git_hash
+        - field: artifacts_created  # array of artifact ids
+      # For each artifact_created in the journal, dispatch by mode:
+      dispatch_table:
+        glossary: glossary_md_to_glossary
+        use-case: use_case_md_to_use_case
+        invariant: invariant_md_to_invariant
+        intent: intent_md_to_note
+        triangulate: hypothesis_md_to_hypothesis
+        gherkin: gherkin_feature_to_scenario
+        canonical: canonical_md_to_spec
+    # Journal also carries `metric_snapshot` — preserve as Note for trend tracking
+    extract_children:
+      - selector: "$.metric_snapshot"
+        produces: note
+        mapping: metric_snapshot_to_note
+
+  # ─── Glossary entry → forge glossary (fallback note)
+  glossary_md_to_glossary:
+    target_kind: glossary  # EPIC-008 kind
+    fallback_kind: note
+    extract:
+      title: "$term  # e.g. 'Eventual Consistency'"
+      body_sections:
+        - from: "## Definition"
+          to: "## Definition"
+        - from: "## Bounded Context"
+          to: "## Bounded Context"
+        - from: "## Code Anchor"
+          to: "## Code Anchor"
+        - from: "## Aliases"
+          to: "## Aliases"
+      synthesized:
+        confidence: "$frontmatter.confidence || verified_if_code_anchored"
+    source_ref:
+      format: "autoresearch/glossary/{term-slug}.md"
+    defaults:
+      author: autoresearch-ingest
+
+  # ─── Use case → forge use-case (fallback PRD)
+  use_case_md_to_use_case:
+    target_kind: use-case  # EPIC-008 kind
+    fallback_kind: prd
+    extract:
+      title: "$frontmatter.title || $h1  # e.g. 'Customer places order'"
+      body_sections:
+        - from: "## Actor"
+          to: "## Actor"
+        - from: "## Trigger"
+          to: "## Trigger"
+        - from: "## Preconditions"
+          to: "## Preconditions"
+        - from: "## Main Flow"
+          to: "## Main Flow"
+        - from: "## Alternative Flows"
+          to: "## Alternative Flows"
+        - from: "## Postconditions"
+          to: "## Postconditions"
+        - from: "## Entry Point"
+          to: "## Code Anchor (entry point)"
+      synthesized:
+        coverage_source: "$journal.metric_snapshot.coverage_use_case"
+    source_ref:
+      format: "autoresearch/use-cases/{slug}.md"
+
+  # ─── Invariant → forge invariant (fallback spec)
+  invariant_md_to_invariant:
+    target_kind: invariant  # EPIC-008 kind
+    fallback_kind: spec
+    extract:
+      title: "$frontmatter.title || $h1  # e.g. 'Order total >= 0'"
+      body_sections:
+        - from: "## Rule"
+          to: "## Invariant Rule"
+        - from: "## Guard Location"
+          to: "## Code Anchor (guard)"
+        - from: "## Violation Consequence"
+          to: "## Consequence on Violation"
+      synthesized:
+        severity: "$frontmatter.severity || medium"
+    source_ref:
+      format: "autoresearch/invariants/{slug}.md"
+
+  # ─── Intent inference → forge note (intent is interpretation, not fact)
+  intent_md_to_note:
+    target_kind: note
+    extract:
+      title: "Intent: $h1  # e.g. 'Intent: idempotent retry on transient errors'"
+      body_sections:
+        - from: "## Inferred Intent"
+          to: "## Inferred Intent"
+        - from: "## Evidence (supporting)"
+          to: "## Supporting Evidence"
+        - from: "## Counter-evidence"
+          to: "## Counter-evidence"
+        - from: "## Confidence"
+          to: "## Confidence"
+      synthesized:
+        # Anti-herd flag from autoresearch (when diversity penalty triggered)
+        anti_herd_flag: "$journal.anti_herd.violation_count"
+    source_ref:
+      format: "autoresearch/intents/{slug}.md"
+
+  # ─── Triangulated hypothesis → forge hypothesis (fallback problem)
+  hypothesis_md_to_hypothesis:
+    target_kind: hypothesis  # EPIC-008 kind
+    fallback_kind: problem
+    extract:
+      title: "$frontmatter.title || $h1"
+      body_sections:
+        - from: "## Hypothesis"
+          to: "## Hypothesis"
+        - from: "## Persona Debate"
+          to: "## Triangulation (persona votes)"
+        - from: "## Consensus"
+          to: "## Consensus Confidence"
+        - from: "## Minority Reports"
+          to: "## Minority Reports"
+        - from: "## Falsification Plan"
+          to: "## Falsification Plan"
+      synthesized:
+        # autoresearch /predict --mode=triangulate emits 5 persona votes
+        triangulation_rate: "$journal.metric_snapshot.triangulation_rate"
+    source_ref:
+      format: "autoresearch/hypotheses/{slug}.md"
+
+  # ─── Gherkin feature → forge scenario (fallback note)
+  gherkin_feature_to_scenario:
+    target_kind: scenario  # EPIC-008 kind
+    fallback_kind: note
+    extract:
+      title: "Feature: $feature_name"
+      body: full_gherkin_block  # preserve Given/When/Then formatting
+      gherkin_metadata:
+        - feature: "$Feature_line"
+        - background: "$Background_block (optional)"
+        - scenarios_count: "count of Scenario:/Scenario Outline: blocks"
+    extract_children:
+      # Each Scenario block in the .feature file → child scenario artifact
+      - selector: "Scenario: *"
+        produces: scenario
+        fallback_kind: note
+    source_ref:
+      format: "autoresearch/scenarios/{slug}.feature"
+
+  # ─── Canonical reproduction → forge spec (full DDL/SDL/pseudo-code)
+  canonical_md_to_spec:
+    target_kind: spec
+    extract:
+      title: "Canonical: $h1  # e.g. 'Canonical: Order schema (DDL)'"
+      body_sections:
+        - from: "## DDL"
+          to: "## Data Model (DDL)"
+        - from: "## SDL"
+          to: "## Schema Definition (SDL)"
+        - from: "## Pseudo-code"
+          to: "## Algorithm (pseudo-code)"
+        - from: "## Validation Results"
+          to: "## Reproducibility Validation"
+      synthesized:
+        # C11 reproducibility-validator emits these
+        validation_passed: "$frontmatter.validation_passed"
+        validation_iterations: "$frontmatter.iterations"
+    source_ref:
+      format: "autoresearch/canonical/{slug}.md"
+    defaults:
+      depth: deep  # canonical artifacts encode load-bearing structure
+
+  # ─── Metric snapshot → forge note (per-session metrics for trend tracking)
+  metric_snapshot_to_note:
+    target_kind: note
+    extract:
+      title: "autoresearch metrics — $journal.timestamp"
+      body: |
+        Session: {journal.command} {journal.mode} — {journal.git_hash}
+
+        ## extract_score
+        {composite_metric_value}
+
+        ## Coverage
+        - glossary: {coverage_glossary}
+        - use-case: {coverage_use_case}
+        - invariant: {coverage_invariant}
+        - triangulation_rate: {triangulation_rate}
+        - reproducibility_rate: {reproducibility_rate}
+    source_ref:
+      format: "autoresearch/journal-{timestamp}.json#$.metric_snapshot"
+    defaults:
+      expires_in_days: 90  # metric snapshots are time-series; let them age out
+
+# Rules applied to all ingested artifacts
+universal_rules:
+  - always_add_sources_section: true
+  - always_draft_status: true
+  - hash_for_idempotency: true        # autoresearch already stamps git_hash; we mirror it
+  - on_source_removal: "mark stale (autoresearch may regenerate; preserve provenance)"
+  - on_kind_fallback: "emit warning; record original kind in x-forgeplan-hints.intended_kind"
+  - preserve_anti_herd_flag: true     # surface diversity violations to reviewer
+  - mirror_decay_policy: true         # honor autoresearch's decay rules per kind (see autoresearch-hooks.md)
+
+# Compat: pre-EPIC-008 fallback (matches ddd-to-forge convention)
+compat_notes:
+  pre_epic_008:
+    unsupported_kinds: [glossary, use-case, invariant, hypothesis, scenario]
+    fallback_strategy: |
+      glossary    → note     (title prefixed "Glossary: ")
+      use-case    → prd      (body header "## Use Case")
+      invariant   → spec     (body header "## Invariant Rule")
+      hypothesis  → problem  (body header "## Hypothesis")
+      scenario    → note     (body wrapped in ```gherkin block)
+      Record original kind in frontmatter `x-forgeplan-hints.intended_kind`
+      so re-ingest can re-materialize after EPIC-008 ships.
+
+# Companion file: integration/autoresearch-hooks.md describes the inverse direction
+# (skill → autoresearch command). This mapping handles outputs returning home as forge artifacts.
+companion:
+  inverse_mapping: "integration/autoresearch-hooks.md"
+  composite_metric: "extract_score (w1..w5 = [0.2, 0.25, 0.2, 0.2, 0.15]) — see autoresearch-hooks.md"
+
+# Realistic counts from a single autoresearch session on a mid-sized service
+example_counts:
+  source: "Single autoresearch session — extract-business-logic playbook on 50-file service"
+  produces:
+    glossary: 25         # business terms
+    use_case: 12         # entry points covered
+    invariant: 18        # code guards
+    hypothesis: 6        # triangulated unresolved questions
+    scenario: 30         # gherkin scenarios (3 per use-case avg)
+    spec_canonical: 8    # canonical reproductions
+    note_intent: 14      # intent inferences
+    note_metric: 1       # metric snapshot
+  total_estimated: 114

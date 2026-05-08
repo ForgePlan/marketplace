@@ -1,0 +1,119 @@
+# madr-to-forge.yaml — mapping rules для MADR (Markdown Architectural Decision Records)
+# Source: https://adr.github.io/madr/  (MADR 3.0 / 4.0 templates)
+# Input: ADR markdown files in docs/adr/, docs/decisions/, doc/architecture/decisions/
+# Output: forge ADR (primary) + Note (for "More Information" overflow) artifacts.
+#
+# MADR is a 1:1 conceptual match for forge `adr` kind — this mapping is mostly
+# section reshuffling + status normalization + supersession-link extraction.
+
+schema_version: "1.0"
+mapping_name: madr-to-forge
+source_plugin: madr  # not a plugin — convention; mapping triggered by path_pattern
+source_spec_version: ">=3.0.0 <5.0.0"  # MADR 3.x and 4.x supported
+
+# Common MADR locations (in priority order — first match wins per file)
+sources:
+  - path_pattern: "docs/adr/[0-9]*-*.md"
+    mapping: madr_to_adr
+  - path_pattern: "docs/decisions/[0-9]*-*.md"
+    mapping: madr_to_adr
+  - path_pattern: "doc/architecture/decisions/[0-9]*-*.md"
+    mapping: madr_to_adr
+  - path_pattern: "adr/[0-9]*-*.md"
+    mapping: madr_to_adr
+  # Allow opt-in via frontmatter `kind: adr` on any markdown file
+  - frontmatter_match: { kind: adr }
+    mapping: madr_to_adr
+
+mappings:
+
+  # ─── MADR file → forge ADR (1:1)
+  madr_to_adr:
+    target_kind: adr
+    extract:
+      title: "$h1_text  # MADR convention: '# ADR-NNNN — Short title' or '# Short title'"
+      number_hint: "$filename_prefix  # e.g. '0042-use-postgres.md' → 42 (advisory; ingest assigns canonical ID)"
+      body_sections:
+        # MADR 3.x canonical sections — direct copy where headings match
+        - from: "## Context and Problem Statement"
+          to: "## Context"
+        - from: "## Decision Drivers"
+          to: "## Decision Drivers"
+        - from: "## Considered Options"
+          to: "## Options Considered"
+        - from: "## Decision Outcome"
+          to: "## Decision"
+          subsections:
+            - from: "### Consequences"
+              to: "## Consequences"
+            - from: "### Confirmation"
+              to: "## Validation"
+        - from: "## Pros and Cons of the Options"
+          to: "## Trade-offs"
+        - from: "## More Information"
+          to: "## References"
+      # MADR 4.x renames a few headings — also accept these as synonyms
+      heading_synonyms:
+        "## Context and Problem Statement": ["## Context", "## Problem Statement"]
+        "## Decision Outcome": ["## Decision", "## Outcome"]
+        "## Pros and Cons of the Options": ["## Trade-offs", "## Analysis"]
+      synthesized:
+        # If MADR has no explicit Validation section, leave a stub
+        validation: "[AUTO — review and add measurable validation criteria]"
+
+    # Status normalization: MADR uses {proposed | rejected | accepted | deprecated | superseded}
+    # forge ADR uses {draft | active | superseded | deprecated}
+    status_map:
+      proposed: draft
+      rejected: deprecated  # rejected ADRs are kept for the record but inactive
+      accepted: active
+      deprecated: deprecated
+      superseded: superseded
+    status_source:
+      # Status appears in MADR either in frontmatter or "## Status" section
+      - frontmatter_field: status
+      - section_first_line: "## Status"
+      - default: draft  # missing status → draft, surface warning
+
+    # Supersession links: "superseded by ADR-NNNN" / "supersedes ADR-NNNN"
+    extract_links:
+      - regex: 'superseded by\s+(?:\[)?ADR[-\s]?(\d+)'
+        relation: superseded_by
+        target_kind: adr
+      - regex: 'supersedes\s+(?:\[)?ADR[-\s]?(\d+)'
+        relation: supersedes
+        target_kind: adr
+      # Markdown links to other ADR files in the same dir → relates_to
+      - regex: '\[.*?\]\((\.{1,2}/)?(\d{4})-[\w-]+\.md\)'
+        relation: relates_to
+        target_kind: adr
+        target_resolution: "filename_to_artifact_id"
+
+    source_ref:
+      format: "{relative_path}:{start_line}-{end_line}"
+    defaults:
+      depth: standard  # most ADRs are standard-depth decisions
+      author: madr-ingest
+
+# Rules applied to all ingested ADRs
+universal_rules:
+  - always_add_sources_section: true
+  - hash_for_idempotency: true
+  - on_source_removal: "mark adr as stale (do not delete — historical record)"
+  - on_status_change_in_source: "update forge artifact status; record change in audit log"
+  - preserve_original_id_in_frontmatter: true  # keep MADR's NNNN as x-source-id
+
+# Compat: handle MADR's "long" template (with sections that have no forge equivalent)
+compat_notes:
+  long_template_extras:
+    # MADR 3.x long template adds these — collected into "## Additional Context" in forge
+    sections_to_concat: ["## Drivers and Goals", "## Quality Attributes", "## Risks and Mitigations"]
+    target: "## Additional Context"
+
+# Example artifact counts from real-world MADR repos
+example_counts:
+  source: "Typical mid-sized project — 30 ADRs over 2 years"
+  produces:
+    adr: 30                # 1:1 with source files
+    note_overflow: 3       # only when "More Information" is huge enough to warrant own artifact
+  total_estimated: 33

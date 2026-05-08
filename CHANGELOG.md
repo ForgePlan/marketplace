@@ -5,6 +5,25 @@ All notable changes to the ForgePlan Marketplace will be documented in this file
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.18.0] - 2026-05-08
+
+Three new brownfield ingestion mappings: MADR, Obsidian vaults, and autoresearch outputs. The `forgeplan-brownfield-pack` plugin now covers five upstream formats end-to-end (c4, ddd, madr, obsidian, autoresearch).
+
+### Added
+- `forgeplan-brownfield-pack` v1.2.0 → **1.3.0** (minor — three new mappings):
+  - **`mappings/madr-to-forge.yaml`** (~110 lines) — MADR (Markdown Architectural Decision Records, https://adr.github.io/madr/) → forge `adr` kind. Supports MADR 3.x and 4.x. Status normalization (proposed → draft, accepted → active, rejected → deprecated, superseded → superseded). Supersession-link extraction (`superseded by ADR-NNNN` / `supersedes ADR-NNNN`). Heading synonyms for the variants between MADR 3 and 4 templates. Path patterns: `docs/adr/`, `docs/decisions/`, `doc/architecture/decisions/`, `adr/` plus opt-in via frontmatter `kind: adr`.
+  - **`mappings/obsidian-to-forge.yaml`** (~190 lines) — Obsidian vault → forge artifacts. Detects vault by `.obsidian/` marker; excludes templates/, daily/, journal/. Four-tier signal priority: frontmatter `kind:` → tag (`#prd`, `#epic`, `#adr`, `#hypothesis`) → folder pattern (PARA / Johnny.Decimal) → default to Note. MOC files → Epic; Project notes → PRD; tagged decision notes → ADR (with delegation to `madr-to-forge` if MADR-shaped). Resolves `[[wikilinks]]` to `relates_to` edges (lazy — broken links warn rather than fail).
+  - **`mappings/autoresearch-to-forge.yaml`** (~210 lines) — autoresearch (uditgoenka/autoresearch v2.x) outputs → forge artifacts. Companion to existing `integration/autoresearch-hooks.md` (which describes the inverse direction). Maps each of the 7 autoresearch modes to the right forge kind: `--mode=glossary` → glossary, `--mode=use-case` → use-case, `--mode=invariant` → invariant, `--mode=intent` → note, `--mode=triangulate` → hypothesis, `--template=gherkin` → scenario, `--mode=canonical` → spec. Journal dispatcher routes per-artifact entries from `.autoresearch/journal-*.json`. Preserves anti-herd flag, mirrors decay policy, and surfaces `extract_score` composite metric as a Note for trend tracking.
+
+### Changed
+- `forgeplan-brownfield-pack/.claude-plugin/plugin.json`: version 1.2.0 → 1.3.0; description "2 mappings (c4-to-forge, ddd-to-forge)" → "5 mappings (c4-to-forge, ddd-to-forge, madr-to-forge, obsidian-to-forge, autoresearch-to-forge)".
+- `marketplace.json`: catalog 1.17.0 → **1.18.0**; brownfield-pack entry 1.2.0 → 1.3.0; description updated to mention all 5 mappings.
+
+### Notes
+All three mappings follow the established schema-v1.0 convention (same as `c4-to-forge.yaml` and `ddd-to-forge.yaml`): `schema_version`, `mapping_name`, `source_plugin`, `sources` (path/frontmatter/tag patterns), per-mapping `extract` rules with `body_sections`, `synthesized` stubs, `extract_links` for cross-artifact edges, `source_ref` for traceability, `universal_rules`, `compat_notes` for pre-EPIC-008 fallbacks, and realistic `example_counts`. Pre-EPIC-008 fallback chain unified: glossary→note, use-case→prd, invariant→spec, hypothesis→problem, scenario→note.
+
+The brownfield-pack now has reasonable coverage of the formats teams actually keep their decisions and notes in: Architecture-as-Code (c4, ddd), Decision Records (madr), Knowledge Management (obsidian), and Research Pipelines (autoresearch). The remaining gaps are intentional — domain-specific formats (Confluence exports, Notion, Jira tickets) belong in separate add-on mappings rather than bloating the core pack.
+
 ## [1.17.0] - 2026-05-08
 
 Final piece of the methodology coverage trio: `/riper` orchestrator + AI-SDLC mapping doc + upstream methodologies bibliography.
