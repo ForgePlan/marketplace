@@ -5,6 +5,23 @@ All notable changes to the ForgePlan Marketplace will be documented in this file
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.20.1] - 2026-05-08
+
+Bug-fix found during smoke-test of v1.20.0 SessionStart hook (PRD-018 deliverable). Routed Tactical (`forgeplan route`, confidence 90%, no PRD pipeline — just do it). Evidence to be linked back to PRD-018 post-merge.
+
+### Fixed
+- `fpl-skills` v1.7.0 → **1.7.1**:
+  - `plugins/fpl-skills/hooks/scripts/session-start.sh` — `timeout` is GNU coreutils; on bare macOS without homebrew it's not on `$PATH`, causing the new health-probe block to silently fail (exit 127) and never surface the next-action warning. Fix: detect `timeout` availability with `command -v timeout`; if absent, run `forgeplan health --json` directly without the wrapper. forgeplan CLI itself is fast (<1s typical) and the hook still has its own 3-second timeout from `hooks.json`, so the safety net stays intact even without GNU coreutils.
+
+### Changed
+- `marketplace.json`: catalog 1.20.0 → **1.20.1**; fpl-skills entry 1.7.0 → 1.7.1.
+- `plugin.json` (fpl-skills): version 1.7.0 → 1.7.1.
+
+### Notes
+**How this was found**: smoke-test 2 (SessionStart hook all paths) used a fake forgeplan shim with `env PATH="/tmp/fakebin:/usr/bin:/bin"` to simulate non-clean health. The PATH-strip incidentally removed `/opt/homebrew/bin/timeout`, causing `bash -x` trace to show `timeout 2 forgeplan health --json` exiting 127 silently. Real-world impact: any macOS user without homebrew or `gnu-coreutils` had a no-op health hook, defeating the v1.20.0 SessionStart improvement on those systems.
+
+**Re-test after fix**: same simulation now correctly prints `⚠ forgeplan health: 1 orphan / 2 stub(s) (PRD-100, PRD-101) / 1 possible-dup pair(s) / 2 stale evidence — close before new work` plus `→ forgeplan supersede PRD-100 --by <NEW>`.
+
 ## [1.20.0] - 2026-05-08
 
 **Forgeplan operating contract enforcement** — closes the gap where skills described forgeplan integration but didn't enforce it across sessions. Refs PRD-018 (planned and validated via `/forge-cycle` autonomous run).
