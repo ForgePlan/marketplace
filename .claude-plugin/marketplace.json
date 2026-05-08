@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.20.1"
+    "version": "1.21.0"
   },
   "plugins": [
     {
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
-      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 21 engineering skills (research, refine, sprint, audit, diagnose, autorun, /fpl-init bootstrap, forge-report structured reports, /shape interview-from-scratch, /migrate-from-dev-toolkit automation, /ddd-decompose, /c4-diagram, /riper RIPER orchestrator, plus session helpers) + dev-advisor agent + 4 hooks. /fpl-init injects a 13-line forgeplan operating contract into project CLAUDE.md (idempotent v1 marker). SessionStart hook surfaces concrete next-action when forgeplan health is non-clean (orphans/stubs/dups/stale). /sprint and /autorun wire the PRD-057 dispatcher and per-teammate forgeplan claim/evidence loop for artifact-driven sprints. Full feature parity with the legacy dev-toolkit plus 18 additional skills built on forgeplan's artifact lifecycle.",
-      "version": "1.7.1",
+      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 22 engineering skills (research, refine, sprint, audit, diagnose, autorun, /fpl-init bootstrap, forge-report structured reports, /shape interview-from-scratch, /migrate-from-dev-toolkit automation, /ddd-decompose, /c4-diagram, /riper RIPER orchestrator, /gh-project project-agnostic GitHub Projects v2 integration, plus session helpers) + dev-advisor agent + 4 hooks. /fpl-init injects a 13-line forgeplan operating contract into project CLAUDE.md (idempotent v1 marker). SessionStart hook surfaces concrete next-action when forgeplan health is non-clean (orphans/stubs/dups/stale). /sprint and /autorun wire the PRD-057 dispatcher and per-teammate forgeplan claim/evidence loop for artifact-driven sprints. /gh-project bridges forgeplan artifacts with a GitHub Projects v2 board via per-project config (no hardcoded project numbers). Full feature parity with the legacy dev-toolkit plus 19 additional skills built on forgeplan's artifact lifecycle.",
+      "version": "1.8.0",
       "author": {
         "name": "ForgePlan"
       },

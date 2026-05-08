@@ -1,0 +1,42 @@
+# Reusable template — auto-add issues + PRs from this repo to a GitHub Projects v2 board.
+#
+# To use:
+# 1. Copy this file to .github/workflows/auto-add-to-project.yml in your repo.
+# 2. Replace {{PROJECT_URL}} with your project URL — e.g.
+#    https://github.com/orgs/ForgePlan/projects/5  (org-level)
+#    https://github.com/users/explosivebit/projects/3  (user-level)
+# 3. Ensure repo or org has a secret named ADD_TO_PROJECT_PAT or use GITHUB_TOKEN
+#    if your org allows GITHUB_TOKEN to write to projects (org settings → Actions).
+#    PAT scopes (classic): project, repo (for private repos)
+#    PAT scopes (fine-grained): Organization → Projects (read+write), Repository → Issues + PRs (read)
+# 4. Optional — narrow scope by labels: see `labeled` filter below.
+#
+# Reference: https://github.com/actions/add-to-project
+
+name: Auto-add to project
+
+on:
+  issues:
+    types: [opened, reopened]
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+
+permissions:
+  # Read-only on this repo's issues/PRs; write on the project.
+  contents: read
+  issues: read
+  pull-requests: read
+
+jobs:
+  add-to-project:
+    name: Add issue/PR to project
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/add-to-project@v1
+        with:
+          project-url: '{{PROJECT_URL}}'
+          # If GITHUB_TOKEN can't write to your project, replace with secrets.ADD_TO_PROJECT_PAT
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # Optional: only add items with at least one of these labels (AND/OR/NOT supported).
+          # labeled: prd,rfc,bug,feature
+          # label-operator: OR

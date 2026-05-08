@@ -1,8 +1,25 @@
 # ForgePlan Marketplace — Claude Code Configuration
 
 **Repo**: [ForgePlan/marketplace](https://github.com/ForgePlan/marketplace)
-**Catalog version**: 1.6.0
-**Plugins**: 10 (5 core + 5 agent packs)
+**Catalog version**: 1.21.0
+**Plugins**: 11 (6 workflow + 5 agent packs)
+**Project board**: [orgs/ForgePlan/projects/5](https://github.com/orgs/ForgePlan/projects/5)
+
+---
+
+<!-- gh-project-convention:v1 -->
+## GitHub Projects integration (this project)
+
+This project tracks work via GitHub Projects v2 board: [orgs/ForgePlan/projects/5](https://github.com/orgs/ForgePlan/projects/5). Per-project config in `.forgeplan/state/gh-project.yaml` (not committed). PRs auto-add via `.github/workflows/auto-add-to-project.yml`.
+
+**What goes on the board**:
+- All PRs (auto-added by workflow). Type derived from conventional-commit prefix in title.
+- Standard+ PRDs/RFCs (manually via `/gh-project link-prd PRD-NNN`). Tactical artifacts → PR-only.
+
+**Lifecycle sync**: after `forgeplan activate <ID>` run `/gh-project sync-status <ID>` to update board Status.
+
+**Skill**: `/gh-project init` (one-time setup per repo), `add-pr`, `link-prd`, `sync-status`, `list`.
+**Convention + setup guide**: [docs/GITHUB-PROJECTS.md](docs/GITHUB-PROJECTS.md) (EN) / [docs/GITHUB-PROJECTS-RU.md](docs/GITHUB-PROJECTS-RU.md) (RU).
 
 ---
 

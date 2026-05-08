@@ -5,6 +5,63 @@ All notable changes to the ForgePlan Marketplace will be documented in this file
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.21.0] - 2026-05-08
+
+**GitHub Projects v2 integration** — project-agnostic skill, convention guide, auto-add workflow template. Refs PRD-019 (validated via `/forge-cycle` autonomous run; routed Standard, conf 90%).
+
+The gap this fixes: ForgePlan/marketplace ships PRs daily and has a project board (`orgs/ForgePlan/projects/5`), but no convention for what goes there, no automation, and no documented mapping between forgeplan artifact lifecycle and project Status. Same enforcement-via-convention pattern as PRD-018 (operating contract), now applied to GitHub Projects.
+
+### Added
+- `fpl-skills` v1.7.1 → **1.8.0** (minor — new skill, fully backward-compatible):
+  - **`/gh-project` skill** (~250 LOC SKILL.md) — five operations:
+    - `init` — interactive one-time setup; reads project number + owner, verifies via `gh project view`, lists fields, warns on missing recommended fields (Status, Type, Forgeplan-ID, Plugin), caches field IDs + single-select option IDs into `.forgeplan/state/gh-project.yaml`.
+    - `add-pr [<url>]` — adds current PR (or explicit URL) to configured board with Type derived from conventional-commit prefix in title.
+    - `link-prd <PRD-NNN>` — for Standard+ PRDs: creates GH issue with body referencing the artifact, adds to board, sets Forgeplan-ID + Type fields. Refuses for Tactical-depth artifacts (PR-only path).
+    - `sync-status <ARTIFACT-ID>` — reads forgeplan artifact status, writes Status field on the board with full mapping (draft/active/superseded/deprecated → Backlog/In Progress/Done/Cancelled).
+    - `list [--filter status=<X>]` — pretty-prints current board items.
+  - **Project-agnostic by design**: skill never hardcodes project numbers or owner names. All values live in per-project `.forgeplan/state/gh-project.yaml` (added to `.gitignore` automatically by `init`). The same skill works in marketplace (project 5), in any other ForgePlan repo with a different board, in user-owned projects, etc.
+  - **Field IDs cached** in config for speed — `gh project item-edit` requires field IDs not names. Refresh via re-running `init`.
+
+### Added (workflow + docs)
+- `docs/templates/auto-add-to-project.yml` — reusable GitHub Actions workflow template using official `actions/add-to-project@v1`. Two placeholders: `{{PROJECT_URL}}` (must replace before commit). Includes inline comments on auth (`GITHUB_TOKEN` vs fine-grained PAT), label filters, AND/OR/NOT operators.
+- `.github/workflows/auto-add-to-project.yml` — filled-in copy for marketplace (project=5, owner=ForgePlan). Auto-adds new issues + PRs to the project board.
+- `docs/GITHUB-PROJECTS.md` + `-RU.md` (~250 LOC each) — bilingual convention guide:
+  - TL;DR (6-step quickstart)
+  - Convention table: what goes on the board, when, why
+  - Status mapping (Forgeplan ↔ Project)
+  - Label conventions
+  - Recommended field schema (5 fields with rationale per field)
+  - Two auto-add paths (built-in project workflow vs `actions/add-to-project@v1`) — when to choose which
+  - Authentication (classic PAT vs fine-grained, required scopes per case)
+  - End-to-end examples (new repo setup, Standard+ PRD lifecycle, Tactical-PR-only path)
+  - CLAUDE.md inject pattern (analogue to PRD-018 operating contract)
+  - Troubleshooting (5 common failure modes + fixes)
+  - References (GitHub docs + actions/add-to-project + gh CLI manual)
+- `CLAUDE.md` (marketplace) — gains 13-line `## GitHub Projects integration` section with `<!-- gh-project-convention:v1 -->` marker for idempotency. Catalog version bumped to 1.21.0; plugin count "10 → 11" reflects fpl-skills' new skill being a notable enough addition to flag.
+
+### Changed
+- `marketplace.json`: catalog 1.20.1 → **1.21.0** (minor — new skill in fpl-skills); fpl-skills entry 1.7.1 → 1.8.0; description mentions `/gh-project`.
+- `plugin.json` (fpl-skills): version 1.7.1 → 1.8.0; skills array gains `gh-project` (alphabetically inserted between `fpl-init` and `migrate-from-dev-toolkit`); description updated to "22 engineering skills".
+
+### Notes
+**Why project-agnostic from day 1**: original design hardcoded `project 5` in skill body. User caught it during design review ("я верно понимаю что скилл не завязан на конкретном проекте?") — drove the redesign to per-project `.forgeplan/state/gh-project.yaml` config. The skill now works in any repo without code change; only the YAML differs.
+
+**Two auto-add paths documented because both have valid use-cases**:
+- Built-in project workflow (UI-configured, no `.github/workflows/` file needed) — simplest case.
+- `actions/add-to-project@v1` — needed for label-based AND/OR/NOT filters or multi-repo source.
+
+Marketplace uses the Action path so the convention is reproducible (workflow file is reviewable + version-controlled + copy-pasteable to other ForgePlan repos).
+
+**Out of scope (deferred)**:
+- Auto-creating missing project fields. User owns the schema; skill warns + prints `gh project field-create` command. Auto-create would silently mutate user's project.
+- Bidirectional issue body ↔ forgeplan body sync. One-way reference (issue body has `## Forgeplan artifact` line pointing at PRD-NNN) is sufficient.
+- GitHub Projects v1 (classic) — discontinued; only v2 supported.
+- Bot-owned automatic Forgeplan-ID assignment based on PR title regex. Heuristic-prone; manual `link-prd` is more reliable.
+
+### PRD-019 — Acceptance criteria status (post-build, pre-merge)
+
+- [x] AC-1..AC-7 — see PRD-019 body. All implemented in skill prose / template / guide; AC-7 (works on hypothetical second repo) verified by design review.
+
 ## [1.20.1] - 2026-05-08
 
 Bug-fix found during smoke-test of v1.20.0 SessionStart hook (PRD-018 deliverable). Routed Tactical (`forgeplan route`, confidence 90%, no PRD pipeline — just do it). Evidence to be linked back to PRD-018 post-merge.
