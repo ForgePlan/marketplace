@@ -5,6 +5,64 @@ All notable changes to the ForgePlan Marketplace will be documented in this file
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.22.0] - 2026-05-08
+
+**Unconditional `forgeplan claim/dispatch/evidence` wiring across `/sprint`, `/autorun`, `/forge-cycle`, `/forge-audit`** — closes the gap discovered in v1.21.0 audit (T4+T5 FAIL CONFIRMED) where chat-driven sprints and SPARC pipelines bypassed the artifact graph entirely. Refs PRD-020 (Deep depth, conf 90%, validated PASS).
+
+### The gap that motivated this
+
+PRD-018 (v1.20.0) put the operating contract in CLAUDE.md as the always-on enforcement lever. But the skill bodies still had **conditional** wiring: line 350 of `/sprint` SKILL.md literally said "Forgeplan-aware (only if task references an artifact ID like PRD-NNN/RFC-NNN/SPEC-NNN)". `/forge-cycle` and `/forge-audit` had **zero** claim mentions — they spawned SPARC and review agents directly via Task tool.
+
+Real-world impact (per dev quote that surfaced it): "у меня все равно в обход forgeplan agents их спавнит, только если ему прямо не сказать использовать forgeplan". Confirmed empirically by audit T4 (3 cite-by-line proofs in `/sprint` SKILL.md) and T5 (`/forge-cycle` 4 SPARC agents → 0 claims, `/forge-audit` 0 claim mentions).
+
+### Added — synthetic SESSION-id pattern
+
+When a task is chat-driven (no `PRD-NNN/RFC-NNN/SPEC-NNN` referenced), skills now derive:
+
+```bash
+SESSION_ID="SESSION-$(date -u +%Y-%m-%d-%H%M%S)"
+```
+
+…and use it as the artifact-id for `forgeplan claim/release/evidence` calls. Format is sortable, parseable, unambiguous. TTL stays at the default 30 min; auto-expire keeps the claim graph clean.
+
+`/forge-audit` uses the `AUDIT-` prefix instead (`AUDIT-2026-05-08-123456`) to distinguish audit work from sprint work in `forgeplan claims` output.
+
+### Added (changes per skill)
+
+- `fpl-skills` v1.8.0 → **1.9.0** (minor — behavior change, fully backward-compatible for artifact-driven flows):
+  - **`/sprint` §4a-bis**: renamed "Forgeplan dispatch (artifact-driven sprints)" → "Forgeplan dispatch + session derivation". Always derives `SESSION_ID` first; calls `forgeplan dispatch` only when real artifact-IDs present (dispatch needs `affected_files` to be useful — no point calling it for chat-driven plans).
+  - **`/sprint` §4b.g**: removed `(only if task references an artifact ID like PRD-NNN/RFC-NNN/SPEC-NNN)` gate. Pattern `${ARTIFACT_ID:-$SESSION_ID}` — every teammate claims unconditionally. Includes failure-path `forgeplan release` so abandoned waves don't leave stale claims.
+  - **`/sprint` §4b-bis**: removed `(artifact-driven sprints)` qualifier. Both modes now emit ≥1 evidence per sprint — chat-driven mode uses `SESSION_ID` in the evidence title, optionally linked to a NOTE for persistence.
+  - **`/autorun` autopilot directive**: `FORGEPLAN-AWARE — UNCONDITIONAL when forgeplan CLI is on $PATH (PRD-020)`. Delegated skills (sprint, etc.) inherit the unconditional wiring.
+
+- `forgeplan-workflow` v1.5.0 → **1.6.0** (minor — adds claim/release wiring to a workflow that previously had zero):
+  - **`/forge-cycle` Step 5 (Build)**: SPARC pipeline now wraps each phase (specification/pseudocode/architecture/refinement) with explicit `forgeplan claim` + `forgeplan release` keyed on `${PRD_ID:-SESSION-...}`. For Tactical work (no PRD created in Shape phase), uses synthetic SESSION-id. Direct-implementation path (Standard/Tactical without SPARC) also gets claim wrapping.
+  - **`/forge-audit` Step 1 + Step 5**: claims `${1:-AUDIT-...}` at start (60-min TTL — audits run longer than sprints), releases at end. Step 5 evidence emission moved from "Optional" to mandatory — audit trail is the *point* of this command.
+
+### Changed
+- `marketplace.json`: catalog 1.21.0 → **1.22.0** (minor — behavior change in two plugins); fpl-skills 1.8.0 → 1.9.0; forgeplan-workflow 1.5.0 → 1.6.0; descriptions on both updated to mention PRD-020.
+
+### Notes
+
+**Why "unconditional" and not "always claim if forgeplan present"**: same thing operationally — if forgeplan CLI is missing, all `forgeplan` calls are no-ops via the existing `command -v forgeplan && ...` probe in §4a-bis. The "unconditional" wording in the SKILL.md prose is what changed: removing the guard that gated on artifact-ID presence in the task description.
+
+**Backward compat — artifact-driven flows**: identical trace to v1.21.0. The `${ARTIFACT_ID:-$SESSION_ID}` pattern resolves to the real artifact-ID first. Existing `/sprint "implement PRD-018"` produces same claim/evidence pattern as before (verified by AC-2 / AC-8 design review).
+
+**TTL housekeeping**: synthetic claims auto-expire after 30 min (sprint) / 60 min (audit). For long-running sessions, teammates can refresh via re-claim. Stale-claim cleanup not yet automated — `forgeplan claims --filter expired=true` future improvement.
+
+**Operating contract `:v1` → `:v2` (deferred)**: PRD-020 FR-008 specifies bumping the CLAUDE.md operating contract marker so existing repos can detect a content change and re-inject. Implemented in this PR for the marketplace itself; existing user-project CLAUDE.md files will stay on `:v1` until they re-run `/fpl-init` (which is idempotent). Not a blocker — `:v1` says "claim per teammate before they start" which is *also* what `:v2` says, just stronger phrasing.
+
+**Out of scope (deferred)**:
+- `forgeplan claims --filter session=true` housekeeping subcommand (forgeplan-core change, not marketplace).
+- Auto-derive `affected_files` from task descriptions for chat-driven dispatch usefulness (heuristic-prone; requires file-mention parsing).
+- Migration tool for existing `:v1` CLAUDE.md → `:v2` re-inject (manual via `/fpl-init` re-run).
+
+### PRD-020 — Acceptance criteria status
+
+- [x] AC-1..AC-9 — design verified in skill prose. Empirical smoke-test (post-merge): chat-driven `/sprint "refactor X"` should produce ≥1 SESSION-claim + ≥1 evidence (`forgeplan claims` and `forgeplan list -k evidence` confirm).
+- [x] AC-7: `./scripts/validate-all-plugins.sh` passes.
+- [x] AC-8: backward compat — artifact-driven trace unchanged.
+
 ## [1.21.0] - 2026-05-08
 
 **GitHub Projects v2 integration** — project-agnostic skill, convention guide, auto-add workflow template. Refs PRD-019 (validated via `/forge-cycle` autonomous run; routed Standard, conf 90%).
