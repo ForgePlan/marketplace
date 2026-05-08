@@ -146,20 +146,21 @@ Target shape:
   "mcpServers": {
     "forgeplan": {
       "command": "forgeplan",
-      "args": ["mcp"],
+      "args": ["serve"],
       "transport": "stdio"
     }
   }
 }
 ```
 
+**Why `args: ["serve"]` not `["mcp"]`** — `forgeplan mcp` is a *parent* command with subcommands (`mcp serve`, `mcp install`, `mcp help`). Launching it without a subcommand makes the server hang waiting for one, and Claude Code reports `failed to reconnect`. The canonical MCP server command is `forgeplan serve` (stdio is the default and only transport, no `--stdio` flag exists). `["mcp", "serve"]` also works as an alias path but `["serve"]` is the most direct.
+
 Rules:
 - File missing → write the minimal version above.
 - File present + `mcpServers.forgeplan` missing → merge the entry in,
   preserving every other server (e.g. `hindsight`, `orch`).
-- File present + `mcpServers.forgeplan` already there → diff against
-  target shape; if it matches, skip; if not, ask the user before
-  changing.
+- File present + `mcpServers.forgeplan.args == ["mcp"]` → **upgrade to `["serve"]`** (this is the buggy v1.6.0 init output that fails to reconnect; the upgrade is idempotent and safe).
+- File present + `mcpServers.forgeplan.args == ["serve"]` already → skip (correct shape).
 
 Implementation: prefer `python3` for the merge (always available, no
 dependency on `jq`):
@@ -170,11 +171,13 @@ import json, pathlib
 p = pathlib.Path(".mcp.json")
 data = json.loads(p.read_text()) if p.exists() else {}
 data.setdefault("mcpServers", {})
-data["mcpServers"].setdefault("forgeplan", {
-    "command": "forgeplan",
-    "args": ["mcp"],
-    "transport": "stdio",
-})
+fp = data["mcpServers"].get("forgeplan")
+if fp is None or fp.get("args") == ["mcp"]:  # missing OR buggy old shape
+    data["mcpServers"]["forgeplan"] = {
+        "command": "forgeplan",
+        "args": ["serve"],
+        "transport": "stdio",
+    }
 p.write_text(json.dumps(data, indent=2) + "\n")
 PY
 ```
