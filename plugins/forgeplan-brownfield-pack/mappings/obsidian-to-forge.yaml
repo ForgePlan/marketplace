@@ -1,0 +1,251 @@
+# obsidian-to-forge.yaml — mapping rules для Obsidian vaults
+# Source: Obsidian markdown notes (https://obsidian.md/) — Zettelkasten / PARA / Johnny.Decimal layouts.
+# Input: vault directory with .md files using YAML frontmatter, [[wikilinks]], #tags.
+# Output: forge artifacts (Note primarily; Epic for MOCs; PRD for project notes; ADR/Hypothesis on tag).
+#
+# Obsidian is loose-structured by design — this mapping leans on conventions that are
+# common but not universal: frontmatter `kind:` field is the strongest signal,
+# folder-name patterns are secondary, tags tertiary.
+
+schema_version: "1.0"
+mapping_name: obsidian-to-forge
+source_plugin: obsidian  # not a plugin — convention
+source_spec_version: "any"  # Obsidian markdown is plain MD + frontmatter; no version gating
+
+# Detection: vault root is identified by presence of `.obsidian/` directory
+vault_detection:
+  marker: ".obsidian/"
+  scan_root: "{vault_root}"
+  exclude_paths:
+    - ".obsidian/**"           # Obsidian config
+    - ".trash/**"              # Obsidian trash
+    - "**/templates/**"        # template files (not actual notes)
+    - "**/daily/**"            # daily notes — too ephemeral to ingest by default
+    - "**/journal/**"
+    - "**/.git/**"
+
+# ─── Source signal priority (first matching rule wins per file)
+sources:
+  # Tier 1: explicit kind hint in frontmatter — strongest signal
+  - frontmatter_match: { kind: prd }
+    mapping: obsidian_note_to_prd
+  - frontmatter_match: { kind: epic }
+    mapping: obsidian_note_to_epic
+  - frontmatter_match: { kind: adr }
+    mapping: obsidian_note_to_adr
+  - frontmatter_match: { kind: hypothesis }
+    mapping: obsidian_note_to_hypothesis
+  - frontmatter_match: { kind: spec }
+    mapping: obsidian_note_to_spec
+
+  # Tier 2: tag-based hints (#prd, #epic, #adr, #hypothesis)
+  - tag_match: "#prd"
+    mapping: obsidian_note_to_prd
+  - tag_match: "#epic"
+    mapping: obsidian_note_to_epic
+  - tag_match: "#adr"
+    mapping: obsidian_note_to_adr
+  - tag_match: "#hypothesis"
+    mapping: obsidian_note_to_hypothesis
+
+  # Tier 3: folder-pattern conventions (PARA / Johnny.Decimal)
+  - path_pattern: "**/[0-9][0-9] Projects/**.md"     # PARA "Projects"
+    mapping: obsidian_note_to_prd
+  - path_pattern: "**/Projects/**.md"
+    mapping: obsidian_note_to_prd
+  - path_pattern: "**/MOCs/**.md"                    # Maps of Content
+    mapping: obsidian_moc_to_epic
+  - path_pattern: "**/*MOC*.md"                      # filename ends in "MOC"
+    mapping: obsidian_moc_to_epic
+  - path_pattern: "**/[0-9][0-9] Areas/**.md"        # PARA "Areas" — long-running domains
+    mapping: obsidian_note_to_epic
+
+  # Tier 4 (default): everything else → Note
+  - path_pattern: "**/*.md"
+    mapping: obsidian_note_to_note
+
+mappings:
+
+  # ─── Atomic note → forge Note (default fallback)
+  obsidian_note_to_note:
+    target_kind: note
+    extract:
+      title: "$frontmatter.title || $h1 || $filename_without_ext"
+      body: full_content_minus_frontmatter
+      tags: "$frontmatter.tags + #inline_tags"  # merged
+    extract_links:
+      # [[wikilink]] → forge `relates_to` (if target file resolves to an artifact)
+      - syntax: wikilink
+        regex: '\[\[([^\]|]+)(?:\|[^\]]+)?\]\]'
+        relation: relates_to
+        target_resolution: "vault_path_to_artifact_id"
+      # Standard markdown links to .md files
+      - syntax: markdown
+        regex: '\[.*?\]\(([^)]+\.md)(?:#[^)]*)?\)'
+        relation: relates_to
+        target_resolution: "vault_path_to_artifact_id"
+    source_ref:
+      format: "{relative_path}"
+    defaults:
+      status: draft
+      author: obsidian-ingest
+      expires_in_days: null  # notes are reference material; keep
+
+  # ─── Project note → forge PRD
+  obsidian_note_to_prd:
+    target_kind: prd
+    extract:
+      title: "$frontmatter.title || $h1"
+      body_sections:
+        - from: "## Problem"
+          to: "## Problem"
+        - from: "## Goals"
+          to: "## Goals"
+        - from: "## Non-Goals"
+          to: "## Non-Goals"
+        - from: "## Users"
+          to: "## Target Users"
+        - from: "## Requirements"
+          to: "## Functional Requirements"
+        - from: "## Acceptance Criteria"
+          to: "## Acceptance Criteria"
+      heading_synonyms:
+        "## Problem": ["## Problem Statement", "## Why", "## Background"]
+        "## Goals": ["## Objectives", "## Outcomes"]
+        "## Target Users": ["## Personas", "## Audience"]
+        "## Functional Requirements": ["## Features", "## Scope"]
+      synthesized:
+        # Obsidian project notes are often loose — fill missing sections with stubs
+        non_goals: "[AUTO — review and explicitly bound the scope]"
+        acceptance_criteria: "[AUTO — extract measurable criteria from Goals]"
+    extract_links:
+      - syntax: wikilink
+        relation: relates_to
+        target_resolution: "vault_path_to_artifact_id"
+    source_ref:
+      format: "{relative_path}"
+    defaults:
+      status: draft
+      depth: standard
+
+  # ─── MOC (Map of Content) → forge Epic
+  obsidian_moc_to_epic:
+    target_kind: epic
+    extract:
+      title: "$frontmatter.title || $h1 || strip_moc_suffix($filename)"
+      body: "intro_paragraphs_before_first_link_section"
+      # MOC body is mostly link lists — convert to epic's "Related Artifacts" section
+      link_sections_to:
+        target: "## Related Artifacts"
+        format: "preserve_hierarchy"  # keep H2/H3 grouping from MOC
+    extract_children:
+      # Every wikilink in MOC → relates_to edge (children become refines if also #project)
+      - selector: "all_wikilinks"
+        produces: link  # not a new artifact — just edge from this epic
+        relation_default: relates_to
+        relation_override:
+          # If linked file has frontmatter `kind: prd`, link is `refines` (child PRD of this epic)
+          if_target_kind: prd
+          relation: refines
+    source_ref:
+      format: "{relative_path}"
+    defaults:
+      status: draft
+      depth: deep
+      author: obsidian-ingest
+
+  # ─── Long-running area → forge Epic (PARA "Areas")
+  obsidian_note_to_epic:
+    target_kind: epic
+    extract:
+      title: "$frontmatter.title || $h1"
+      body: full_content_minus_frontmatter
+    source_ref:
+      format: "{relative_path}"
+    defaults:
+      status: draft
+      depth: deep
+
+  # ─── Decision-tagged note → forge ADR (delegates section parsing to madr-to-forge if MADR-shaped)
+  obsidian_note_to_adr:
+    target_kind: adr
+    extract:
+      title: "$frontmatter.title || $h1"
+      body_sections:
+        - from: "## Context"
+          to: "## Context"
+        - from: "## Decision"
+          to: "## Decision"
+        - from: "## Consequences"
+          to: "## Consequences"
+        - from: "## Alternatives"
+          to: "## Options Considered"
+      heading_synonyms:
+        "## Decision": ["## Outcome", "## Resolution"]
+        "## Alternatives": ["## Considered Options", "## Options"]
+      # Defer to madr_to_adr if structure matches MADR more strictly
+      delegate_if_matches:
+        rule: "has all of [## Context and Problem Statement, ## Decision Outcome]"
+        delegate_to: "madr-to-forge:madr_to_adr"
+    status_source:
+      - frontmatter_field: status
+      - default: draft
+    source_ref:
+      format: "{relative_path}"
+
+  # ─── Hypothesis-tagged note → forge Hypothesis (EPIC-008 kind, fallback Problem)
+  obsidian_note_to_hypothesis:
+    target_kind: hypothesis  # EPIC-008 kind
+    fallback_kind: problem
+    extract:
+      title: "$frontmatter.title || $h1"
+      body_sections:
+        - from: "## Hypothesis"
+          to: "## Hypothesis"
+        - from: "## Evidence"
+          to: "## Evidence (supporting / refuting)"
+        - from: "## Test"
+          to: "## Falsification Plan"
+      synthesized:
+        confidence: "[AUTO — assess from Evidence quality]"
+    source_ref:
+      format: "{relative_path}"
+
+  # ─── Spec-tagged note → forge Spec
+  obsidian_note_to_spec:
+    target_kind: spec
+    extract:
+      title: "$frontmatter.title || $h1"
+      body: full_content_minus_frontmatter
+    source_ref:
+      format: "{relative_path}"
+
+# Rules applied to all ingested artifacts
+universal_rules:
+  - always_add_sources_section: true
+  - always_draft_status: true
+  - hash_for_idempotency: true
+  - on_source_removal: "mark artifact as stale; preserve link history"
+  - preserve_obsidian_metadata: true  # vault-relative path, frontmatter, tags → x-obsidian-* hints
+  - resolve_wikilinks_lazily: true    # broken wikilinks → warning + leave as text, don't fail ingest
+
+# Compat: forge kinds that may not be present pre-EPIC-008
+compat_notes:
+  pre_epic_008:
+    unsupported_kinds: [hypothesis, glossary, invariant]
+    fallback_strategy: |
+      hypothesis → problem (body header "## Hypothesis")
+      glossary → note (title prefixed "Glossary: ")
+      invariant → spec (body header "## Invariant Rule")
+
+# Realistic vault stats (mid-sized vault, 2-3 years of notes)
+example_counts:
+  source: "Typical PARA-organized vault — 800 notes, 12 MOCs, 25 projects, 8 areas"
+  produces:
+    note: 720           # default fallback for atomic / fleeting / literature notes
+    epic_from_moc: 12   # 1 per MOC
+    epic_from_area: 8   # PARA Areas
+    prd: 25             # tagged or in Projects/
+    adr: 15             # tagged with #adr
+    hypothesis_or_problem: 20  # tagged with #hypothesis (fallback to problem)
+  total_estimated: 800
