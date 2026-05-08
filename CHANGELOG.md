@@ -5,6 +5,33 @@ All notable changes to the ForgePlan Marketplace will be documented in this file
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.22.2] - 2026-05-08
+
+**Fix `/fpl-init` MCP server config** — `args: ["mcp"]` produced a hanging command (`forgeplan mcp` is a parent command waiting for subcommand), causing Claude Code to report `failed to reconnect to forgeplan` for every project bootstrapped with v1.6.0+ of `/fpl-init`. Switched to `args: ["serve"]` — the direct stdio MCP server entry-point.
+
+### Fixed
+- `fpl-skills` v1.9.1 → **1.9.2** (patch — config-template fix in `/fpl-init`):
+  - `plugins/fpl-skills/skills/fpl-init/SKILL.md` step 5 (Wire `.mcp.json`):
+    - **Target shape `args` field**: `["mcp"]` → `["serve"]`. `forgeplan mcp` is a parent command with subcommands (`serve`, `install`, `help`); without a subcommand it hangs awaiting one, which manifests as MCP handshake failure in Claude Code.
+    - **Python merge implementation**: now detects the buggy `args == ["mcp"]` shape on existing `.mcp.json` files and upgrades to `["serve"]` automatically (idempotent — re-running `/fpl-init` migrates broken configs).
+    - **Added "Why `args: ["serve"]` not `["mcp"]`" rationale** inline so future edits don't regress.
+
+### Changed
+- `marketplace.json`: catalog 1.22.1 → **1.22.2**; fpl-skills 1.9.1 → 1.9.2.
+- `plugin.json` (fpl-skills): version 1.9.1 → 1.9.2.
+
+### Notes
+**Discovery process**: user ran `/mcp` in Claude Code, output showed `forgeplan · ✘ failed`. Investigation: `forgeplan serve --help` revealed `Usage: forgeplan serve` (no subcommand needed, no `--stdio` flag), while `forgeplan mcp --help` showed it's a parent command. Empirical fix on this repo's `.mcp.json` from `["mcp"]` → `["serve"]` confirmed working.
+
+**Existing `.mcp.json` files in user projects**: the upgraded merge logic in `/fpl-init` step 5 will auto-fix them on re-run (`args == ["mcp"]` is detected and replaced). Users can also patch manually with one-liner:
+```bash
+python3 -c "import json,pathlib; p=pathlib.Path('.mcp.json'); d=json.loads(p.read_text()); d['mcpServers']['forgeplan']['args']=['serve']; p.write_text(json.dumps(d,indent=2)+'\n')"
+```
+
+**No behavior change in working systems** — only repairs broken MCP wiring. Skills using forgeplan via shell (existing flow) are unaffected.
+
+**Forward-compat to Option B (forgeplan MCP-first wiring)**: now that the MCP server actually starts, `mcp__forgeplan__*` tools should appear in Claude Code's deferred-tools list. PRD-021 (skill prose preferring MCP over shell) becomes practically possible — was theoretical until this fix.
+
 ## [1.22.1] - 2026-05-08
 
 **Convention drift fix** — `/gh-project` skill prose + bilingual guides now match `orgs/ForgePlan/projects/5` server reality discovered during empirical setup (Step 4-6 of post-PRD-020 verification, EVID-031).
