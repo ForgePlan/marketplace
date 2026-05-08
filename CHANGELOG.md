@@ -5,6 +5,20 @@ All notable changes to the ForgePlan Marketplace will be documented in this file
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.18.2] - 2026-05-08
+
+User-reported bug: `/plugin marketplace update forgeplan-marketplace` (lowercase) fails because Claude Code is case-sensitive and the canonical name in `marketplace.json` is `ForgePlan-marketplace` (PascalCase). Two top-level READMEs printed the broken lowercase form.
+
+### Fixed
+- `README.md`: update command line 310 — `forgeplan-marketplace` → `ForgePlan-marketplace`.
+- `README-RU.md`: update command line 284 — same fix.
+- `marketplace.json`: catalog 1.18.1 → **1.18.2**.
+
+### Notes
+`docs/USAGE-GUIDE.md` and `-RU.md` already documented the case-sensitivity correctly (with explicit "Wrong: forgeplan-marketplace / Right: ForgePlan-marketplace" examples) — those were intentional and not touched. Plugin install commands across all docs already use the correct `@ForgePlan-marketplace` form (148+ occurrences, none broken).
+
+The marketplace name in your local registry is set when you run `/plugin marketplace add ForgePlan/marketplace` — so the canonical name is what GitHub reports for the marketplace.json `"name"` field. PascalCase F + P, lowercase rest. No version bump for plugins; this is a docs-only patch.
+
 ## [1.18.1] - 2026-05-08
 
 Documentation sync for v1.18.0 — brings README/METHODOLOGIES/USAGE-GUIDE/ARCHITECTURE/AUTORESEARCH-INTEGRATION docs in line with the new mappings shipped in v1.18.0. No code or mapping changes.

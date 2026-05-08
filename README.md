@@ -307,7 +307,7 @@ These standalone repos are **auto-mirrored** from the marketplace — same conte
 Get the latest plugins:
 
 ```bash
-/plugin marketplace update forgeplan-marketplace
+/plugin marketplace update ForgePlan-marketplace
 ```
 
 ## Contributing
