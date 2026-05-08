@@ -256,7 +256,7 @@ Structured reasoning for decompose / evaluate / reason / lookup. 224 FPF spec se
 
 ### `forgeplan-brownfield-pack` — Legacy ingest
 
-Mappings + playbooks for brownfield migration (Obsidian, MADR, ad-hoc markdown → forgeplan graph). Composes `c4-architecture`, `autoresearch`, `ddd-expert`, `feature-dev`. See [plugins/forgeplan-brownfield-pack/README.md](../plugins/forgeplan-brownfield-pack/README.md).
+12 extraction skills + 2 playbooks + 5 mappings (`c4-to-forge`, `ddd-to-forge`, `madr-to-forge`, `obsidian-to-forge`, `autoresearch-to-forge`) → forgeplan graph. Composes `c4-architecture`, `autoresearch`, `ddd-expert`, `feature-dev`. See [plugins/forgeplan-brownfield-pack/README.md](../plugins/forgeplan-brownfield-pack/README.md).
 
 **Requires**: forgeplan CLI v0.25+.
 

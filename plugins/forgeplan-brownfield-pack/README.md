@@ -46,10 +46,15 @@ A Claude Code marketplace pack for **brownfield extraction**: take inherited cod
 - `forgeplan-mcp-additions.md` — additions to forgeplan MCP for brownfield-specific operations
 - `rag-export-format.md` — output format for the RAG packager
 
-### 2 mappings (`mappings/`)
+### 5 mappings (`mappings/`)
+
+All five follow schema-v1.0; each emits forge artifacts with a `## Sources` section for traceability.
 
 - `c4-to-forge.yaml` — C4 Context/Container/Component → forgeplan Epic + PRDs + Notes (validated CL3 on Forgeplan repo, 2026-04-20)
-- `ddd-to-forge.yaml` — DDD bounded-context map → Epic + PRDs + Spec
+- `ddd-to-forge.yaml` — DDD bounded-context map → Epic + PRDs + Spec (Spike-3, 2026-04-21)
+- `madr-to-forge.yaml` — MADR 3.x/4.x ADR markdown → forgeplan `adr` (1:1) with status normalization and supersession-link extraction
+- `obsidian-to-forge.yaml` — Obsidian vault (`.obsidian/` marker) → Note/Epic/PRD/ADR/Hypothesis with 4-tier signal priority (frontmatter → tag → folder → default) and lazy wikilink resolution
+- `autoresearch-to-forge.yaml` — autoresearch v2.x outputs (7 modes: glossary/use-case/invariant/intent/triangulate/gherkin/canonical) → matching forge kinds. Companion (inverse direction) of `integration/autoresearch-hooks.md`.
 
 ### Templates and examples
 

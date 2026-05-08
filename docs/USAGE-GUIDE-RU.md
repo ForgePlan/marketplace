@@ -256,7 +256,7 @@ Worked example (`добавить аутентификацию` end-to-end) — 
 
 ### `forgeplan-brownfield-pack` — Legacy ингест
 
-Mappings + playbooks для brownfield миграции (Obsidian, MADR, ad-hoc markdown → forgeplan граф). Композит `c4-architecture`, `autoresearch`, `ddd-expert`, `feature-dev`. См. [plugins/forgeplan-brownfield-pack/README-RU.md](../plugins/forgeplan-brownfield-pack/README-RU.md).
+12 скиллов извлечения + 2 playbooks + 5 карт соответствия (`c4-to-forge`, `ddd-to-forge`, `madr-to-forge`, `obsidian-to-forge`, `autoresearch-to-forge`) → граф forgeplan. Композит `c4-architecture`, `autoresearch`, `ddd-expert`, `feature-dev`. См. [plugins/forgeplan-brownfield-pack/README-RU.md](../plugins/forgeplan-brownfield-pack/README-RU.md).
 
 **Требует**: CLI forgeplan v0.25+.
 

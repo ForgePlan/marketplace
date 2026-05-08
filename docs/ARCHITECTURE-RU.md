@@ -167,7 +167,7 @@ Orchestra: Task "OAuth" Status=Review, Phase=Evidence
 | UX | laws-of-ux | `ux-reviewer` агент + `/ux-review` + auto-hint hook при правке frontend-файлов. |
 | Агенты | agents-core / agents-domain / agents-pro / agents-github | Специализированные сабагенты, которые `/audit`, `/sprint` и др. композят при необходимости. |
 | Универсальный тулкит (legacy) | dev-toolkit | Soft-deprecated, superseded by fpl-skills. Используй только если CLI forgeplan недоступен. |
-| Brownfield ингест | forgeplan-brownfield-pack | Mappings + playbooks для миграции legacy-доков (Obsidian, MADR) в forgeplan-граф. |
+| Brownfield ингест | forgeplan-brownfield-pack | 5 карт соответствия (c4, ddd, madr, obsidian, autoresearch) + 12 скиллов извлечения + 2 playbooks для миграции legacy-кода и доков в forgeplan-граф. |
 
 Команда установки: `/plugin install <plugin-name>@ForgePlan-marketplace`.
 

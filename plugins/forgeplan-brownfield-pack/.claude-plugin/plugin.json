@@ -1,6 +1,6 @@
 {
   "name": "forgeplan-brownfield-pack",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "Brownfield extraction pack for forgeplan — turns legacy code + docs into a structured forgeplan graph. Ships 12 extraction skills (ubiquitous-language, use-case-miner, intent-inferrer, invariant-detector, causal-linker, hypothesis-triangulator, interview-packager, scenario-writer, kg-curator, canonical-reproducer, reproducibility-validator, rag-packager), 2 orchestration playbooks (extract-business-logic, phase-transitions), 3 integration recipes (autoresearch hooks, forgeplan MCP additions, RAG export), 5 mappings (c4-to-forge, ddd-to-forge, madr-to-forge, obsidian-to-forge, autoresearch-to-forge), templates, examples, and methodology docs. Implements two-tier extraction (Factum vs Intent) with confidence taxonomy and ADI cycle.",
   "author": {
     "name": "ForgePlan"

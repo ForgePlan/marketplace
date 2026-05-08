@@ -5,6 +5,22 @@ All notable changes to the ForgePlan Marketplace will be documented in this file
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.18.1] - 2026-05-08
+
+Documentation sync for v1.18.0 — brings README/METHODOLOGIES/USAGE-GUIDE/ARCHITECTURE/AUTORESEARCH-INTEGRATION docs in line with the new mappings shipped in v1.18.0. No code or mapping changes.
+
+### Changed
+- `forgeplan-brownfield-pack` v1.3.0 → **1.3.1** (patch — docs only):
+  - `README.md` and `README-RU.md`: section "2 mappings" → "5 mappings"; lists all five (c4, ddd, madr, obsidian, autoresearch) with one-line descriptions each.
+- `docs/METHODOLOGIES.md` and `-RU.md`: added per-methodology sections for **MADR** and **Obsidian** (alongside existing DDD and C4 entries). Quick lookup table extended with rows for MADR, Obsidian, plus an updated Autoresearch row mentioning the new ingest mapping.
+- `docs/USAGE-GUIDE.md` and `-RU.md`: brownfield-pack section description now lists all five mappings by name instead of generic "Obsidian, MADR, ad-hoc markdown".
+- `docs/ARCHITECTURE.md` and `-RU.md`: brownfield-pack capability row updated from "Mappings + playbooks for migrating legacy docs (Obsidian, MADR)" to "5 mappings (c4, ddd, madr, obsidian, autoresearch) + 12 extraction skills + 2 playbooks".
+- `docs/AUTORESEARCH-INTEGRATION.md` and `-RU.md`: "See also" section now distinguishes the two directions — `autoresearch-hooks.md` (outbound: skill → autoresearch command) and `autoresearch-to-forge.yaml` (inbound: autoresearch outputs → forge artifacts).
+- `marketplace.json`: catalog 1.18.0 → **1.18.1**; brownfield-pack entry 1.3.0 → 1.3.1.
+
+### Notes
+This patch closes the documentation gap from v1.18.0 — the mappings YAMLs were shipped, but the user-facing docs that point at them weren't updated in the same PR. No new files; only edits to existing docs.
+
 ## [1.18.0] - 2026-05-08
 
 Three new brownfield ingestion mappings: MADR, Obsidian vaults, and autoresearch outputs. The `forgeplan-brownfield-pack` plugin now covers five upstream formats end-to-end (c4, ddd, madr, obsidian, autoresearch).

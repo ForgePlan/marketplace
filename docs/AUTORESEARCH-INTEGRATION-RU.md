@@ -173,4 +173,5 @@ forgeplan --version          # CLI forgeplan
 - Оригинал Карпатого — [github.com/karpathy/autoresearch](https://github.com/karpathy/autoresearch)
 - [METHODOLOGIES-RU.md](METHODOLOGIES-RU.md) — autoresearch как recommended companion
 - [PLAYBOOK-RU.md](PLAYBOOK-RU.md) — сценарий «итерации под мерой»
-- [`plugins/forgeplan-brownfield-pack/integration/autoresearch-hooks.md`](../plugins/forgeplan-brownfield-pack/integration/autoresearch-hooks.md) — карта соответствия для 12 скиллов brownfield
+- [`plugins/forgeplan-brownfield-pack/integration/autoresearch-hooks.md`](../plugins/forgeplan-brownfield-pack/integration/autoresearch-hooks.md) — **исходящее** направление: карта соответствия для 12 скиллов brownfield (скилл → команда + режим autoresearch)
+- [`plugins/forgeplan-brownfield-pack/mappings/autoresearch-to-forge.yaml`](../plugins/forgeplan-brownfield-pack/mappings/autoresearch-to-forge.yaml) — **входящее** направление: выводы autoresearch (журналы + per-mode артефакты в `.autoresearch/`) → kind-ы артефактов forgeplan. Companion к файлу hooks выше.
