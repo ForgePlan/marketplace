@@ -281,7 +281,7 @@ Standalone-репо **автоматически зеркалируются** и
 Получить последние версии плагинов:
 
 ```bash
-/plugin marketplace update forgeplan-marketplace
+/plugin marketplace update ForgePlan-marketplace
 ```
 
 ## Участие в разработке
