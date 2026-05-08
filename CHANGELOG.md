@@ -5,6 +5,33 @@ All notable changes to the ForgePlan Marketplace will be documented in this file
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.19.0] - 2026-05-08
+
+`/sprint` and `/autorun` now wire the **forgeplan dispatch + claim + evidence loop** for artifact-driven sprints. Tasks taken from forgeplan as artifacts (PRD-NNN/RFC-NNN/SPEC-NNN), parallel-safe grouping computed by PRD-057 dispatcher, soft-claim per teammate, evidence emitted per artifact at wave-close.
+
+This is **option A** from the agent-team integration roadmap — prose-only patch, no new MCP tools, no new code. Uses existing forgeplan CLI capabilities (`dispatch`, `claim`, `new evidence`) wired into skill prose so teammates pull tasks from the artifact graph instead of operating in a vacuum.
+
+### Added
+- `fpl-skills` v1.5.0 → **1.6.0** (minor — new behavior in two skills, fully backward-compatible):
+  - `/sprint` SKILL.md gains three new sub-steps:
+    - **§4a-bis "Forgeplan dispatch (artifact-driven sprints)"** — when wave plan tasks reference forgeplan IDs, calls `forgeplan dispatch -n {agents} --json` for a parallel-safe grouping with Jaccard file-overlap detection (threshold 0.3, PRD-057). Used as a second-opinion check on the human-built wave plan; surfaces conflicts in a 3-row decision table (agree → go, conservative → go, disagree → stop and re-check ownership).
+    - **§4b.g "Forgeplan-aware teammate prompt addendum"** — every teammate working on an artifact runs `forgeplan claim {artifact-id} --agent {kebab-name}` before starting (PRD-057 soft signal). Skipped if no artifact ID in task.
+    - **§4b-bis "Per-artifact evidence emission"** — at wave-close, team-lead emits `forgeplan new evidence` + `forgeplan link --relation informs` per completed artifact (one evidence per artifact, not per teammate, not per wave — because a single artifact may span multiple teammates and waves).
+  - `/sprint` "Forgeplan integration" section restructured: "Before / During / After" — During row mentions dispatch + claim flow; existing pre/post recommendations preserved.
+  - `/autorun` SKILL.md autopilot directive extended with FORGEPLAN-AWARE block — surfaces the dispatch/claim/evidence wiring to delegated skills so they don't have to re-discover it.
+  - `/autorun` "Forgeplan integration (clarified)" table row 2 (forgeplan CLI without forgeplan-workflow) updated to mention dispatch + claim per-teammate when task is artifact-driven.
+
+### Changed
+- `marketplace.json`: catalog 1.18.2 → **1.19.0** (minor — fpl-skills feature add); fpl-skills entry 1.5.0 → 1.6.0; description mentions PRD-057 dispatcher and claim/evidence loop.
+- `plugin.json` (fpl-skills): version 1.5.0 → 1.6.0.
+
+### Notes
+**Backward compatibility**: skills detect artifact-driven mode by presence of forgeplan IDs in task descriptions. Chat-driven sprints (no IDs) take the existing path unchanged — no claim, no evidence per artifact, no dispatch. Existing `/sprint` invocations continue to work identically.
+
+**No new MCP tools added** — uses existing `forgeplan dispatch`/`claim`/`new evidence` CLI subcommands (forgeplan ships an MCP server via `forgeplan serve --stdio`; that path is option B for a future patch and is out of scope here).
+
+**Soft-claim trade-off**: `forgeplan claim` is a soft signal, not a hard lock. Two parallel sessions claiming the same artifact will both succeed locally; conflict detection happens at the artifact graph level, not at claim-time. Acceptable for current single-orchestrator use; if multi-orchestrator races become real, upstream forgeplan would add TTL + lease-renewal to claim.
+
 ## [1.18.2] - 2026-05-08
 
 User-reported bug: `/plugin marketplace update forgeplan-marketplace` (lowercase) fails because Claude Code is case-sensitive and the canonical name in `marketplace.json` is `ForgePlan-marketplace` (PascalCase). Two top-level READMEs printed the broken lowercase form.

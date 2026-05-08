@@ -108,6 +108,12 @@ AUTOPILOT MODE — green light from user, do NOT pause for approval.
 Skip every "Proceed?" / "Continue to next wave?" / "Запускаем?" prompt — assume YES.
 Resolve blockers via ADI (Abduct → Induct → Deduce), 3 rounds max per blocker.
 Only stop on red-line actions (see /autorun red lines). Surface state and exit cleanly when red line hit.
+
+FORGEPLAN-AWARE — if forgeplan CLI is on $PATH and the task has artifact IDs:
+- /sprint will use `forgeplan dispatch -n N --json` for parallel-safe wave plan (4a-bis).
+- Each teammate runs `forgeplan claim <ID> --agent <name>` before starting (4b.g).
+- Team-lead emits `forgeplan new evidence` per completed artifact at wave-close (4b-bis).
+- See sprint SKILL.md sections 4a-bis / 4b.g / 4b-bis for the wired pattern.
 ```
 
 ---
@@ -208,7 +214,7 @@ The probe block at the start of this skill (step 2 — Detect environment) alrea
 | Detected | What `/autorun` does |
 |---|---|
 | `forgeplan-workflow` plugin installed | **Delegates to `/forge-cycle "<task>"`** — full route → shape → build → evidence → activate. No pauses. |
-| `forgeplan` CLI but no `forgeplan-workflow` | Runs `research → sprint → audit → report` and **inserts manual `forgeplan` calls between phases** (route → new prd → new evidence → activate). All non-interactive. |
+| `forgeplan` CLI but no `forgeplan-workflow` | Runs `research → sprint → audit → report` and **inserts manual `forgeplan` calls between phases** (route → new prd → new evidence → activate). All non-interactive. When the task is artifact-driven, `/sprint` automatically uses `forgeplan dispatch` for parallel-safe wave grouping and `forgeplan claim` per teammate (sprint SKILL.md §4a-bis / 4b.g). |
 | Neither | Runs the standard pipeline. Prints a single warning at the start: "no forgeplan integration; artifact graph will not be updated". |
 
 ### Want full automation?
