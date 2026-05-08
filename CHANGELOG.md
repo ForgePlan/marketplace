@@ -16,6 +16,20 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - **`Cancelled` status note**: GitHub default Status field has 5 options (`Backlog`, `Ready`, `In progress`, `In review`, `Done`) — no `Cancelled`. Convention table now notes "add via UI or remap `deprecated`→`Done`".
   - Added new section **"Server reality vs documented convention"** to `gh-project/SKILL.md` summarising 4 quirks (Type→Kind, Cancelled missing, lowercase Status, P3 missing) with mitigations.
 
+### Added
+- **`docs/SETUP-GUIDE-NEW-REPO.md`** (~300 lines) — comprehensive end-to-end setup guide for bringing **any** new or existing repo into the ForgePlan ecosystem. Bilingual prose (RU primary, EN technical terms). Covers:
+  - Pre-requisites (host-level, one-time): forgeplan CLI, gh CLI scopes, Claude Code, ForgePlan marketplace plugin install
+  - Step 1: create repo + GitHub Projects v2 board
+  - Step 2: `/fpl-init` 11-step bootstrap (forgeplan init + CLAUDE.md + docs/agents/)
+  - Step 3: field schema setup with `gh project field-create` x4 (Kind/Forgeplan-ID/Plugin/Priority)
+  - Step 4: `/gh-project init` to write `.forgeplan/state/gh-project.yaml` with cached IDs
+  - Step 5: auto-add workflow copy + edit + PAT secret (when GITHUB_TOKEN insufficient)
+  - Step 6: labels creation (forgeplan/prd/rfc/adr)
+  - Step 7: smoke tests (test issue, chat-driven /sprint, /forge-cycle)
+  - Step 8: daily flow examples (Standard+ feature, Tactical fix, audit)
+  - Reference + Troubleshooting (6 common failure modes with fixes) + printable Checklist
+  - All lessons learned from `orgs/ForgePlan/projects/5` setup empirical run baked in (no `Type` reserved-word hits, correct lowercase status, PAT setup if GITHUB_TOKEN denied).
+
 ### Changed
 - `marketplace.json`: catalog 1.22.0 → **1.22.1**; fpl-skills 1.9.0 → 1.9.1.
 - `plugin.json` (fpl-skills): version 1.9.0 → 1.9.1.
