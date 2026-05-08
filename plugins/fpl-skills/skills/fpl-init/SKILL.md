@@ -269,6 +269,41 @@ scratch" because the template seems too verbose. The verbosity is the
 point — the U-curve attention model needs primacy/recency zones to be
 populated. A thin file silently strips guard rails.
 
+### 7-bis. Inject forgeplan operating contract into CLAUDE.md
+
+If forgeplan CLI is on `$PATH` (probed in step 2), append the **operating contract** to CLAUDE.md. This makes forgeplan-aware behaviour the default for every session in the project — without it, agents revert to general heuristics and skip artifact-graph operations under context pressure (the failure mode this section fixes).
+
+**Idempotency check** — read CLAUDE.md and look for the version marker `<!-- forgeplan-operating-contract:v1 -->`. If present, skip silently and continue to step 8. If absent, ask the user once:
+
+```
+Inject the 13-line forgeplan operating contract into CLAUDE.md? It tells future
+agents to use forgeplan as source-of-truth on every non-trivial task — search
+before creating, claim before working, evidence after finishing. [y/n]
+```
+
+Default to `y` (per the step-3 plan approval). If user says no — skip; do not warn again.
+
+If yes — append (NOT replace) the following block to `./CLAUDE.md`:
+
+```markdown
+<!-- forgeplan-operating-contract:v1 -->
+## Forgeplan operating contract (this project)
+
+Forgeplan is the source of truth for artifacts in this project. On every non-trivial task you MUST:
+
+**Before** — `forgeplan search "<topic>"` then `forgeplan list -s draft`. Find related artifacts before creating new ones (avoid duplicates; reuse existing).
+**During** (multi-agent / artifact-driven) — `forgeplan claim <ID> --agent <name>` per teammate before they start; `forgeplan dispatch -n N --json` for parallel-safe wave grouping.
+**After** — `forgeplan new evidence "<summary>"` + `forgeplan link EVID-MMM <ARTIFACT-ID> --relation informs` + `forgeplan score <ARTIFACT-ID>` + `forgeplan activate <ARTIFACT-ID>` if R_eff > 0.
+
+Prefer `mcp__forgeplan__*` tools over shell when forgeplan MCP is wired in `.mcp.json`. If `command -v forgeplan` fails, warn once at session start and proceed without artifact ops.
+
+This is enforcement, not recommendation. Skipping leaves the artifact graph empty — `forgeplan health` will flag orphans / missing evidence / stale stubs.
+```
+
+The marker `<!-- forgeplan-operating-contract:v1 -->` is **load-bearing**: re-running `/fpl-init` keys off this marker to avoid double-appending. If the contract evolves to v2, change the marker and add a migration note rather than mutating the v1 block in place.
+
+**Verify**: `grep -q 'forgeplan-operating-contract:v1' CLAUDE.md` returns 0. Echo "✓ operating contract injected" or "✓ contract already present, skipped" depending on path taken.
+
 ### 8. Run `/setup` flow
 
 If `docs/agents/` is missing, invoke the setup wizard inline. Per
@@ -339,6 +374,7 @@ Final summary in a single block:
 ✓ .mcp.json                wired (forgeplan + N existing servers preserved)
 ✓ .claude/settings.json    safety hook added       (or "skipped per user")
 ✓ CLAUDE.md                created from template   (or "appended")
+✓ Operating contract       injected into CLAUDE.md (or "already present" / "skipped per user")
 ✓ docs/agents/             configured (4 files)
 ✓ CONTEXT.md               created starter         (or "skipped — exists")
 
@@ -365,6 +401,7 @@ If any step in the plan failed — replace its ✓ with ✗ and show the error.
 
 - Detect what's already in place (step 1) and skip those branches.
 - Never overwrite existing `CLAUDE.md` content (always append).
+- Operating contract injection (step 7-bis) keys off marker `<!-- forgeplan-operating-contract:v1 -->` — re-runs detect and skip without prompting.
 - Never overwrite existing `.mcp.json` entries (always merge).
 - Never overwrite existing `docs/agents/*.md` (`/setup` re-prompts).
 
