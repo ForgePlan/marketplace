@@ -1,6 +1,6 @@
 ---
 name: audit
-description: Multi-expert audit of code, architecture, or a finished feature — at least 4 parallel reviewer agents, each with a specialization (logic, architecture/SOLID, typing, security; optionally tests, backend patterns, frontend, task-completion). Each runs its own checklist. Output is cross-validation, score, verdict, and action plan. Use when the user wants a sharp second pair of eyes on code, a PR, a branch diff, or a sprint. Triggers (EN/RU) — "audit", "review", "проверь код", "ревью", "оцени качество", "всё ли правильно", "code audit", "expert review", "/audit".
+description: Multi-expert audit of code, architecture, or a finished feature — at least 4 parallel reviewer agents, each with a specialization (logic, architecture/SOLID, typing, security; optionally tests, backend patterns, frontend, task-completion). Each runs its own checklist. Output is cross-validation, score, verdict, and action plan. On completion, **automatically writes an EvidencePack via forgeplan MCP** (`mcp__forgeplan__forgeplan_new` + `forgeplan_update` + `forgeplan_link`) so the audit lands in the artifact graph and R_eff reflects it — no manual step required (CLI fallback if MCP not connected). Use when the user wants a sharp second pair of eyes on code, a PR, a branch diff, or a sprint. Triggers (EN/RU) — "audit", "review", "проверь код", "ревью", "оцени качество", "всё ли правильно", "code audit", "expert review", "/audit".
 ---
 
 # Multi-Expert Audit
@@ -50,7 +50,7 @@ point review, not an audit. More than 6 = token explosion.
 
 ---
 
-## Architecture (4 Phases)
+## Architecture (5 Phases)
 
 | Phase | What it does |
 |---|---|
@@ -58,6 +58,7 @@ point review, not an audit. More than 6 = token explosion.
 | **2. Parallel Review** | Spawn 4–6 agents in parallel via TeamCreate |
 | **3. Task Completion Check** | Compare "delivered vs. requested" |
 | **4. Synthesis & Verdict** | Cross-validation, score, verdict, action plan |
+| **5. Evidence Capture (MANDATORY)** | Auto-publish EVID via `mcp__forgeplan__forgeplan_new` + `forgeplan_link`; prompt for activation; CLI fallback if MCP missing |
 
 ---
 
@@ -379,6 +380,216 @@ Options:
 
 ---
 
+## Phase 5: Evidence Capture (MANDATORY)
+
+**Why this phase exists.** Without an EvidencePack, an `/audit` run disappears: `forgeplan score` won't reflect it, `forgeplan health` reports blind spots on the audited artifact, and the next session has no record the review happened. The skill — not the user — is responsible for closing the loop. Skipping this phase silently is a contract violation (PRD-077 FR-011).
+
+### 5a. Detect target artifact(s)
+
+From Phase 1 scope, extract any forgeplan IDs the audit covered:
+
+| Source | How to extract |
+|---|---|
+| `/audit PRD-NNN` form | `ARTIFACT_IDS = ["PRD-NNN"]` (explicit) |
+| Branch name `feat/prd-NNN-…` | Regex `(PRD|RFC|ADR|SPEC|EPIC|PROB)-\d+` against the branch |
+| RFC/TODO reference found in Phase 1b | Use that ID |
+| Commit body `Refs: PRD-NNN, RFC-MMM` | Parse `Refs:` lines from `git log` |
+| **No artifact** (ad-hoc code audit, no spec) | `ARTIFACT_IDS = []` — handled in 5d |
+
+### 5b. Probe MCP availability (one call)
+
+```python
+# True if forgeplan MCP server is wired in this session
+have_mcp = "mcp__forgeplan__forgeplan_new" in available_tools
+```
+
+If `have_mcp` is unclear, attempt `mcp__forgeplan__forgeplan_health()`. Connection error → `have_mcp = False`, proceed to **5e fallback**, never silently skip.
+
+### 5c. Map verdict → structured fields
+
+| Final Verdict (from 4c) | `verdict:` field | Rationale |
+|---|---|---|
+| APPROVE | `supports` | Audit confirms the artifact is correct |
+| APPROVE_WITH_FIXES | `supports` | Net positive — fixes are minor warnings |
+| REQUEST_CHANGES | `weakens` | Significant gaps but not fundamental |
+| REJECT | `refutes` | Audit refutes the implementation's claim of done |
+
+Constants for every audit EVID:
+- `congruence_level: 3` — `/audit` reads the actual code under review (CL3 same-context)
+- `evidence_type: code_review`
+
+### 5d. MCP-first flow (have_mcp = True)
+
+```python
+# 5d.1 — Create the EvidencePack (draft)
+scope_label = "<panel-summary>"   # e.g. "PRD-077 backend feature" or "ad-hoc src/auth/"
+crit_n  = len(consensus_critical + unique_critical)
+high_n  = len(consensus_high  + unique_high)
+defer_n = len([f for f in findings if f.deferred])
+
+evid = mcp__forgeplan__forgeplan_new(
+    kind="evidence",
+    title=f"{scope_label}: audit — {n_reviewers} reviewers, "
+          f"{crit_n} CRIT/HIGH closed, {defer_n} deferred"
+)
+EVID_ID = evid["id"]   # e.g. "EVID-142"
+
+# 5d.2 — Fill the body (full Phase 4d report + Structured Fields)
+body = textwrap.dedent(f"""\
+## Structured Fields
+
+verdict: {verdict_field}            # supports | weakens | refutes — see 5c
+congruence_level: 3                 # CL3 — direct same-context code review
+evidence_type: code_review
+
+## Audit Summary
+
+- **Panel**: {panel_with_subagent_types}
+- **Files reviewed**: {n_files} files, ~{loc} LOC
+- **Original task ref**: {rfc_todo_ref or "ad-hoc"}
+- **Overall score**: {overall_score}/10
+- **Task completion**: {done}/{total} ({pct}%)
+- **Final verdict**: {final_verdict}
+
+## Findings
+
+{findings_table}                    # consensus + unique, severity-sorted
+
+## Reproduction
+
+For each finding:
+- **File**: `{file}:{line}`
+- **Reproduce**: `{command_or_test}`
+- **Fix**: {one-line remediation}
+
+## Pipeline Gate Results
+
+```
+{cargo_fmt_result}
+{cargo_check_result}
+{cargo_test_result}
+{cargo_clippy_result}
+```
+
+## Recommendation
+
+{key_recommendation}
+""")
+
+mcp__forgeplan__forgeplan_update(id=EVID_ID, body=body)
+
+# 5d.3 — Link to every target artifact (informs relation)
+for target in ARTIFACT_IDS:
+    mcp__forgeplan__forgeplan_link(
+        source=EVID_ID,
+        target=target,
+        relation="informs"
+    )
+
+# 5d.4 — Score parent artifacts (so user sees R_eff move immediately)
+for target in ARTIFACT_IDS:
+    mcp__forgeplan__forgeplan_score(id=target)
+```
+
+**If `ARTIFACT_IDS` is empty** (ad-hoc code audit, no spec found in 5a):
+- Skip the `forgeplan_link` loop entirely.
+- The EVID stands alone — still discoverable via `forgeplan list -k evidence` and `forgeplan search`.
+- Add a `note:` line in the body: `note: ad-hoc audit — no parent artifact (no link emitted)`.
+- Optional: also create a Note artifact (`forgeplan_new(kind="note", title="Ad-hoc audit of <scope>")`) and link the EVID to it, if the audit produced reusable lessons. Don't force this — let the user decide.
+
+### 5e. Shell fallback (have_mcp = False)
+
+Warn the user explicitly — **do NOT silently skip**:
+
+```
+⚠️  forgeplan MCP not connected — falling back to CLI.
+   Run `/mcp` to verify, or `/fpl-init` to wire it up.
+   Evidence capture is mandatory — copy/paste these commands now:
+
+EVID_ID=$(forgeplan new evidence "<scope>: audit — <N> reviewers, <X> CRIT/HIGH closed, <Y> deferred" --json | jq -r '.id')
+$EDITOR ".forgeplan/evidence/${EVID_ID}-"*.md   # fill Structured Fields + body
+forgeplan link "$EVID_ID" <ARTIFACT-ID> --relation informs    # repeat per target
+forgeplan score <ARTIFACT-ID>
+forgeplan activate "$EVID_ID"
+```
+
+If `forgeplan` CLI is also missing → print the manual artifact path and contents the user must write, and surface this as a `WARN` in the final report.
+
+### 5f. Activation prompt
+
+```
+EVID-{ID} drafted and linked to {", ".join(ARTIFACT_IDS) or "(no parent)"}.
+
+Activate EVID-{ID} now? [y/N]
+  y → mcp__forgeplan__forgeplan_activate(id="EVID-{ID}")  (or CLI: forgeplan activate EVID-{ID})
+  N → keep as draft; activate later with:
+      forgeplan activate EVID-{ID}
+```
+
+On `y`: call `mcp__forgeplan__forgeplan_activate(id=EVID_ID)`. If validation gate fails (missing structured fields, etc.), surface the error and keep the EVID in draft — don't retry silently. Relay any `_next_action` hint from the MCP response verbatim.
+
+### 5g. Final user-facing output
+
+Append to the bottom of the Phase 4d report so the user sees the EVID landed prominently:
+
+```markdown
+---
+
+### 📎 Evidence Captured
+
+- **EVID**: `EVID-{ID}` ({draft|active})
+- **Verdict**: {supports|weakens|refutes} · CL3 · code_review
+- **Linked to**: PRD-NNN, RFC-MMM   (or "ad-hoc — no parent")
+- **R_eff impact**: see `forgeplan score PRD-NNN`
+- **Tool path**: MCP (forgeplan_new + link + activate)   ← or "CLI fallback (MCP not connected)"
+```
+
+### 5h. Post-hoc / retroactive EVID (sibling pattern)
+
+The auto-flow above covers work that just completed. For work **already done in a prior session** that never got an EVID (e.g. cross-worktree race fix shipped in v0.31.0 but unlinked) the skill cannot reconstruct the audit from scratch. Use this manual template once, then return to the auto-flow:
+
+```python
+# Post-hoc EVID for past work — manual, one-shot
+evid = mcp__forgeplan__forgeplan_new(
+    kind="evidence",
+    title=f"{PROB_ID} retro: <fix summary> shipped <version>"
+)
+mcp__forgeplan__forgeplan_update(id=evid["id"], body=textwrap.dedent(f"""\
+## Structured Fields
+
+verdict: supports
+congruence_level: 2          # CL2 — reconstructed from git log + commit refs, not live review
+evidence_type: measurement   # or audit/test depending on what's being recorded
+
+## Reconstruction Source
+
+- **Commits**: {git_log_oneline_range}
+- **Files touched**: {git_diff_stat_summary}
+- **Tests added**: {test_paths}
+- **Shipped in**: <version-or-tag>
+
+## Why retro (not auto)
+
+<one-line reason — e.g. "work predates FR-011 autopublish; PROB-067 closure
+identified in 2026-05-13 audit retrospective">
+
+## Outcome
+
+<verdict + measured impact>
+"""))
+mcp__forgeplan__forgeplan_link(source=evid["id"], target=PROB_ID, relation="informs")
+# Optionally: forgeplan_link to the merged PR commit SHA as a Note
+mcp__forgeplan__forgeplan_activate(id=evid["id"])
+```
+
+Use CL2 (not CL3) for retro EVIDs — you reconstructed the evidence from `git log` and diffs, not from a live multi-reviewer audit. This is honest about the lower congruence and keeps `forgeplan score` calibrated.
+
+**When this is the right tool**: closing a PROB whose fix shipped without an evidence link, recording a measurement that was taken but never persisted, or formalising an ADR's empirical outcome long after the decision.
+
+**When this is NOT the right tool**: live audits (use Phase 5a-5g); future planning (use a Note); speculative claims without git/test backing (don't fabricate evidence).
+
+---
+
 ## Token Budget
 
 - Max 6 agents per audit.
@@ -423,29 +634,20 @@ completion (Mode B). See cleanup checklist in [`team`](../team/SKILL.md).
 - **Score 8/10 without consensus issues** — suspicious, ask for cross-validation.
 - **APPROVE at 50% completion** — violates the Phase 3 rule.
 - **Files passed by reference instead of content** — agents re-read and burn tokens.
+- **Skipping Phase 5 ("I'll write the evidence later")** — violates the PRD-077 FR-011 contract. The skill MUST emit an EVID (MCP) or print the CLI fallback with a `WARN`. Never "silently succeed" without evidence.
+- **Activating EVID with empty Structured Fields** — `congruence_level` defaults to CL0 (penalty 0.9), R_eff collapses to 0.1. Always fill `verdict:` + `congruence_level: 3` + `evidence_type: code_review` before activating.
+- **Inventing a parent artifact ID just to have one to link** — if Phase 5a finds no real artifact, leave `ARTIFACT_IDS` empty and let the EVID stand alone. Fabricated links pollute the dependency graph.
 
 ---
 
 ## Forgeplan integration
 
-If the `forgeplan` CLI is on `$PATH`, this skill is **forgeplan-aware** — it recommends the right CLI calls but does not invoke them itself.
+This skill is **forgeplan-aware** and **forgeplan-active**: Phase 5 above is mandatory, not advisory. The skill itself calls `mcp__forgeplan__forgeplan_new` + `forgeplan_update` + `forgeplan_link` + (on user opt-in) `forgeplan_activate`. No `/audit` run ends without an EVID drafted (or, if neither MCP nor CLI are reachable, an explicit `WARN` and copy-paste recovery block).
 
-### After `/audit` completes
+### Anti-pattern: "I'll write the evidence later"
 
-The audit produces severity-ranked findings (CRITICAL / HIGH / MEDIUM / LOW). Capture the verdict as Evidence:
+Historically `/audit` only *recommended* `forgeplan new evidence`. Users routinely forgot the step, blind spots accumulated, and `forgeplan health` reported `unhealthy` on artifacts that had in fact been reviewed. PRD-077 FR-011 closed this gap by making EVID emission part of the skill flow, not a follow-up checklist item. **Do not "save it for later"** — by the next prompt, the audit context is gone.
 
-```bash
-forgeplan new evidence "<scope>: audit by N reviewers — X HIGH, Y MED resolved, Z LOW deferred"
-forgeplan link EVID-MMM PRD-NNN --relation informs
-# Add Structured Fields in the evidence body:
-#   verdict: supports | weakens | refutes
-#   congruence_level: 3      (CL3 same-context)
-#   evidence_type: code_review
-forgeplan score PRD-NNN            # R_eff updated
-```
+### Companion skill
 
-Without Evidence, an `/audit` pass disappears — `forgeplan score` won't reflect it, and `forgeplan health` may report blind spots on the audited artifact.
-
-### Want this orchestrated for you?
-
-Install [`forgeplan-workflow`](../../../../plugins/forgeplan-workflow/README.md) and use `/forge-audit` — it runs 6 parallel reviewers (logic, architecture, security, tests, performance, docs) and writes Evidence automatically.
+Install [`forgeplan-workflow`](../../../../plugins/forgeplan-workflow/README.md) and use `/forge-audit` for the artifact-scoped variant (claim slot + 6 reviewers including Performance & Documentation + identical evidence emission). `/audit` (this skill) is the general-purpose flavour; `/forge-audit` is `/audit` pre-bound to a forgeplan artifact ID with multi-agent claim/release wiring.
