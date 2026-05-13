@@ -1,6 +1,6 @@
 ---
 name: build
-description: Runs the implementation team from a finished research report — reads IMPLEMENTATION-PLAN.md (phases, file ownership, acceptance criteria) and the SUMMARY with ADRs, spawns teammates by phase (sequential or parallel), and verifies the result via build/typecheck/tests. Use when research is already done (via research or manually) and only "execute the plan" is left. Triggers (EN/RU) — "build from research", "execute IMPLEMENTATION-PLAN", "implement based on research report", "имплементируй по research", "выполни план", "/build".
+description: Runs the implementation team from a finished research report — reads IMPLEMENTATION-PLAN.md (phases, file ownership, acceptance criteria) and the SUMMARY with ADRs, spawns teammates by phase (sequential or parallel), and verifies the result via build/typecheck/tests. On completion, **automatically writes a single EvidencePack via forgeplan MCP** (`mcp__forgeplan__forgeplan_new` + `forgeplan_update` + `forgeplan_link`) so the build lands in the artifact graph — no manual step required (CLI fallback if MCP not connected; explicit warning if neither available, never a silent skip). Use when research is already done (via research or manually) and only "execute the plan" is left. Triggers (EN/RU) — "build from research", "execute IMPLEMENTATION-PLAN", "implement based on research report", "имплементируй по research", "выполни план", "/build".
 ---
 
 # Build from Research
@@ -244,7 +244,123 @@ cargo test {affected-crate}
 All three are mandatory: typecheck, build, test. If anything is red — don't
 declare the phase done.
 
-### Step 7: Update Docs
+### Step 7: Evidence Capture (MANDATORY — PRD-077 FR-013)
+
+> **This step is not optional.** When verification passes (typecheck + build +
+> tests all green) and before updating docs, `/build` MUST emit one EvidencePack
+> that captures the build outcome and links it to the parent PRD/RFC. Skipping
+> = artifact graph stays blind, `forgeplan score` won't reflect the work, and
+> `forgeplan health` reports a missing-evidence blind spot.
+
+Unlike `/sprint` (multi-wave, multi-EVID, batched), `/build` is **one-shot**:
+single target, single completion → exactly one EVID.
+
+#### Algorithm
+
+```
+1. Identify parent_artifact_id:
+   - Read IMPLEMENTATION-PLAN.md (or 00-SUMMARY.md) for a "Parent: PRD-NNN"
+     or "RFC: RFC-NNN" reference at the top.
+   - If not present, grep the plan body for PRD-NNN / RFC-NNN / SPEC-NNN.
+   - If still nothing, ask the user: "Which PRD/RFC does this build inform?"
+     (Standard+ depth requires an artifact; Tactical may skip — note in report.)
+
+2. Build the EVID title:
+   "{plan-name}: implementation complete — {N} phases / {M} files / {T} tests"
+
+3. MCP-first (when mcp__forgeplan__forgeplan_new is in the tool list):
+   a) evid = mcp__forgeplan__forgeplan_new(kind="evidence", title=<title>)
+   b) mcp__forgeplan__forgeplan_update(id=evid["id"], body=<body — see template>)
+   c) mcp__forgeplan__forgeplan_link(
+          source=evid["id"], target=parent_artifact_id, relation="informs"
+      )
+   d) relay evid["_next_action"] into the final report
+
+4. Shell fallback (MCP tools absent):
+   a) forgeplan new evidence "<title>"      # capture EVID-MMM from output hint
+   b) $EDITOR .forgeplan/evidence/EVID-MMM-*.md   # paste body template
+   c) forgeplan link EVID-MMM <parent_artifact_id> --relation informs
+
+5. If MCP+CLI both unavailable (no forgeplan binary on PATH):
+   - DO NOT silently skip
+   - WARN explicitly: "MCP+CLI both unavailable. Capture this evidence
+     manually after the build:" then print the would-have-been commands +
+     the body template so the user can paste verbatim.
+
+6. Activation prompt (optional, single):
+   "EVID-MMM created (draft). Activate now? [Y/n]"
+   - Default Y for interactive sessions; auto-skip when called from /autorun
+   - On Y: mcp__forgeplan__forgeplan_activate(id=evid["id"])
+           OR forgeplan activate EVID-MMM
+```
+
+#### EvidencePack body template
+
+> Required structured fields keep R_eff from collapsing to 0.1 (CL0 penalty).
+> Defaults below are appropriate for build runs — sprint-style measurement
+> against IMPLEMENTATION-PLAN acceptance criteria.
+
+```markdown
+## Structured Fields
+
+verdict: supports
+congruence_level: 3
+evidence_type: measurement
+
+## Build summary
+
+- Plan: {path to IMPLEMENTATION-PLAN.md}
+- Parent artifact: {PRD-NNN / RFC-NNN}
+- Phases executed: {1, 2, 3 | "all" | "phase 1 only"}
+- Teammates spawned: {role-1, role-2, ...}
+
+## Files created / modified
+
+- NEW ({count}): {list — truncate top 5 + "+ N more"}
+- MODIFIED ({count}): {list — truncate top 5 + "+ N more"}
+
+## Tests added
+
+- Count: {N}
+- Coverage: {what they cover — bullet 2-3 items}
+- Pass rate: {N/N passing}
+
+## Verification
+
+- typecheck: ✓ ({command, e.g., `pnpm tsc --noEmit`})
+- build:     ✓ ({command})
+- tests:     ✓ ({command})
+- lint:      ✓ ({command, if run})
+
+## Acceptance criteria validation
+
+{paste the AC table from IMPLEMENTATION-PLAN.md and tick ✓/✗ each row}
+
+## Blockers / tech debt discovered
+
+{from teammate reports — if none, write "None."}
+```
+
+#### Why one EVID, not per-phase
+
+A `/build` invocation is the unit of completion: the plan was read once,
+the team spawned once, verification ran once. One EVID per build keeps the
+artifact graph clean. If a build is split across sessions (incremental
+phases over days), prefer **updating the same EVID body** (re-emit `forgeplan
+update id=EVID-MMM body=...`) rather than creating a new EVID per session —
+keeps the trail single-threaded. The forgeplan-aware flow in the existing
+"Forgeplan integration" section already calls this out.
+
+#### Do NOT skip when verification is red
+
+Step 6 already requires green typecheck + build + tests before declaring the
+phase done. Step 7 (evidence) runs only after Step 6 passes — so a red build
+correctly skips evidence (because the build itself isn't a completion). If
+the user explicitly accepts a partial build, emit the EVID with
+`verdict: weakens` and a body section listing what failed; this is the
+honest record.
+
+### Step 8: Update Docs
 
 1. **TODO files** — `[x]` for completed, `[ ]` for gaps.
 2. **KNOWN-ISSUES.md** — if bugs were discovered along the way.
@@ -260,7 +376,7 @@ declare the phase done.
    Key decisions: {ADRs from research}")
    ```
 
-### Step 8: Cleanup
+### Step 9: Cleanup
 
 Shutdown teammates → `TeamDelete()`. See cleanup checklist in
 [`team`](../team/SKILL.md).
@@ -310,7 +426,10 @@ build research/reports/{dir} --phase 1
 | All phases at once | Context overflow | 2-3 phases per session |
 | No verify after each | Cascade failures | typecheck + test after every phase |
 | Frontend before backend types | Types out of sync | Backend → types → frontend |
-| Skip TODO/RFC update | Knowledge lost | Step 7 is mandatory |
+| Skip TODO/RFC update | Knowledge lost | Step 8 is mandatory |
+| ⛔ Skip post-build evidence emission | Artifact graph blind, R_eff stays at 0.1 | Step 7 is MANDATORY — one EVID per build |
+| Silent skip when MCP+CLI both unavailable | User never learns evidence wasn't captured | WARN explicitly with copy-paste commands |
+| Auto-activate without prompt | Bypasses user review of generated evidence | Default to `[Y/n]` prompt; `/autorun` defers to draft |
 
 ---
 
@@ -327,9 +446,21 @@ build research/reports/{dir} --phase 1
 
 ## Forgeplan integration
 
-If the `forgeplan` CLI is on `$PATH` and the IMPLEMENTATION-PLAN.md references a PRD, this skill is **forgeplan-aware** — it recommends the right CLI calls but does not invoke them.
+`/build` is **forgeplan-aware end-to-end** when `forgeplan` is on `$PATH` or
+`mcp__forgeplan__*` tools are exposed:
 
-### Before `/build`
+- **Post-verification evidence autopublish** — MANDATORY (§Step 7), one EVID
+  per completed build, linked `informs` to the parent PRD/RFC, structured
+  fields filled by the skill
+- **Optional activation prompt** — interactive sessions get a `[Y/n]` for
+  immediate EVID activation; non-interactive (e.g., `/autorun`) leaves it
+  draft for batch activation later
+
+No manual `forgeplan new evidence` is required after a clean build; the
+skill writes it for you. The commands below describe the shape; the skill
+calls them.
+
+### Before `/build` (still user's responsibility)
 
 The IMPLEMENTATION-PLAN.md should already reference the parent PRD/RFC (created by `/research` → `/refine` → `/rfc`). If not, create one:
 
@@ -339,16 +470,25 @@ forgeplan new prd "<title>"            # if Standard+ depth
 forgeplan validate PRD-NNN
 ```
 
-### After `/build` completes
+### During / after `/build` (skill calls these automatically)
 
 ```bash
-forgeplan new evidence "<plan>: N waves merged, M tests added, build/lint clean"
+# After Step 6 (typecheck + build + tests all green):
+forgeplan new evidence "<plan>: implementation complete — N phases / M files / T tests"
 forgeplan link EVID-MMM PRD-NNN --relation informs
-forgeplan score PRD-NNN
-forgeplan activate PRD-NNN              # draft → active
+# Skill then prompts: "Activate EVID-MMM now? [Y/n]"
+# On Y:
+forgeplan activate EVID-MMM
+# User next steps (skill does not auto-run these):
+forgeplan score PRD-NNN            # R_eff reflects the new evidence
+forgeplan activate PRD-NNN         # parent PRD: draft → active (if ready)
 ```
 
-For `/build` runs that took multiple sessions (each adding a wave), append to the same Evidence rather than creating multiple — keeps the trail single-threaded.
+For `/build` runs that take multiple sessions (each adding a phase), prefer
+`forgeplan update id=EVID-MMM body=...` on the *existing* EVID rather than
+creating new EVIDs per session — keeps the trail single-threaded. The skill
+will create a fresh EVID on each invocation by default; pass the existing
+EVID-MMM in the plan's frontmatter to override and update-in-place instead.
 
 ### Want this orchestrated for you?
 
