@@ -1,6 +1,6 @@
 ---
 name: diagnose
-description: Disciplined diagnosis loop for hard bugs and performance regressions. Six phases — build feedback loop → reproduce → hypothesise → instrument → fix + regression test → cleanup + post-mortem. Phase 1 (the feedback loop) is the entire skill — everything else is mechanical once you have a fast deterministic pass/fail signal. Use when a bug is non-trivial, intermittent, performance-related, or has resisted obvious fixes. Triggers (EN/RU) — "diagnose this", "debug this", "find the root cause", "performance regression", "intermittent bug", "продиагностируй", "найди причину бага", "отладь", "/diagnose".
+description: Disciplined diagnosis loop for hard bugs and performance regressions. Six phases — build feedback loop → reproduce → hypothesise → instrument → fix + regression test → cleanup + post-mortem. Phase 1 (the feedback loop) is the entire skill — everything else is mechanical once you have a fast deterministic pass/fail signal. On verified fix, captures **Evidence via MCP-first path** (`mcp__forgeplan__forgeplan_new` + `forgeplan_link`) with CLI fallback when MCP is not connected. Use when a bug is non-trivial, intermittent, performance-related, or has resisted obvious fixes. Triggers (EN/RU) — "diagnose this", "debug this", "find the root cause", "performance regression", "intermittent bug", "продиагностируй", "найди причину бага", "отладь", "/diagnose".
 ---
 
 # Diagnose
@@ -221,30 +221,66 @@ If the bug uncovered a missing project rule (e.g. "always validate inputs at thi
 
 ## Forgeplan integration
 
-If the `forgeplan` CLI is on `$PATH`, this skill is **forgeplan-aware** — it recommends the right CLI calls but does not invoke them.
+This skill is **forgeplan-aware** with hybrid MCP/CLI dispatch per PRD-022. A verified fix is Evidence-worthy — `/diagnose` captures it in the artifact graph automatically.
 
-### When `/diagnose <bug>` finds a fix
+### Probe MCP availability (one call)
 
-A verified fix is Evidence-worthy. Capture it:
+```python
+# True if the forgeplan MCP server is wired in this session
+have_mcp = "mcp__forgeplan__forgeplan_new" in available_tools
+```
+
+If `have_mcp` is unclear, attempt `mcp__forgeplan__forgeplan_health()`. Connection error → `have_mcp = False`, fall through to CLI block.
+
+### When `/diagnose <bug>` finds a fix — MCP-first flow (`have_mcp = True`)
+
+```python
+# Create Evidence for the verified fix
+evid = mcp__forgeplan__forgeplan_new(
+    kind="evidence",
+    title=f"<bug>: root cause = <X>; fix = <Y>; verified by <test/repro>"
+)
+EVID_ID = evid["id"]
+
+# Body: include the diagnostic trace (what you tried, what worked)
+mcp__forgeplan__forgeplan_update(
+    id=EVID_ID,
+    body="<diagnostic trace + structured fields: verdict=supports|refutes, "
+         "congruence_level=3 (CL3 same-context), evidence_type=measurement|test_result>"
+)
+
+# Link to the parent feature PRD (if known)
+if PARENT_PRD:
+    mcp__forgeplan__forgeplan_link(source=EVID_ID, target=PARENT_PRD, relation="informs")
+
+# If the bug surfaced a deeper architectural issue, capture problem + solution
+if architectural_issue:
+    prob = mcp__forgeplan__forgeplan_new(kind="problem", title="<problem card>")
+    mcp__forgeplan__forgeplan_link(source=prob["id"], target=PARENT_PRD, relation="informs")
+    if multiple_solutions_warranted:
+        sol = mcp__forgeplan__forgeplan_new(
+            kind="solution",
+            title=f"<solution portfolio for {prob['id']}>"
+        )
+```
+
+### CLI fallback (`have_mcp = False`, `forgeplan` on `$PATH`)
 
 ```bash
 forgeplan new evidence "<bug>: root cause = <X>; fix = <Y>; verified by <test/repro>"
-# Body: include the diagnostic trace (what you tried, what worked).
-# Structured Fields:
-#   verdict: supports | refutes
-#   congruence_level: 3 (CL3 same-context)
-#   evidence_type: measurement | test_result
-forgeplan link EVID-MMM PRD-NNN --relation informs   # if linked to a feature PRD
-```
+# Body: include the diagnostic trace
+# Structured Fields: verdict / congruence_level / evidence_type
+forgeplan link EVID-MMM PRD-NNN --relation informs
 
-If the bug surfaced a deeper architectural issue:
-
-```bash
-forgeplan new problem "<problem card>"   # category: bug, performance, security, ...
+# Architectural issue
+forgeplan new problem "<problem card>"
 forgeplan link PROB-NNN PRD-MMM --relation informs
-# Then create a `solution` portfolio if multiple options:
 forgeplan new solution "<solution portfolio for PROB-NNN>"
 ```
+
+### No-forgeplan environment
+
+If neither MCP nor `forgeplan` CLI is reachable: tell the user "diagnose complete; forgeplan not detected — capture findings in your project's own issue tracker manually". Don't silently skip.
 
 ### Want this orchestrated for you?
 
