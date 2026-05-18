@@ -5,15 +5,15 @@
     "url": "https://github.com/ForgePlan"
   },
   "metadata": {
-    "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.25.0"
+    "description": "Official ForgePlan plugin marketplace for Claude Code — UX, frontend, workflow, and developer tools",
+    "version": "1.34.0"
   },
   "plugins": [
     {
       "name": "fpl-hsmem",
       "source": "./plugins/fpl-hsmem",
-      "description": "ForgePlan Hindsight memory plugin for Claude Code. Long-term cross-session memory wrapping Hindsight (vectorize-io). Provides 13 MCP tools (memory_* + mental_model_* + document_ingest_*), 3 auto-hooks (recall on UserPromptSubmit, retain on Stop, force-retain on SessionEnd), and 5 helper skills (/status, /bootstrap, /mental-model, /diagnose, /export-bank). Two activation modes: plugin install (default-on across all projects, bank derived from cwd) or per-project setup CLI (explicit opt-in via project's .mcp.json). Implements Ruflo-style outcome-feedback patterns (NOTE-004) — adopted by ForgePlan ecosystem for cross-session pipeline knowledge.",
-      "version": "2.0.0",
+      "description": "ForgePlan Hindsight memory plugin for Claude Code. Long-term cross-session memory wrapping Hindsight (vectorize-io). Provides 13 MCP tools (memory_* + mental_model_* + document_ingest_*), 3 auto-hooks (recall on UserPromptSubmit, retain on Stop, force-retain on SessionEnd), and 5 helper skills (/status, /bootstrap, /mental-model, /diagnose, /export-bank). Three activation modes: plugin install (default-on, bank derived from cwd), per-project setup CLI (explicit `.mcp.json`), or direct MCP wire-up (standalone bundle). v2.1.0 — full documentation set (GETTING-STARTED, CONFIGURATION, USAGE, TROUBLESHOOTING, CHANGELOG) and source code colocation.",
+      "version": "2.1.0",
       "author": {
         "name": "ForgePlan"
       },
@@ -35,8 +35,8 @@
     {
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
-      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 22 engineering skills (research, refine, sprint, audit, diagnose, autorun, /fpl-init bootstrap, forge-report structured reports, /shape interview-from-scratch, /migrate-from-dev-toolkit automation, /ddd-decompose, /c4-diagram, /riper RIPER orchestrator, /gh-project project-agnostic GitHub Projects v2 integration, plus session helpers) + dev-advisor agent + 4 hooks. /fpl-init injects a 13-line forgeplan operating contract into project CLAUDE.md (idempotent v1 marker). SessionStart hook surfaces concrete next-action when forgeplan health is non-clean (orphans/stubs/dups/stale). UNCONDITIONAL claim/dispatch wiring (PRD-020): /sprint + /autorun derive synthetic SESSION-YYYY-MM-DD-HHMMSS for chat-driven mode — every teammate registers in the artifact graph regardless of whether task references PRD-NNN. Hybrid MCP-first dispatch (PRD-021 Phase 1 + PRD-022 Phase 2 Batch 1: shape, rfc, diagnose, restore, briefing skills probe mcp__forgeplan__* availability and route mutating ops through MCP with CLI fallback). /gh-project bridges forgeplan artifacts with a GitHub Projects v2 board via per-project config (no hardcoded project numbers). Full feature parity with the legacy dev-toolkit plus 19 additional skills built on forgeplan's artifact lifecycle.",
-      "version": "1.11.0",
+      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 22 engineering skills (research, refine, sprint, audit, diagnose, autorun, /fpl-init bootstrap, forge-report structured reports, /shape interview-from-scratch, /migrate-from-dev-toolkit automation, /ddd-decompose, /c4-diagram, /riper RIPER orchestrator, /gh-project project-agnostic GitHub Projects v2 integration, plus session helpers) + dev-advisor agent + 4 hooks. v1.13.0: PRD-026 Phase 5 — fpl-init v2.0 canonical layer scaffold (templates/project-agent-matrix.yaml + templates/project-config.yaml + skill Step 8.5); LR-1..LR-7 canonical-pattern lint rules (Phase 4+1). v1.12.1: AGENT-AUTHORING-GUIDE.md aligned with batch-1 audit findings — Profile A excludes forgeplan_activate (activation is orchestrator/guardian territory); HARD RULES voice convention locked to plain bold (severity icons reserved for inline body callouts). /fpl-init injects a 13-line forgeplan operating contract into project CLAUDE.md (idempotent v1 marker). SessionStart hook surfaces concrete next-action when forgeplan health is non-clean (orphans/stubs/dups/stale). UNCONDITIONAL claim/dispatch wiring (PRD-020): /sprint + /autorun derive synthetic SESSION-YYYY-MM-DD-HHMMSS for chat-driven mode — every teammate registers in the artifact graph regardless of whether task references PRD-NNN. Hybrid MCP-first dispatch (PRD-021 Phase 1 + PRD-022 Phase 2 Batch 1: shape, rfc, diagnose, restore, briefing skills probe mcp__forgeplan__* availability and route mutating ops through MCP with CLI fallback). /gh-project bridges forgeplan artifacts with a GitHub Projects v2 board via per-project config (no hardcoded project numbers). Full feature parity with the legacy dev-toolkit plus 19 additional skills built on forgeplan's artifact lifecycle.",
+      "version": "1.14.0",
       "author": {
         "name": "ForgePlan"
       },
@@ -79,8 +79,8 @@
     {
       "name": "forgeplan-workflow",
       "source": "./plugins/forgeplan-workflow",
-      "description": "Structured engineering workflow for forgeplan users. Provides /forge-cycle (full SDLC cycle: Hindsight v2 memory bootstrap + parallel subagent dispatch via forgeplan_dispatch + Task tool + multi-reviewer audit with 4 parallel agents + mail-as-beads autonomous decisions logging + MCP-first per PRD-021/022 + claim/release per PRD-020 — implements RFC-003/PRD-025) and /forge-audit (multi-expert review), methodology knowledge base, quality gate hooks. Requires forgeplan CLI.",
-      "version": "1.8.0",
+      "description": "Structured engineering workflow for forgeplan users. Provides /forge-cycle (full SDLC cycle with Step 0.5 project-agent-matrix.yaml dispatch — PRD-026 Phase 6) and /forge-audit (multi-expert review), methodology knowledge base, quality gate hooks. Requires forgeplan CLI.",
+      "version": "1.9.0",
       "author": {
         "name": "ForgePlan"
       },
@@ -123,7 +123,7 @@
     {
       "name": "fpf",
       "source": "./plugins/fpf",
-      "description": "First Principles Framework (FPF) \u2014 thinking amplifier for structured reasoning, decomposition, and decision-making. Enhanced plugin with /fpf command, applied patterns, forgeplan integration, and FPF advisor agent. Based on FPF by Anatoly Levenchuk.",
+      "description": "First Principles Framework (FPF) — thinking amplifier for structured reasoning, decomposition, and decision-making. Enhanced plugin with /fpf command, applied patterns, forgeplan integration, and FPF advisor agent. Based on FPF by Anatoly Levenchuk.",
       "version": "1.4.0",
       "author": {
         "name": "ForgePlan"
@@ -186,9 +186,11 @@
     {
       "name": "agents-core",
       "source": "./plugins/agents-core",
-      "description": "Core development agents: debugger, code reviewer, error detective, performance engineer, production validator, plus complete dev team (coder, planner, researcher, reviewer, tester, TDD).",
-      "version": "1.0.0",
-      "author": {"name": "ForgePlan"},
+      "description": "Core development agents: debugger, code reviewer, error detective, performance engineer, production validator, plus complete dev team (coder, planner, researcher, reviewer, tester, TDD). v1.2: coder forgeplan-aware Profile C-coder reference + code-reviewer + tester Profile B (PRD-026 Phase 3 complete — 3 of 11 agents migrated).",
+      "version": "1.2.0",
+      "author": {
+        "name": "ForgePlan"
+      },
       "homepage": "https://github.com/ForgePlan/marketplace",
       "license": "MIT"
     },
@@ -197,16 +199,20 @@
       "source": "./plugins/agents-domain",
       "description": "Language and framework specialist agents: TypeScript, Go, React, Next.js, Electron, embedded systems, mobile, WebSocket, and more.",
       "version": "1.0.0",
-      "author": {"name": "ForgePlan"},
+      "author": {
+        "name": "ForgePlan"
+      },
       "homepage": "https://github.com/ForgePlan/marketplace",
       "license": "MIT"
     },
     {
       "name": "agents-pro",
       "source": "./plugins/agents-pro",
-      "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, and infrastructure engineers.",
-      "version": "1.0.0",
-      "author": {"name": "ForgePlan"},
+      "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.6: guardian reads project-config.yaml quality_gates (PRD-026 Phase 6). v1.5: 4 NEW forgeplan-aware agents (brief-intake, guardian, system-dev, evidence-recorder — Phase 4). Cumulative: 9 of 25 agents migrated.",
+      "version": "1.6.0",
+      "author": {
+        "name": "ForgePlan"
+      },
       "homepage": "https://github.com/ForgePlan/marketplace",
       "license": "MIT"
     },
@@ -215,16 +221,20 @@
       "source": "./plugins/agents-github",
       "description": "GitHub operations agents: PR management, issue tracking, release automation, multi-repo coordination, project boards, workflow engineering.",
       "version": "1.0.0",
-      "author": {"name": "ForgePlan"},
+      "author": {
+        "name": "ForgePlan"
+      },
       "homepage": "https://github.com/ForgePlan/marketplace",
       "license": "MIT"
     },
     {
       "name": "agents-sparc",
       "source": "./plugins/agents-sparc",
-      "description": "SPARC development methodology: orchestrator with quality gates plus 4 phase specialists (specification, pseudocode, architecture, refinement).",
-      "version": "1.0.0",
-      "author": {"name": "ForgePlan"},
+      "description": "SPARC development methodology: orchestrator with quality gates plus 4 phase specialists (specification, pseudocode, architecture, refinement). v1.1: specification + architecture migrated to forgeplan-aware Profile A (PRD-026 Phase 3 batch 1).",
+      "version": "1.1.0",
+      "author": {
+        "name": "ForgePlan"
+      },
       "homepage": "https://github.com/ForgePlan/marketplace",
       "license": "MIT"
     }

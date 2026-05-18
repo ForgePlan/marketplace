@@ -1,8 +1,8 @@
 ---
 name: fpl-init
-description: One-command project bootstrap for the ForgePlan ecosystem. Probes the forgeplan CLI, runs `forgeplan init`, wires `.mcp.json` and `.claude/settings.json`, then chains `/bootstrap` (universal CLAUDE.md template) and `/setup` (docs/agents/ wizard) so a fresh repo is fully wired in one shot. Recommends — but does not install — companion plugins (fpf, laws-of-ux, agents-core, forgeplan-workflow, forgeplan-orchestra). Use on a brand-new project, or on an existing project that has none of `.forgeplan/`, `CLAUDE.md`, `docs/agents/`. Triggers (EN/RU) — "fpl init", "init project", "bootstrap forgeplan", "set up everything", "full project setup", "/fpl-init", "поставь всё", "разверни проект с нуля", "инициализируй проект".
+description: One-command project bootstrap for the ForgePlan ecosystem. Probes the forgeplan CLI, runs `forgeplan init`, wires `.mcp.json` and `.claude/settings.json`, then chains `/bootstrap` (universal CLAUDE.md template) and `/setup` (docs/agents/ wizard) so a fresh repo is fully wired in one shot. Recommends — but does not install — companion plugins (fpf, laws-of-ux, agents-core, forgeplan-workflow, forgeplan-orchestra). v2.0: Adds optional `--canonize` step that scaffolds the canonical agent layer (project-agent-matrix.yaml + project-config.yaml + Hindsight mental models) for forgeplan-aware projects per PRD-026 Phase 5. Use on a brand-new project, or on an existing project that has none of `.forgeplan/`, `CLAUDE.md`, `docs/agents/`. Triggers (EN/RU) — "fpl init", "init project", "bootstrap forgeplan", "set up everything", "full project setup", "/fpl-init", "поставь всё", "разверни проект с нуля", "инициализируй проект", "fpl init canonize", "setup agent matrix", "v2 bootstrap".
 disable-model-invocation: true
-allowed-tools: Read Write Edit Bash(test *) Bash(ls *) Bash(cat *) Bash(pwd *) Bash(command *) Bash(git *) Bash(forgeplan *) Bash(mkdir *) Bash(jq *) Bash(python3 *)
+allowed-tools: Read Write Edit Bash(test *) Bash(ls *) Bash(cat *) Bash(pwd *) Bash(command *) Bash(git *) Bash(forgeplan *) Bash(mkdir *) Bash(jq *) Bash(python3 *) Bash(cp *) Bash(sed *) Bash(basename *) Bash(grep *)
 ---
 
 # fpl-init — full project bootstrap
@@ -64,8 +64,8 @@ Decide:
 |---|---|
 | `not a git repo` | Refuse. Ask user to run `git init -b main`. |
 | `REFUSE: this is a plugin source` | Refuse. Tell the user this skill is for project repos, not plugin sources. |
-| All four (`.forgeplan/`, `CLAUDE.md`, `docs/agents/`, `.mcp.json`) present | Tell the user setup is already complete; suggest `/restore` for context recall and exit. |
-| Anything missing | Continue to step 2. |
+| All four (`.forgeplan/`, `CLAUDE.md`, `docs/agents/`, `.mcp.json`) present | Tell the user setup is already complete; suggest `/restore` for context recall — but still offer step 8.5 (canonical agent layer) if `.forgeplan/project-agent-matrix.yaml` is absent or `--canonize` was passed. Otherwise exit. |
+| Anything missing | Continue to step 2. Step 8.5 (canonical agent layer, v2.0 — PRD-026 Phase 5) runs after `/setup`. |
 
 ### 2. Probe forgeplan CLI
 
@@ -368,6 +368,220 @@ through the sections.
 At the end, append the `## Agent skills` block to `CLAUDE.md` (with user
 yes; that's setup's final step).
 
+### 8.5. Canonical agent layer (v2.0 — PRD-026 Phase 5)
+
+Optional, additive. Scaffolds the **canonical agent layer** for
+forgeplan-aware projects: `project-agent-matrix.yaml` (phase × agent ×
+methodology dispatch rules) + `project-config.yaml` (depth defaults,
+quality-gate thresholds, autonomy levels) + Hindsight bank baseline. See
+PRD-026 Journey 2 for the full vision.
+
+This is **additive to v1**: if the user runs `/fpl-init` without
+`--canonize` and answers "n" to the prompt below, behaviour is identical
+to v1 — no new files written.
+
+#### 8.5.1 — Decision: skip or apply?
+
+| Project condition | Action |
+|---|---|
+| `.forgeplan/project-agent-matrix.yaml` exists | Skip (don't overwrite — user's customisation) |
+| `forgeplan` MCP tools not detected (`mcp__forgeplan__*` absent from deferred-tools) | Skip (canonical layer requires forgeplan MCP) |
+| User explicitly passed `--no-canonize` | Skip |
+| User explicitly passed `--canonize` | Apply (forced) |
+| Default (none of above) | Ask user: "Scaffold canonical agent layer (project-agent-matrix.yaml + project-config.yaml)? [Y/n]" |
+
+If skipping for any reason — print one line ("canonical layer: skipped (<reason>)") and continue to step 9. Do not warn or re-prompt.
+
+#### 8.5.2 — Copy templates
+
+Templates ship with the `fpl-skills` plugin at
+`fpl-skills/templates/`. Locate them via `$CLAUDE_PLUGIN_ROOT` if
+available; fall back to the marketplace install path:
+
+```bash
+# Locate templates (installed via fpl-skills plugin)
+PLUGIN_TEMPLATES="${CLAUDE_PLUGIN_ROOT:-}/templates"
+# Fallback: search marketplace plugin install location
+if [ ! -d "$PLUGIN_TEMPLATES" ]; then
+    PLUGIN_TEMPLATES="$HOME/.claude/plugins/marketplaces/ForgePlan-marketplace/plugins/fpl-skills/templates"
+fi
+
+mkdir -p .forgeplan
+
+# Copy if templates exist; warn clearly otherwise
+if [ -f "$PLUGIN_TEMPLATES/project-agent-matrix.yaml" ]; then
+    cp "$PLUGIN_TEMPLATES/project-agent-matrix.yaml" .forgeplan/project-agent-matrix.yaml
+    echo "✓ project-agent-matrix.yaml copied"
+else
+    echo "WARN: template not found at $PLUGIN_TEMPLATES/project-agent-matrix.yaml"
+    echo "      please copy manually from fpl-skills/templates/ in the marketplace repo"
+fi
+
+if [ -f "$PLUGIN_TEMPLATES/project-config.yaml" ]; then
+    cp "$PLUGIN_TEMPLATES/project-config.yaml" .forgeplan/project-config.yaml
+    echo "✓ project-config.yaml copied"
+else
+    echo "WARN: template not found at $PLUGIN_TEMPLATES/project-config.yaml"
+    echo "      please copy manually from fpl-skills/templates/"
+fi
+```
+
+Do **not** embed full YAML heredocs in this skill body — that would
+duplicate the templates and defeat the purpose of shipping them with the
+plugin. The WARN messages point to the canonical location.
+
+Immediately after copying, stamp a marker comment so future `/fpl-init`
+runs detect prior canonize:
+
+```bash
+# Stamp v2.0 marker at top of project-agent-matrix.yaml.
+# Use a quoted heredoc + os.environ to avoid shell injection from $STAMP content.
+export FPL_INIT_STAMP="# Created by fpl-init v2.0 / $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+python3 - <<'PY'
+import os, pathlib
+p = pathlib.Path(".forgeplan/project-agent-matrix.yaml")
+if p.exists():
+    txt = p.read_text()
+    if "Created by fpl-init v2.0" not in txt:
+        p.write_text(os.environ["FPL_INIT_STAMP"] + "\n" + txt)
+PY
+unset FPL_INIT_STAMP
+```
+
+#### 8.5.3 — Customise (interactive — orchestrator asks user)
+
+After copying, prompt the user for the four values the templates
+parameterise. Use sensible defaults so a quick-bootstrap user can just
+hit Enter four times:
+
+| Prompt | Default | Choices |
+|---|---|---|
+| `project_name` | `basename "$PWD"` | (free text) |
+| `domain` | `fullstack` | backend / frontend / fullstack / mobile / data / embedded / other |
+| `language` | (detect from `package.json`/`Cargo.toml`/`pyproject.toml`; else `other`) | typescript / python / go / rust / java / other |
+| `autonomy.default_level` | `3` | 1=ask-everything / 2=ask-major / 3=mostly-autonomous / 4=autonomous-with-checkpoints / 5=fully-autonomous |
+
+Then patch both YAML files with the user's choices. Prefer `python3` for
+the patch (it round-trips YAML safely; `sed` works for simple key:value
+swaps but corrupts nested structures):
+
+```bash
+# Export user choices as environment variables so the Python patch script can read
+# them via os.environ — quoted heredoc prevents shell interpolation into Python regex,
+# which would corrupt the regex if a value contained quotes, dollar signs, or backslashes.
+export PROJECT_NAME="${PROJECT_NAME:-$(basename "$PWD")}"
+export DOMAIN="${DOMAIN:-fullstack}"
+export LANGUAGE="${LANGUAGE:-other}"
+export AUTONOMY="${AUTONOMY:-3}"
+# Derive Hindsight bank_id from project_name (kebab-case, org-prefixed if applicable).
+export BANK_ID="${BANK_ID:-$(echo "$PROJECT_NAME" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-\|-$//g')}"
+
+python3 - <<'PY'
+import os, pathlib, re
+
+PROJECT_NAME = os.environ["PROJECT_NAME"]
+DOMAIN       = os.environ["DOMAIN"]
+LANGUAGE     = os.environ["LANGUAGE"]
+AUTONOMY     = os.environ["AUTONOMY"]
+BANK_ID      = os.environ["BANK_ID"]
+
+def replace_re(txt, pattern, replacement):
+    return re.sub(pattern, replacement, txt, count=1, flags=re.MULTILINE)
+
+# project-agent-matrix.yaml: project_name + domain + language + hindsight.bank_id
+p = pathlib.Path(".forgeplan/project-agent-matrix.yaml")
+if p.exists():
+    txt = p.read_text()
+    txt = replace_re(txt, r'^(project_name:\s*).*$',         f'\\g<1>"{PROJECT_NAME}"')
+    txt = replace_re(txt, r'^(domain:\s*).*$',               f'\\g<1>{DOMAIN}')
+    txt = replace_re(txt, r'^(language:\s*).*$',             f'\\g<1>{LANGUAGE}')
+    txt = replace_re(txt, r'^(\s*bank_id:\s*).*$',           f'\\g<1>"{BANK_ID}"')
+    p.write_text(txt)
+
+# project-config.yaml: autonomy.default_level
+p = pathlib.Path(".forgeplan/project-config.yaml")
+if p.exists():
+    txt = p.read_text()
+    txt = replace_re(txt, r'^(\s*default_level:\s*).*$', f'\\g<1>{AUTONOMY}')
+    p.write_text(txt)
+PY
+
+unset PROJECT_NAME DOMAIN LANGUAGE AUTONOMY BANK_ID
+```
+
+If the user passed `--canonize --yes` (or hit Enter four times), use the
+defaults silently — don't dump a "4 prompts answered" block.
+
+#### 8.5.4 — Hindsight bank baseline (optional)
+
+If `mcp__plugin_fpl-hsmem_hindsight__*` tools are available in the
+deferred-tools list (Hindsight MCP wired), set the bank's persona once:
+
+```
+memory_set_mission(
+  content="Forgeplan-aware project: <project_name>. Domain: <domain>. Language: <language>."
+)
+```
+
+This is a **one-time** call per project bank — re-running `/fpl-init`
+later should skip (mission already set). Check via `memory_status` first
+if you want to be defensive.
+
+The orchestrator should be aware of **5 baseline mental models** that
+agents create lazily on first need (per Hindsight v2.0 convention — do
+**not** pre-create empty ones here):
+
+| Mental model ID | Purpose | Created by (lazy) |
+|---|---|---|
+| `mm-pipeline-methodology` | Execution-flow reasoning | Profile B execution reviewers |
+| `mm-gate-failures` | Prior gate decisions | Profile B gate-style reviewers |
+| `mm-fpf-examples` | FPF Abduction-Deduction-Induction cycle examples | Profile A creators |
+| `mm-agent-selection` | When to dispatch which agent | Matrix dispatcher |
+| `mm-branch-decision` | Git branch decisions (feat/fix/chore mapping) | Branch-deciding agents |
+
+Print the list to the user so they know what will appear in their bank
+over time:
+
+```
+Hindsight bank: mission set. 5 baseline mental models will be created
+lazily by agents on first need (mm-pipeline-methodology, mm-gate-failures,
+mm-fpf-examples, mm-agent-selection, mm-branch-decision). No action needed.
+```
+
+If Hindsight MCP is not wired — skip this sub-step silently.
+
+#### 8.5.5 — Project-scoped agents (deferred to Phase 6)
+
+Document but **don't yet implement**: `.claude/agents/<name>.md` copies
+of marketplace agents for project-scoped customisation. This is Phase 6
+work (orchestrator integration — see PRD-026 Phase 6). For now, projects
+rely on marketplace pack agents via `agents-pro:<name>` dispatch through
+the matrix.
+
+Print one line so the user isn't surprised when `.claude/agents/` stays
+empty:
+
+```
+Project-scoped agents: not copied (Phase 6 work). Marketplace pack
+agents (agents-pro, agents-core, ...) dispatched via project-agent-matrix.yaml.
+```
+
+#### 8.5.6 — Validate
+
+```bash
+# Verify the 2 YAML files parse
+python3 -c "import yaml; yaml.safe_load(open('.forgeplan/project-agent-matrix.yaml'))" && echo "✓ matrix OK"
+python3 -c "import yaml; yaml.safe_load(open('.forgeplan/project-config.yaml'))" && echo "✓ config OK"
+
+# If forgeplan CLI available: forgeplan health (picks up the new files)
+command -v forgeplan >/dev/null 2>&1 && forgeplan health 2>/dev/null | head -10
+```
+
+If either YAML fails to parse — surface the error, back up the broken
+file to `.forgeplan/<name>.yaml.bak`, and tell the user to re-copy
+manually from `fpl-skills/templates/`. Don't continue to step 9 with a
+broken matrix; downstream `/forge-cycle` runs would fail at Step 0.5.
+
 ### 9. Recommend companion plugins
 
 **Print, don't install.** Show the user a copy-paste block:
@@ -423,6 +637,8 @@ Final summary in a single block:
 ✓ Operating contract       injected into CLAUDE.md (or "already present" / "skipped per user")
 ✓ docs/agents/             configured (4 files)
 ✓ CONTEXT.md               created starter         (or "skipped — exists")
+✓ Canonical agent layer    project-agent-matrix.yaml + project-config.yaml (or "skipped per user / already present / no forgeplan MCP")
+✓ Hindsight bank mission   set                     (or "skipped — Hindsight MCP not wired")
 
 Next steps:
   /restore        — recover context after a break
@@ -447,9 +663,10 @@ If any step in the plan failed — replace its ✓ with ✗ and show the error.
 
 - Detect what's already in place (step 1) and skip those branches.
 - Never overwrite existing `CLAUDE.md` content (always append).
-- Operating contract injection (step 7-bis) keys off marker `<!-- forgeplan-operating-contract:v1 -->` — re-runs detect and skip without prompting.
+- Operating contract injection (step 7-bis) keys off markers `<!-- forgeplan-operating-contract:v2 -->` (current) or `<!-- forgeplan-operating-contract:v1 -->` (legacy — prompts user to upgrade) — re-runs detect and skip without prompting if v2 already present.
 - Never overwrite existing `.mcp.json` entries (always merge).
 - Never overwrite existing `docs/agents/*.md` (`/setup` re-prompts).
+- Canonical agent layer (step 8.5) keys off `.forgeplan/project-agent-matrix.yaml` existence + the `# Created by fpl-init v2.0` stamp — re-runs detect and skip the copy. Re-canonize requires manual deletion of the matrix file or explicit `--canonize` (which currently still skips if the file exists — to force overwrite, delete it first).
 
 If everything is already in place, the skill prints "already initialized"
 and exits without changes.

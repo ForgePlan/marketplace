@@ -1,148 +1,150 @@
-# fpl-hsmem — ForgePlan Hindsight memory plugin
+[English](README.md) | [Русский](README-RU.md)
 
-Долгосрочная межсессионная память для Claude Code, упакованная для маркетплейса ForgePlan.
+# fpl-hsmem
 
-Обёртка над [Hindsight](https://github.com/vectorize-io/hindsight) с:
+> Долговременная межсессионная память для Claude Code. Обёртка над [Hindsight](https://github.com/vectorize-io/hindsight): 13 MCP инструментов, 3 авто-хука и 5 вспомогательных skills — Claude помнит контекст между сессиями, проектами и неделями работы.
 
-- **13 MCP-инструментов** — `memory_*`, `mental_model_*`, `document_*`
-- **3 крючка (auto-hooks)** — auto-recall перед каждым промптом, auto-retain после каждого ответа, force-retain на закрытие сессии (с throttling и детекцией Claude Code compaction)
-- **5 навыков (skills)** — `/status`, `/bootstrap`, `/mental-model`, `/diagnose`, `/export-bank`
-- **Два режима активации** — установка как plugin (везде) или per-project setup CLI (явное opt-in)
+Поставил один раз — каждый проект получает свой приватный bank памяти. Auto-recall вставляет релевантную историю перед каждым твоим сообщением; auto-retain сохраняет разговор после каждого ответа. Ручные MCP-инструменты покрывают синтез (`memory_reflect`), живые страницы знаний (`mental_model_*`) и заливку документов.
 
-## Два режима — что выбирать
+> [!WARNING]
+> Требует запущенный сервер [Hindsight](https://github.com/vectorize-io/hindsight). Простейший путь — Docker с провайдером `claude-code` (внешние LLM-ключи не нужны, для извлечения фактов используется твоя подписка Claude). См. [Быстрый старт](#быстрый-старт).
 
-| | Plugin install | Per-project setup |
-|---|---|---|
-| Активация | Один install — везде | Запустить `setup.js` в каждом проекте |
-| Bank ID | Выводится из git/cwd | Зафиксирован в `.mcp.json` проекта |
-| Opt-out | Маркер `.hindsight-disabled` | Не запускать setup |
-| Источник правды | Plugin manifest + cwd | Project `.mcp.json` |
-| Подходит для | Default-on на N проектах | Явный per-project контроль |
-
-Оба режима могут сосуществовать — project-level `.mcp.json` переопределяет plugin-level конфигурацию.
-
-## Режим 1 — Plugin install (рекомендуется)
+## Быстрый старт
 
 ```bash
-# 1. Запустить Hindsight (LLM key не требуется — использует твою Claude subscription)
+# 1. Запустить Hindsight в Docker (без API-ключей)
 docker run -d --name hindsight -p 8888:8888 -p 9999:9999 \
   -e HINDSIGHT_API_LLM_PROVIDER=claude-code \
   ghcr.io/vectorize-io/hindsight:latest
 
 # 2. Установить плагин
-claude plugin marketplace add ForgePlan/marketplace
-claude plugin install fpl-hsmem
+/plugin install fpl-hsmem@ForgePlan-marketplace
 
-# 3. Проверить
-claude  # restart
-# В любом проекте спроси: "memory_status"
+# 3. Проверить в любом проекте
+/fpl-hsmem:status
 ```
 
-Плагин:
-- Регистрирует `mcp__hindsight__*` tools в каждом проекте
-- Запускает auto-recall перед каждым промптом
-- Запускает auto-retain после каждого ответа
-- Использует bank ID, выведенный из git remote или cwd-hash
+Полная настройка с нуля — Docker, установка плагина, первый bootstrap, первая mental model — см. [`GETTING-STARTED.md`](./GETTING-STARTED.md).
 
-## Режим 2 — Per-project setup
+## Примеры использования
 
-```bash
-# В корне проекта
-cd /path/to/your-project
-npx fpl-hsmem-setup
+### Auto-recall в разговоре
 
-# Создаст .mcp.json с pinned bank_id
-# Чтобы отключить — просто удали запись из .mcp.json
+```
+> Что мы решили про авторизацию на прошлой неделе?
+
+[скрытый контекст вставлен хуком recall.js]
+  - JWT RS256 вместо симметричного HS256 — security review NOTE-003
+  - Ротация refresh-token раз в 7 дней (Orchestra ADR-012)
+  - Service-to-service через mTLS, не через JWT
+
+Мы остановились на JWT RS256 с ротацией refresh-token раз в 7 дней,
+зафиксировано в ADR-012. Трафик между сервисами остаётся на mTLS —
+JWT используется только для пользовательских сессий.
 ```
 
-Подходит когда хочешь:
-- Зафиксировать `HINDSIGHT_BANK_ID` (не derived)
-- Указать custom `HINDSIGHT_URL` (self-hosted)
-- Использовать отдельный API key только для этого проекта
+Пользователь никогда не видит блок `<hindsight_memories>` — но Claude его видит, и отвечает с полным контекстом.
 
-## 13 MCP-инструментов
+### `/fpl-hsmem:bootstrap` — подключить память к новому проекту
 
-### Memory tools (6)
-- `memory_status` — health check + статистика bank
-- `memory_get_current_bank` — какой bank активен
-- `memory_recall(query)` — семантический поиск по memories
-- `memory_reflect(query)` — LLM-синтезированный ответ
-- `memory_retain(content)` — ручное сохранение знания
-- `memory_set_mission(mission)` — задать "характер" bank (one-time)
+```
+> /fpl-hsmem:bootstrap
 
-### Mental models (5)
-- `mental_model_list` — список живых страниц знаний
-- `mental_model_get(id)` — взять страницу
-- `mental_model_create(id, name, source_query)` — создать auto-обновляемую страницу
-- `mental_model_update(id, ...)` — обновить
-- `mental_model_delete(id)` — удалить
+Bootstrap plan для bank "my-project":
+  • set mission         "TypeScript API биллинга — фокус на технические
+                         решения, изменения модели данных, deprecations."
+  • ingest 4 documents  forge/prds/PRD-001-billing.md
+                        forge/rfcs/RFC-002-stripe.md
+                        forge/adrs/ADR-003-currency.md
+                        docs/architecture.md
+  • create 2 pages      "decisions-log" — синтезирует архитектурные решения
+                        "tech-debt" — открытые пункты технического долга
 
-### Documents (2)
-- `document_ingest(title, content)` — загрузить документ как single unit
-- `document_ingest_file(path)` — загрузить файл с диска
-
-## 5 навыков
-
-- **`/status`** — quick bank health overview
-- **`/bootstrap`** — one-time project memory setup (mission + baseline mental models)
-- **`/mental-model`** — create/update/list mental models интерактивно
-- **`/diagnose`** — диагностика проблем (auth, network, throttling)
-- **`/export-bank`** — экспорт bank для backup или миграции
-
-## Auto-hooks (включаются автоматически при plugin install)
-
-| Hook | Когда срабатывает | Что делает |
-|---|---|---|
-| **UserPromptSubmit** | Перед каждым твоим промптом | `recall` релевантных memories, приклеивает к контексту незаметно (12s timeout) |
-| **Stop** | После каждого ответа Claude | `retain` transcript каждые N turns (с throttling, 15s timeout) |
-| **SessionEnd** | При выходе из сессии | Force `retain` финального transcript (15s timeout) |
-
-**Следствие:** не вызывай `memory_recall` или `memory_retain` рефлекторно — это уже делается фоном.
-
-## Связь с другими ForgePlan плагинами
-
-- **fpl-skills** — workflow plugin. Pipeline skills (`/forge-cycle`, `/autorun`) могут использовать `mental_model_get` для context-aware orchestration (см. PRD-025, RFC-003)
-- **forgeplan-workflow** — `/forge-cycle` v1.8.0+ Step 0 пробует Hindsight для project methodology context
-- **fpf** — FPF reasoning может опираться на `memory_recall` для empirical evidence
-
-## Принципы (см. `~/.claude/rules/hindsight.md` v2.0)
-
-1. **Каждое знание — в одном слое.** Не дублируй ADR в `retain`; auto-retain поймает обсуждение, ADR остаётся источником.
-2. **Mental models — для синтеза**, не для документации. Хорошая страница отвечает на вопрос, **которого нельзя получить через grep или Read**.
-3. **Ingest — только для семантического поиска.** Активные документы читаются через Read.
-4. **Per-project bank.** Bank одного проекта не виден из другого.
-5. **Проверяй recall перед использованием.** Память — снимок прошлого, не источник правды настоящего.
-
-## Setup verification
-
-```bash
-# В Claude Code сессии:
-memory_status                    # Health check + statistics
-memory_get_current_bank          # Bank ID confirmed?
-mental_model_list                # Какие живые страницы есть
+Proceed? [y/n]
 ```
 
-## Troubleshooting
+Однократная настройка нового bank — миссия, существующие артефакты, стартовые mental models.
 
-| Проблема | Решение |
+### `/fpl-hsmem:mental-model` — управляемое создание страницы знаний
+
+```
+> /fpl-hsmem:mental-model
+
+Существующие страницы в bank "my-project":
+  decisions-log    | "Какие архитектурные решения и почему?"
+  tech-debt        | "Какой технический долг мы обозначили?"
+
+Предлагаемая новая страница:
+  id:           billing-edge-cases
+  source_query: "Какие необычные edge-кейсы биллинга мы обсуждали —
+                 частичные возвраты, валютные несовпадения, диспуты?"
+
+Живая страница — Hindsight автоматически перестраивает содержимое
+после каждой консолидации. Контент появится через несколько циклов retain.
+
+Создать? [y/n]
+```
+
+Валидирует source query, ловит дубли, объясняет жизненный цикл.
+
+## Что внутри
+
+### 13 MCP инструментов
+
+| Группа | Инструменты |
+|--------|-------------|
+| **Базовая память** | `memory_retain`, `memory_recall`, `memory_reflect`, `memory_status`, `memory_get_current_bank`, `memory_set_mission` |
+| **Mental models** (живые страницы) | `mental_model_list`, `mental_model_get`, `mental_model_create`, `mental_model_update`, `mental_model_delete` |
+| **Документы** | `document_ingest`, `document_ingest_file` |
+
+### 3 авто-хука
+
+| Хук | Триггер | Поведение |
+|-----|---------|-----------|
+| `recall.mjs` | UserPromptSubmit | Семантический recall перед каждым prompt; результаты вставляются как `additionalContext`. Опционально multi-turn компоновка запроса. |
+| `retain.mjs` | Stop | Сохраняет transcript после каждого ответа. Throttling через `retainEveryNTurns` (по умолчанию 10). **Compaction detection** — сохраняет старый длинный документ когда Claude Code сжимает сессию. |
+| `session-end.mjs` | SessionEnd | Принудительный retain при закрытии. Страховка для коротких сессий (< `retainEveryNTurns`). |
+
+### 5 skills
+
+| Skill | Назначение |
+|-------|-----------|
+| `/fpl-hsmem:status` | Быстрая проверка здоровья + статистика bank + активные mental models. |
+| `/fpl-hsmem:bootstrap` | Однократная настройка нового bank — миссия, ingest существующих артефактов, создание стартовых mental models. |
+| `/fpl-hsmem:mental-model` | Управляемое создание mental model с валидацией source query. |
+| `/fpl-hsmem:diagnose` | 6-шаговая диагностика (server, bank, content, hooks, config, opt-out). |
+| `/fpl-hsmem:export-bank` | Markdown-снимок bank для бэкапа или аудита. |
+
+### 3 режима активации
+
+| Режим | Как | Хуки? | Skills? | Лучше всего для |
+|-------|-----|-------|---------|-----------------|
+| **Установка плагина** | `/plugin install fpl-hsmem` | ✅ авто | ✅ авто | Default-on на всех проектах |
+| **Setup CLI** | `node dist/setup.mjs` per project | ✅ создаёт CLI | ❌ | Явный per-project контроль, committed `.mcp.json` |
+| **Direct MCP** | Вручную `dist/index.mjs` в `.mcp.json` | ❌ | ❌ | Разовое использование, MCP-инструменты без фоновой автоматики |
+
+Все три режима сосуществуют — project-level `.mcp.json` перекрывает plugin-level конфиг. **Opt-out** в любом проекте: `touch .hindsight-disabled` или `HINDSIGHT_DISABLED=true`. Детали — в [`CONFIGURATION.md`](./CONFIGURATION.md).
+
+## Сопутствующие плагины
+
+| Плагин | Когда подключать |
 |---|---|
-| Tools не загружаются после install | Restart Claude Code. Проверь `.mcp.json` пути |
-| `memory_status` падает | Проверь `HINDSIGHT_URL` reachable, `HINDSIGHT_API_KEY` валидный |
-| Auto-hooks не срабатывают | Проверь `.claude/settings.json` — plugin сам regnistrирует hooks |
-| Bank растёт без границ | TTL/decay активны автоматически; manual prune через `/diagnose` |
+| [`fpl-skills`](../fpl-skills/) | Workflow-skills — `/restore`, `/briefing`, `/research`. Auto-recall **дополняет** `/restore` для межсессионного контекста. |
+| [`forgeplan-orchestra`](../forgeplan-orchestra/) | Multi-session координация — `/sync` артефактов в память через `document_ingest_file`. |
+| [`forgeplan-workflow`](../forgeplan-workflow/) | `/forge-cycle` Step 0 вызывает `mental_model_get` чтобы заправить инженерные циклы синтезированным контекстом. |
 
-## Адопция в ForgePlan ecosystem
+## Документация
 
-Hindsight v2 — основной memory layer для pipeline:
-- **NOTE-004**: identified Hindsight auto-hooks как Ruflo-style outcome-feedback
-- **PRD-025 FR-021/022**: pipeline skills bootstrap mental_models на старте
-- **RFC-003 Layer 3**: 5 baseline mental models для pipeline knowledge
-- **EVID-035..038**: shape evidence (ingested как docs для semantic search)
+- [`GETTING-STARTED.md`](./GETTING-STARTED.md) — 10-минутный walkthrough с нуля
+- [`USAGE.md`](./USAGE.md) — реальные use cases + интеграция с `fpl-skills` и артефактами forgeplan
+- [`CONFIGURATION.md`](./CONFIGURATION.md) — полный справочник env-переменных, рецепты настройки для 3 режимов
+- [`TROUBLESHOOTING.md`](./TROUBLESHOOTING.md) — диагностические рецепты для типичных проблем
+- [`CHANGELOG.md`](./CHANGELOG.md) — история версий
 
-## License
+## Авторство
+
+Построено поверх [Hindsight](https://github.com/vectorize-io/hindsight) от vectorize-io. Реализует [Ruflo](https://ruflo.com/)-style outcome-feedback паттерн (NOTE-004). Структура плагина следует конвенциям флагмана [`fpl-skills`](../fpl-skills/).
+
+## Лицензия
 
 MIT
-
-## Контрибьютинг
-
-PR'ы welcome. Плагин — wrapper, основная разработка идёт в [vectorize-io/hindsight](https://github.com/vectorize-io/hindsight). Здесь — Claude Code integration слой.

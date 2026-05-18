@@ -39,6 +39,169 @@ If `docs/agents/` is empty AND the repo has no recognizable project files (no `p
 
 ---
 
+## Autonomy gating (project-config.yaml)
+
+**Read `.forgeplan/project-config.yaml` at start** (before the main execution loop, before any tool dispatch). The `autonomy` section governs whether `/autorun` may proceed silently with a given operation, must prompt the user, or must refuse. This is the **gate** wrapped around every MCP/Bash call in the workflow below.
+
+### What is consumed
+
+Three parameters from `autonomy:` (see `templates/project-config.yaml`):
+
+| Key | Type | Semantics |
+|---|---|---|
+| `autonomy.default_level` | int 1–5 | Overall slider. 1 = ask everything; 5 = fully autonomous. Default **3**. |
+| `autonomy.auto_approve` | list[str] | Operations allowed without confirmation, regardless of level. |
+| `autonomy.human_required` | list[str] | Operations that ALWAYS require explicit human confirmation in the current turn — **cannot be auto-approved even at level 5**. |
+
+### Precedence (hard rules)
+
+1. **`human_required` always wins.** If an operation matches `human_required`, `/autorun` MUST stop and ask — even at level 5, even if the same op also appears in `auto_approve` (which would be a misconfiguration). This list models one-way doors.
+2. **`auto_approve` wins** for matched operations not also in `human_required`. Proceed silently.
+3. **`default_level` is the fallback** when neither list matches.
+
+### Level heuristic (fallback when no list matches)
+
+| Level | Behavior |
+|---|---|
+| 1 | Ask every operation (timid). |
+| 2 | Ask for any mutation (forgeplan_new / update / link / Write / Edit / commit). Reads + validation auto. |
+| 3 | Ask for activation/supersede/deprecate/push/merge. Low-stakes mutations auto. **(Default)** |
+| 4 | Ask only for irreversible operations (`push --force`, `reset --hard`, `DROP`, `rm -rf`, delete). |
+| 5 | Proceed silently for all except `human_required` (max autonomy). |
+
+### Operation-naming syntax (matcher)
+
+The lists use ad-hoc strings. The gating function recognises three patterns:
+
+| Pattern | Example | Matches |
+|---|---|---|
+| **Exact tool name** | `forgeplan_activate` | `mcp__forgeplan__forgeplan_activate` (suffix `__<name>` or exact). |
+| **Scoped match** | `forgeplan_new(kind="adr")` | Tool name AND the scope token (`kind="adr"`) appears in the operation invocation. |
+| **Command prefix** | `git push --force` | The Bash command line starts with this prefix (literal prefix, not regex). |
+
+### Gating function (pseudocode — apply at every potentially-mutating op)
+
+```python
+def gating_check(operation, project_config):
+    """Returns "auto" (proceed silently), "ask" (prompt user), or "block" (refuse)."""
+    autonomy = project_config.get("autonomy", {})
+
+    # Rule 1: human_required ALWAYS wins — no level override.
+    if _matches(operation, autonomy.get("human_required", [])):
+        return "ask"
+
+    # Rule 2: auto_approve wins for matched operations.
+    if _matches(operation, autonomy.get("auto_approve", [])):
+        return "auto"
+
+    # Rule 3: fall back to default_level heuristic.
+    level = autonomy.get("default_level", 3)
+    risk = _classify(operation)  # "read" | "mutate-low" | "mutate-mid" | "irreversible"
+    if level == 1: return "ask"
+    if level == 2 and risk != "read": return "ask"
+    if level == 3 and risk in ("mutate-mid", "irreversible"): return "ask"
+    if level == 4 and risk == "irreversible": return "ask"
+    return "auto"  # level 5 or low-risk at lower levels
+
+
+def _matches(operation, pattern_list):
+    """Pattern matcher — exact / scoped / command-prefix."""
+    for pattern in pattern_list:
+        if "(" in pattern:                           # scoped: forgeplan_new(kind="adr")
+            tool, scope = pattern.split("(", 1)
+            scope = scope.rstrip(")")
+            if operation.startswith(tool) and scope in operation:
+                return True
+        elif pattern.startswith("git ") or pattern.startswith("gh "):  # bash prefix
+            if operation.startswith(pattern):
+                return True
+        else:                                        # exact tool-name match
+            if pattern == operation or operation.endswith("__" + pattern):
+                return True
+    return False
+
+
+def _classify(operation):
+    """Heuristic risk classification — fallback for level-based gating."""
+    if any(x in operation for x in ("--force", "reset --hard", "DROP", "rm -rf")):
+        return "irreversible"
+    if any(x in operation for x in ("activate", "supersede", "deprecate", "push", "merge")):
+        return "mutate-mid"
+    if any(x in operation for x in ("new", "update", "link", "Write", "Edit", "commit")):
+        return "mutate-low"
+    return "read"
+```
+
+### "Ask" UX (when the gate says ask)
+
+When `gating_check(op) == "ask"`, `/autorun` pauses and prints a structured prompt:
+
+```
+[AUTONOMY GATE] operation requires confirmation
+  op:     <full operation string, e.g. mcp__forgeplan__forgeplan_activate(id="PRD-027")>
+  reason: matched human_required | level-N heuristic for risk-class <X>
+  proceed? (y/n)
+```
+
+Single-character answer accepted (`y` / `n`). On `n` — abort the operation, record in the final report under "Held by autonomy gate", continue with the next non-blocked wave if any.
+
+### Built-in safe defaults (project-config.yaml absent)
+
+If `.forgeplan/project-config.yaml` is missing or unparseable, `/autorun` continues with these **safe defaults** — backward-compatible with pre-PRD-026 projects:
+
+```yaml
+# Mirrors templates/project-config.yaml verbatim — keep in sync.
+autonomy:
+  default_level: 3
+  auto_approve:
+    - forgeplan_validate
+    - forgeplan_link
+    - forgeplan_get
+    - forgeplan_list
+    - forgeplan_new(kind="evidence")
+    - forgeplan_new(kind="note")
+  human_required:
+    - forgeplan_activate
+    - forgeplan_supersede
+    - forgeplan_deprecate
+    - forgeplan_new(kind="adr")
+    - git push
+    - git push --force
+    - git reset --hard
+    - gh pr merge
+    - deployment
+    - operation on main
+    - operation on master
+```
+
+Note: `--no-verify` lives in `project-config.yaml.forbidden:` (never permitted, not even with confirmation) — see "Red lines" section below.
+
+Log a single one-line warning at start: `autonomy: no project-config.yaml — using built-in defaults (level 3)`. No fatal error — the legacy run path stays operational.
+
+### Integration with execution loop
+
+Every potentially-mutating tool invocation in the workflow below (sections "Workflow", "Forgeplan integration", and any delegated skill) is wrapped:
+
+```
+verdict = gating_check(operation, project_config)
+if verdict == "auto":
+    invoke(operation)                          # silent
+elif verdict == "ask":
+    if not prompt_user_yes_no(operation):
+        record_held(operation); continue
+    invoke(operation)
+elif verdict == "block":
+    record_refused(operation); abort_wave()
+```
+
+This gate is **in addition to** the hard red-lines (see "Red lines" below). Red-lines are non-negotiable code-level stops; the autonomy gate is configurable per-project. **Red-lines override autonomy** — a level-5 project still cannot push to `main` without explicit user instruction in the current turn.
+
+### Identity preserved
+
+The gate does not alter identity tagging. Every teammate still runs `forgeplan_claim` / `forgeplan_release` with its own agent name (per the AUTOPILOT directive below). The gate sits between the orchestrator's decision to invoke a tool and the tool call itself — claims and releases (mechanical identity ops) are part of `auto_approve` by default and run silently.
+
+---
+
 ## Detect environment
 
 Probe what's available before starting:
@@ -64,8 +227,10 @@ Decisions:
 
 ## Workflow
 
+> **Gate every tool call.** Before invoking any MCP or Bash operation in the steps below (or in any delegated skill), apply `gating_check(operation, project_config)` from the "Autonomy gating" section above. `auto` → invoke; `ask` → prompt y/n; `block` → record and skip. The gate sits in front of the entire pipeline, not just step 4.
+
 ### 1. Read context
-`@docs/agents/*.md` are auto-loaded by frontmatter imports. Check `CONTEXT.md` and recent `git log` for any in-flight intent.
+`@docs/agents/*.md` are auto-loaded by frontmatter imports. Check `CONTEXT.md` and recent `git log` for any in-flight intent. Read `.forgeplan/project-config.yaml` into memory now — its `autonomy` section is consulted on every subsequent tool call.
 
 ### 2. Classify the task
 Same categories as [`do`](../do/SKILL.md): research / docs / feature / review / bug / refactor / status. Pick template silently — do NOT show plan to user, do NOT ask for approval.
@@ -107,7 +272,11 @@ Use `forge-report` skill if available. Otherwise generate inline using the templ
 AUTOPILOT MODE — green light from user, do NOT pause for approval.
 Skip every "Proceed?" / "Continue to next wave?" / "Запускаем?" prompt — assume YES.
 Resolve blockers via ADI (Abduct → Induct → Deduce), 3 rounds max per blocker.
-Only stop on red-line actions (see /autorun red lines). Surface state and exit cleanly when red line hit.
+Only stop on (a) red-line actions (see /autorun red lines) and (b) operations the
+autonomy gate marks `ask` (project-config.yaml `autonomy.human_required` or the
+default_level heuristic — see /autorun "Autonomy gating" section). Surface state
+and exit cleanly when red line hit; surface a structured prompt for autonomy-gate
+asks and resume on user `y`.
 
 FORGEPLAN-AWARE — UNCONDITIONAL with MCP-FIRST preference (PRD-020 + PRD-021):
 
@@ -174,6 +343,10 @@ Red-line behavior: write the intended action to the report ("Would have run: X")
 ## Red lines hit
 (empty if none — autopilot ran cleanly)
 - <action> — paused for user; current state saved at <branch / file>
+
+## Held by autonomy gate
+(empty if none — every op was auto-approved)
+- <operation> — reason: <human_required | level-N heuristic>; user verdict: <y/n>
 
 ## Next steps
 1. <user-actionable item>

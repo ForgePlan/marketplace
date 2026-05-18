@@ -1,7 +1,7 @@
 {
   "name": "agents-sparc",
-  "version": "1.0.0",
-  "description": "SPARC development methodology agents: orchestrator with quality gates, plus 4 phase specialists (specification, pseudocode, architecture, refinement/TDD).",
+  "version": "1.1.0",
+  "description": "SPARC development methodology agents: orchestrator with quality gates, plus 4 phase specialists (specification, pseudocode, architecture, refinement/TDD). v1.1: specification + architecture migrated to forgeplan-aware canonical Profile A pattern (PRD-026 Phase 3 batch 1).",
   "author": {"name": "ForgePlan"},
   "homepage": "https://github.com/ForgePlan/marketplace",
   "repository": "https://github.com/ForgePlan/marketplace",

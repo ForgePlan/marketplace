@@ -1,0 +1,282 @@
+# ============================================================================
+# .forgeplan/project-config.yaml — canonical default project configuration
+# ============================================================================
+#
+# Purpose:
+#   Per-project default behaviour knobs for the ForgePlan SDLC pipeline.
+#   Governs: depth defaults per artifact kind, autonomy levels, quality-gate
+#   thresholds, methodology preferences, validation strictness, branch policy,
+#   forbidden ops, Hindsight memory rules, and structured-reporting triggers.
+#
+# Sister file: project-agent-matrix.yaml
+#   - project-agent-matrix.yaml  → WHO runs each phase (agent dispatch matrix)
+#   - project-config.yaml        → HOW it runs (defaults, thresholds, gates)
+#   Both files live under `.forgeplan/` and are read by /forge-cycle, /autorun,
+#   and quality gates at pipeline start.
+#
+# Provenance:
+#   - PRD-026 FR-040 (project config schema)
+#   - PRD-024 (depth levels: tactical | standard | deep | critical; gates)
+#   - PRD-025 (multi-agent + Hindsight)
+#   - RFC-003 Layer 1 (dispatch) / Layer 4 (project-level customization)
+#
+# Override pattern:
+#   Copy this file to `.forgeplan/project-config.yaml`. For per-environment
+#   overrides, create sibling files (e.g. `project-config.production.yaml`,
+#   `project-config.dev.yaml`) and select via env var `FORGEPLAN_CONFIG_PROFILE`
+#   or `--config-profile production`. Unspecified keys fall back to the values
+#   defined here. This template IS the canonical default — keep it minimal and
+#   sensible; push exotic tuning into profile overlays.
+#
+# Validation:
+#   `python3 -c "import yaml; yaml.safe_load(open('.forgeplan/project-config.yaml'))"`
+#   …or `forgeplan validate-config` once the CLI command lands.
+# ============================================================================
+
+# Schema version of THIS file (not of forgeplan itself).
+# Forward-compatible: readers ignore unknown keys; bump on breaking changes.
+schema_version: 1
+
+# ----------------------------------------------------------------------------
+# depth_defaults
+# ----------------------------------------------------------------------------
+# Default pipeline depth (rigour level) when creating each artifact kind.
+# Allowed values (per PRD-024):
+#   tactical  — minimal ceremony; just-do-it (typos, one-file fixes, notes)
+#   standard  — PRD → build → audit → evidence (new feature, 1–3 days)
+#   deep      — PRD → RFC → build → 2-round audit (architectural change)
+#   critical  — Epic → PRD → RFC → ADR (strategy, foundation, blast-radius high)
+# These are *defaults*; `forgeplan route` and `/forge-cycle` may still
+# escalate based on detected risk signals (security, breaking changes, etc).
+depth_defaults:
+  prd:      standard   # New feature/capability descriptions — standard rigour.
+  rfc:      standard   # Technical designs that flow from a standard PRD.
+  adr:      deep       # Architectural decisions are higher-stakes (one-way doors).
+  epic:     critical   # Cross-cutting initiatives — always full ceremony.
+  spec:     standard   # Detailed specs nested under PRD/RFC.
+  note:     tactical   # Lightweight context capture — fast path.
+  evidence: tactical   # Evidence is recording, not designing — fast path.
+  problem:  standard   # Problem framing deserves shape work.
+  solution: standard   # Solution proposals matched to problem.
+  refresh:  tactical   # Status refreshes / snapshots — minimal.
+
+# ----------------------------------------------------------------------------
+# autonomy
+# ----------------------------------------------------------------------------
+# Operational autonomy slider for /autorun and orchestrators.
+# Levels (1–5):
+#   1 = ask for confirmation on every mutating operation (timid)
+#   2 = ask on writes; reads & validation auto
+#   3 = auto-approve low-stakes mutations; confirm risky ones      (DEFAULT)
+#   4 = auto-approve most ops; confirm only one-way doors
+#   5 = fully autonomous (CI/agent-loop mode); confirm nothing
+# `auto_approve` and `human_required` lists are evaluated REGARDLESS of level:
+#   - any op in `auto_approve` is always OK
+#   - any op in `human_required` always needs explicit confirmation
+# When in doubt, the more restrictive rule wins.
+autonomy:
+  default_level: 3
+
+  # Always-safe operations — readable, idempotent, or low-stakes recording.
+  # Subagents and /autorun may invoke these without prompting.
+  auto_approve:
+    - forgeplan_validate                       # idempotent — quality check only
+    - forgeplan_link                           # idempotent — relation insert
+    - forgeplan_get                            # read-only
+    - forgeplan_list                           # read-only
+    - forgeplan_new(kind="evidence")           # recording, not deciding
+    - forgeplan_new(kind="note")               # low-stakes context capture
+
+  # One-way doors and high-blast-radius ops — always confirm with a human.
+  # These bypass any autonomy_level escalation: the user MUST acknowledge.
+  human_required:
+    - forgeplan_activate                       # promotes draft → active (commits)
+    - forgeplan_supersede                      # retires prior artifact
+    - forgeplan_deprecate                      # marks artifact obsolete
+    - forgeplan_new(kind="adr")                # architectural decisions stick
+    - git push                                 # leaves the local machine
+    - git push --force                         # rewrites remote history
+    - git reset --hard                         # destroys local work
+    - gh pr merge                              # merges into target branch
+    - deployment                               # any prod/staging deploy
+    - operation on main                        # any mutation on main branch
+    - operation on master                      # any mutation on master branch
+
+# ----------------------------------------------------------------------------
+# quality_gates
+# ----------------------------------------------------------------------------
+# Thresholds enforced by the `guardian` agent and `/audit` skill.
+# A failing threshold means guardian returns REJECT — pipeline halts at the
+# gate phase until the issue is fixed (or the user passes `--force` and
+# guardian logs an override NOTE per PRD-024 FR-014).
+quality_gates:
+  # Minimum test coverage (percent, 0–100). Set to -1 to disable the gate.
+  # 80% is a common industry target; tune up (e.g. 90) for safety-critical
+  # code, or down (e.g. 60) for early-stage spike projects.
+  min_test_coverage: 80
+
+  # Hard caps on audit findings before guardian REJECTs.
+  # Critical = security/data-loss/breaking; High = serious; Medium = noteworthy.
+  max_findings_critical: 0     # zero tolerance for blockers
+  max_findings_high:     3     # a few non-blockers OK if triaged
+  max_findings_medium:   10    # nuisance bar — keep the noise floor sane
+
+  # Artifact kinds that MUST have ≥1 linked EVIDENCE before they can move
+  # to status=active. Prevents shipping designs that nobody validated.
+  require_evidence_chain:
+    - prd
+    - rfc
+    - adr
+    - spec
+
+  # `mcp__forgeplan__forgeplan_validate` must PASS (no errors) before
+  # an artifact can be activated. Lint-equivalent for artifacts.
+  require_validate_pass: true
+
+  # At least one EVIDENCE artifact with `profile=B` (audit profile) and
+  # `verdict=PASS` must be linked to the parent before activation.
+  # Profile A = build evidence; Profile B = audit evidence (per PRD-024).
+  require_audit_pass: true
+
+# ----------------------------------------------------------------------------
+# methodology_preferences
+# ----------------------------------------------------------------------------
+# Default methodology applied at each pipeline phase. Orchestrators read
+# this to pick the right skill/agent procedure. Per-phase overrides live
+# in project-agent-matrix.yaml under `phase_dispatch.<phase>.methodology`.
+methodology_preferences:
+  # SHAPE — turning a raw brief into requirements.
+  #   fpf         → First Principles Framework ADI cycle (recommended)
+  #   freeform    → unguided prose (not recommended for Standard+)
+  shape: fpf
+
+  # DECOMPOSE — breaking a PRD into RFC-level tasks.
+  #   goap        → Goal-Oriented Action Planning (backward chaining)
+  #   wbs         → classical Work Breakdown Structure
+  #   user-stories→ Agile user-story decomposition
+  decompose: goap
+
+  # DESIGN — producing the RFC / technical design.
+  #   sparc       → Specification → Pseudocode → Architecture → Refinement → Completion
+  #   c4          → C4 model (Context → Container → Component → Code)
+  #   adr-only    → skip RFC; capture only the decision (ADR) — small changes
+  design: sparc
+
+  # BUILD — writing the code.
+  #   tdd-london  → mock-driven outside-in TDD (recommended for new code)
+  #   tdd-classical → state-based inside-out TDD (good for algorithmic work)
+  #   bdd         → Behaviour-Driven Development (Given/When/Then)
+  #   none        → no enforced methodology (spikes, prototypes)
+  build: tdd-london
+
+  # AUDIT — reviewing the produced artifact.
+  #   fpf         → FPF applied to findings (root-cause oriented)
+  #   checklist   → static checklist (faster, less insightful)
+  audit: fpf
+
+# ----------------------------------------------------------------------------
+# validation
+# ----------------------------------------------------------------------------
+# Strictness knobs for `validate-all-plugins.sh` and friends.
+validation:
+  # When true, legacy "agent-without-explicit-tools-whitelist" warnings are
+  # promoted to errors (--strict-agents mode). Enable once the project has
+  # finished migrating to PRD-026 canonical agent pattern.
+  agent_pattern_strict: false
+
+  # Require descriptions to include EN + RU + Triggers sections (FR-050).
+  # Set to false for English-only or single-locale projects.
+  require_bilingual_descriptions: true
+
+  # Require frontmatter `color:` fields to use #RRGGBB hex, not named colors
+  # (FR-049). Keeps marketplace presentation consistent.
+  require_hex_colors: true
+
+# ----------------------------------------------------------------------------
+# branch_policy
+# ----------------------------------------------------------------------------
+# Git workflow guardrails enforced by /forge-cycle, /autorun, and the
+# pre-push hook (when fpl-skills hooks are active).
+branch_policy:
+  # Branches that MUST NEVER receive direct pushes. Mutations require a PR.
+  protected:
+    - main
+    - master
+    - production
+
+  # Prefix used when /forge-cycle auto-creates a feature branch.
+  # Common alternatives: "feature/", "task/", "<user>/".
+  feature_branch_prefix: "feat/"
+
+  # When true, all changes against `protected` branches must go through PR.
+  # Disabling this is strongly discouraged for team projects.
+  require_pr: true
+
+  # Allow `gh pr merge --admin` to bypass branch protection when CI is
+  # temporarily broken or for emergency hotfixes.
+  # Default `false` — opt-in only. Strictest mode is the safer default for new
+  # projects; teams that need emergency bypass can flip this to `true` after
+  # establishing on-call procedure. Aligns with repo CLAUDE.md "Merge без зелёного CI запрещено".
+  allow_admin_bypass: false
+
+# ----------------------------------------------------------------------------
+# forbidden
+# ----------------------------------------------------------------------------
+# Operations the agent must NEVER perform automatically, regardless of
+# autonomy level. Even at level 5, these require explicit user instruction
+# in the current turn (not a pre-saved approval). Mirrors the global
+# CLAUDE.md "Git Safety Protocol" — duplicated here for project-level
+# enforcement and visibility.
+forbidden:
+  - git push --force         # rewrites remote history; destroys teammates' work
+  - git reset --hard         # destroys uncommitted local changes
+  - git clean -fd            # deletes uncommitted untracked files + dirs
+  - git checkout .           # discards all unstaged changes
+  - git restore .            # same as above (newer git syntax)
+  - git branch -D main       # force-delete protected branch
+  - git branch -D master     # force-delete protected branch
+  - git branch -D dev        # force-delete protected branch
+  - --no-verify              # skips pre-commit/pre-push hooks
+  - --no-gpg-sign            # bypasses commit signing
+  - rm -rf /                 # filesystem nuke
+  - rm -rf ~                 # home nuke
+  - rm -rf .                 # cwd nuke
+  - DROP TABLE               # SQL data loss
+  - DROP DATABASE            # SQL catastrophic data loss
+
+# ----------------------------------------------------------------------------
+# hindsight_policy
+# ----------------------------------------------------------------------------
+# Rules for how agents interact with the Hindsight long-term memory bank.
+# See ~/.claude/rules/hindsight.md for full guidance; this section codifies
+# project-level defaults that auto-loaded rules cannot dictate.
+hindsight_policy:
+  # When true, the UserPromptSubmit / Stop / SessionEnd hooks run and capture
+  # transcripts automatically. Disable in privacy-sensitive projects.
+  auto_retain_enabled: true
+
+  # Guidance for when an agent should manually call `memory_retain`.
+  # Free-form string — agents read it as a heuristic, not a regex.
+  manual_retain_threshold: "non-obvious lessons only"
+
+  # Guidance for `mental_model_create`. Mental models are auto-refreshing
+  # synthesis pages — expensive to maintain, so create them sparingly.
+  mental_model_creation: "rare — only for recurring questions that grep cannot answer"
+
+# ----------------------------------------------------------------------------
+# reporting
+# ----------------------------------------------------------------------------
+# Output-style preferences for completed tasks. Drives the `forge-report`
+# skill auto-trigger (see global CLAUDE.md "Structured Reports" section).
+reporting:
+  # When true, complex tasks end with a forge-report card-based summary.
+  # When false, all replies are free prose regardless of complexity.
+  structured_reports: true
+
+  # Auto-trigger thresholds: a structured report is emitted when at least
+  # TWO of the three numeric conditions below are met in a single turn.
+  # Tune down for verbose/learning audiences; tune up for terse/expert ones.
+  report_thresholds:
+    min_tool_calls:    5   # ≥5 tool invocations in this turn
+    min_files_changed: 3   # ≥3 files created or modified
+    min_task_count:    3   # ≥3 TaskList items completed
