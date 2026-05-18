@@ -1,6 +1,6 @@
 ---
 name: refine
-description: Interview-driven refinement of a plan, design, or proposal. Walks the user down each branch of the design tree one question at a time, sharpening fuzzy terminology, surfacing contradictions against the existing domain model, stress-testing edge cases with concrete scenarios, and updating CONTEXT.md and ADRs inline as decisions crystallise. Use when a plan is rough, when terms are being used loosely, when the user said "thoughts?" or "does this make sense?", or before kicking off a sprint where ambiguity will cost time. Adapted from Matt Pocock's grill-with-docs. Triggers (EN/RU) — "refine this plan", "stress-test this", "review my design", "sharpen the spec", "уточни план", "проверь на прочность", "доведи до ума", "/refine".
+description: Interview-driven refinement of a plan, design, or proposal. Walks the user down each branch of the design tree one question at a time, sharpening fuzzy terminology, surfacing contradictions against the existing domain model, stress-testing edge cases with concrete scenarios, and updating CONTEXT.md and ADRs inline as decisions crystallise. Use when a plan is rough, when terms are being used loosely, when the user said "thoughts?" or "does this make sense?", or before kicking off a sprint where ambiguity will cost time. When forgeplan is reachable, **MCP-first** — recommends `mcp__forgeplan__forgeplan_new` for ADRs/NOTEs surfaced during refinement, `mcp__forgeplan__forgeplan_link` to connect to parent PRD, `mcp__forgeplan__forgeplan_validate` after refining existing artifact; CLI fallback (`bash forgeplan ...`) when MCP not connected. Adapted from Matt Pocock's grill-with-docs. Triggers (EN/RU) — "refine this plan", "stress-test this", "review my design", "sharpen the spec", "уточни план", "проверь на прочность", "доведи до ума", "/refine".
 ---
 
 # Refine
@@ -185,35 +185,48 @@ When the design tree is exhausted (every branch either resolved or explicitly de
 
 ---
 
-## Forgeplan integration
+## Forgeplan integration (MCP-first per PRD-022)
 
-If the `forgeplan` CLI is on `$PATH`, this skill is **forgeplan-aware** — it recommends the right CLI calls but does not invoke them.
+This skill is **forgeplan-aware** — when forgeplan MCP tools (`mcp__forgeplan__*`) are available, prefer MCP calls over shell. CLI fallback only when MCP server not connected.
 
-### During `/refine <plan>`
+### During `/refine <plan>` — capture surfaced decisions
 
-Refinement often surfaces decisions worth recording. When you land on one:
+Refinement often surfaces decisions worth recording. Detection: if `mcp__forgeplan__forgeplan_new` is available, use MCP path; otherwise CLI fallback.
 
+**MCP path (preferred)**:
+```
+mcp__forgeplan__forgeplan_new(kind="adr", title="<key decision>")
+# returns ADR-NNN; orchestrator/user fills body via subsequent forgeplan_update or generates via forgeplan_generate
+mcp__forgeplan__forgeplan_link(source="ADR-NNN", target="PRD-MMM", relation="informs")
+```
+
+**CLI fallback (only when MCP unavailable)**:
 ```bash
 forgeplan new adr "<key decision>"
-# Body: Context (why this came up) / Decision (what we picked) / Alternatives / Consequences
-forgeplan link ADR-NNN PRD-MMM --relation informs   # link to the parent PRD
+forgeplan link ADR-NNN PRD-MMM --relation informs
 ```
 
 If refinement clarifies terminology or invariants but isn't a "decision" — capture as a `note` instead:
 
-```bash
-forgeplan new note "<convention or constraint surfaced during refine>"
-```
+**MCP**: `mcp__forgeplan__forgeplan_new(kind="note", title="<convention surfaced>")`
+**CLI fallback**: `forgeplan new note "<convention>"`
 
-### After `/refine` completes
+### After `/refine` completes — re-validate refined artifact
 
 If you refined an existing artifact (PRD/RFC):
 
+**MCP path**:
+```
+mcp__forgeplan__forgeplan_validate(id="PRD-NNN")
+mcp__forgeplan__forgeplan_reason(id="PRD-NNN")          # ADI hypotheses refresh (Deep+)
+```
+
+**CLI fallback**:
 ```bash
-forgeplan validate PRD-NNN          # confirm MUST sections still pass
-forgeplan reason PRD-NNN            # ADI hypotheses (Deep+: refresh after refinement)
+forgeplan validate PRD-NNN
+forgeplan reason PRD-NNN
 ```
 
 ### Want this orchestrated for you?
 
-Install [`forgeplan-workflow`](../../../../plugins/forgeplan-workflow/README.md). `/forge-cycle` includes refinement as the gate between Shape and Build.
+Install [`forgeplan-workflow`](../../../../plugins/forgeplan-workflow/README.md). `/forge-cycle` includes refinement as the gate between Shape and Build, with MCP-first wiring already in place.

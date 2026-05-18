@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.38.0"
+    "version": "1.39.0"
   },
   "plugins": [
     {
@@ -36,7 +36,7 @@
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
       "description": "Flagship workflow plugin for the ForgePlan ecosystem. 22 engineering skills (research, refine, sprint, audit, diagnose, autorun, /fpl-init bootstrap, forge-report structured reports, /shape interview-from-scratch, /migrate-from-dev-toolkit automation, /ddd-decompose, /c4-diagram, /riper RIPER orchestrator, /gh-project project-agnostic GitHub Projects v2 integration, plus session helpers) + dev-advisor agent + 4 hooks. v1.15.0: AGENT-AUTHORING-GUIDE.md \u2014 CRUD-R-A matrix (5-operation lifecycle with designated profile per operation), Profile D/Maintainer (NEW \u2014 artifact-maintainer, in-place fixes via forgeplan_update, forgeplan_new DENIED), artifact-reviewer generic (Profile B, reviews artifact schema/links/freshness \u2014 distinct from code/security/design reviewers), forgeplan_generate primary creation path (DRY, ~2s, ~$0.005/artifact). v1.14.0: PRD-026 Phase 5 \u2014 fpl-init v2.0 canonical layer scaffold; LR-1..LR-7 canonical-pattern lint rules. Full feature parity with the legacy dev-toolkit plus 19 additional skills built on forgeplan's artifact lifecycle.",
-      "version": "1.15.1",
+      "version": "1.16.0",
       "author": {
         "name": "ForgePlan"
       },

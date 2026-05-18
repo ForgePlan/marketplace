@@ -1,6 +1,6 @@
 ---
 name: research
-description: Deep multi-agent research on a topic — parallel scout agents cover source code, design docs/RFCs, TODO/status files, reference implementations, persistent memory. Each agent gets a bounded domain and its own context. Use when the topic is large (auth chain, competitor comparison, gap-analysis for a feature) and one agent/context isn't enough. Triggers (EN/RU) — "deep research", "explore X across the project", "compare our X with Y", "gap analysis for X", "разберись", "изучи", "сравни", "глубокий research", "что есть по теме X", "/research".
+description: Deep multi-agent research on a topic — parallel scout agents cover source code, design docs/RFCs, TODO/status files, reference implementations, persistent memory. Each agent gets a bounded domain and its own context. Use when the topic is large (auth chain, competitor comparison, gap-analysis for a feature) and one agent/context isn't enough. When forgeplan is reachable, **MCP-first** plug-in to artifact graph — recommends `mcp__forgeplan__forgeplan_new` (note/prd/adr/rfc) + `mcp__forgeplan__forgeplan_link` + `mcp__forgeplan__forgeplan_validate` for outputs; CLI fallback when MCP not connected. Triggers (EN/RU) — "deep research", "explore X across the project", "compare our X with Y", "gap analysis for X", "разберись", "изучи", "сравни", "глубокий research", "что есть по теме X", "/research".
 ---
 
 # Multi-Agent Deep Research
@@ -449,21 +449,30 @@ TOPIC, KEYWORDS — same.
 
 ---
 
-## Forgeplan integration
+## Forgeplan integration (MCP-first per PRD-022)
 
-If the `forgeplan` CLI is on `$PATH`, this skill is **forgeplan-aware** — it recommends the right CLI calls but does not invoke them.
+This skill is **forgeplan-aware** — when forgeplan MCP tools (`mcp__forgeplan__*`) are available, prefer MCP calls. CLI fallback only when MCP server not connected.
 
 ### After `/research <topic>` completes
 
-The skill writes a report to `research/reports/<topic>/REPORT.md`. To plug it into the artifact graph:
+The skill writes a report to `research/reports/<topic>/REPORT.md`. To plug it into the artifact graph, detect availability of `mcp__forgeplan__forgeplan_new` first:
 
-- **Background context for an existing artifact** → `forgeplan new note "<takeaway from research>"` and link to the relevant PRD/RFC/ADR.
-- **New initiative warranting a PRD** → `forgeplan new prd "<title>"`, cite the report path in Sources, run `forgeplan validate PRD-NNN`.
-- **Architecture decision surfaced** → `forgeplan new adr "<decision>"`, fill Context/Decision/Consequences from the report.
-- **Comparison/evaluation captured** → `/refine` next to formalise → `forgeplan new rfc "<scope>"` if it leads to a deep change.
+**MCP path (preferred)**:
 
-Without an artifact link, the research is ephemeral — `forgeplan list` won't surface it; future readers won't find it via semantic search.
+- **Background context for an existing artifact** → `mcp__forgeplan__forgeplan_new(kind="note", title="<takeaway>")` + `mcp__forgeplan__forgeplan_link(source=NOTE-NNN, target=PRD-MMM, relation="informs")`
+- **New initiative warranting a PRD** → `mcp__forgeplan__forgeplan_new(kind="prd", title="<title>")` (or `forgeplan_generate` for LLM-fill from report) + `mcp__forgeplan__forgeplan_validate(id=PRD-NNN)`
+- **Architecture decision surfaced** → `mcp__forgeplan__forgeplan_new(kind="adr", title="<decision>")` (or dispatch `adr-architect` agent via Task tool)
+- **Comparison/evaluation captured** → `/refine` next to formalise → `mcp__forgeplan__forgeplan_new(kind="rfc", title="<scope>")` if deep change
+
+**CLI fallback (only when MCP unavailable)**:
+
+- `forgeplan new note "<takeaway>"` + `forgeplan link NOTE-NNN PRD-MMM --relation informs`
+- `forgeplan new prd "<title>"` + `forgeplan validate PRD-NNN`
+- `forgeplan new adr "<decision>"`
+- `forgeplan new rfc "<scope>"`
+
+Without an artifact link, the research is ephemeral — `mcp__forgeplan__forgeplan_list` (or `forgeplan list` fallback) won't surface it; future readers won't find it via semantic search.
 
 ### Want this orchestrated for you?
 
-Install [`forgeplan-workflow`](../../../../plugins/forgeplan-workflow/README.md). `/forge-cycle "<task>"` runs research as part of its Shape phase and creates the PRD automatically.
+Install [`forgeplan-workflow`](../../../../plugins/forgeplan-workflow/README.md). `/forge-cycle "<task>"` runs research as part of its Shape phase and creates the PRD automatically via MCP-first wiring.
