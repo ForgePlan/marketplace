@@ -11,22 +11,22 @@ Wraps [Hindsight](https://github.com/vectorize-io/hindsight) with:
   compaction detection)
 - **5 skills** — `/status`, `/bootstrap`, `/mental-model`, `/diagnose`,
   `/export-bank`
-- **Two activation modes** — plugin install (everywhere) or per-project
-  setup CLI (explicit opt-in)
+- **Three activation modes** — plugin install (everywhere), per-project
+  setup CLI (explicit opt-in), or direct MCP wire-up (standalone)
 
-## Two modes — which to pick
+## Three modes — which to pick
 
-| | Plugin install | Per-project setup |
-|---|---|---|
-| Activation | One install, every project | Run `setup.js` per project |
-| Bank ID | Derived from git/cwd | Pinned in project's `.mcp.json` |
-| Opt-out | `.hindsight-disabled` marker | Don't run setup |
-| Source of truth | Plugin manifest + cwd | Project's `.mcp.json` |
-| Best for | Default-on across N projects | Explicit per-project control |
+| | Plugin install | Setup CLI | Direct MCP |
+|---|---|---|---|
+| Activation | One install, every project | Run `setup.mjs` per project | Edit project `.mcp.json` by hand |
+| Bank ID | Derived from git/cwd | Pinned in project's `.mcp.json` | Pinned in project's `.mcp.json` |
+| Opt-out | `.hindsight-disabled` marker | Don't run setup | Don't add the entry |
+| Source of truth | Plugin manifest + cwd | Project's `.mcp.json` | Project's `.mcp.json` |
+| Hooks (auto-recall/retain) | Yes (registered by plugin) | Yes (registered by CLI) | No (MCP tools only) |
+| Best for | Default-on across N projects | Explicit per-project control | One-off use, no Claude Code plugin system |
 
-Both modes can coexist — project-level `.mcp.json` overrides plugin-level
-config, so a project that ran `setup.js` will use its own bank even when
-the plugin is installed.
+All three modes can coexist — project-level `.mcp.json` always wins over
+plugin-level config.
 
 ## Mode 1 — Plugin install
 
@@ -69,14 +69,15 @@ want the bank ID visible in `.mcp.json` and committed to git.
 ```bash
 # 1. Start Hindsight (same docker command as Mode 1)
 
-# 2. Build from source (one-time)
-cd /Users/explosovebit/Work/Orchestra/utils/mcp/hindsight-mcp
+# 2. Clone the marketplace once
+git clone https://github.com/ForgePlan/marketplace.git ~/Work/forgeplan-marketplace
+cd ~/Work/forgeplan-marketplace/plugins/fpl-hsmem
 npm install
 npm run build
 
 # 3. Wire up a project
 cd ~/Work/my-project
-node /Users/explosovebit/Work/Orchestra/utils/mcp/hindsight-mcp/dist/setup.mjs
+node ~/Work/forgeplan-marketplace/plugins/fpl-hsmem/dist/setup.mjs
 ```
 
 The CLI creates:
@@ -96,6 +97,49 @@ Options:
 --no-rules       Skip writing .claude/rules/hindsight.md
 --force          Overwrite existing files
 ```
+
+## Mode 3 — Direct MCP (standalone, no plugin system)
+
+For one-off use without installing the plugin or running setup CLI.
+Just point any project's `.mcp.json` at the bundled `dist/index.mjs` file.
+
+```bash
+# 1. Start Hindsight (same docker command as Mode 1)
+
+# 2. Clone the marketplace once (or use any local copy)
+git clone https://github.com/ForgePlan/marketplace.git ~/Work/forgeplan-marketplace
+cd ~/Work/forgeplan-marketplace/plugins/fpl-hsmem
+npm install
+npm run build
+```
+
+Then in `~/Work/my-project/.mcp.json` (project-level):
+
+```json
+{
+  "mcpServers": {
+    "hindsight": {
+      "command": "node",
+      "args": ["/Users/<you>/Work/forgeplan-marketplace/plugins/fpl-hsmem/dist/index.mjs"],
+      "env": {
+        "HINDSIGHT_URL": "http://localhost:8888",
+        "HINDSIGHT_BANK_ID": "my-project"
+      }
+    }
+  }
+}
+```
+
+The `dist/index.mjs` is a **standalone bundle** — it has no runtime
+dependency on `node_modules`. You can copy `dist/` anywhere and run it
+from there. The `node_modules/` you `npm install`-ed above is only used
+by `npm run build`; once built, you can delete it.
+
+Difference from Mode 1/2:
+- **No auto-recall / auto-retain hooks** — you get MCP tools only
+- **No skills** — `/fpl-hsmem:status` etc. are not registered
+- Useful when you want explicit, manual memory control without the
+  background machinery
 
 ## 13 MCP tools
 
