@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.39.0"
+    "version": "1.40.0"
   },
   "plugins": [
     {
@@ -230,8 +230,8 @@
     {
       "name": "agents-sparc",
       "source": "./plugins/agents-sparc",
-      "description": "SPARC development methodology: orchestrator with quality gates plus 4 phase specialists (specification, pseudocode, architecture, refinement). v1.1: specification + architecture migrated to forgeplan-aware Profile A (PRD-026 Phase 3 batch 1). v1.1.1: README refreshed with profile labels + Forgeplan-aware section.",
-      "version": "1.1.1",
+      "description": "SPARC development methodology: orchestrator with quality gates plus 4 phase specialists (specification, pseudocode, architecture, refinement). v1.2: ALL 5 agents canonical-lint compliant — sparc-orchestrator + pseudocode + refinement migrated to valid model + hex color + bilingual EN/RU/Triggers descriptions. 100% pack passes LR-1..LR-3. specification + architecture remain forgeplan-aware Profile A (PRD-026 Phase 3 batch 1).",
+      "version": "1.2.0",
       "author": {
         "name": "ForgePlan"
       },

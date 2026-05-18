@@ -1,9 +1,12 @@
 ---
 name: pseudocode
-description: SPARC Pseudocode phase specialist for algorithm design, data structure selection, and complexity analysis
-model: inherit
+description: |
+  EN: SPARC Pseudocode phase specialist. Takes a parent SPEC/PRD or RFC draft and produces algorithm sketches, data structure choices, and complexity analysis (Big-O for time + space) BEFORE any code is written. Bridges Specification → Architecture by validating that the algorithmic core fits the constraints. Not forgeplan-aware — operates on local pseudo-code files. Hand off to `architecture` for concrete RFC, then to `coder` (C-coder profile) for implementation.
+  RU: Специалист фазы SPARC Pseudocode. Берёт родительский SPEC/PRD или черновик RFC и выдаёт скетчи алгоритмов, выбор структур данных и анализ сложности (Big-O для времени и памяти) ДО написания кода. Мост между Specification → Architecture: проверяет, что алгоритмическое ядро влезает в ограничения. Не forgeplan-aware — работает с локальными pseudo-code файлами. Передаёт `architecture` для конкретного RFC, далее `coder` (Profile C-coder) для реализации.
+  Triggers: "pseudocode", "algorithm design", "complexity analysis", "Big-O", "data structure choice", "SPARC pseudocode phase", "псевдокод", "анализ сложности", "выбор алгоритма", "выбор структуры данных", "before implementation sketch"
+model: sonnet
 tools: [Read, Write, Edit, Bash, Glob, Grep]
-color: indigo
+color: '#3F51B5'
 ---
 
 # SPARC Pseudocode Agent

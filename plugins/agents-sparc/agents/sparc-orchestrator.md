@@ -1,7 +1,10 @@
 ---
 name: sparc-orchestrator
-description: SPARC methodology orchestrator coordinating five development phases with quality gates and structured delegation
-model: inherit
+description: |
+  EN: SPARC methodology orchestrator. Coordinates 5 development phases (Specification → Pseudocode → Architecture → Refinement → Completion) by dispatching the corresponding phase-specialist agent for each phase, enforcing quality gates between phases, and aggregating phase outcomes into a final delivery report. Operates one level above individual phase specialists — picks the right specialist for the current phase, hands them context, evaluates their output, decides next phase. Not forgeplan-aware itself; delegates to specialists that may be forgeplan-aware (specification, architecture are Profile A creators).
+  RU: Оркестратор методологии SPARC. Координирует 5 фаз разработки (Specification → Pseudocode → Architecture → Refinement → Completion) через диспатч соответствующего phase-specialist агента для каждой фазы, контроль quality gates между фазами и агрегацию результатов в финальный delivery-отчёт. Работает на уровень выше отдельных phase-специалистов — выбирает правильного специалиста для текущей фазы, передаёт ему контекст, оценивает output, решает следующую фазу. Сам не forgeplan-aware; делегирует специалистам, которые могут быть forgeplan-aware (specification, architecture — Profile A creators).
+  Triggers: "SPARC orchestration", "SPARC pipeline", "guide through SPARC", "five-phase delivery", "SPARC quality gates", "structured delegation", "SPARC methodology", "guide development through all phases", "проведи через SPARC", "SPARC оркестрация", "координируй пять фаз", "SPARC pipeline"
+model: opus
 tools: [Read, Write, Edit, Bash, Glob, Grep]
 color: '#FF5722'
 ---
