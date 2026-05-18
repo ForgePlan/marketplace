@@ -1,8 +1,9 @@
 # ForgePlan Marketplace — Claude Code Configuration
 
 **Repo**: [ForgePlan/marketplace](https://github.com/ForgePlan/marketplace)
-**Catalog version**: 1.21.0
-**Plugins**: 11 (6 workflow + 5 agent packs)
+**Catalog version**: 1.36.0
+**Plugins**: 13 (7 workflow + 5 agent packs + 1 memory plugin fpl-hsmem)
+**Agents**: 17 of ~65 forgeplan-aware (PRD-026 canonical B2 paradigm — `disallowedTools` denylist + `forgeplan_generate` primary creation path + 5 profiles A/B/C/C-coder/D)
 **Project board**: [orgs/ForgePlan/projects/5](https://github.com/orgs/ForgePlan/projects/5)
 
 ---
