@@ -1,7 +1,7 @@
 {
   "name": "agents-pro",
-  "version": "1.0.0",
-  "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, and infrastructure engineers.",
+  "version": "1.6.0",
+  "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.6: guardian reads project-config.yaml quality_gates with conservative built-in fallbacks (PRD-026 Phase 6). v1.5: 4 NEW forgeplan-aware agents (brief-intake, guardian, system-dev, evidence-recorder — PRD-026 Phase 4). Cumulative: 9 of 25 agents forgeplan-aware.",
   "author": {"name": "ForgePlan"},
   "homepage": "https://github.com/ForgePlan/marketplace",
   "repository": "https://github.com/ForgePlan/marketplace",
@@ -33,7 +33,11 @@
       "research-analyst",
       "search-specialist",
       "mcp-developer",
-      "platform-engineer"
+      "platform-engineer",
+      "brief-intake",
+      "guardian",
+      "system-dev",
+      "evidence-recorder"
     ],
     "skills": [],
     "hooks": []

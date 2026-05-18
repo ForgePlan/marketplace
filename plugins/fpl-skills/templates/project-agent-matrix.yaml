@@ -1,0 +1,282 @@
+# =============================================================================
+# project-agent-matrix.yaml — Per-Project Orchestrator Dispatch Directives
+# =============================================================================
+#
+# WHAT THIS FILE DOES
+# -------------------
+# When `/forge-cycle` or `/autorun` runs in this project, it reads this file
+# (PRD-026 FR-041, Phase 6 work) to decide which agent to dispatch for each
+# pipeline phase. Without this file, the orchestrator falls back to the
+# hardcoded canonical defaults from RFC-003 Layer 2.
+#
+# WHERE THIS FILE LIVES
+# ---------------------
+# Committed to the project repo at: .forgeplan/project-agent-matrix.yaml
+#
+# HOW DISPATCH WORKS
+# ------------------
+# For each pipeline phase, the orchestrator:
+#   1. Reads `phase_dispatch.<phase>.primary`
+#   2. If it starts with `.claude/agents/...` it dispatches the project-scoped
+#      agent (per FR-047 fallback chain: project-scoped wins over marketplace)
+#   3. Otherwise it dispatches the marketplace agent (e.g. `agents-pro:guardian`)
+#   4. If primary is unavailable, it falls back to `secondary`
+#   5. If `parallel` is set (audit phase), it spawns all listed agents at once
+#      and merges their EVIDENCE artifacts
+#   6. `depth_filter` gates the phase: e.g. `deep+` means the phase only fires
+#      for Deep or Critical depth tasks; Tactical/Standard skip it.
+#
+# OVERRIDE PATTERN (project-scoped customisation)
+# -----------------------------------------------
+# To override a default with a project-specific agent:
+#   1. Copy `templates/agent-template.md` into `.claude/agents/<name>.md`
+#   2. Customise it (e.g. add your stack's lint rules)
+#   3. Change the matching `primary:` value below from
+#        `agents-sparc:specification`
+#      to
+#        `.claude/agents/pm.md`
+#   4. Keep `secondary: agents-sparc:specification` as a marketplace fallback
+#
+# SCHEMA VERSIONING
+# -----------------
+# Top-level `schema_version` lets us evolve this file without breaking parsers.
+# When v2 ships, the orchestrator reads `schema_version` first and dispatches
+# to the correct loader.
+#
+# SENTINELS (special values, not agent IDs)
+# -----------------------------------------
+# `inline`         — orchestrator handles this phase directly; no agent dispatched
+# `inline-merger`  — primary for `audit` phase; orchestrator merges parallel verdicts
+# `none`           — methodology value when no formal methodology applies
+#
+# DEPTH FILTER VALUES
+# -------------------
+# `all`            — phase fires for every depth (Tactical → Critical)
+# `tactical-only`  — phase fires only for Tactical (rare; not currently used)
+# `standard+`      — Standard, Deep, Critical
+# `deep+`          — Deep, Critical only
+# `critical-only`  — Critical only
+#
+# METHODOLOGY VALUES (closed enum — must match values in project-config.yaml)
+# -------------------------------------------------------------------------
+# `fpf`            — First Principles Framework (Abduction / Deduction / Induction)
+# `sparc`          — Specification / Pseudocode / Architecture / Refinement / Completion
+# `goap`           — Goal-Oriented Action Planning
+# `tdd-london`     — TDD London School (mock-driven outside-in)
+# `tdd-classical`  — Classic Detroit-style TDD
+# `bdd`            — Behaviour-Driven Development
+# `wbs`            — Work-Breakdown Structure (decomposition)
+# `c4`             — C4 architectural diagrams
+# `checklist`      — plain checklist (no formal methodology)
+# `none`           — no methodology applies
+#
+# PRECEDENCE WITH project-config.yaml
+# -----------------------------------
+# This file and `project-config.yaml` both have an `autonomy` section. When the
+# orchestrator merges them, `project-config.yaml` WINS for per-operation lists
+# (`auto_approve` / `human_required`) because it uses the canonical fully-qualified
+# tool-name form (`forgeplan_validate`, `git push`). The matrix's `autonomy`
+# section uses short verbs for human readability and is informational only.
+# `default_level` should match across both files; mismatch → use the stricter.
+#
+# =============================================================================
+
+schema_version: 1
+
+# -----------------------------------------------------------------------------
+# Project identity
+# -----------------------------------------------------------------------------
+# `project_name` is human-readable, shown in orchestrator logs and Hindsight.
+# `domain` and `language` hint which specialist agents to pick when the
+# `phase_dispatch` falls back through the chain. Keep them lower-case.
+# -----------------------------------------------------------------------------
+
+project_name: "MyExampleProject"
+domain: backend          # backend | frontend | fullstack | mobile | data | embedded | infra
+language: typescript     # typescript | python | go | rust | java | swift | kotlin | ...
+
+# -----------------------------------------------------------------------------
+# phase_dispatch — the load-bearing section
+# -----------------------------------------------------------------------------
+# Maps each canonical pipeline phase (RFC-002 + PRD-024, 11 phases) to:
+#   primary       — main agent to dispatch (project-scoped or marketplace ref)
+#   methodology   — which methodology drives this phase (FPF ADI / SPARC / BMAD / none)
+#   secondary     — fallback agent when primary is unavailable
+#   parallel      — list of agents for parallel dispatch (audit phase only)
+#   depth_filter  — optional: which depths invoke this phase
+#                   values: `all` (default), `standard+`, `deep+`, `critical-only`
+#
+# The 11 canonical phases are:
+#   brief → shape → decompose → design → estimate → gate → build → audit
+#         → evidence → activate → wrap
+# -----------------------------------------------------------------------------
+
+phase_dispatch:
+
+  # Phase 1: Brief — raw idea becomes a structured Brief NOTE.
+  # Profile A creator. Always runs (every depth needs a Brief).
+  brief:
+    primary: "agents-pro:brief-intake"
+    methodology: "fpf"
+    # No secondary — brief-intake has no marketplace fallback for raw-idea intake.
+    depth_filter: all
+
+  # Phase 2: Shape — Brief becomes a PRD.
+  # Profile A creator. Override below shows how to swap for a project-scoped pm.
+  # Example override (uncomment to use):
+  #   primary: ".claude/agents/pm.md"
+  #   secondary: "agents-sparc:specification"
+  shape:
+    primary: "agents-sparc:specification"
+    methodology: "sparc"
+    secondary: "agents-pro:research-analyst"  # read-only prior-art discovery when specification needs research context
+    depth_filter: standard+
+
+  # Phase 3: Decompose — PRD breaks into sibling RFCs / tasks.
+  # Profile A decomposer. Deep+ only — Tactical/Standard usually don't decompose.
+  decompose:
+    primary: "agents-pro:goal-planner"
+    methodology: "fpf"
+    secondary: "agents-sparc:specification"
+    depth_filter: deep+
+
+  # Phase 4: Design — RFC creation, technical contract.
+  # Profile A creator. Standard+ (Tactical fixes don't need an RFC).
+  design:
+    primary: "agents-sparc:architecture"
+    methodology: "sparc"
+    secondary: "agents-pro:adr-architect"   # for architectural-decision-heavy RFCs
+    depth_filter: standard+
+
+  # Phase 5: Estimate — effort & risk estimation.
+  # No canonical agent yet (PRD-026 Phase 4 carry-forward).
+  # Orchestrator falls back to inline estimation until a dedicated agent ships.
+  estimate:
+    primary: "inline"   # sentinel — orchestrator handles estimation directly; no agent yet
+    methodology: "none"
+    depth_filter: deep+
+
+  # Phase 6: Gate — pre-build quality gate (PASS / CONCERNS / BLOCKER).
+  # Profile B gate-style. Guardian inspects the PRD+RFC chain before any code.
+  gate:
+    primary: "agents-pro:guardian"
+    methodology: "fpf"
+    secondary: "agents-pro:architect-reviewer"
+    depth_filter: standard+
+
+  # Phase 7: Build — code implementation.
+  # Profile C-coder (mutator). Tactical depth uses coder directly without RFC.
+  build:
+    primary: "agents-core:coder"
+    methodology: "tdd-london"
+    # No secondary — coder is the canonical mutator. Language-specific overrides
+    # (typescript-pro / golang-pro / etc.) live under agents-domain pack.
+    depth_filter: all
+
+  # Phase 8: Audit — parallel multi-reviewer pass.
+  # Profile B reviewers run in PARALLEL; each writes its own EVIDENCE artifact.
+  # The orchestrator merges verdicts before handing off to `activate`.
+  # `primary` is the verdict-merger (orchestrator inline); `parallel` is the fleet.
+  audit:
+    primary: "inline-merger"
+    methodology: "fpf"
+    parallel:
+      - "agents-core:code-reviewer"      # lint, style, mechanical issues
+      - "agents-pro:security-expert"     # STRIDE / OWASP / CWE
+      - "agents-core:tester"             # test coverage, flaky tests, results
+      - "agents-pro:architect-reviewer"  # single-RFC architectural fitness
+      - "agents-pro:system-dev"          # staff/principal blast-radius audit (deep+)
+      # evidence-recorder is NOT in audit fan-out — see `evidence` phase below.
+      # Audit is for specialists with domain scoring; recorder is for non-specialist phases.
+    depth_filter: standard+
+
+  # Phase 9: Evidence — produced inline by each Profile B reviewer above.
+  # No separate dispatch; this phase is bookkeeping (EVID artifacts are linked).
+  # `evidence-recorder` (Profile B mechanical fallback) is used ONLY when a phase
+  # produces non-specialist evidence: manual QA, deployment validation, performance
+  # benchmarks, UX session notes, external audits, compliance — see agent body.
+  evidence:
+    primary: "agents-pro:evidence-recorder"
+    methodology: "none"
+    # No secondary — if evidence-recorder doesn't fit, hand back to orchestrator.
+    depth_filter: all
+
+  # Phase 10: Activate — final gate, full-chain inspection, binary verdict.
+  # Profile B gate-style. Reads FULL EVID chain. PASS → activate, BLOCKER → halt.
+  # Only the orchestrator may call `forgeplan_activate`; guardian only verdicts.
+  activate:
+    primary: "agents-pro:guardian"
+    methodology: "fpf"
+    secondary: "agents-pro:architect-reviewer"
+    depth_filter: standard+
+
+  # Phase 11: Wrap — post-activation summary, lessons learned, retro.
+  # No canonical agent yet — orchestrator inlines a brief summary.
+  wrap:
+    primary: "inline"   # sentinel — orchestrator handles directly; no agent yet
+    methodology: "none"
+    depth_filter: deep+
+
+# -----------------------------------------------------------------------------
+# autonomy — what the orchestrator may do without human approval
+# -----------------------------------------------------------------------------
+# `default_level` is the autonomy slider (1=ask everything, 5=fully autonomous).
+# `auto_approve` lists operations the orchestrator can do silently.
+# `human_required` lists operations that ALWAYS need explicit user confirmation,
+# regardless of `default_level` — these are the "blast radius" operations.
+# -----------------------------------------------------------------------------
+
+autonomy:
+  default_level: 3        # 1 (ask everything) ... 5 (fully autonomous)
+  auto_approve:
+    - validate            # forgeplan_validate
+    - link                # forgeplan_link (informs/refines/based_on)
+    - create_evidence     # forgeplan_new(kind=evidence)
+    - create_note         # forgeplan_new(kind=note)
+    - claim               # forgeplan_claim (identity tagging)
+    - release             # forgeplan_release
+    - memory_recall       # hindsight reads
+    - mental_model_get
+  human_required:
+    - activate            # forgeplan_activate — moves artifact to active
+    - supersede           # forgeplan_supersede — replaces an active artifact
+    - deprecate           # forgeplan_deprecate
+    - push                # git push to remote
+    - deploy              # any deployment trigger
+    - delete              # any destructive op
+    - secret_write        # writing tokens/credentials
+
+# -----------------------------------------------------------------------------
+# hindsight — long-term memory wiring (per PRD-024 / EVID-044)
+# -----------------------------------------------------------------------------
+# `bank_id` should be derived from the project name (kebab-case, prefix the org).
+# `mental_models` lists the 5 baseline models every forgeplan-aware project needs.
+# Projects may add domain-specific models (e.g. `mm-payment-flow-edge-cases`)
+# but should NOT remove any of the 5 baselines.
+# -----------------------------------------------------------------------------
+
+hindsight:
+  bank_id: "myexampleproject"           # kebab-case; usually derived from project_name
+  mental_models:
+    - "mm-pipeline-methodology"         # how the canonical pipeline runs
+    - "mm-gate-failures"                # common gate-rejection patterns
+    - "mm-fpf-examples"                 # First Principles Framework worked examples
+    - "mm-agent-selection"              # which agent for which task
+    - "mm-branch-decision"              # when to branch vs when to inline
+
+# -----------------------------------------------------------------------------
+# required_plugins — marketplace dependencies this project assumes
+# -----------------------------------------------------------------------------
+# The orchestrator validates these are installed on startup. Missing plugins
+# trigger a friendly `/plugin install` prompt instead of a cryptic dispatch
+# failure. Pin only major versions — let users get patches automatically.
+# -----------------------------------------------------------------------------
+
+required_plugins:
+  - "fpl-skills@ForgePlan-marketplace"            # orchestration skills + canonical pattern
+  - "fpl-hsmem@ForgePlan-marketplace"             # Hindsight memory
+  - "fpf@ForgePlan-marketplace"                   # First Principles Framework reasoning
+  - "forgeplan-workflow@ForgePlan-marketplace"    # /forge-cycle, /forge-audit commands
+  - "agents-pro@ForgePlan-marketplace"            # 25 specialists (guardian, brief-intake, ...)
+  - "agents-core@ForgePlan-marketplace"           # coder, code-reviewer, tester, ...
+  - "agents-sparc@ForgePlan-marketplace"          # specification, architecture (SPARC methodology)
