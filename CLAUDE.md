@@ -1,7 +1,7 @@
 # ForgePlan Marketplace — Claude Code Configuration
 
 **Repo**: [ForgePlan/marketplace](https://github.com/ForgePlan/marketplace)
-**Catalog version**: 1.36.0
+**Catalog version**: 1.37.0
 **Plugins**: 13 (7 workflow + 5 agent packs + 1 memory plugin fpl-hsmem)
 **Agents**: 17 of ~65 forgeplan-aware (PRD-026 canonical B2 paradigm — `disallowedTools` denylist + `forgeplan_generate` primary creation path + 5 profiles A/B/C/C-coder/D)
 **Project board**: [orgs/ForgePlan/projects/5](https://github.com/orgs/ForgePlan/projects/5)
@@ -172,6 +172,21 @@ Hook bypass: временно убрать из `.claude/settings.json` (не р
 ./scripts/validate-all-plugins.sh          # Все плагины
 ./scripts/validate-all-plugins.sh plugin-name  # Один плагин
 ```
+
+---
+
+## Plugin cache troubleshooting (workaround for users)
+
+If users report that updates to canonical agents don't appear after `/plugin marketplace update`, the cause is usually Claude Code's plugin cache invalidation behavior (upstream issue, captured in PROB-001 deprecated 2026-05-19):
+
+| Symptom | Root cause | Workaround |
+|---------|------------|------------|
+| `/plugin install` says "already installed" but new version present | Cache exists, settings.local.json shows enabled | `/plugin uninstall` + `/plugin install` (force re-resolve) |
+| `/plugin uninstall` doesn't free disk space | Settings toggle, cache files remain | Manual: `rm -rf ~/.claude-code-plugins/<plugin-name>` then reinstall |
+| New version in marketplace.json not picked up | Catalog `metadata.version` not bumped | Verify catalog `metadata.version` was bumped — required for `/plugin marketplace update` to refresh |
+| Agent loaded but new tools/config not active | Stale subagent cache in conversation | `/reload-plugins` (Claude Code session-level) |
+
+**Rule of thumb when shipping**: always bump both per-plugin `version` AND catalog `metadata.version`. Without the catalog bump, no user gets the update via `/plugin marketplace update`.
 
 ---
 
