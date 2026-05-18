@@ -1,7 +1,7 @@
 {
   "name": "agents-sparc",
-  "version": "1.1.1",
-  "description": "SPARC development methodology agents: orchestrator with quality gates, plus 4 phase specialists (specification, pseudocode, architecture, refinement/TDD). v1.1: specification + architecture migrated to forgeplan-aware canonical Profile A pattern (PRD-026 Phase 3 batch 1).",
+  "version": "1.2.0",
+  "description": "SPARC development methodology agents: orchestrator with quality gates, plus 4 phase specialists (specification, pseudocode, architecture, refinement/TDD). v1.2: ALL 5 agents canonical-lint compliant — sparc-orchestrator + pseudocode + refinement migrated to model=opus|sonnet, hex colors, bilingual EN/RU/Triggers descriptions (legacy lint warnings eliminated). 100% of agents-sparc pack passes LR-1..LR-3. specification + architecture remain forgeplan-aware Profile A (PRD-026 Phase 3 batch 1).",
   "author": {"name": "ForgePlan"},
   "homepage": "https://github.com/ForgePlan/marketplace",
   "repository": "https://github.com/ForgePlan/marketplace",

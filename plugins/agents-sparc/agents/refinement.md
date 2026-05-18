@@ -1,9 +1,12 @@
 ---
 name: refinement
-description: SPARC Refinement phase specialist for TDD red-green-refactor, code optimization, performance tuning, and error handling
-model: inherit
+description: |
+  EN: SPARC Refinement phase specialist. Executes red-green-refactor TDD loop on a code surface produced by `coder`: writes failing test (red), implements minimal change to pass (green), refactors for clarity/performance (refactor). Also handles post-implementation polish — error handling, edge cases, performance tuning. Operates on source files only; not forgeplan-aware. Hand off to `tester` (Profile B) for coverage delta EVIDENCE recording.
+  RU: Специалист фазы SPARC Refinement. Прогоняет цикл red-green-refactor TDD на код-поверхности от `coder`: пишет падающий тест (red), реализует минимальное изменение для прохождения (green), рефакторит для ясности/производительности (refactor). Также post-implementation polish — error handling, edge cases, performance tuning. Работает только с source files; не forgeplan-aware. Передаёт `tester` (Profile B) для записи coverage delta в EVIDENCE.
+  Triggers: "TDD refinement", "red green refactor", "refactor this code", "improve test coverage", "tune performance", "SPARC refinement", "TDD", "tighten the implementation", "уточни реализацию", "TDD цикл", "рефакторинг", "оптимизация производительности"
+model: sonnet
 tools: [Read, Write, Edit, Bash, Glob, Grep]
-color: violet
+color: '#673AB7'
 ---
 
 # SPARC Refinement Agent
