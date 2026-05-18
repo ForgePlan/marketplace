@@ -208,8 +208,24 @@ def check_agent(plugin, agent_path):
         tools = []
     tools_set = set(tools)
 
-    # Detect forgeplan-aware
-    is_fp_aware = any(t.startswith('mcp__forgeplan__') for t in tools)
+    # Parse disallowedTools (B2 paradigm — comma-separated string OR list)
+    disallowed_raw = fm.get('disallowedTools', '') or ''
+    if isinstance(disallowed_raw, str):
+        disallowed_set = set(t.strip() for t in disallowed_raw.split(',') if t.strip())
+    elif isinstance(disallowed_raw, list):
+        disallowed_set = set(disallowed_raw)
+    else:
+        disallowed_set = set()
+
+    # Detect forgeplan-aware:
+    #   - Legacy v1 path: tools allowlist contains mcp__forgeplan__*
+    #   - B2 canonical path: disallowedTools mentions mcp__forgeplan__forgeplan_activate
+    #     (only canonical Profile A/B/D agents explicitly deny activate)
+    #   - Body path: mentions mcp__forgeplan__ MCP calls
+    is_fp_aware_legacy = any(t.startswith('mcp__forgeplan__') for t in tools)
+    is_fp_aware_b2 = 'mcp__forgeplan__forgeplan_activate' in disallowed_set or any(t.startswith('mcp__forgeplan__') for t in disallowed_set)
+    is_fp_aware_body = bool(body and 'mcp__forgeplan__' in body)
+    is_fp_aware = is_fp_aware_legacy or is_fp_aware_b2 or is_fp_aware_body
     if is_fp_aware:
         forgeplan_aware += 1
     else:
