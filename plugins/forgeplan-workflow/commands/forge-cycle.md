@@ -25,6 +25,35 @@ Full reference: [`forgeplan-methodology` skill section 06](../skills/forgeplan-m
 
 ---
 
+## Step 0: Memory Bootstrap (optional — Hindsight v2)
+
+If `mcp__hindsight__memory_status` is available, probe the project memory bank for context:
+
+```python
+# Check availability
+if has_tool("mcp__hindsight__memory_status"):
+    status = mcp__hindsight__memory_status()
+    if status.healthy:
+        # List mental models with project knowledge
+        models = mcp__hindsight__mental_model_list()
+
+        # Read methodology stack if exists
+        for model in models:
+            if model.id == "mm-pipeline-methodology":
+                methodology_ctx = mcp__hindsight__mental_model_get("mm-pipeline-methodology")
+                # Use methodology_ctx для dispatch decisions in Step 5
+
+            if model.id == "mm-agent-selection":
+                agent_ctx = mcp__hindsight__mental_model_get("mm-agent-selection")
+                # Use agent_ctx для specialist selection
+```
+
+**Graceful degradation**: if Hindsight not available — proceed без memory context. Pipeline still functional (NFR-014 PRD-025).
+
+Reference: RFC-003 Layer 3 (Hindsight v2 Integration). Per PRD-025 FR-022.
+
+---
+
 ## Step 1: Health Check
 
 Run `forgeplan health` to check the project state.
@@ -131,6 +160,54 @@ mcp__forgeplan__forgeplan_claim(id=ARTIFACT_ID, agent="forge-cycle/v1", note="St
 mcp__forgeplan__forgeplan_release(id=ARTIFACT_ID, agent="forge-cycle/v1")
 ```
 
+### Step 5.5: Parallel build dispatch (Deep+ depth, multi-artifact work)
+
+For Deep+ tasks with multiple artifacts (RFC has N sub-tasks), use **parallel subagent dispatch** per RFC-003 Layer 1:
+
+```python
+# 1. Compute parallel-safe work plan
+plan = mcp__forgeplan__forgeplan_dispatch(
+    agents=3,           # N subagents
+    status="draft",
+    kind="rfc",
+    agent_skills=[      # optional: per-bucket skills
+        ["backend"],
+        ["frontend"],
+        ["tests"],
+    ]
+)
+# Returns: { buckets, serial_queue, reasoning }
+
+# 2. Pre-claim on behalf of subagents (orchestrator-on-behalf-of pattern)
+for i, bucket in enumerate(plan.buckets):
+    task_id = f"phase6-build-{SESSION_ID}-{i}"
+    mcp__forgeplan__forgeplan_claim(
+        id=bucket.artifact_id,
+        agent=f"claude-code/2.1/{task_id}",
+        note=f"Phase 6 Build bucket {i}",
+        ttl_minutes=60
+    )
+
+# 3. Spawn N parallel subagents in SINGLE message
+# (Multiple Task tool calls в одном response для параллели)
+# Each Task() goes to subagent_type matching bucket skills
+# Examples: agents-core:coder, agents-domain:typescript-pro, agents-core:tester
+
+# 4. On subagent completion — orchestrator или subagent releases claim
+# Force-release escape hatch if subagent crashes:
+# mcp__forgeplan__forgeplan_release(id=..., agent=..., force=true)
+```
+
+Reference: RFC-003 Section 1.2 (Subagent spawn pattern), PRD-025 FR-017.
+
+**Agent dispatch matrix** для Build phase:
+- Backend tasks → `agents-domain:golang-pro` / `agents-domain:fullstack-developer`
+- Frontend tasks → `agents-domain:frontend-developer` / `agents-domain:nextjs-developer`
+- Tests-heavy → `agents-core:tester` + `agents-core:tdd-london`
+- Generic → `agents-core:coder`
+
+Full matrix: RFC-003 Layer 2 (Agent Pack Dispatch Matrix).
+
 **Why MCP-first (PRD-021)**: typed dicts + `_next_action` field on every response = methodology-as-protocol. Server tells client what's the correct Shape→Validate→Code→Evidence→Activate next-step. Skills relay these hints to reports instead of hardcoding next steps in prose.
 
 **Why unconditional (PRD-020)**: prior to v1.6.0 of forgeplan-workflow, /forge-cycle spawned SPARC agents directly via Task tool with zero forgeplan claim wiring. Now every SPARC phase is visible in `forgeplan_claims`.
@@ -142,19 +219,97 @@ Execute the project's test suite:
 - Run the full suite or the relevant subset.
 - All tests must pass before proceeding.
 
+## Step 6.5: Multi-Reviewer Audit (Standard+ depth)
+
+Per RFC-003 Layer 2 + PRD-025 FR-018, spawn **4 parallel reviewers** in single message для cross-validation:
+
+```python
+# Single message, 4 parallel Agent calls (Claude Code Task tool)
+reports = parallel_spawn([
+    Agent(
+        subagent_type="agents-core:code-reviewer",
+        description="Logic + style review",
+        prompt=f"Review {ARTIFACT_ID} linked code. Check: logic issues, style, dead code, naming."
+    ),
+    Agent(
+        subagent_type="agents-pro:security-expert",
+        description="Security audit",
+        prompt=f"Security audit {ARTIFACT_ID}: OWASP top 10, secrets exposure, injection vectors, auth flows."
+    ),
+    Agent(
+        subagent_type="agents-pro:architect-reviewer",
+        description="Architecture review",
+        prompt=f"Review {ARTIFACT_ID} architecture vs linked RFC. Check: SOLID, coupling, layer violations."
+    ),
+    Agent(
+        subagent_type="agents-core:tester",
+        description="Test coverage review",
+        prompt=f"Review test coverage {ARTIFACT_ID}: coverage%, edge cases, integration tests."
+    ),
+])
+
+# Aggregate findings; surface critical immediately
+consensus = synthesize_findings(reports)
+critical = [f for f in consensus if f.severity == "CRITICAL"]
+```
+
+For Deep+ depth, add `agents-pro:performance-engineer` для perf-critical paths.
+
+If critical findings — halt и address before Step 7. If clean — proceed to Step 7 with consolidated audit findings ready for EVID body.
+
 ## Step 7: Create Evidence
 
-Create an evidence artifact linking implementation to the PRD:
+Create an evidence artifact linking implementation to the PRD (MCP-first):
+
+```python
+# MCP-first
+evid = mcp__forgeplan__forgeplan_new(
+    kind="evidence",
+    title=f"<brief description of what was built>"
+)
+mcp__forgeplan__forgeplan_update(
+    id=evid["id"],
+    body=format_evidence_body(reports_from_step_6_5)
+)
+mcp__forgeplan__forgeplan_link(
+    source=evid["id"],
+    target=PRD_ID,
+    relation="informs"
+)
+```
+
+Shell fallback:
 ```bash
 forgeplan new evidence "<brief description of what was built>"
 ```
 
 Fill in the evidence with structured fields:
 - **verdict**: PASS or FAIL
-- **congruence_level**: CL1 (exact match) through CL5 (no match)
+- **congruence_level**: CL3 (same-context) typical; CL1-CL2 for cross-context
 - **evidence_type**: test_result | code_review | manual_verification
 - **linked_artifact**: PRD-XXX
 - **summary**: Brief description of what was verified and how.
+
+### Autonomous decisions logging (mail-as-beads pattern per NOTE-004)
+
+If at any step the orchestrator или a subagent made an **autonomous decision** (без explicit user input — e.g. FPF-resolved conflict, automatic agent fallback, gate-check override), record as a typed NOTE:
+
+```python
+mcp__forgeplan__forgeplan_new(
+    kind="note",
+    title=f"Autonomous decision: <short summary>"
+)
+# Body содержит:
+# - Context: what triggered decision
+# - Options considered: list
+# - Chosen: + reasoning (FPF justification if applicable)
+# - Impact: which artifact affected
+mcp__forgeplan__forgeplan_link(
+    source=NOTE_ID, target=PRD_ID, relation="informs"
+)
+```
+
+Reference: NOTE-004 (mail-as-beads pattern from Gas Town), PRD-025 FR-027.
 
 ## Step 8: Review and Activate
 

@@ -1,0 +1,67 @@
+# Hindsight memory — {{BANK_ID}}
+
+This project uses Hindsight bank `{{BANK_ID}}` (see `.mcp.json`).
+Auto-recall and auto-retain are enabled via `.claude/settings.local.json`.
+
+## What happens automatically
+
+- **Before each user prompt** the `recall.js` hook searches this bank for
+  relevant memories and silently appends them to the message. Claude sees
+  them, the user does not.
+- **After each response** the `retain.js` hook saves the transcript once
+  every N turns.
+- **On session end** `session-end.js` forces a final retain.
+
+So **don't call `memory_recall` and `memory_retain` reflexively** — it's
+already happening. Manual calls are only for the special cases below.
+
+## Mental models in this bank
+
+<!-- Add entries as you create them. The starter list is empty —
+     don't create pages just to fill it. Create one only when you see a
+     recurring question that deserves a ready-made synthesis. -->
+
+_None yet. Add when `mental_model_create` is genuinely needed._
+
+## Domain tags for manual retain
+
+<!-- List project-specific tags here. Claude will use them when explicitly
+     saving things via memory_retain. -->
+
+_None yet. Accumulate them as patterns emerge, e.g. `[postmortem]`,
+`[client:<name>]`, `[deprecation]`._
+
+## When to invoke a tool by hand
+
+- `memory_recall(query)` — only if the auto-hook didn't fire (very short
+  prompt, or session just started). Usually not needed.
+- `memory_retain(content)` — when the user explicitly says "remember X",
+  or when you arrive at a **non-obvious decision / lesson** that auto-retain
+  could dilute in the transcript stream.
+- `memory_reflect(query)` — when the user wants a **synthesis** over a
+  topic, not raw facts. E.g. "give me the big picture on auth", "what
+  open tech debt do we have?".
+- `mental_model_get(id)` — when the question matches one of the mental
+  models above. Reading the page gives coherent synthesis instead of a
+  spray of raw facts.
+- `document_ingest_file(path)` — when we've produced a significant
+  artifact (PRD, RFC, ADR, postmortem) and want it semantically
+  searchable, not just findable by name with `Read`.
+
+## What NOT to store in this bank
+
+- Contents of PRD/RFC/ADR — they live in `forge/` and are read via `Read`
+- Global conventions — those belong in `~/.claude/CLAUDE.md`
+- Git history — `git log` has it
+- `.mcp.json` config or env vars
+- Secrets, tokens, credentials
+
+## Diagnostics for this bank
+
+```
+memory_status            # health + statistics
+memory_get_current_bank  # confirm bank_id
+mental_model_list        # list living pages
+```
+
+Web UI with the memory graph: http://localhost:9999

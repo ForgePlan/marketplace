@@ -1,7 +1,7 @@
 {
   "name": "forgeplan-workflow",
-  "version": "1.7.0",
-  "description": "Structured engineering workflow for forgeplan users. Provides /forge-cycle (full dev cycle with unconditional per-SPARC-phase claim/release wiring per PRD-020), /forge-audit (multi-expert review with claim+evidence wrapping), methodology knowledge base, and quality gate hooks. Requires forgeplan CLI (private app, access via project admin).",
+  "version": "1.8.0",
+  "description": "Structured engineering workflow for forgeplan users. Provides /forge-cycle (full SDLC cycle: Hindsight v2 memory bootstrap + parallel subagent dispatch via forgeplan_dispatch + Task tool + multi-reviewer audit with 4 parallel agents + mail-as-beads autonomous decisions logging + MCP-first per PRD-021/022 + claim/release per PRD-020 — implements RFC-003/PRD-025) and /forge-audit (multi-expert review), methodology knowledge base, quality gate hooks. Requires forgeplan CLI.",
   "author": {
     "name": "ForgePlan"
   },

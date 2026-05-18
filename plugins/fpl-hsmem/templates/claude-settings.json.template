@@ -1,0 +1,37 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node {{HINDSIGHT_MCP_PATH}}/dist/hooks/recall.js",
+            "timeout": 12
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node {{HINDSIGHT_MCP_PATH}}/dist/hooks/retain.js",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node {{HINDSIGHT_MCP_PATH}}/dist/hooks/session-end.js",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "name": "fpl-hsmem",
+  "version": "2.0.0",
+  "description": "ForgePlan Hindsight memory plugin for Claude Code — MCP server + auto-recall/retain hooks + skills",
+  "type": "module",
+  "main": "dist/index.mjs",
+  "bin": {
+    "fpl-hsmem": "dist/index.mjs",
+    "fpl-hsmem-recall": "dist/hooks/recall.mjs",
+    "fpl-hsmem-retain": "dist/hooks/retain.mjs",
+    "fpl-hsmem-session-end": "dist/hooks/session-end.mjs",
+    "fpl-hsmem-setup": "dist/setup.mjs"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "npm run typecheck && npm run bundle",
+    "bundle": "node build.mjs",
+    "watch": "tsc --watch",
+    "start": "node dist/index.mjs",
+    "setup": "node dist/setup.mjs",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.12.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "esbuild": "^0.28.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
