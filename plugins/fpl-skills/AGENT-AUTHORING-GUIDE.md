@@ -1,6 +1,41 @@
 # AGENT-AUTHORING-GUIDE
 
+> **Frontmatter paradigm (B2 — current canon, verified 2026-05-18 in EVID-050)**:
+> Forgeplan-aware agents use **`disallowedTools:` denylist**, NOT `tools:` allowlist.
+> Reason: Anthropic issue #53865 — subagent `tools:` allowlist breaks MCP propagation
+> (wildcards parse as ⚠ Unrecognized, exact enumeration is brittle, and unrecognized
+> entries silently strip the entire MCP server). Default behavior is "inherit all from
+> parent session" — `disallowedTools:` removes only what must not be available.
+>
+> **Defence-in-depth shifts to**:
+> - Body Hard Rules (procedural discipline)
+> - PreToolUse hooks on `.forgeplan/` paths
+> - Server-side identity-tag enforcement by forgeplan MCP
+
 Canonical pattern for **forgeplan-aware agents** in ForgePlan marketplace. Required reading before authoring or migrating any agent in `agents-pro`, `agents-core`, `agents-domain`, `agents-sparc`, or `agents-github` packs (and for project-scoped agents in `.claude/agents/`).
+
+---
+
+## CRUD-R-A matrix — canonical operations on forgeplan artifacts
+
+Every forgeplan artifact (PRD/RFC/ADR/EPIC/SPEC/PROBLEM/SOLUTION/EVIDENCE/NOTE/REFRESH) has a five-operation lifecycle. Each operation has a designated agent profile:
+
+| Operation | Profile | Generic agent (any kind) | Kind specialists (preferred when available) |
+|---|---|---|---|
+| **CREATE** | A | `artifact-author` (uses forgeplan_generate primary, forgeplan_new fallback) | adr-architect, specification, architecture, goal-planner, brief-intake, evidence-recorder |
+| **READ** | any | (no dedicated agent — direct `forgeplan_get`) | n/a |
+| **UPDATE** (metadata, links, status) | D | `artifact-maintainer` (NEW) | n/a — kind-specialists focus on CREATE |
+| **REVIEW** (health/quality audit) | B | `artifact-reviewer` (NEW) | code-reviewer, security-expert, architect-reviewer, tester, system-dev — these review CODE/DESIGN/SYSTEM, not the artifact itself |
+| **GATE** (activation verdict) | B gate | `guardian` | n/a |
+
+### Why this matrix matters
+
+1. **Dispatch clarity** — orchestrator knows which agent to send for which operation
+2. **Defence-in-depth** — creator never activates own artifact (separation of duty)
+3. **DRY knowledge** — kind-templates live in forgeplan binary, not duplicated across agents
+4. **Fallback resilience** — generic agents work for any kind when specialist unavailable
+
+---
 
 This guide implements PRD-026 / Phase 1. The reference implementation lives in `forgeplan-marketplace/plugins/agents-pro/agents/adr-architect.md` (v1.1, the POC validated in EVID-040).
 
@@ -18,11 +53,11 @@ Everyone else can skip this — agents authored against this guide just *work* w
 
 ## TL;DR — the canon in 6 lines
 
-1. **Tools whitelist is a runtime gate** — Claude Code refuses any tool not listed. Use it for defence-in-depth, not just hints.
+1. **`disallowedTools` denylist is the runtime gate** — explicitly block what must not run; everything else is inherited. (B2 canon — `tools:` allowlist broke MCP propagation, see "Why disallowedTools, not tools" section.)
 2. **Model is explicit** — `opus`/`sonnet`/`haiku`, never `inherit` for marketplace agents.
 3. **Bilingual description** — EN + RU + Triggers, parseable by orchestrator dispatch.
 4. **Body is procedural** — every MCP call mapped to a numbered step. No prose substitutes.
-5. **HARD RULES are first-class** — surface invariants that the whitelist cannot enforce (identity tagging, "always call X before Y").
+5. **HARD RULES are first-class** — surface invariants that the denylist cannot enforce (identity tagging, "always call X before Y").
 6. **Three role profiles** — artifact-creator, consumer+EVID, read-only. Pick one. Mixing leads to drift.
 
 ---
@@ -57,12 +92,9 @@ description: |                         # required, bilingual EN+RU+Triggers (see
   Triggers: "<phrase 1>", "<phrase 2>", "<фраза 3>"
 model: opus | sonnet | haiku           # required, explicit — NEVER inherit
 color: "#RRGGBB"                       # required, hex format (no named colors)
-tools:                                 # required, explicit whitelist
-  - Read
-  - Grep
-  - Glob
-  - mcp__forgeplan__forgeplan_<op>
-  - mcp__plugin_fpl-hsmem_hindsight__<op>
+disallowedTools:                       # required, denylist (B2 canon — NOT tools: allowlist)
+  - <tool-name-to-block>
+  - <tool-name-to-block>
 ---
 ```
 
@@ -75,7 +107,7 @@ tools:                                 # required, explicit whitelist
 | `description.Triggers` | comma-separated quoted phrases | enables fuzzy intent matching by orchestrator |
 | `model` | one of `opus`/`sonnet`/`haiku` | cost-aware dispatch (RFC-003 Layer 2) |
 | `color` | hex `#RRGGBB` only | UI rendering; named colors break terminals |
-| `tools` | explicit list of strings | **runtime gate** — see "Three role profiles" |
+| `disallowedTools` | explicit denylist of strings | **runtime gate** — blocks specific tools; all others inherited from parent session. See "Why disallowedTools, not tools" |
 
 ### `model` selection heuristic
 
@@ -97,27 +129,15 @@ Every forgeplan-aware agent matches **exactly one** profile. The profile dictate
 
 **Responsibility**: produces a new forgeplan artifact (`prd`/`rfc`/`adr`/`spec`/`epic`/`evidence`/`note`) and links it to parents.
 
-**Required MCP tools** (15 total = 3 standard + 9 forgeplan + 3 hindsight):
+**Frontmatter denylist** (B2 canon — blocks what Profile A must never call; all forgeplan/hindsight read-ops and write-ops are inherited from parent session):
 ```yaml
-tools:
-  - Read
-  - Grep
-  - Glob
-  - mcp__forgeplan__forgeplan_get          # read parent context
-  - mcp__forgeplan__forgeplan_new          # create artifact
-  - mcp__forgeplan__forgeplan_update       # fill body
-  - mcp__forgeplan__forgeplan_link         # connect to parent
-  - mcp__forgeplan__forgeplan_validate     # gate before release
-  - mcp__forgeplan__forgeplan_reason       # ADI cycle for option choice
-  - mcp__forgeplan__forgeplan_claim        # identity tag
-  - mcp__forgeplan__forgeplan_release      # identity tag
-  - mcp__forgeplan__forgeplan_claims       # avoid stepping on siblings
-  - mcp__plugin_fpl-hsmem_hindsight__memory_recall
-  - mcp__plugin_fpl-hsmem_hindsight__mental_model_get
-  - mcp__plugin_fpl-hsmem_hindsight__memory_retain   # optional, when capturing a non-obvious lesson
+model: opus
+color: "#673AB7"
+disallowedTools: Write, Edit, NotebookEdit, mcp__forgeplan__forgeplan_activate
 ```
 
-**Forbidden tools**: `Write`, `Edit`, `Bash` — the agent must not bypass forgeplan to drop a file directly under `.forgeplan/<kind>/`. **`forgeplan_activate` is also forbidden** for Profile A — activation is the orchestrator/guardian's responsibility after EVIDENCE is linked. Profile A creates artifacts in `draft` status only.
+- `Write, Edit, NotebookEdit` — forces Profile A to use `forgeplan_new`/`forgeplan_update` via MCP, never direct file writes to `.forgeplan/<kind>/`
+- `forgeplan_activate` — activation is orchestrator/guardian territory (LR-5 invariant); Profile A creates artifacts in `draft` status only
 
 **Default model**: `opus` — creating an artifact involves judging trade-offs.
 
@@ -125,27 +145,22 @@ tools:
 
 **Examples**: `code-reviewer`, `security-expert`, `tester`, `architect-reviewer`.
 
+**New canonical addition**: `artifact-reviewer` (Profile B generic) reviews the ARTIFACT ITSELF (schema, sections, links, freshness, R_eff trust). This is distinct from existing specialist reviewers which audit CODE (code-reviewer), SECURITY (security-expert), RFC design (architect-reviewer), TESTS (tester), or SYSTEM-WIDE (system-dev). For each lifecycle review, dispatch the right specialist — and artifact-reviewer for the artifact-level audit.
+
 **Responsibility**: reads code or an existing artifact, produces an EVIDENCE artifact with verdict / findings.
 
-**Required MCP tools** (13 total = 4 standard + 7 forgeplan + 2 hindsight):
+**Frontmatter denylist** (B2 canon — blocks what Profile B must never call; all read-ops and EVID-write-ops are inherited from parent session):
 ```yaml
-tools:
-  - Read
-  - Grep
-  - Glob
-  - Bash                                   # often needs to run tests/scanners
-  - mcp__forgeplan__forgeplan_get          # read what's being audited
-  - mcp__forgeplan__forgeplan_new          # create EVID-NNN
-  - mcp__forgeplan__forgeplan_update       # fill verdict + findings
-  - mcp__forgeplan__forgeplan_link         # informs <parent>
-  - mcp__forgeplan__forgeplan_validate
-  - mcp__forgeplan__forgeplan_claim
-  - mcp__forgeplan__forgeplan_release
-  - mcp__plugin_fpl-hsmem_hindsight__memory_recall
-  - mcp__plugin_fpl-hsmem_hindsight__mental_model_get
+model: sonnet  # or opus for security/architecture reviewers
+color: "#1976D2"
+disallowedTools: Write, Edit, NotebookEdit, mcp__forgeplan__forgeplan_activate, mcp__forgeplan__forgeplan_reason, mcp__forgeplan__forgeplan_claims, mcp__plugin_fpl-hsmem_hindsight__memory_retain
 ```
 
-**Forbidden tools**: `Write`/`Edit` on `.forgeplan/` (use MCP). Also forbidden for Profile B: `mcp__forgeplan__forgeplan_reason` (Profile B reports findings via mental reasoning, not ADI calls — that's Profile A's job), `mcp__forgeplan__forgeplan_activate` (orchestrator / guardian territory), `mcp__forgeplan__forgeplan_claims` (Profile B claims one specific artifact, no exploration needed), `mcp__plugin_fpl-hsmem_hindsight__memory_retain` (auto-hooks handle Hindsight; EVID artifact is the canonical record). `Write`/`Edit` on source files is allowed *only* for `coder`-style agents (see Profile C variant below).
+- `Write, Edit, NotebookEdit` — Profile B must not write to `.forgeplan/<kind>/` directly; EVID creation goes through MCP. Source-file writes are only allowed for `coder`-style agents (see Profile C-coder variant)
+- `forgeplan_activate` — orchestrator/guardian territory; Profile B records EVIDENCE only
+- `forgeplan_reason` — ADI contract belongs to Profile A; Profile B uses mental reasoning, not ADI cycles
+- `forgeplan_claims` — Profile B claims one specific artifact; no sibling-exploration needed
+- `memory_retain` — auto-hooks (Stop/SessionEnd) handle Hindsight; the EVID artifact is the canonical audit record
 
 **Default model**: `sonnet` for mechanical reviewers (lint-style: `code-reviewer`, `tester`), `opus` for reasoning reviewers (architecture, security: `security-expert`, `architect-reviewer`).
 
@@ -177,47 +192,86 @@ Authors may override when their domain demands different priors — document the
 
 **Responsibility**: gathers context, returns synthesis to the orchestrator. Never mutates state.
 
-**Required MCP tools**:
+**Frontmatter denylist** (B2 canon — blocks all mutation tools; read-ops and WebFetch/Search are inherited):
 ```yaml
-tools:
-  - Read
-  - Grep
-  - Glob
-  - WebFetch                               # optional, when external research is in scope
-  - WebSearch                              # optional
-  - mcp__forgeplan__forgeplan_get
-  - mcp__forgeplan__forgeplan_search       # semantic search over artifacts
-  - mcp__forgeplan__forgeplan_list
-  - mcp__plugin_fpl-hsmem_hindsight__memory_recall
-  - mcp__plugin_fpl-hsmem_hindsight__memory_reflect
-  - mcp__plugin_fpl-hsmem_hindsight__mental_model_get
-  - mcp__plugin_fpl-hsmem_hindsight__mental_model_list
+model: sonnet
+color: "#388E3C"
+disallowedTools: Write, Edit, NotebookEdit, Bash, mcp__forgeplan__forgeplan_new, mcp__forgeplan__forgeplan_update, mcp__forgeplan__forgeplan_link, mcp__forgeplan__forgeplan_validate, mcp__forgeplan__forgeplan_activate, mcp__forgeplan__forgeplan_reason, mcp__forgeplan__forgeplan_claim, mcp__forgeplan__forgeplan_release, mcp__plugin_fpl-hsmem_hindsight__memory_retain, mcp__plugin_fpl-hsmem_hindsight__memory_set_mission, mcp__plugin_fpl-hsmem_hindsight__mental_model_create, mcp__plugin_fpl-hsmem_hindsight__mental_model_update, mcp__plugin_fpl-hsmem_hindsight__mental_model_delete
 ```
 
-**Forbidden tools**: any `forgeplan_new`/`update`/`link`/`activate`/`claim`/`release`/`retain` — read-only by design. If the agent thinks it needs to write, it should hand findings to a Profile A/B agent via the orchestrator instead.
+If the agent thinks it needs to write, it should hand findings to a Profile A/B agent via the orchestrator instead.
 
 **Default model**: `sonnet` (summarisation) or `haiku` (single-keyword scan).
 
+### Profile D — Maintainer (NEW)
+
+**Purpose**: Fix existing forgeplan artifacts in-place. NOT a creator (Profile A), NOT a reviewer (Profile B), NOT read-only (Profile C). Distinct fourth profile.
+
+**Examples**: `artifact-maintainer`
+
+**Tools** — uses `disallowedTools` denylist (B2 paradigm):
+- `disallowedTools: Write, Edit, NotebookEdit, Bash, mcp__forgeplan__forgeplan_new, mcp__forgeplan__forgeplan_activate, mcp__forgeplan__forgeplan_reason, mcp__plugin_fpl-hsmem_hindsight__memory_retain` (+ other hindsight write tools)
+- **Allowed** via default inheritance: forgeplan_get, forgeplan_update, forgeplan_link, forgeplan_supersede, forgeplan_deprecate, forgeplan_validate, forgeplan_score, forgeplan_list, forgeplan_search, forgeplan_claim/release, Read/Grep/Glob, memory_recall, mental_model_get
+
+**Key constraint**: `forgeplan_new` DENIED. Profile D is "fix what exists", never "create from scratch".
+
+**Universal HARD RULES**:
+1. **Never** call `forgeplan_new` — creation is Profile A's job
+2. **Never** call `forgeplan_activate` — orchestrator/guardian territory
+3. **Never** use `Write`/`Edit` on `.forgeplan/<kind>/` — LanceDB is source of truth, not .md projections (file edits silently lose vs LanceDB)
+4. **Always** prefer kind-specialist if one exists — Profile D is fallback
+5. **Always** verify with `forgeplan_score` after `forgeplan_update` (catches silent LanceDB lag)
+6. **Never** touch artifacts >90 days old without explicit instruction (history rewrite risk)
+7. **Never** semantic rewrite — use `forgeplan_supersede` if change is fundamental
+
+**Default model**: `sonnet` — mechanical fixes don't need opus judgment.
+
+**Step count**: 7 (claim → get → recall → apply → validate → score → release).
+
 ### Profile C-coder variant — Source mutator
 
-A narrow exception: `coder`, `typescript-pro`, `golang-pro`, etc. — agents that write **source code**, not artifacts. They get:
+A narrow exception: `coder`, `typescript-pro`, `golang-pro`, etc. — agents that write **source code**, not artifacts. This profile DOES have `Write`/`Edit`/`NotebookEdit` allowed (for source files under `src/`) — only forgeplan/hindsight mutations are denied:
 
 ```yaml
-tools:
-  - Read
-  - Grep
-  - Glob
-  - Write
-  - Edit
-  - Bash
-  - mcp__forgeplan__forgeplan_get          # read RFC/spec
-  - mcp__forgeplan__forgeplan_claim        # identity tag
-  - mcp__forgeplan__forgeplan_release
-  # NO forgeplan_new/update/link — coder doesn't create artifacts.
-  # If the build produces evidence, a Profile B agent records it.
+model: sonnet
+color: "#388E3C"
+disallowedTools: mcp__forgeplan__forgeplan_new, mcp__forgeplan__forgeplan_update, mcp__forgeplan__forgeplan_link, mcp__forgeplan__forgeplan_activate, mcp__forgeplan__forgeplan_supersede, mcp__forgeplan__forgeplan_deprecate, mcp__forgeplan__forgeplan_reason, mcp__plugin_fpl-hsmem_hindsight__memory_retain, mcp__plugin_fpl-hsmem_hindsight__memory_set_mission, mcp__plugin_fpl-hsmem_hindsight__mental_model_create, mcp__plugin_fpl-hsmem_hindsight__mental_model_update, mcp__plugin_fpl-hsmem_hindsight__mental_model_delete
+# Write/Edit/Bash are NOT denied — coder writes source files.
+# forgeplan_get/claim/release are inherited from parent — coder uses these.
+# If the build produces evidence, a Profile B agent records it.
 ```
 
-**Forbidden**: `forgeplan_activate`, `forgeplan_supersede`, `forgeplan_deprecate` — coder never decides artefact lifecycle.
+**Denied**: `forgeplan_new`/`update`/`link`/`activate`/`supersede`/`deprecate`/`reason` — coder never creates artifacts or decides artifact lifecycle.
+
+---
+
+## forgeplan_generate — primary creation path (NEW)
+
+`forgeplan_generate(kind, description)` is the canonical primary path for creating artifacts. It uses the LLM provider configured in `.forgeplan/config.yaml` (Gemini Flash, OpenAI, Claude, or Ollama) to render a full body draft from natural language — leveraging forgeplan binary's per-kind template knowledge.
+
+**Why this is the default**:
+
+- **DRY** — kind-templates live in forgeplan binary; agents don't duplicate them
+- **Speed** — ~2 sec wall-clock for full draft (vs ~30-60 sec for agent manual fill)
+- **Cost** — ~$0.005-0.01 per artifact (Gemini Flash) vs ~$0.10-0.50 (Claude in subagent)
+- **Quality** — Gemini Flash produces structured drafts that match schema MUST sections; agent refines
+
+**When to use**:
+
+- Creating standard artifacts (PRD, RFC, ADR, EPIC, SPEC, PROBLEM, SOLUTION, EVIDENCE)
+- Bulk creation across kinds
+- When kind-specialist doesn't exist (e.g., PROBLEM, SOLUTION, REFRESH have no dedicated agent)
+
+**When to fall back to `forgeplan_new` + manual fill**:
+
+- LLM provider unavailable (rate limit, auth fail, network down)
+- `forgeplan_generate` doesn't support the kind (NOTE, REFRESH)
+- Generated body fails `forgeplan_validate` MUST rules
+- User requires hand-crafted structure (rare)
+
+`artifact-author` agent implements the 2-path strategy automatically. Specialists (adr-architect, specification, etc.) should also adopt Step 5 forgeplan_generate as primary, with Step 6 manual refinement only when needed.
+
+**Real example (PRD-026 dogfooding)**: PROB-001 generated via forgeplan_generate in 2 seconds with Signal/Context/Impact/Anti-Goodhart/Action Plan sections — quality sufficient as starting draft, no manual fill needed.
 
 ---
 
@@ -328,17 +382,17 @@ Why: the activity log uses this for attribution. Anonymous claims are rejected b
 
 ---
 
-## Lessons from the POC (EVID-040)
+## Lessons from the POC (EVID-040) and B2 shift (EVID-050)
 
 The reference implementation taught us:
 
-1. **Tools whitelist is the strongest runtime gate.** Removing `Write`/`Edit` from an artifact-creator is a one-line change that physically prevents bypass.
-2. **Identity tagging belongs in the body** — the whitelist allows `forgeplan_claim` but cannot enforce that `agent=` is set. HARD RULES rule 3 must reject anonymous claims.
+1. **`disallowedTools` denylist is the correct runtime gate** (B2 canon, EVID-050). The original `tools:` allowlist physically broke MCP propagation (Anthropic #53865) — wildcards silently stripped entire MCP servers. Denylisting what must not run, while inheriting everything else, restores working MCP without brittle enumeration.
+2. **Identity tagging belongs in the body** — `forgeplan_claim` is inherited from parent session but cannot auto-enforce that `agent=` is set. HARD RULES rule 3 must reject anonymous claims.
 3. **`forgeplan_reason` must be gated as mandatory** for Profile A agents. Without an explicit "must call before choosing" rule, agents skip the ADI cycle when they "already know the answer".
-4. **MCP tool count for Profile A: 13 (10 forgeplan + 3 hindsight)** — minimum viable surface. Profile B drops `forgeplan_activate`/`reason`. Profile C uses `search`/`list`/`recall` instead of `new`/`update`.
+4. **Profile surface sizes stay conceptually the same** — Profile A needs forgeplan write-ops + hindsight recall; Profile B drops `activate`/`reason`; Profile C uses `search`/`list`/`recall` only. The difference is now expressed as a denylist rather than an allowlist.
 5. **Bash is rarely needed**. Read/Grep/Glob cover most cross-reference work. Skip Bash unless the agent runs tests or scanners (Profile B).
 6. **Templates inline, not in skills.** A MADR 3.0 template lives in the `adr-architect` body, not in a separate skill — keeps the agent self-contained.
-7. **`forgeplan_claims` in the whitelist** even when the procedure doesn't reach for it. It lets the agent self-check before claiming, avoiding collision with a sibling.
+7. **`forgeplan_claims` exploration is Profile A only.** Profile B claims one specific artifact — no sibling-exploration needed. Deny it in Profile B denylist.
 
 ---
 
@@ -366,20 +420,42 @@ START: what does the agent produce?
 
 ---
 
+## Why disallowedTools, not tools (canon decision)
+
+**Background**: The natural intuition is to use `tools:` allowlist for runtime security — explicitly enumerate what the agent CAN call. This is what we tried first.
+
+**What broke**: Anthropic Claude Code v2.1.143 has open issue #53865 — subagent `tools:` field requires exact tool-name match. Wildcards (`mcp__forgeplan__*`) parse as "⚠ Unrecognized" and silently filter out the ENTIRE MCP server. Even explicit enumeration was unreliable because Task-dispatched subagents inherit MCP from parent by default, but `tools:` strips this inheritance the moment it's specified.
+
+**Live evidence**: PRD-026 SC-8 smoke (EVID-049 / EVID-050):
+- Pre-B2: subagent dispatch yielded 0/9 successful MCP calls (canon discipline forced refusal, no Write/Edit fallback — early detection of upstream blocker)
+- Post-B2: subagent dispatch successfully called `mcp__forgeplan__forgeplan_claim` AND `mcp__plugin_fpl-hsmem_hindsight__memory_status` (EVID-050 verdict: B2 FIX WORKS)
+
+**Trade-off accepted**:
+- **Lost**: explicit positive-allow runtime gate (was already broken by #53865 anyway)
+- **Kept**: body Hard Rules + PreToolUse hooks + server-side identity-tag enforcement
+- **Gained**: actual working MCP propagation for canonical agents
+
+When Anthropic fixes #53865, we can re-evaluate adding `tools:` enumeration for tighter scoping — but only as additive layer atop `disallowedTools:`, not replacement.
+
+---
+
 ## Validation
 
 Before submitting a PR with a new or migrated agent:
 
 ```bash
-# 1. Frontmatter parses + schema-conformant
+# 1. Frontmatter parses + schema-conformant (B2 canon: disallowedTools, not tools)
 python3 -c "
 import re, yaml, sys
 text = open('plugins/<pack>/agents/<name>.md').read()
 fm = yaml.safe_load(re.match(r'^---\n(.*?)\n---', text, re.S).group(1))
-for k in ['name','description','model','color','tools']:
+for k in ['name','description','model','color','disallowedTools']:
     assert k in fm, f'missing {k}'
 assert fm['model'] in ('opus','sonnet','haiku'), f'bad model {fm[\"model\"]}'
-assert isinstance(fm['tools'], list) and len(fm['tools']) >= 3
+# disallowedTools may be a list OR a comma-separated string
+dt = fm['disallowedTools']
+assert isinstance(dt, (list, str)) and dt, 'disallowedTools must be non-empty'
+assert 'tools' not in fm, 'tools: allowlist found — migrate to disallowedTools: denylist (B2 canon)'
 assert all(s in fm['description'] for s in ('EN:','RU:','Triggers:'))
 print('PASS')
 "
@@ -419,20 +495,7 @@ description: |
   Triggers: "review this PR", "code review", "ревью кода"
 model: sonnet
 color: "#E53935"
-tools:
-  - Read
-  - Grep
-  - Glob
-  - Bash
-  - mcp__forgeplan__forgeplan_get
-  - mcp__forgeplan__forgeplan_new
-  - mcp__forgeplan__forgeplan_update
-  - mcp__forgeplan__forgeplan_link
-  - mcp__forgeplan__forgeplan_validate
-  - mcp__forgeplan__forgeplan_claim
-  - mcp__forgeplan__forgeplan_release
-  - mcp__plugin_fpl-hsmem_hindsight__memory_recall
-  - mcp__plugin_fpl-hsmem_hindsight__mental_model_get
+disallowedTools: Write, Edit, NotebookEdit, mcp__forgeplan__forgeplan_activate, mcp__forgeplan__forgeplan_reason, mcp__forgeplan__forgeplan_claims, mcp__plugin_fpl-hsmem_hindsight__memory_retain
 ---
 ```
 
@@ -449,19 +512,7 @@ description: |
   Triggers: "research", "compare alternatives", "найди prior art"
 model: sonnet
 color: "#1E88E5"
-tools:
-  - Read
-  - Grep
-  - Glob
-  - WebFetch
-  - WebSearch
-  - mcp__forgeplan__forgeplan_get
-  - mcp__forgeplan__forgeplan_search
-  - mcp__forgeplan__forgeplan_list
-  - mcp__plugin_fpl-hsmem_hindsight__memory_recall
-  - mcp__plugin_fpl-hsmem_hindsight__memory_reflect
-  - mcp__plugin_fpl-hsmem_hindsight__mental_model_get
-  - mcp__plugin_fpl-hsmem_hindsight__mental_model_list
+disallowedTools: Write, Edit, NotebookEdit, Bash, mcp__forgeplan__forgeplan_new, mcp__forgeplan__forgeplan_update, mcp__forgeplan__forgeplan_link, mcp__forgeplan__forgeplan_validate, mcp__forgeplan__forgeplan_activate, mcp__forgeplan__forgeplan_reason, mcp__forgeplan__forgeplan_claim, mcp__forgeplan__forgeplan_release, mcp__plugin_fpl-hsmem_hindsight__memory_retain, mcp__plugin_fpl-hsmem_hindsight__memory_set_mission, mcp__plugin_fpl-hsmem_hindsight__mental_model_create, mcp__plugin_fpl-hsmem_hindsight__mental_model_update, mcp__plugin_fpl-hsmem_hindsight__mental_model_delete
 ---
 ```
 
@@ -477,7 +528,7 @@ When migrating an existing agent from generic v1.0 to canonical v2.0:
 - [ ] Replace `model: inherit` with explicit `opus`/`sonnet`/`haiku`
 - [ ] Replace `description: <single line>` with bilingual EN+RU+Triggers
 - [ ] Replace `color: red` (named) with hex `#RRGGBB`
-- [ ] Replace generic `tools: [Read, Write, Edit, Bash, Glob, Grep]` with the profile-specific whitelist
+- [ ] Replace `tools:` allowlist (v1.0 / B1 paradigm) with `disallowedTools:` denylist using the profile-specific blocked set (B2 canon)
 - [ ] Rewrite body around the **9-step MCP usage pattern** (Profile A) or **6-step EVID pattern** (Profile B) or **synthesis pattern** (Profile C)
 - [ ] Add **Identity & audit** section near the top
 - [ ] Add **HARD RULES** section with the 3–7 invariants the whitelist cannot enforce
@@ -541,6 +592,8 @@ Three situations justify deviating from this guide:
 2. **Orchestrator-internal helper.** Agents called only by a single skill (never by the user, never by `/forge-cycle`) can skip identity tagging if the skill provides its own audit.
 3. **Experimental research agent.** Mark with `keywords: ["experimental"]` in plugin.json and skip the lint rule. Move to canon before promoting to the marketplace.
 
+**Profile D note**: Profile D (artifact-maintainer) is a NEW profile introduced in this guide revision. It's distinct from A/B/C and addresses metadata maintenance — a gap discovered during PRD-026 implementation when 5 of 10 subagents falsely reported success on EVID body edits (they wrote .md projection files instead of LanceDB because their profile lacked forgeplan_update). Profile D's identity is "fix what exists in-place".
+
 Anything else — follow the canon. Drift compounds, and "we'll fix it later" rarely happens.
 
 ---
@@ -549,6 +602,8 @@ Anything else — follow the canon. Drift compounds, and "we'll fix it later" ra
 
 - **PRD-026** — Forgeplan-aware agent layer (canonical pattern + project config + fpl-init v2.0)
 - **EVID-040** — POC migration audit (adr-architect v1.0 → v1.1)
+- **EVID-049** — SC-8 smoke pre-B2 (0/9 MCP calls — upstream blocker detected)
+- **EVID-050** — SC-8 smoke post-B2 (B2 FIX WORKS — `disallowedTools` restores MCP propagation, 2026-05-18)
 - **MASTER-REFERENCE.md** — 7-layer architecture context, project root
 - **NOTE-006** — Agent layer integration research synthesis
 - **RFC-003** — Multi-agent multi-CLI architecture (Layer 2 Agent Pack Dispatch)
