@@ -1,6 +1,6 @@
 ---
 name: restore
-description: Restores working session context — collects fresh info on the current branch, recent commits, uncommitted changes, stashes, and (if available) decisions from a memory system. Use at the start of a new session or after a long break, when you need to recall "where we left off". Triggers (EN/RU) — "restore context", "where did I stop", "что я делал", "восстанови контекст", "напомни на чём я остановился", "session start", "/recall".
+description: Restores working session context — collects fresh info on the current branch, recent commits, uncommitted changes, stashes, and (if available) decisions from a memory system. When forgeplan is reachable, probes **MCP-first** (`mcp__forgeplan__forgeplan_health` + `forgeplan_list` + `forgeplan_blocked`) with CLI fallback when MCP is not connected. Use at the start of a new session or after a long break, when you need to recall "where we left off". Triggers (EN/RU) — "restore context", "where did I stop", "что я делал", "восстанови контекст", "напомни на чём я остановился", "session start", "/recall".
 ---
 
 # Restore Context
@@ -182,19 +182,38 @@ End with 2–4 recommendations grounded in what you found:
 
 ## Forgeplan integration
 
-If the `forgeplan` CLI is on `$PATH`, add a **forgeplan health probe** to the parallel recall block — it surfaces context that `git status + git log` cannot.
+If forgeplan is reachable, add a **health probe** to the parallel recall block — it surfaces context that `git status + git log` cannot. Hybrid MCP/CLI dispatch per PRD-022.
 
-### Add to step 1 (parallel collection)
+### Probe MCP availability (one call)
+
+```python
+have_mcp = "mcp__forgeplan__forgeplan_health" in available_tools
+```
+
+### Add to step 1 (parallel collection) — MCP-first (`have_mcp = True`)
+
+```python
+# All read-only — fire in parallel
+health   = mcp__forgeplan__forgeplan_health()                    # active artifacts, blind spots, stubs, stale
+active   = mcp__forgeplan__forgeplan_list(status="active")       # currently in flight
+blocked  = mcp__forgeplan__forgeplan_blocked()                   # waiting on dependencies
+```
+
+### CLI fallback (`have_mcp = False`, `forgeplan` on `$PATH`)
 
 ```bash
 forgeplan health           # active artifacts, blind spots, stubs, stale items
-forgeplan list --status active --limit 5   # what's currently in flight
-forgeplan blocked          # artifacts waiting on dependencies (if relevant)
+forgeplan list --status active   # what's currently in flight
+forgeplan blocked          # artifacts waiting on dependencies
 ```
+
+### No-forgeplan environment
+
+Skip this block entirely. Continue with git snapshot + memory (1a/1b) only. Don't synthesize forgeplan state.
 
 This complements the git snapshot:
 - `git log` tells you **what changed**.
-- `forgeplan health` tells you **what was decided** and **what's missing evidence**.
+- forgeplan health tells you **what was decided** and **what's missing evidence**.
 
 ### When `forgeplan health` reports issues during restore
 

@@ -1,6 +1,6 @@
 ---
 name: briefing
-description: Morning briefing on tasks and messages — collects overdue, due today, @mentions, unread chats, and project stats from any available task tracker (Orchestra MCP, Linear MCP, Jira MCP, GitHub Issues) or from local TODO files. Use at the start of the workday or when the user asks "what's on my plate", "morning standup", or similar. Triggers (EN/RU) — "daily briefing", "what's on my plate", "morning standup", "что у меня сегодня", "что висит", "брифинг", "standup", "/briefing".
+description: Morning briefing on tasks and messages — collects overdue, due today, @mentions, unread chats, and project stats from any available task tracker (Orchestra MCP, Linear MCP, Jira MCP, GitHub Issues) or from local TODO files. When forgeplan is reachable, augments with **MCP-first** artifact signals (`mcp__forgeplan__forgeplan_list` + `forgeplan_blocked` + `forgeplan_stale` + `forgeplan_blindspots`) with CLI fallback when MCP is not connected. Use at the start of the workday or when the user asks "what's on my plate", "morning standup", or similar. Triggers (EN/RU) — "daily briefing", "what's on my plate", "morning standup", "что у меня сегодня", "что висит", "брифинг", "standup", "/briefing".
 ---
 
 # Daily Briefing
@@ -214,18 +214,36 @@ Everything, including starred / reminders / saved. Default mode is compact and s
 
 ## Forgeplan integration
 
-If the `forgeplan` CLI is on `$PATH`, daily briefings benefit from forgeplan-side signals beyond the tracker.
+If forgeplan is reachable, daily briefings benefit from forgeplan-side signals beyond the tracker. Hybrid MCP/CLI dispatch per PRD-022.
 
-### Add to the daily briefing
+### Probe MCP availability (one call)
 
-Beyond the tracker (Orchestra/GitHub Issues/Linear/Jira/local TODO), include:
+```python
+have_mcp = "mcp__forgeplan__forgeplan_list" in available_tools
+```
+
+### Add to the daily briefing — MCP-first (`have_mcp = True`)
+
+```python
+# All read-only — fire in parallel
+active     = mcp__forgeplan__forgeplan_list(status="active")
+blocked    = mcp__forgeplan__forgeplan_blocked()
+stale      = mcp__forgeplan__forgeplan_stale()
+blindspots = mcp__forgeplan__forgeplan_blindspots()
+```
+
+### CLI fallback (`have_mcp = False`, `forgeplan` on `$PATH`)
 
 ```bash
-forgeplan list --status active --limit 5    # what's currently in flight
-forgeplan blocked                            # artifacts waiting on dependencies
-forgeplan stale                              # past valid_until — need renew/deprecate
-forgeplan blindspots                         # active artifacts with no evidence
+forgeplan list --status active    # what's currently in flight
+forgeplan blocked                  # artifacts waiting on dependencies
+forgeplan stale                    # past valid_until — need renew/deprecate
+forgeplan blindspots               # active artifacts with no evidence
 ```
+
+### No-forgeplan environment
+
+Skip this block entirely. Briefing relies on tracker signals only.
 
 ### Why these belong in a briefing
 

@@ -1,6 +1,6 @@
 ---
 name: rfc
-description: Creates, reads, and updates RFCs (Request for Comments) / design docs — structured documents for architectural decisions. Knows the canonical structure (Meta header, Phase Progress, Implementation TODO, ADR), the rules for updating progress bars, and the checkbox format. Use when proposing a new technical solution, documenting architecture, or updating progress on an existing RFC after a sprint/wave. Triggers (EN/RU) — "write RFC", "create design doc", "update RFC progress", "draft proposal", "ADR", "напиши RFC", "сделай design doc", "обнови прогресс RFC", "создай предложение", "архитектурное решение".
+description: Creates, reads, and updates RFCs (Request for Comments) / design docs — structured documents for architectural decisions via **MCP-first** path (`mcp__forgeplan__forgeplan_new` + `forgeplan_update` + `forgeplan_link` + `forgeplan_validate`) with CLI fallback when MCP is not connected, or plain markdown when neither is available. Knows the canonical structure (Meta header, Phase Progress, Implementation TODO, ADR), the rules for updating progress bars, and the checkbox format. Use when proposing a new technical solution, documenting architecture, or updating progress on an existing RFC after a sprint/wave. Triggers (EN/RU) — "write RFC", "create design doc", "update RFC progress", "draft proposal", "ADR", "напиши RFC", "сделай design doc", "обнови прогресс RFC", "создай предложение", "архитектурное решение".
 ---
 
 # RFC Document
@@ -274,34 +274,70 @@ If `RFC-INDEX.md` exists:
 
 ## Forgeplan integration
 
-If the `forgeplan` CLI is on `$PATH`, prefer `forgeplan` over plain markdown for RFC/ADR creation — the CLI gives you state machine, validation, R_eff scoring, and semantic search out of the box.
+This skill is **forgeplan-aware** with hybrid MCP/CLI dispatch per PRD-022. RFC/ADR creation goes through the artifact graph — you get state machine, validation, R_eff scoring, and semantic search.
 
-### Forgeplan-aware mode (recommended)
+### Probe MCP availability (one call)
+
+```python
+# True if the forgeplan MCP server is wired in this session
+have_mcp = "mcp__forgeplan__forgeplan_new" in available_tools
+```
+
+If `have_mcp` is unclear, attempt `mcp__forgeplan__forgeplan_health()`. Connection error → `have_mcp = False`, fall through to the CLI block.
+
+### MCP-first flow (`have_mcp = True`)
+
+```python
+# Create
+rfc = mcp__forgeplan__forgeplan_new(kind="rfc", title="<title>")
+adr = mcp__forgeplan__forgeplan_new(kind="adr", title="<title>")
+
+# Fill body
+mcp__forgeplan__forgeplan_update(id=rfc["id"], body="<full markdown body>")
+
+# Confirm MUST sections present
+mcp__forgeplan__forgeplan_validate(id=rfc["id"])
+
+# Wire to parent
+mcp__forgeplan__forgeplan_link(source=rfc["id"], target=PRD_ID, relation="based_on")
+
+# Read
+body = mcp__forgeplan__forgeplan_get(id=rfc["id"])           # canonical body
+all_rfcs = mcp__forgeplan__forgeplan_list(kind="rfc")
+
+# Lifecycle
+mcp__forgeplan__forgeplan_activate(id=rfc["id"])
+mcp__forgeplan__forgeplan_supersede(id=OLD_RFC, by=NEW_RFC)
+mcp__forgeplan__forgeplan_deprecate(id=ADR_ID, reason="...")
+```
+
+The MCP response carries `_next_action` hints — relay them to the user verbatim.
+
+### CLI fallback (`have_mcp = False`, `forgeplan` on `$PATH`)
 
 ```bash
 # Create
-forgeplan new rfc "<title>"        # → RFC-NNN with template (Status, Phases, Alternatives, Decision)
-forgeplan new adr "<title>"        # → ADR-NNN with template (Context, Decision, Consequences, Valid Until)
-forgeplan validate RFC-NNN         # check MUST sections
-forgeplan link RFC-NNN PRD-MMM --relation based_on   # wire to parent PRD
+forgeplan new rfc "<title>"        # → RFC-NNN
+forgeplan new adr "<title>"        # → ADR-NNN
+forgeplan validate RFC-NNN
+forgeplan link RFC-NNN PRD-MMM --relation based_on
 
 # Read
-forgeplan get RFC-NNN              # canonical body (vs reading file directly)
-forgeplan list --kind rfc          # all RFCs
+forgeplan get RFC-NNN
+forgeplan list --kind rfc
 
-# Update
-forgeplan update RFC-NNN body=<full new body>   # idempotent; keeps LanceDB in sync
-# (Direct Edit/Write on .forgeplan/rfcs/*.md desyncs the index — use update)
+# Update (idempotent; keeps LanceDB in sync — never Edit/Write the file directly)
+forgeplan update RFC-NNN body="<full new body>"
 
 # Lifecycle
 forgeplan activate RFC-NNN
-forgeplan supersede RFC-NNN --by RFC-MMM        # when a successor lands
-forgeplan deprecate ADR-NNN --reason "..."      # decision no longer applies
+forgeplan supersede RFC-NNN --by RFC-MMM
+forgeplan deprecate ADR-NNN --reason "..."
 ```
 
-### Plain-markdown mode (fallback)
+### Plain-markdown mode (no MCP, no CLI)
 
-If `forgeplan` CLI is missing, this skill falls back to plain markdown — write `docs/rfcs/RFC-NNN-...md` per project conventions. You lose the validation/scoring/search benefits.
+If neither MCP nor `forgeplan` CLI is reachable, fall back to plain markdown — write `docs/rfcs/RFC-NNN-...md` per project conventions. You lose validation/scoring/search benefits. Tell the user explicitly: `Tool path: markdown fallback (no forgeplan)`.
 
 ### Want this orchestrated for you?
 

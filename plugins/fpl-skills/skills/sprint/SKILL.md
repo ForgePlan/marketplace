@@ -1,6 +1,6 @@
 ---
 name: sprint
-description: Wave-based execution of a feature/task by a multi-agent team — research → wave plan (5-8 agents in 2-5 waves) → approval → wave-by-wave teammate spawn via TeamCreate. Two modes — full sprint (with research phase) and lightweight wave (uses current chat context). Each wave is independent parallel work by agents under strict file ownership; dependent tasks go in the next wave. Use for large feature implementation, refactor sprints, milestones. Triggers (EN/RU) — "sprint", "wave plan", "implement feature in waves", "запусти спринт", "распланируй волны", "реализуй фичу", "implement RFC-XXX", "/sprint", "/wave".
+description: Wave-based execution of a feature/task by a multi-agent team — research → wave plan (5-8 agents in 2-5 waves) → approval → wave-by-wave teammate spawn via TeamCreate. Two modes — full sprint (with research phase) and lightweight wave (uses current chat context). Each wave is independent parallel work by agents under strict file ownership; dependent tasks go in the next wave. At every wave-close, **automatically emits one EvidencePack per touched artifact via forgeplan MCP** (`mcp__forgeplan__forgeplan_new` + `forgeplan_update` + `forgeplan_link`) — no opt-in. At sprint-close, prompts the user to bulk-activate the collected EVIDs. Soft CLI fallback if MCP unavailable; warns instead of silent-skip if a sprint closes with zero EVIDs. Use for large feature implementation, refactor sprints, milestones. Triggers (EN/RU) — "sprint", "wave plan", "implement feature in waves", "запусти спринт", "распланируй волны", "реализуй фичу", "implement RFC-XXX", "/sprint", "/wave".
 ---
 
 # Wave-Based Sprint Execution
@@ -422,55 +422,118 @@ For each Wave (sequential):
 After ALL waves:
 1. Final verification (typecheck/build/tests).
 2. INSIGHTS EXTRACTION (mandatory — see Step 6).
-3. Summary report.
-4. Shutdown teammates.
-5. Signal completion.
+3. SPRINT-CLOSE EVID BULK ACTIVATION (mandatory — see Step 7).
+4. Summary report.
+5. Shutdown teammates.
+6. Signal completion.
 ```
 
-### 4b-bis. Per-artifact evidence emission (UNCONDITIONAL — PRD-020, MCP-first PRD-021)
+### 4b-bis. Wave-close evidence autopublish (MANDATORY — PRD-077 FR-012)
 
-Team-lead emits **one evidence per completed artifact** at wave-close — not per teammate, not per wave. Same pattern for both modes; only the linked artifact differs.
+> **This step is not optional.** Team-lead MUST execute it after every wave that
+> reports back. Skipping it = sprint methodology failure → `forgeplan health`
+> stays blind and `forgeplan score` underweights the work.
 
-**MCP-first path** (when `mcp__forgeplan__forgeplan_new` is available):
+After all teammates in wave `N` report back, team-lead runs the **autopublish
+algorithm** before announcing "wave complete" to the user:
 
-```python
-# Artifact-driven (real PRD-NNN/RFC-NNN/SPEC-NNN in plan):
-evid = mcp__forgeplan__forgeplan_new(
-    kind="evidence",
-    title=f"{artifact_id}: {what_shipped} — {tests_smoke_status}"
-)
-mcp__forgeplan__forgeplan_link(
-    source=evid["id"],
-    target=artifact_id,
-    relation="informs"
-)
-# Relay evid["_next_action"] to your final report
+#### Algorithm
 
-# Chat-driven (using SESSION_ID from §4a-bis):
-evid = mcp__forgeplan__forgeplan_new(
-    kind="evidence",
-    title=f"{SESSION_ID}: {sprint_description} — {what_shipped}"
-)
-# No link needed — SESSION-IDs are ephemeral
+```
+1. enumerate touched_artifacts (set):
+   - any PRD-NNN / RFC-NNN / SPEC-NNN / ADR-NNN / EPIC-NNN ID mentioned in:
+       a) teammate prompts (the {ARTIFACT_ID} they claimed)
+       b) commit Refs: trailers landed during this wave
+       c) the wave-plan's File Ownership / Effort tables
+   - dedupe (one EVID per artifact, even if 2-3 teammates worked on it)
+
+2. if touched_artifacts is empty:
+   - this is a chat-driven wave with no artifact attribution
+   - emit ONE session-level EVID linked to the SESSION_ID (§4a-bis), title:
+     "{SESSION_ID}: wave N — {1-line work summary}"
+   - skip the per-artifact link step; SESSION_IDs are ephemeral
+   - continue to step 5
+
+3. for each artifact_id in touched_artifacts:
+   a) build EVID title:  "{sprint_name}: wave N — {work summary for this artifact}"
+   b) build EVID body (see §4b-ter for the required structured fields)
+   c) MCP-first:  evid = mcp__forgeplan__forgeplan_new(kind="evidence", title=...)
+                  mcp__forgeplan__forgeplan_update(id=evid["id"], body=...)
+                  mcp__forgeplan__forgeplan_link(source=evid["id"], target=artifact_id, relation="informs")
+                  relay evid["_next_action"] into the wave-close report
+   d) Shell fallback (MCP unavailable, see step 6):
+                  forgeplan new evidence "{title}"   # capture EVID-MMM from output
+                  $EDITOR .forgeplan/evidence/EVID-MMM-*.md   # fill ## Structured Fields
+                  forgeplan link EVID-MMM {artifact_id} --relation informs
+
+4. record (evid_id, target_artifact_id, wave_n) in the sprint's collected_evids
+   list — used by §7 sprint-close batch prompt.
+
+5. announce in the wave-close handoff (see §4d):
+   "Wave N evidence: {len(collected_evids_this_wave)} EVID(s) emitted —
+    {EVID-AAA → PRD-XXX, EVID-BBB → RFC-YYY, …}"
+
+6. if MCP tools unavailable AND CLI fallback also fails (no forgeplan binary on PATH):
+   - DO NOT silently skip
+   - WARN explicitly: "MCP+CLI both unavailable — N evidence captures
+     deferred. Copy-paste these commands manually after the sprint:
+     <print the would-have-been shell commands>"
+   - still record placeholder entries in collected_evids so §7 surfaces them
 ```
 
-**Shell fallback** (MCP tools absent):
+#### Why per-artifact, not per-teammate or per-wave
 
-```bash
-# Artifact-driven:
-forgeplan new evidence "{artifact-id}: {what shipped} — {tests/smoke status}"
-forgeplan link EVID-MMM {artifact-id} --relation informs
+- A single artifact may be built by 2-3 teammates across waves (Wave 1 scaffolding + Wave 2 integration). Evidence describes the *artifact's* state, not whose hands.
+- One wave may touch 0, 1, or many artifacts — the algorithm handles all three.
+- One artifact may accumulate multiple EVIDs across waves (Wave 1 EVID for "scaffolded", Wave 2 EVID for "integration done"). These are linked separately and bulk-activated together in §7.
 
-# Chat-driven:
-forgeplan new evidence "{SESSION_ID}: {sprint description} — {what shipped}"
-# Optionally link to a NOTE for persistent reference:
-#   forgeplan new note "Sprint outcome: {description}"
-#   forgeplan link EVID-MMM NOTE-NNN --relation informs
+#### Do NOT auto-activate at this step
+
+Wave-close emits **draft** EVIDs. Activation is batched at sprint close (§7) so
+the user reviews all evidence at once instead of being interrupted N times.
+
+### 4b-ter. EvidencePack body — required structured fields
+
+> **Critical for R_eff.** Without these fields the parser sets `CL0`
+> (penalty 0.9) and the artifact's score collapses to 0.1. The autopublish
+> writes them automatically; if you customize the body, do not strip them.
+
+After `forgeplan_new` returns the EVID ID, immediately call `forgeplan_update`
+(or edit the file in CLI fallback) with a body matching this template:
+
+```markdown
+## Structured Fields
+
+verdict: supports
+congruence_level: 3
+evidence_type: measurement
+
+## Wave summary
+
+- Sprint: {sprint_name}
+- Wave: {N} of {total}
+- Workers spawned: {kebab-name-1}, {kebab-name-2}, ...
+- Commits: {short-sha-1}, {short-sha-2}, ...   # only this wave's commits
+- Files changed: {count} ({list — truncate to top 5 + "+ N more"})
+- Tests added: {count} ({pass/fail summary})
+- Pipeline gates: fmt ✓, check ✓, test ✓, clippy ✓   # whichever ran
+- Merge commit: {sha if integration branch already merged, else "pending"}
+
+## Acceptance criteria validation
+
+{paste the acceptance criteria for this artifact and tick ✓/✗ each one}
 ```
 
-Why per-artifact and not per-teammate: a single artifact may be built by 2-3 teammates across waves (Wave 1: scaffolding + Wave 2: integration). Evidence describes the *artifact's* state, not who pushed which line.
+**Defaults rationale**: sprint work is the *implementation* of acceptance
+criteria from the parent PRD/RFC. That maps to `evidence_type: measurement`
+(quantitative check against criteria). `verdict: supports` is the default
+because sprint completion implies the design hypothesis held; flip to
+`weakens` only if the wave produced contrary findings (rare — usually those
+go into a separate EVID via `/audit`).
 
-Why unconditional (vs v1.6.0 conditional): PRD-020 closed the gap where chat-driven sprints emitted no evidence at all. Now every sprint produces ≥1 evidence in the artifact graph, making `forgeplan activity` and `forgeplan health` reflect actual project work even when scope started without explicit artifact IDs.
+`congruence_level: 3` (CL3, same-context) is the default because the EVID
+captures the exact artifact it informs. Lower only if cross-artifact
+inferences were involved.
 
 ### 4c. Dynamic teammates
 
@@ -540,6 +603,104 @@ Emit the **Sprint Complete** report — format in [`references/OUTPUT-FORMATS.md
 
 ---
 
+## Step 7: Sprint-close — bulk EVID activation prompt (MANDATORY — PRD-077 FR-012)
+
+After Step 6 (Insights Extraction) and before signalling "sprint complete",
+team-lead consolidates the EVIDs collected in §4b-bis across every wave and
+hands control to the user for activation.
+
+### 7a. Summary print
+
+```markdown
+## Sprint evidence summary
+
+Sprint "{sprint_name}" emitted **{N} EVID(s)** across **{M} artifact(s)**
+in **{W} wave(s)**.
+
+| EVID | Target artifact | Wave | Verdict | Status |
+|---|---|---|---|---|
+| EVID-AAA | PRD-XXX | 1 | supports | draft |
+| EVID-BBB | RFC-YYY | 1 | supports | draft |
+| EVID-CCC | PRD-XXX | 2 | supports | draft |
+| EVID-DDD | SESSION-2026-…  | 3 | supports | draft |   # chat-driven, no link
+```
+
+If `M == 0` (no artifacts touched, no SESSION-level EVID emitted either),
+this is a **methodology failure** — see §7c below.
+
+### 7b. Activation prompt
+
+```
+{N} EVID(s) created during this sprint. Activate them now?
+
+Options:
+1. ✅ Activate ALL ({N}) — bulk forgeplan_activate
+2. 🔧 Review one-by-one (walk through, activate selectively)
+3. ⏸️ Defer — keep as draft, activate manually later
+4. ❌ Discard — drop EVIDs without activation (rare; explain why)
+```
+
+**Wait for explicit user response.** Do not auto-activate.
+
+When user picks (1):
+
+```python
+# MCP-first:
+for evid_id in collected_evids:
+    mcp__forgeplan__forgeplan_activate(id=evid_id)
+# relay each _next_action; abort batch on first failure
+
+# Shell fallback:
+for evid_id in collected_evids:
+    forgeplan activate $evid_id
+```
+
+When user picks (2): print each EVID title + target + structured fields →
+`forgeplan_activate` per yes.
+
+When user picks (3) or (4): record the choice in the sprint final report so
+later sessions know these EVIDs exist as drafts.
+
+### 7c. Zero-EVID warning (methodology failure)
+
+If the sprint closes with **zero** EVIDs emitted (touched_artifacts was empty
+on every wave AND no SESSION-level EVID landed):
+
+```
+⚠️  Sprint closed without evidence.
+
+This is a methodology gap: the artifact graph has no record of the {W} waves
+of work just completed. `forgeplan health` will report a blind spot.
+
+Suggested remediation — emit a session-level EVID retroactively:
+
+  forgeplan new evidence "{sprint_name}: {1-line summary}"
+  # → captures EVID-MMM, edit body to add Structured Fields:
+  #     verdict: supports
+  #     congruence_level: 3
+  #     evidence_type: measurement
+  # optionally link to a Note:
+  forgeplan new note "Sprint outcome: {description}"
+  forgeplan link EVID-MMM NOTE-NNN --relation informs
+
+Run these before merging the release branch.
+```
+
+### 7d. Non-interactive (`/autorun`) considerations
+
+When `/sprint` is invoked from `/autorun` or another non-interactive
+orchestrator that cannot prompt the user, behaviour:
+
+- §7b prompt is skipped; collected EVIDs are left as **draft**
+- the sprint final report lists all collected EVIDs and emits a single
+  line: `Bulk-activate when ready:  forgeplan activate EVID-AAA EVID-BBB ...`
+- §7c zero-EVID warning still fires (it's a print, not a prompt)
+- callers can pass `auto_activate=true` (orchestrator convention) to skip
+  the prompt and execute option (1) directly — only enable this when the
+  orchestrator has already gated user approval upstream
+
+---
+
 ## Wave Patterns Quick Reference
 
 | Type | Pattern | Waves | Agents |
@@ -568,6 +729,9 @@ Emit the **Sprint Complete** report — format in [`references/OUTPUT-FORMATS.md
 | Ignoring token budget | Mid-sprint overflow | Check before every wave |
 | Duplicating CLAUDE.md rules | Wasted tokens | "Follow CLAUDE.md" + 3-4 specifics |
 | Skip insights extraction | Knowledge is lost | INSIGHTS — mandatory |
+| ⛔ Skip wave-close evidence autopublish | Artifact graph stays blind, R_eff underweights work | §4b-bis is MANDATORY — one EVID per touched artifact per wave |
+| ⛔ Auto-activate EVIDs without user prompt | Bypasses user review of generated evidence | §7b ALWAYS prompts (unless `auto_activate=true` from gated orchestrator) |
+| Silent skip when MCP+CLI both unavailable | User never learns evidence wasn't captured | WARN explicitly with copy-paste fallback commands |
 
 ---
 
@@ -583,9 +747,20 @@ Emit the **Sprint Complete** report — format in [`references/OUTPUT-FORMATS.md
 
 ## Forgeplan integration
 
-If the `forgeplan` CLI is on `$PATH` (probe with `command -v forgeplan`), this skill is **forgeplan-aware**. The **dispatch + claim + evidence loop** is wired into Step 4 (4a-bis, 4b.g, 4b-bis) for artifact-driven sprints; the recommendations below are for human-orchestrated runs.
+`/sprint` is **forgeplan-aware end-to-end** when `forgeplan` is on `$PATH` or
+`mcp__forgeplan__*` tools are exposed:
 
-### Before `/sprint <task>`
+- **Dispatch + claim loop** — wired into Step 4 (4a-bis, 4b.g)
+- **Wave-close evidence autopublish** — MANDATORY (§4b-bis), one EVID per
+  touched artifact per wave, structured fields filled by the skill
+- **Sprint-close batch activation** — MANDATORY (§7), prompts user to
+  bulk-activate the collected draft EVIDs
+
+No manual `forgeplan new evidence` is required at wave-close anymore; the
+skill writes it for you. The commands below describe the shape; the skill
+calls them.
+
+### Before `/sprint <task>` (still user's responsibility)
 
 ```bash
 forgeplan health                   # observe blind spots first
@@ -596,27 +771,33 @@ forgeplan validate PRD-NNN         # gate before sprint
 forgeplan reason PRD-NNN           # ADI 3+ hypotheses (Deep+: required)
 ```
 
-### During `/sprint` (artifact-driven mode — see 4a-bis)
+### During `/sprint` (skill calls these automatically)
 
 ```bash
 forgeplan dispatch -n {agents-per-wave} --json   # parallel-safe grouping (PRD-057)
 # Per teammate, in their spawn prompt:
-forgeplan claim {artifact-id} --agent {kebab-name}   # soft signal "I'm working on this"
-# Per artifact at wave-close, by team-lead:
-forgeplan new evidence "{artifact-id}: ..."
+forgeplan claim {artifact-id} --agent {kebab-name}
+# Per wave at close, by team-lead (autopublish, MANDATORY):
+forgeplan new evidence "{artifact-id}: wave N — ..."   # ×N for N touched artifacts
 forgeplan link EVID-MMM {artifact-id} --relation informs
 ```
 
-### After `/sprint` completes
+### After `/sprint` completes (skill prompts, user picks)
 
 ```bash
-forgeplan new evidence "<task>: tests pass / smoke OK / N waves merged"   # for chat-driven sprints, or sprint-level summary
-forgeplan link EVID-MMM PRD-NNN --relation informs
-forgeplan score PRD-NNN            # R_eff > 0?
-forgeplan activate PRD-NNN         # draft → active
+# Skill prints the EVID summary and asks: "Activate all N EVIDs now?"
+# On "yes" the skill calls:
+forgeplan activate EVID-AAA
+forgeplan activate EVID-BBB
+# ...
+# After bulk activation, user runs themselves:
+forgeplan score PRD-NNN            # R_eff updated with new EVID weights
+forgeplan activate PRD-NNN         # parent PRD: draft → active (if ready)
 ```
 
-Without these, the sprint output ships but the artifact graph stays empty — `forgeplan health` will surface a blind spot ("active sprint without linked evidence").
+If the user picks "defer" or "discard" at §7b, EVIDs stay draft and the
+sprint report records the deferred list. If MCP+CLI are both unavailable,
+the skill prints copy-paste commands rather than silently skipping.
 
 ### Want this orchestrated for you?
 

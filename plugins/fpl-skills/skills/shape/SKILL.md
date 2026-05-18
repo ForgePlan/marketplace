@@ -1,8 +1,7 @@
 ---
 name: shape
-description: Interview-from-scratch skill that turns a raw idea into a structured PRD draft. Asks one focused question at a time, sharpens the problem statement and goals, surfaces target users and constraints, and writes the result as a forgeplan PRD draft (or markdown if forgeplan CLI is missing). Pairs with `/refine` (which polishes an existing plan) — `/shape` creates the plan from a fuzzy idea. Triggers (EN/RU) — "shape this idea", "I have an idea", "help me think this through", "от идеи к PRD", "продумать фичу", "оформить идею", "/shape".
+description: Interview-from-scratch skill that turns a raw idea into a structured PRD draft. Asks one focused question at a time, sharpens the problem statement and goals, surfaces target users and constraints, and writes the result as a forgeplan PRD draft via **MCP-first** path (`mcp__forgeplan__forgeplan_new` + `forgeplan_update` + `forgeplan_validate`) with CLI fallback when MCP is not connected, or plain markdown when neither is available. Pairs with `/refine` (which polishes an existing plan) — `/shape` creates the plan from a fuzzy idea. Triggers (EN/RU) — "shape this idea", "I have an idea", "help me think this through", "от идеи к PRD", "продумать фичу", "оформить идею", "/shape".
 disable-model-invocation: true
-allowed-tools: Read Write Edit Bash(test *) Bash(forgeplan *) Bash(command *) Bash(grep *) Bash(ls *)
 ---
 
 # shape — From a fuzzy idea to a draft PRD
@@ -91,21 +90,53 @@ If the user goes off on a tangent — let them, then gently return ("…that's g
 
 When you have enough to fill the MUST sections of a PRD (problem, goals, target users, scope, at least one risk, one constraint), stop interviewing.
 
-Write the draft:
+#### 3a. Probe MCP availability (one call)
 
-**Forgeplan-aware mode**:
+```python
+# True if the forgeplan MCP server is wired in this session
+have_mcp = "mcp__forgeplan__forgeplan_new" in available_tools
+```
+
+If `have_mcp` is unclear, attempt `mcp__forgeplan__forgeplan_health()`. Connection error → `have_mcp = False`, proceed to the CLI fallback (3c), never silently skip.
+
+#### 3b. MCP-first flow (`have_mcp = True`)
+
+```python
+# Create the PRD draft
+prd = mcp__forgeplan__forgeplan_new(
+    kind="prd",
+    title="<title from interview>"
+)
+PRD_ID = prd["id"]   # e.g. "PRD-NNN"
+
+# Fill body with content collected during interview
+mcp__forgeplan__forgeplan_update(
+    id=PRD_ID,
+    body="<full markdown body — problem, goals, target users, MVP scope, risks, constraints>"
+)
+
+# Confirm MUST sections present
+mcp__forgeplan__forgeplan_validate(id=PRD_ID)
+```
+
+The MCP response carries `_next_action` hints — relay them to the user verbatim.
+
+#### 3c. CLI fallback (`have_mcp = False`, but `forgeplan` is on `$PATH`)
+
 ```bash
-forgeplan new prd "<title from interview>"
-# Then update body with content collected during interview:
-forgeplan_update id=PRD-NNN body="<full markdown body>"
+forgeplan new prd "<title from interview>"        # capture PRD-NNN from output
+forgeplan update id=PRD-NNN body="<full markdown body>"
 forgeplan validate PRD-NNN
 ```
 
-**Plain markdown fallback** (no forgeplan CLI):
+#### 3d. Plain markdown fallback (no MCP, no forgeplan CLI)
+
 ```bash
 mkdir -p docs/ideas
-$EDITOR docs/ideas/<slug>.md   # write the draft here
+$EDITOR docs/ideas/<slug>.md   # write the draft here — user migrates later
 ```
+
+Tell the user explicitly which path was used: `Tool path: MCP` / `Tool path: CLI fallback (MCP not connected)` / `Tool path: markdown fallback (no forgeplan)`.
 
 ### 4. Hand-off
 
@@ -152,28 +183,47 @@ The draft is a **starting point**. Expect to spend 30+ minutes refining it befor
 
 ## Forgeplan integration
 
-If the `forgeplan` CLI is on `$PATH`, this skill writes the draft directly as a forgeplan artifact:
+This skill is **forgeplan-aware** with hybrid MCP/CLI dispatch per PRD-022. The interview always ends with a structured artifact — `/shape` never leaves the user with raw markdown when forgeplan is reachable.
+
+**MCP-first path** (`have_mcp = True`):
+
+```python
+# Mutating operations on MCP — drafts the PRD inside the artifact graph
+prd = mcp__forgeplan__forgeplan_new(kind="prd", title="<title>")
+mcp__forgeplan__forgeplan_update(id=prd["id"], body="<markdown>")
+mcp__forgeplan__forgeplan_validate(id=prd["id"])
+# Status stays draft — activation is later, after /refine + evidence
+
+# Deep+ scope detected during interview (cross-system, irreversible)
+route = mcp__forgeplan__forgeplan_route(task="<scope summary>")
+if route["depth"] in ("deep", "critical"):
+    mcp__forgeplan__forgeplan_reason(id=prd["id"])   # mandatory ADI — 3+ hypotheses
+
+# Architectural decision surfaced during interview
+if adr_warranted:
+    adr = mcp__forgeplan__forgeplan_new(kind="adr", title="<key decision>")
+    mcp__forgeplan__forgeplan_link(source=adr["id"], target=prd["id"], relation="informs")
+```
+
+**CLI fallback** (`have_mcp = False`, `forgeplan` on `$PATH`):
 
 ```bash
 forgeplan new prd "<title>"
-forgeplan_update id=PRD-NNN body=<markdown>
-forgeplan validate PRD-NNN          # confirm MUST sections present
-# Status stays draft — activation is later, after /refine + evidence
-```
+forgeplan update id=PRD-NNN body="<markdown>"
+forgeplan validate PRD-NNN
 
-For Deep+ scope detected during interview (cross-system change, irreversible decision):
+# Deep+ scope
+forgeplan route "<task>"
+forgeplan reason PRD-NNN
 
-```bash
-forgeplan route "<task>"            # confirms Deep depth
-forgeplan reason PRD-NNN            # mandatory ADI for Deep — 3+ hypotheses
-```
-
-If a clear architectural decision surfaced during the interview — also create an ADR:
-
-```bash
+# ADR
 forgeplan new adr "<key decision>"
 forgeplan link ADR-MMM PRD-NNN --relation informs
 ```
+
+**No-forgeplan environment**: tell the user "forgeplan not detected — wrote draft to `docs/ideas/<slug>.md`. Migrate later with `forgeplan import <path>`."
+
+The `Tool path:` line in the hand-off (Step 4) MUST reflect which branch ran.
 
 ### Want this orchestrated for you?
 

@@ -6,14 +6,37 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.23.0"
+    "version": "1.25.0"
   },
   "plugins": [
     {
+      "name": "fpl-hsmem",
+      "source": "./plugins/fpl-hsmem",
+      "description": "ForgePlan Hindsight memory plugin for Claude Code. Long-term cross-session memory wrapping Hindsight (vectorize-io). Provides 13 MCP tools (memory_* + mental_model_* + document_ingest_*), 3 auto-hooks (recall on UserPromptSubmit, retain on Stop, force-retain on SessionEnd), and 5 helper skills (/status, /bootstrap, /mental-model, /diagnose, /export-bank). Two activation modes: plugin install (default-on across all projects, bank derived from cwd) or per-project setup CLI (explicit opt-in via project's .mcp.json). Implements Ruflo-style outcome-feedback patterns (NOTE-004) — adopted by ForgePlan ecosystem for cross-session pipeline knowledge.",
+      "version": "2.0.0",
+      "author": {
+        "name": "ForgePlan"
+      },
+      "homepage": "https://github.com/ForgePlan/marketplace",
+      "license": "MIT",
+      "category": "memory",
+      "keywords": [
+        "memory",
+        "hindsight",
+        "recall",
+        "retain",
+        "mental-models",
+        "long-term-memory",
+        "cross-session",
+        "forgeplan",
+        "mcp"
+      ]
+    },
+    {
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
-      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 22 engineering skills (research, refine, sprint, audit, diagnose, autorun, /fpl-init bootstrap, forge-report structured reports, /shape interview-from-scratch, /migrate-from-dev-toolkit automation, /ddd-decompose, /c4-diagram, /riper RIPER orchestrator, /gh-project project-agnostic GitHub Projects v2 integration, plus session helpers) + dev-advisor agent + 4 hooks. /fpl-init injects a 13-line forgeplan operating contract into project CLAUDE.md (idempotent v1 marker). SessionStart hook surfaces concrete next-action when forgeplan health is non-clean (orphans/stubs/dups/stale). UNCONDITIONAL claim/dispatch wiring (PRD-020): /sprint + /autorun derive synthetic SESSION-YYYY-MM-DD-HHMMSS for chat-driven mode — every teammate registers in the artifact graph regardless of whether task references PRD-NNN. /gh-project bridges forgeplan artifacts with a GitHub Projects v2 board via per-project config (no hardcoded project numbers). Full feature parity with the legacy dev-toolkit plus 19 additional skills built on forgeplan's artifact lifecycle.",
-      "version": "1.10.0",
+      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 22 engineering skills (research, refine, sprint, audit, diagnose, autorun, /fpl-init bootstrap, forge-report structured reports, /shape interview-from-scratch, /migrate-from-dev-toolkit automation, /ddd-decompose, /c4-diagram, /riper RIPER orchestrator, /gh-project project-agnostic GitHub Projects v2 integration, plus session helpers) + dev-advisor agent + 4 hooks. /fpl-init injects a 13-line forgeplan operating contract into project CLAUDE.md (idempotent v1 marker). SessionStart hook surfaces concrete next-action when forgeplan health is non-clean (orphans/stubs/dups/stale). UNCONDITIONAL claim/dispatch wiring (PRD-020): /sprint + /autorun derive synthetic SESSION-YYYY-MM-DD-HHMMSS for chat-driven mode — every teammate registers in the artifact graph regardless of whether task references PRD-NNN. Hybrid MCP-first dispatch (PRD-021 Phase 1 + PRD-022 Phase 2 Batch 1: shape, rfc, diagnose, restore, briefing skills probe mcp__forgeplan__* availability and route mutating ops through MCP with CLI fallback). /gh-project bridges forgeplan artifacts with a GitHub Projects v2 board via per-project config (no hardcoded project numbers). Full feature parity with the legacy dev-toolkit plus 19 additional skills built on forgeplan's artifact lifecycle.",
+      "version": "1.11.0",
       "author": {
         "name": "ForgePlan"
       },
@@ -56,8 +79,8 @@
     {
       "name": "forgeplan-workflow",
       "source": "./plugins/forgeplan-workflow",
-      "description": "Structured engineering workflow for forgeplan users. Provides /forge-cycle (full dev cycle with unconditional per-SPARC-phase claim/release per PRD-020, MCP-first per PRD-021) and /forge-audit (multi-expert review with claim+evidence wrapping, MCP-first), methodology knowledge base, and quality gate hooks. Requires forgeplan CLI.",
-      "version": "1.7.0",
+      "description": "Structured engineering workflow for forgeplan users. Provides /forge-cycle (full SDLC cycle: Hindsight v2 memory bootstrap + parallel subagent dispatch via forgeplan_dispatch + Task tool + multi-reviewer audit with 4 parallel agents + mail-as-beads autonomous decisions logging + MCP-first per PRD-021/022 + claim/release per PRD-020 — implements RFC-003/PRD-025) and /forge-audit (multi-expert review), methodology knowledge base, quality gate hooks. Requires forgeplan CLI.",
+      "version": "1.8.0",
       "author": {
         "name": "ForgePlan"
       },

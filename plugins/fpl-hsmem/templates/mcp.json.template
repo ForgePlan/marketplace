@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "hindsight": {
+      "command": "node",
+      "args": ["{{HINDSIGHT_MCP_PATH}}/dist/index.js"],
+      "env": {
+        "HINDSIGHT_URL": "{{HINDSIGHT_URL}}",
+        "HINDSIGHT_BANK_ID": "{{BANK_ID}}"
+      }
+    }
+  }
+}
