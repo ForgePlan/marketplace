@@ -44,6 +44,22 @@ Debugging, code review, error investigation, performance engineering, production
 ### Dev Team (6 agents)
 Full development team: planning, research, implementation, review, testing, TDD.
 
+## Version history
+
+- **v1.3.0** (current, 2026-05-19) — Sprint B canonical-lint compliance
+  - All 8 legacy specialists migrated to canonical pattern: `model: sonnet`, hex colors, bilingual EN/RU/Triggers descriptions
+  - Forgeplan-aware agents include methodology citation as first line of description (CRUD-R-A profile labels)
+  - Closed marketplace-wide lint warnings 121 → 0 (LR-1..LR-3 pass)
+- **v1.3.1** (in-flight, Sprint E) — Profile B agents patched with Step 9b sentinel emit instruction (organic `<<NEEDS_ACTIVATION>>` emission per PRD-032 + PRD-033)
+
+For complete change history, see [`forgeplan-marketplace/CLAUDE.md`](../../CLAUDE.md) § Sprint A-E session.
+
+## Profile B sentinel emission (Sprint E)
+
+Profile B reviewer agents in this pack (`code-reviewer`, `tester`) emit `<<NEEDS_ACTIVATION: EVID-XXX>>` as first line of their return value to the orchestrator when an EVIDENCE artifact is complete + R_eff>0. This closes the canonical pipeline activate step automatically — no manual cleanup needed.
+
+Full spec: `plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md` → "Profile B Step 9b — Surface NEEDS_ACTIVATION sentinel".
+
 ## License
 
 MIT

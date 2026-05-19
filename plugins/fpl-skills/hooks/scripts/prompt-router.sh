@@ -84,20 +84,33 @@ if [ -z "$suggestion" ]; then
   exit 0
 fi
 
-# Cap output at 500 chars per NFR-003 (use awk for portability)
-suggestion=$(echo "$suggestion" | awk 'BEGIN{c=0} {if(c+length($0)<=500){print; c+=length($0)+1}}')
+# Cap output at 500 BYTES per NFR-003 (use python3 for multibyte-safe truncation —
+# Sprint E EVID-060 finding #3 fix: awk length() counts characters not bytes, would
+# overflow on Cyrillic / CJK content)
+suggestion=$(printf '%s' "$suggestion" | python3 -c "
+import sys
+data = sys.stdin.buffer.read()
+if len(data) > 500:
+    # Truncate to 500 bytes, decode safely to avoid mid-character splits
+    data = data[:500].decode('utf-8', errors='ignore').encode('utf-8')
+sys.stdout.buffer.write(data)
+" 2>/dev/null || printf '%s' "$suggestion" | head -c 500)
 
 # Emit as JSON with additionalContext field
-# Use python3 for safe JSON encoding (handles quotes, newlines properly)
-python3 -c "
-import json, sys
-ctx = '''$suggestion
-
-(Hint from prompt-router hook. You always override — pick whatever fits.)'''
+# Sprint E EVID-060 finding #1 fix: pass suggestion via env var instead of interpolating
+# into triple-quoted Python string (was brittle if suggestion contained literal ''')
+SUGGESTION_TEXT="$suggestion" python3 - <<'PY' 2>/dev/null
+import json, os
+suggestion = os.environ.get('SUGGESTION_TEXT', '')
+ctx = suggestion + "\n\n(Hint from prompt-router hook. You always override — pick whatever fits.)"
 print(json.dumps({'hookSpecificOutput': {'additionalContext': ctx}}))
-" 2>/dev/null || {
+PY
+PY_EXIT=$?
+if [ $PY_EXIT -ne 0 ]; then
   # Fallback if python3 unavailable: bare echo (Claude Code accepts plain text in additionalContext too)
-  echo "{\"hookSpecificOutput\":{\"additionalContext\":\"${suggestion} (prompt-router hint; override anytime).\"}}"
-}
+  # Use printf for safety; escape backslashes + double-quotes minimally
+  escaped=$(printf '%s' "$suggestion" | sed 's/\\/\\\\/g; s/"/\\"/g')
+  printf '{"hookSpecificOutput":{"additionalContext":"%s (prompt-router hint; override anytime)."}}\n' "$escaped"
+fi
 
 exit 0

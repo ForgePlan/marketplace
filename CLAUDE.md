@@ -1,9 +1,10 @@
 # ForgePlan Marketplace — Claude Code Configuration
 
 **Repo**: [ForgePlan/marketplace](https://github.com/ForgePlan/marketplace)
-**Catalog version**: 1.37.0
+**Catalog version**: 1.47.0
 **Plugins**: 13 (7 workflow + 5 agent packs + 1 memory plugin fpl-hsmem)
 **Agents**: 17 of ~65 forgeplan-aware (PRD-026 canonical B2 paradigm — `disallowedTools` denylist + `forgeplan_generate` primary creation path + 5 profiles A/B/C/C-coder/D)
+**Last Updated**: 2026-05-19 (post Sprint A-E session: autonomy framework GA v2.3.0, catalog v1.47.0)
 **Project board**: [orgs/ForgePlan/projects/5](https://github.com/orgs/ForgePlan/projects/5)
 
 ---
@@ -222,3 +223,83 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # Rulesets
 # Валидация
 ./scripts/validate-all-plugins.sh      # Перед PR
 ```
+
+---
+
+## Plugin versions (catalog v1.47.0)
+
+### Workflow plugins
+
+| Plugin | Version |
+|--------|:-------:|
+| **fpl-skills** | 1.23.0 |
+| **fpl-hsmem** | 2.1.0 |
+| **forgeplan-workflow** | 1.9.1 |
+| **forgeplan-orchestra** | 1.4.1 |
+| **forgeplan-brownfield-pack** | 1.3.1 |
+| **fpf** | 1.4.1 |
+| **laws-of-ux** | 1.4.1 |
+| **dev-toolkit** | 1.6.3 |
+
+### Agent packs
+
+| Plugin | Version |
+|--------|:-------:|
+| **agents-core** | 1.3.0 |
+| **agents-domain** | 1.1.0 |
+| **agents-pro** | 1.8.0 |
+| **agents-github** | 1.1.0 |
+| **agents-sparc** | 1.2.0 |
+
+> Source of truth: `.claude-plugin/marketplace.json` and `plugins/*/.claude-plugin/plugin.json`. Always verify before PR.
+
+---
+
+## Sprint A-E session 2026-05-19 — autonomy framework
+
+Five consecutive sprints shipped the full autonomy framework. All PRDs closed R_eff=1.0 grade A.
+
+| PRD | Sprint | Deliverable |
+|-----|--------|-------------|
+| **PRD-029** (active, R_eff=1.0 grade A) | Sprint A | UX layer: `/agent-advisor` skill + `NEED_USER_INPUT` sentinel protocol + prompt-router hook |
+| **PRD-030** (active, R_eff=1.0 grade A) | Sprint B | Closure pack: 7 deliverables in 3 waves — parser integration into `/forge-cycle` + `/autorun`, methodology citation in 17 forgeplan-aware agents, Profile A Step 10 retain convention, `/project-agent-scaffold`, `/agent-fetcher`, `/forge-progress` |
+| **PRD-031** (active, R_eff=1.0 grade A) | Sprint C | `/autorun` resume protocol + `docs/SESSION-CHECKPOINT-SCHEMA.md` (643-line spec) |
+| **PRD-032** (active, R_eff=1.0 grade A) | Sprint D | Pipeline self-healing: `/forge-cleanup` skill + `NEEDS_ACTIVATION` sentinel + parsers in `/forge-cycle` + `/autorun` + 3-tier resolution (AUTO/ADI/USER) |
+| **PRD-033** (active, R_eff=1.0 grade A) | Sprint E | Closure pack + GA v2.3.0: 7 Profile B agent body patches for organic sentinel emission + docs sync + AGENTS.md + live smoke + GA release |
+
+### Evidence (Sprint A-E)
+
+- **EVID-056** — Sprint A closure (informs PRD-029)
+- **EVID-057** — Sprint B closure (informs PRD-030)
+- **EVID-058** — Sprint C closure (informs PRD-031)
+- **EVID-059** — Sprint D closure (informs PRD-032)
+- **EVID-060** — Sprint E closure (informs PRD-033)
+
+### Mental models added
+
+- **mm-draft-hygiene** — pattern: EVIDs stick in draft because Profile B denied activate; resolution: coder/orchestrator calls `forgeplan_activate` after EVID creation
+- **mm-pipeline-anomalies** — 3-tier resolution framework (AUTO/ADI/USER) with 9 initial anomaly kinds; see PRD-032
+
+### Upstream issues filed
+
+| Issue | Description |
+|-------|-------------|
+| forgeplan#286 | Unlink primitive (filed Sprint A-B era) |
+| forgeplan#287 | Brownfield MCP tools epic |
+| forgeplan#288 | Pipeline hygiene auto-activate + stale-draft + chain hint |
+| forgeplan#289 | `forgeplan_anomalies` MCP tool |
+
+### Known anomalies (Sprint A-E session log)
+
+| # | Anomaly | Status |
+|---|---------|--------|
+| 1 | Profile B `forgeplan_activate` denied → EVID stays draft | AUTO-resolved: orchestrator activates post-EVID |
+| 2 | `/forge-cycle` missing parser for `NEEDS_ACTIVATION` sentinel | Resolved Sprint D (PRD-032) |
+| 3 | `/autorun` missing resume on checkpoint load | Resolved Sprint C (PRD-031) |
+| 4 | Methodology citation absent in 17 forgeplan-aware agents | Resolved Sprint B (PRD-030) |
+| 5 | `/agent-fetcher` unimplemented (dependency gap) | Resolved Sprint B (PRD-030) |
+| 6 | `/forge-progress` missing real-time visibility command | Resolved Sprint B (PRD-030) |
+| 7 | `/forge-cleanup` unimplemented (stale artifact cleanup) | Resolved Sprint D (PRD-032) |
+| 8 | `NEED_USER_INPUT` sentinel not emitted organically by Profile B agents | Resolved Sprint E (PRD-033): 7 agent body patches |
+| 9 | Documentation drift — catalog v1.37 vs actual v1.47 | Resolved Sprint E (PRD-033): this sync |
+| 10 | AGENTS.md missing (cross-CLI context shim) | Resolved Sprint E (PRD-033) |

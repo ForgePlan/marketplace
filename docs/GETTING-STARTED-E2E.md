@@ -227,6 +227,36 @@ Each should:
 
 ---
 
+## Step 5.5 — New skills from Sprint A-D autonomy framework
+
+After Sprint A-D, 5 new fpl-skills augment the canonical pipeline. Each closes a specific autonomy gap:
+
+| Skill | What it does | Sprint | Vision gap closed |
+|---|---|---|---|
+| `/agent-advisor "<task>"` | Recommends specialist canonical agent for described task — consults `mm-agent-selection` mental model + embedded CRUD-R-A map | A | Gap E (right-agent-for-job) |
+| `/agent-fetcher "<task>"` | Suggests agents from other installed marketplaces (cc-marketplace, claude-plugins-official) — SUGGEST-ONLY, NEVER auto-installs | B | Gap G (cross-marketplace fetcher) |
+| `/project-agent-scaffold` | Detects project tech stack (package.json/Cargo.toml/etc.) → proposes 1-3 project-scoped agents → user confirms each before write | B | Gap F (custom project agent) |
+| `/forge-progress` | Live read-only orchestrator state snapshot (sprint/phase/wave/agents-in-flight/files-modified/ETA) | B (Wave 3) | Gap D (progress dashboard) |
+| `/forge-cleanup` | Sweep drafts, classify into 3 tiers (AUTO/ADI/USER) per pipeline self-healing framework | D | Anomaly #7 (stuck drafts) |
+
+### Auto-routing hook (Sprint A)
+
+`prompt-router` UserPromptSubmit hook (Sprint A) classifies your natural-language prompt and suggests the right skill in `additionalContext`. So you can describe what you want — no need to memorise command names. Try: "I have an idea for a new feature" → hook suggests `/shape` or `/agent-fetcher`.
+
+### Ask-back protocol (Sprint A-D)
+
+When a sub-agent hits an info gap mid-flow, it emits a `<<NEED_USER_INPUT: question>>` sentinel; orchestrator (`/forge-cycle`, `/autorun`) parses + surfaces via AskUserQuestion + re-dispatches. Closes the previous limitation that subagents couldn't AskUserQuestion themselves.
+
+### Activation sentinel (Sprint D-E)
+
+When a Profile B reviewer agent completes an EVIDENCE artifact, it emits `<<NEEDS_ACTIVATION: EVID-XXX>>` — orchestrator activates it without manual intervention. Closes Anomaly #7 (EVIDs stuck in draft because Profile B denies activate).
+
+### `/autorun` resume (Sprint C)
+
+`/autorun` writes session checkpoint to `.forgeplan/sessions/<id>.yaml` after each phase. On blocker (timeout, ADI fail, red-line), exit cleanly with resume hint. `--resume <session-id>` restores state. `--list-sessions`/`--cleanup-sessions` manage session lifecycle. Full schema: `docs/SESSION-CHECKPOINT-SCHEMA.md`.
+
+---
+
 ## Step 6 — Test representative fpl-skills
 
 Run a couple of skills that exercise the MCP-first dispatch + skill chaining:
@@ -398,12 +428,13 @@ mcp__forgeplan__forgeplan_health
 
 ---
 
-## Known limitations (as of v2.2.0)
+## Known limitations (as of v2.3.0)
 
 1. **No `forgeplan_unlink` primitive** — mis-typed link relations stay forever. Workaround: use `informs` for evidence; double-check before linking. Tracking: [forgeplan#286](https://github.com/ForgePlan/forgeplan/issues/286).
 2. **Brownfield Discover Agent v3.2 is standalone**, not a `/plugin install`able plugin. Blocked on 9 new MCP tools in forgeplan core. Tracking: [forgeplan#287](https://github.com/ForgePlan/forgeplan/issues/287).
 3. **MCP server cwd binding** — the forgeplan MCP server is tied to whatever workspace Claude Code launched in. Testing in a different directory via MCP writes to the launched-workspace's `.forgeplan/`, not the new dir. Restart Claude Code in the target directory. CLI doesn't have this constraint.
 4. **Subagent MCP propagation** — uses `disallowedTools` denylist, not `tools:` allowlist. Wildcards in `tools:` silently strip MCP server. Already worked around in all 17 forgeplan-aware agents.
+5. **Sprint D `<<NEEDS_ACTIVATION>>` sentinel** — Profile B agents now emit organically (Sprint E patches body); orchestrator parses + activates. No more manual cleanup at end of cycles.
 
 ---
 

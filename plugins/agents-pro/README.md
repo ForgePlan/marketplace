@@ -102,6 +102,22 @@ Task({ subagent_type: "architect-reviewer", prompt: "Review RFC-003 fitness" })
 Task({ subagent_type: "prompt-engineer", prompt: "Optimize this system prompt" })
 ```
 
+## Version history
+
+- **v1.8.0** (current, 2026-05-19) — Sprint B canonical-lint compliance
+  - All 16 non-canonical specialists migrated to canonical pattern: `model: sonnet/opus`, hex colors, bilingual EN/RU/Triggers descriptions
+  - Forgeplan-aware agents include methodology citation as first line of description (BMAD-Brief / MADR 3.0 / FPF-Decompose / CRUD-R-A profile labels)
+  - Closed marketplace-wide lint warnings 121 → 0 (LR-1..LR-3 pass)
+- **v1.8.1** (in-flight, Sprint E) — Profile B agents patched with Step 9b sentinel emit instruction (organic `<<NEEDS_ACTIVATION>>` emission per PRD-032 + PRD-033)
+
+For complete change history, see [`forgeplan-marketplace/CLAUDE.md`](../../CLAUDE.md) § Sprint A-E session.
+
+## Profile B sentinel emission (Sprint E)
+
+Profile B reviewer agents in this pack (`artifact-reviewer`, `architect-reviewer`, `evidence-recorder`, `guardian`, `security-expert`, `system-dev`) emit `<<NEEDS_ACTIVATION: EVID-XXX>>` as first line of their return value to the orchestrator when an EVIDENCE artifact is complete + R_eff>0. This closes the canonical pipeline activate step automatically — no manual cleanup needed.
+
+Full spec: `plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md` → "Profile B Step 9b — Surface NEEDS_ACTIVATION sentinel".
+
 ## License
 
 MIT

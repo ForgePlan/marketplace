@@ -35,6 +35,15 @@ After installation, agents are available via the `@agent-name` syntax:
 @repo-architect Scaffold a new repository with proper structure
 ```
 
+## Version history
+
+- **v1.1.0** (current, 2026-05-19) — Sprint B canonical-lint compliance
+  - All 7 agents migrated to canonical pattern: `model: sonnet`, GitHub-themed hex colors, bilingual EN/RU/Triggers descriptions
+  - Closed marketplace-wide lint warnings 121 → 0 (LR-1..LR-3 pass)
+- **v1.1.1** (in-flight, Sprint E) — documentation drift closed; no forgeplan-aware agents in this pack, Step 9b sentinel N/A
+
+For complete change history, see [`forgeplan-marketplace/CLAUDE.md`](../../CLAUDE.md) § Sprint A-E session.
+
 ## License
 
 MIT
