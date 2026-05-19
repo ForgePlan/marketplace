@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.42.0"
+    "version": "1.43.0"
   },
   "plugins": [
     {
@@ -35,8 +35,8 @@
     {
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
-      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 22 engineering skills + dev-advisor agent + 4 hooks. v1.18: PRD-022 Tier A \u2014 4 high-traffic skills (riper, ddd-decompose, gh-project, c4-diagram) migrated to MCP-first with CLI fallback. ALL 16 of 22 skills now MCP-first; remaining 6 Tier B explicitly classified as no-forgeplan. PRD-022 Phase 2 COMPLETE. v1.17.1: dev-advisor canonical-lint. AGENT-AUTHORING-GUIDE + CRUD-R-A matrix + Profile D + forgeplan_generate primary. LR-1..LR-7 lint rules.",
-      "version": "1.18.0",
+      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 22 engineering skills + dev-advisor agent + 4 hooks. v1.19: /fpl-init operating contract v3 marker \u2014 closes PRD-022 AC-3 (idempotent injection). v3 reflects Phase 2 completion + canonical B2 agent dispatch awareness. Idempotent v1\u2192v3 and v2\u2192v3 upgrade paths. v1.18: PRD-022 Tier A \u2014 4 high-traffic skills MCP-first with CLI fallback. PRD-022 Phase 2 + AC-3 COMPLETE.",
+      "version": "1.19.0",
       "author": {
         "name": "ForgePlan"
       },

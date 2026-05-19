@@ -272,31 +272,39 @@ scratch" because the template seems too verbose. The verbosity is the
 point — the U-curve attention model needs primacy/recency zones to be
 populated. A thin file silently strips guard rails.
 
-### 7-bis. Inject forgeplan operating contract into CLAUDE.md (v2 — MCP-first)
+### 7-bis. Inject forgeplan operating contract into CLAUDE.md (v3 — Phase 2 complete)
 
 If forgeplan CLI is on `$PATH` (probed in step 2), append the **operating contract** to CLAUDE.md. This makes forgeplan-aware behaviour the default for every session in the project — without it, agents revert to general heuristics and skip artifact-graph operations under context pressure.
 
-**Idempotency check** — read CLAUDE.md and look for **either** marker:
+**Contract version history**:
+- `v1` (PRD-018) — initial CLI-only contract
+- `v2` (PRD-021) — MCP-first preferences with shell fallback
+- `v3` (PRD-022 Phase 2 COMPLETE + PRD-026) — 16/22 skills MCP-first + 6 Tier B classified, 17 canonical agents with B2 paradigm, CRUD-R-A profile matrix awareness
+
+**Idempotency check** — read CLAUDE.md and look for **any** marker:
 
 | Marker found | Action |
 |---|---|
-| `<!-- forgeplan-operating-contract:v2 -->` | ✓ Latest version present — skip silently, continue to step 8 |
-| `<!-- forgeplan-operating-contract:v1 -->` (only) | Old version present (PRD-018 era; pre-MCP). Prompt user to **upgrade to v2** (one yes/no). On yes: replace `:v1` block with `:v2` block. On no: leave alone, continue. |
-| Neither present | Prompt user once (default yes per step-3 plan approval) to inject `:v2` block fresh |
+| `<!-- forgeplan-operating-contract:v3 -->` | ✓ Latest version present — skip silently, continue to step 8 |
+| `<!-- forgeplan-operating-contract:v2 -->` (only) | Prior version present (PRD-021 era; pre-Phase 2 closure). Prompt user to **upgrade to v3** (one yes/no). On yes: replace `:v2` block with `:v3` block. On no: leave alone, continue. |
+| `<!-- forgeplan-operating-contract:v1 -->` (only) | Legacy version (PRD-018 era; pre-MCP). Prompt user to **upgrade to v3** (skips v2). On yes: replace `:v1` block with `:v3` block. On no: leave alone, continue. |
+| Neither present | Prompt user once (default yes per step-3 plan approval) to inject `:v3` block fresh |
 
 ```
-Inject the 14-line forgeplan operating contract into CLAUDE.md (v2 — MCP-first)?
+Inject the forgeplan operating contract into CLAUDE.md (v3 — Phase 2 complete + canonical agents)?
 It tells future agents to use forgeplan as source-of-truth on every non-trivial
 task — search before creating, claim before working, evidence after finishing,
-preferring mcp__forgeplan__* tools over shell when MCP server is wired. [y/n]
+preferring mcp__forgeplan__* tools over shell, and dispatching to canonical
+B2-paradigm agents (Profile A creator / B reviewer / C-coder / D maintainer)
+when artifact lifecycle operations are needed. [y/n]
 ```
 
 If user says no — skip; do not warn again.
 
-If yes — append the following `:v2` block (or replace `:v1` block if upgrading):
+If yes — append the following `:v3` block (or replace `:v1`/`:v2` block if upgrading):
 
 ```markdown
-<!-- forgeplan-operating-contract:v2 -->
+<!-- forgeplan-operating-contract:v3 -->
 ## Forgeplan operating contract (this project)
 
 Forgeplan is the source of truth for artifacts in this project. On every non-trivial task you MUST follow this workflow.
@@ -307,10 +315,14 @@ Forgeplan is the source of truth for artifacts in this project. On every non-tri
 **During** (multi-agent / artifact-driven) — `forgeplan_claim id=<ID> agent=<name>` per teammate before they start; `forgeplan_dispatch agents=N` for parallel-safe wave grouping.
 **After** — `forgeplan_new kind=evidence title=...` + `forgeplan_link source=EVID-MMM target=<ARTIFACT-ID> relation=informs` + `forgeplan_score id=<ARTIFACT-ID>` + `forgeplan_activate id=<ARTIFACT-ID>` if R_eff > 0.
 
+**Agent dispatch** — for artifact lifecycle operations, prefer dispatching the right canonical agent (PRD-026, B2 paradigm with `disallowedTools` denylist) over doing the work yourself. Profile A creators (artifact-author, adr-architect, specification, architecture, brief-intake, goal-planner, evidence-recorder) for CREATE; Profile B reviewers (artifact-reviewer, code-reviewer, security-expert, architect-reviewer, tester, system-dev, guardian-gate) for REVIEW+EVID; Profile C-coder (coder) for source-file mutations only; Profile D maintainer (artifact-maintainer) for in-place artifact metadata fixes. See `plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md` for the full CRUD-R-A matrix.
+
+**Skill awareness** — 16 of 22 fpl-skills are MCP-first with CLI fallback (audit, autorun, briefing, build, c4-diagram, ddd-decompose, diagnose, fpl-init, gh-project, refine, research, restore, rfc, riper, shape, sprint). 6 are explicitly classified as no-forgeplan (do, team, bootstrap, setup, forge-report, migrate-from-dev-toolkit) — they delegate or operate on local files only.
+
 This is enforcement, not recommendation. Skipping leaves the artifact graph empty — `forgeplan_health` will flag orphans / missing evidence / stale stubs.
 ```
 
-The marker `<!-- forgeplan-operating-contract:v2 -->` is **load-bearing**: re-running `/fpl-init` keys off this marker to detect already-current state. The `:v1` → `:v2` upgrade path preserves user-customised content above/below the contract block by replacing only the marker-delimited region.
+The marker `<!-- forgeplan-operating-contract:v3 -->` is **load-bearing**: re-running `/fpl-init` keys off this marker to detect already-current state. The `:v1`/`:v2` → `:v3` upgrade path preserves user-customised content above/below the contract block by replacing only the marker-delimited region.
 
 **Migration implementation** (Python — same pattern as `.mcp.json` merge):
 
@@ -318,7 +330,7 @@ The marker `<!-- forgeplan-operating-contract:v2 -->` is **load-bearing**: re-ru
 python3 - <<'PY'
 import re, pathlib
 
-V2_BLOCK = '''<!-- forgeplan-operating-contract:v2 -->
+V3_BLOCK = '''<!-- forgeplan-operating-contract:v3 -->
 ## Forgeplan operating contract (this project)
 
 Forgeplan is the source of truth for artifacts in this project. On every non-trivial task you MUST follow this workflow.
@@ -329,26 +341,36 @@ Forgeplan is the source of truth for artifacts in this project. On every non-tri
 **During** (multi-agent / artifact-driven) — `forgeplan_claim id=<ID> agent=<name>` per teammate before they start; `forgeplan_dispatch agents=N` for parallel-safe wave grouping.
 **After** — `forgeplan_new kind=evidence title=...` + `forgeplan_link source=EVID-MMM target=<ARTIFACT-ID> relation=informs` + `forgeplan_score id=<ARTIFACT-ID>` + `forgeplan_activate id=<ARTIFACT-ID>` if R_eff > 0.
 
+**Agent dispatch** — for artifact lifecycle operations, prefer dispatching the right canonical agent (PRD-026, B2 paradigm with `disallowedTools` denylist) over doing the work yourself. Profile A creators (artifact-author, adr-architect, specification, architecture, brief-intake, goal-planner, evidence-recorder) for CREATE; Profile B reviewers (artifact-reviewer, code-reviewer, security-expert, architect-reviewer, tester, system-dev, guardian-gate) for REVIEW+EVID; Profile C-coder (coder) for source-file mutations only; Profile D maintainer (artifact-maintainer) for in-place artifact metadata fixes. See `plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md` for the full CRUD-R-A matrix.
+
+**Skill awareness** — 16 of 22 fpl-skills are MCP-first with CLI fallback (audit, autorun, briefing, build, c4-diagram, ddd-decompose, diagnose, fpl-init, gh-project, refine, research, restore, rfc, riper, shape, sprint). 6 are explicitly classified as no-forgeplan (do, team, bootstrap, setup, forge-report, migrate-from-dev-toolkit) — they delegate or operate on local files only.
+
 This is enforcement, not recommendation. Skipping leaves the artifact graph empty — `forgeplan_health` will flag orphans / missing evidence / stale stubs.'''
 
 p = pathlib.Path("CLAUDE.md")
 txt = p.read_text() if p.exists() else ""
 
-if "<!-- forgeplan-operating-contract:v2 -->" in txt:
-    print("v2 already present, no change")
-elif "<!-- forgeplan-operating-contract:v1 -->" in txt:
-    # Replace v1 block (marker through end of contract section)
-    pattern = r'<!-- forgeplan-operating-contract:v1 -->.*?(?=\n---|\n## (?!Forgeplan)|\Z)'
-    new_txt = re.sub(pattern, V2_BLOCK, txt, count=1, flags=re.DOTALL)
+if "<!-- forgeplan-operating-contract:v3 -->" in txt:
+    print("v3 already present, no change")
+elif "<!-- forgeplan-operating-contract:v2 -->" in txt:
+    # Replace v2 block (marker through end of contract section)
+    pattern = r'<!-- forgeplan-operating-contract:v2 -->.*?(?=\n---|\n## (?!Forgeplan)|\Z)'
+    new_txt = re.sub(pattern, V3_BLOCK, txt, count=1, flags=re.DOTALL)
     p.write_text(new_txt)
-    print("upgraded :v1 → :v2")
+    print("upgraded :v2 → :v3")
+elif "<!-- forgeplan-operating-contract:v1 -->" in txt:
+    # Replace v1 block — skip v2 intermediate
+    pattern = r'<!-- forgeplan-operating-contract:v1 -->.*?(?=\n---|\n## (?!Forgeplan)|\Z)'
+    new_txt = re.sub(pattern, V3_BLOCK, txt, count=1, flags=re.DOTALL)
+    p.write_text(new_txt)
+    print("upgraded :v1 → :v3 (skipped v2)")
 else:
-    p.write_text(txt.rstrip() + "\n\n" + V2_BLOCK + "\n")
-    print("v2 injected fresh")
+    p.write_text(txt.rstrip() + "\n\n" + V3_BLOCK + "\n")
+    print("v3 injected fresh")
 PY
 ```
 
-**Verify**: `grep -q 'forgeplan-operating-contract:v2' CLAUDE.md` returns 0. Echo "✓ operating contract v2 injected" / "✓ upgraded v1 → v2" / "✓ v2 already present, skipped" depending on path taken.
+**Verify**: `grep -q 'forgeplan-operating-contract:v3' CLAUDE.md` returns 0. Echo "✓ operating contract v3 injected" / "✓ upgraded v2 → v3" / "✓ upgraded v1 → v3" / "✓ v3 already present, skipped" depending on path taken.
 
 ### 8. Run `/setup` flow
 
