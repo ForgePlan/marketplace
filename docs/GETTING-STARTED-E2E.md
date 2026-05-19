@@ -415,3 +415,7 @@ This guide was authored during the v2.2.0 GA acceptance test (2026-05-19). The w
 - Evidence trail: EVID-049..055 (PRD-026 closure + PRD-022 closure + this walkthrough)
 - Tracking issues: [forgeplan#286](https://github.com/ForgePlan/forgeplan/issues/286), [forgeplan#287](https://github.com/ForgePlan/forgeplan/issues/287)
 - Release: [v2.2.0](https://github.com/ForgePlan/marketplace/releases/tag/v2.2.0)
+
+---
+
+**Русская версия**: [`docs/GETTING-STARTED-E2E-RU.md`](GETTING-STARTED-E2E-RU.md)
