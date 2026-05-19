@@ -1,9 +1,12 @@
 ---
 name: production-validator
-description: Production readiness validator — detects mock implementations, verifies real integrations, validates deployment configuration, and ensures no stubs remain in release code
-model: inherit
+description: |
+  EN: Production readiness validator that detects mock/stub/fake implementations in release code, verifies real database and external API integrations, validates environment configuration, and runs a deployment readiness checklist (code quality, security, monitoring, performance). Use immediately before any production deployment or release gate. Hand off blockers to `coder` for remediation; pass results to `tester` (Profile B) for EVIDENCE recording.
+  RU: Валидатор готовности к production, обнаруживающий mock/stub/fake реализации в релизном коде, проверяющий реальные интеграции с базой данных и внешними API, валидирующий конфигурацию окружения и выполняющий чеклист готовности к деплою (качество кода, безопасность, мониторинг, производительность). Используйте непосредственно перед любым production-деплоем или release gate. Передайте блокеры `coder` для устранения; результаты — `tester` (Profile B) для записи EVIDENCE.
+  Triggers: "production ready", "release checklist", "mock in production", "stub detection", "deployment validation", "environment config", "production gate", "готовность к production", "релизный чеклист", "моки в production", "валидация деплоя"
+model: sonnet
 tools: [Read, Write, Edit, Bash, Glob, Grep]
-color: '#4CAF50'
+color: '#43A047'
 ---
 
 # Production Validator

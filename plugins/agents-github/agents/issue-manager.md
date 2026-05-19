@@ -1,7 +1,10 @@
 ---
 name: issue-manager
-description: GitHub issue lifecycle management — create, triage, decompose, track, and automate stale issue cleanup
-model: inherit
+description: |
+  EN: GitHub issue lifecycle specialist. Creates, triages, and decomposes issues into subtasks; tracks progress via label and milestone workflows; automates stale-issue cleanup with configurable thresholds. Use when you need to manage a backlog at scale, bulk-label or bulk-close issues, or set up automated staleness enforcement. Produces `gh` command sequences, label taxonomy suggestions, and triage checklists. Pairs with `pr-manager` for end-to-end issue-to-PR traceability.
+  RU: Специалист по жизненному циклу GitHub issues. Создаёт, сортирует и декомпозирует задачи на подзадачи; отслеживает прогресс через лейблы и milestone; автоматизирует очистку устаревших задач с настраиваемыми порогами. Используй при управлении бэклогом в масштабе, массовой маркировке/закрытии задач или настройке автоматического staleness enforcement. Выдаёт последовательности `gh` команд, предложения по таксономии лейблов и чеклисты триажа. Работает в паре с `pr-manager` для сквозной трассировки issue → PR.
+  Triggers: "triage issues", "manage backlog", "stale issues", "decompose issue", "issue lifecycle", "bulk label", "create subtasks", "track issue progress", "issue automation", "триаж задач", "управление бэклогом", "устаревшие задачи", "декомпозиция задачи"
+model: sonnet
 tools: [Read, Write, Edit, Bash, Glob, Grep]
 color: '#FF6B35'
 ---

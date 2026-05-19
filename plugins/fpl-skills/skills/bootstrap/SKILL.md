@@ -1,6 +1,6 @@
 ---
 name: bootstrap
-description: Deploys the author's Claude Code starter scaffold into a new or existing project — creates a CLAUDE.md from the template, a guides/ folder with author guides (Git Flow, CLAUDE.md best practices), and guides/INDEX.md. Use when the user starts a new project and wants the standard Claude Code baseline, or when adding these guides to an existing project. Triggers (EN/RU) — "bootstrap project", "init claude baseline", "install my guides", "scaffold claude code", "поставь мои гайды", "разверни базу", "установи базовый CLAUDE.md", "подготовь проект под claude", "засетапь проект".
+description: Deploys the author's Claude Code starter scaffold into a new or existing project — creates a CLAUDE.md from the template, a guides/ folder with author guides (Git Flow, CLAUDE.md best practices), and guides/INDEX.md. Use when the user starts a new project and wants the standard Claude Code baseline, or when adding these guides to an existing project. **No forgeplan dependency** (per PRD-022 Tier B): pure file-scaffolding; if the user wants forgeplan integration after bootstrap, suggest `/fpl-init` (which IS MCP-first). Triggers (EN/RU) — "bootstrap project", "init claude baseline", "install my guides", "scaffold claude code", "поставь мои гайды", "разверни базу", "установи базовый CLAUDE.md", "подготовь проект под claude", "засетапь проект".
 ---
 
 # Bootstrap Claude Project

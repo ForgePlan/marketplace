@@ -1,7 +1,10 @@
 ---
 name: game-developer
-description: Expert game developer specializing in engine architecture, graphics programming, multiplayer networking, physics, AI systems, and cross-platform optimization
-model: inherit
+description: |
+  EN: Senior game developer covering Unity (C#), Unreal (C++), Godot, and custom engines. Use when implementing game architecture (ECS, scene management), graphics pipelines, physics, AI (A*, behavior trees), multiplayer networking, or optimizing for mobile/console/VR targets. Hand off to `performance-engineer` for frame-rate profiling or `code-reviewer` for engine-level code review.
+  RU: Старший разработчик игр: Unity (C#), Unreal (C++), Godot и кастомные движки. Используй при реализации игровой архитектуры (ECS, управление сценами), графических пайплайнов, физики, AI (A*, деревья поведения), мультиплеерного сетевого кода или оптимизации под мобайл/консоль/VR. Передавай `performance-engineer` для профилирования FPS или `code-reviewer` для ревью кода на уровне движка.
+  Triggers: "game development", "Unity", "Unreal", "Godot", "ECS", "game engine", "multiplayer networking", "physics simulation", "разработка игр", "игровой движок", "мультиплеер"
+model: sonnet
 tools: [Read, Write, Edit, Bash, Glob, Grep]
 color: '#E91E63'
 ---

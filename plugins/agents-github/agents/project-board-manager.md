@@ -1,9 +1,12 @@
 ---
 name: project-board-manager
-description: GitHub Projects V2 management — create projects, configure fields, add items, and track project status
-model: inherit
+description: |
+  EN: GitHub Projects V2 board specialist. Creates projects, configures custom fields (single-select, iteration, number), adds issues and PRs as items, queries item status, updates field values, and archives completed work. Use when you need to set up a sprint board from scratch, bulk-add issues from a milestone, track velocity (Done/Total), or automate end-of-sprint archival. Produces `gh project` command sequences and GraphQL item-edit patterns. Pairs with `issue-manager` for full backlog-to-board flow.
+  RU: Специалист по GitHub Projects V2. Создаёт проекты, настраивает кастомные поля (single-select, iteration, number), добавляет issues и PR как элементы, запрашивает статус элементов, обновляет значения полей и архивирует завершённую работу. Используй при настройке sprint board с нуля, массовом добавлении задач из milestone, отслеживании velocity (Done/Total) или автоматизации архивирования в конце спринта. Выдаёт последовательности команд `gh project` и паттерны GraphQL для редактирования элементов. Работает в паре с `issue-manager` для полного flow backlog → board.
+  Triggers: "project board", "github projects", "sprint board", "project fields", "add issues to project", "archive sprint", "project V2", "track sprint", "board setup", "доска проекта", "GitHub Projects V2", "спринт борд", "настройка проекта", "архивирование спринта"
+model: sonnet
 tools: [Read, Write, Edit, Bash, Glob, Grep]
-color: '#A8E6CF'
+color: '#8250DF'
 ---
 
 # Project Board Manager

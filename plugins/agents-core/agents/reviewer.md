@@ -1,9 +1,12 @@
 ---
 name: reviewer
-description: Code review and quality assurance — finds bugs, security issues, and design problems
-model: inherit
+description: |
+  EN: Code review and quality assurance specialist that finds bugs, security vulnerabilities, design problems, and standards violations through systematic review. Use for diff reviews on PRs, general code quality gates, or when a second pair of eyes is needed on a non-security-critical change. For security-critical changes, prefer `security-expert` (agents-pro); for EVIDENCE recording use the forgeplan-aware `code-reviewer` agent.
+  RU: Специалист по code review и обеспечению качества, выявляющий баги, уязвимости безопасности, проблемы дизайна и нарушения стандартов через систематический анализ. Используйте для ревью диффов PR, общих quality gate или когда нужен второй взгляд на некритичное с точки зрения безопасности изменение. Для security-критичных изменений предпочтите `security-expert` (agents-pro); для записи EVIDENCE используйте forgeplan-aware агент `code-reviewer`.
+  Triggers: "code review", "review this", "find bugs", "quality check", "security audit", "design review", "ревью кода", "найди баги", "проверка качества", "аудит безопасности"
+model: sonnet
 tools: [Read, Write, Edit, Bash, Glob, Grep]
-color: '#E74C3C'
+color: '#546E7A'
 ---
 
 # Code Review Agent

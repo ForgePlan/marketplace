@@ -1,9 +1,12 @@
 ---
 name: pr-manager
-description: Pull request lifecycle management — create, review, merge PRs with automated validation and merge strategy selection
-model: inherit
+description: |
+  EN: Pull request lifecycle specialist. Creates PRs with structured body templates, reviews diff and CI status, selects the right merge strategy (squash/merge/rebase), and coordinates multi-PR batches with label-based filtering. Use when you need to open a PR with a proper checklist, check which PRs are blocked on CI, batch-approve a set of PRs, or enable auto-merge with approval gating. Produces `gh pr create/review/merge` command sequences and merge-strategy recommendations. Pairs with `issue-manager` for issue-to-PR traceability.
+  RU: Специалист по жизненному циклу pull request. Создаёт PR со структурированными шаблонами тела, проверяет diff и статус CI, выбирает правильную стратегию слияния (squash/merge/rebase) и координирует batch PR с фильтрацией по лейблам. Используй при необходимости открыть PR с нормальным чеклистом, проверить, какие PR заблокированы CI, пакетно одобрить набор PR или включить auto-merge с условием одобрения. Выдаёт последовательности команд `gh pr create/review/merge` и рекомендации по стратегии слияния. Работает в паре с `issue-manager` для трассировки issue → PR.
+  Triggers: "create PR", "merge PR", "review PR", "pull request lifecycle", "auto-merge", "merge strategy", "squash merge", "PR checklist", "PR status", "создать PR", "слить PR", "ревью PR", "жизненный цикл pull request", "автослияние"
+model: sonnet
 tools: [Read, Write, Edit, Bash, Glob, Grep]
-color: '#4ECDC4'
+color: '#0075CA'
 ---
 
 # PR Manager
