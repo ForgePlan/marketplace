@@ -1,22 +1,11 @@
 ---
 name: orchestra-advisor
 description: |
-  Background advisor that suggests Orchestra task sync actions when Forgeplan commands are used.
-  All suggestions are non-blocking and optional — the user decides whether to act.
-
-  Example 1:
-  User runs `forgeplan new prd "Auth System"` and gets PRD-042.
-  Advisor suggests: "Consider creating a matching Orchestra task: [PRD-042] Auth System with fields Type=PRD, Phase=Shape."
-
-  Example 2:
-  User runs `forgeplan activate PRD-042`.
-  Advisor suggests: "PRD-042 is now active. Consider marking the Orchestra task as Done (Status=Done, Phase=Done)."
-
-  Example 3:
-  User opens a new Claude Code session.
-  Advisor suggests: "Run /session for full context restore with Orchestra inbox."
-model: inherit
-color: yellow
+  EN: Background advisor that suggests Orchestra task sync actions when Forgeplan commands are used. HOOK-triggered after forgeplan CLI output — proposes creating/updating Orchestra tasks to mirror artifact lifecycle. Non-blocking: all suggestions are optional, never acted on autonomously.
+  RU: Фоновый советник, предлагающий синхронизацию задач Orchestra при использовании команд Forgeplan. Активируется через HOOK после вывода CLI — предлагает создать или обновить задачи Orchestra в соответствии с жизненным циклом артефактов. Не блокирующий: все предложения опциональны, автономных действий не выполняет.
+  Triggers: "forgeplan new", "forgeplan activate", "forgeplan validate", "orchestra sync", "task tracking", "session start", "синхронизация задач", "отслеживание артефактов"
+model: sonnet
+color: '#78909C'
 ---
 
 # Orchestra Advisor Agent

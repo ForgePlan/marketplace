@@ -1,7 +1,7 @@
 {
   "name": "agents-pro",
-  "version": "1.7.1",
-  "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.7: 3 NEW generic CRUD-R-A agents — artifact-author (Profile A, forgeplan_generate primary + forgeplan_new fallback), artifact-maintainer (Profile D, metadata maintenance, NEW canonical profile), artifact-reviewer (Profile B generic, artifact-health audit distinct from code/security/RFC/test reviewers). Cumulative: 12 of 28 agents forgeplan-aware.",
+  "version": "1.8.0",
+  "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.8: 16 non-canonical specialists canonical-lint compliant (model: sonnet/opus, hex colors, bilingual descriptions with triggers). v1.7: 3 NEW generic CRUD-R-A agents — artifact-author (Profile A), artifact-maintainer (Profile D), artifact-reviewer (Profile B generic). Cumulative: 12 of 28 agents forgeplan-aware.",
   "author": {"name": "ForgePlan"},
   "homepage": "https://github.com/ForgePlan/marketplace",
   "repository": "https://github.com/ForgePlan/marketplace",

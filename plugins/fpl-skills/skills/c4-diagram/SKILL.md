@@ -1,6 +1,6 @@
 ---
 name: c4-diagram
-description: Interactive C4 architecture diagram generator. Walks through the four C4 levels (Context, Container, Component, Code) via guided questions and produces Mermaid diagrams plus a context document. Pairs with /ddd-decompose (which produces a domain context map) — /c4-diagram adds the deployment / runtime structure layer. Maps cleanly to forgeplan via c4-to-forge.yaml in forgeplan-brownfield-pack. Triggers (EN/RU) — "c4 diagram", "architecture diagram", "context container component", "архитектурная диаграмма", "c4 нарисуй", "/c4-diagram".
+description: Interactive C4 architecture diagram generator. Walks through the four C4 levels (Context, Container, Component, Code) via guided questions and produces Mermaid diagrams plus a context document. Pairs with /ddd-decompose (which produces a domain context map) — /c4-diagram adds the deployment / runtime structure layer. Maps cleanly to forgeplan via c4-to-forge.yaml in forgeplan-brownfield-pack. **MCP-first per PRD-022 Tier A** — Epic/Note/PRD/RFC/ADR creation uses `mcp__forgeplan__forgeplan_new` + `_link` + `_reason` when MCP available; CLI fallback when MCP server not connected. Triggers (EN/RU) — "c4 diagram", "architecture diagram", "context container component", "архитектурная диаграмма", "c4 нарисуй", "/c4-diagram".
 disable-model-invocation: true
 allowed-tools: Read Write Edit Bash(test *) Bash(forgeplan *) Bash(command *) Bash(grep *) Bash(ls *) Bash(mkdir *)
 ---
@@ -152,7 +152,7 @@ If yes — produce a UML-style class/function diagram. If no (the typical answer
 
 ### 7. Forgeplan integration
 
-If `forgeplan` is on `$PATH`, write the diagrams as forgeplan artifacts using the [`c4-to-forge.yaml`](../../../forgeplan-brownfield-pack/mappings/c4-to-forge.yaml) mapping:
+Write the diagrams as forgeplan artifacts using the [`c4-to-forge.yaml`](../../../forgeplan-brownfield-pack/mappings/c4-to-forge.yaml) mapping. Detect `mcp__forgeplan__forgeplan_new` availability first; prefer MCP, CLI fallback only when MCP unavailable.
 
 | C4 level | Forgeplan artifact |
 |---|---|
@@ -161,25 +161,41 @@ If `forgeplan` is on `$PATH`, write the diagrams as forgeplan artifacts using th
 | L3 — Component | RFC per detailed container |
 | L4 — Code | (rare) RFC or Spec |
 
+**MCP path (preferred)**:
+```
+mcp__forgeplan__forgeplan_new(kind="epic", title="<system> architecture (C4)")
+mcp__forgeplan__forgeplan_new(kind="note", title="<system> — L1 Context diagram + system landscape")
+mcp__forgeplan__forgeplan_link(source="NOTE-NNN", target="EPIC-MMM", relation="based_on")
+
+# Per container (L2)
+for c in <list of containers>:
+  mcp__forgeplan__forgeplan_new(kind="prd", title="<system> — <container> container")
+  mcp__forgeplan__forgeplan_link(source="PRD-NNN", target="EPIC-MMM", relation="based_on")
+
+# Per detailed container (L3)
+for c in <list of detailed>:
+  mcp__forgeplan__forgeplan_new(kind="rfc", title="<system> — <container> components")
+  mcp__forgeplan__forgeplan_link(source="RFC-NNN", target="PRD-CONTAINER", relation="based_on")
+```
+
+**CLI fallback (only when MCP unavailable)**:
 ```bash
 forgeplan new epic "<system> architecture (C4)"
 forgeplan new note "<system> — L1 Context diagram + system landscape"
 forgeplan link NOTE-NNN EPIC-MMM --relation based_on
 
-# Per container
 for c in <list of containers>; do
   forgeplan new prd "<system> — <container> container"
   forgeplan link PRD-NNN EPIC-MMM --relation based_on
 done
 
-# For each detailed container (L3)
 for c in <list of detailed>; do
   forgeplan new rfc "<system> — <container> components"
   forgeplan link RFC-NNN PRD-CONTAINER --relation based_on
 done
 ```
 
-If `forgeplan` is missing — leave the markdown files in `docs/architecture/c4/` as the source.
+If neither MCP nor CLI available — leave the markdown files in `docs/architecture/c4/` as the source.
 
 ### 8. Hand-off
 
@@ -197,17 +213,25 @@ Next steps:
 
 ---
 
-## Forgeplan integration
+## Forgeplan integration (MCP-first per PRD-022)
 
-The output diagrams + docs map to forgeplan via [`c4-to-forge.yaml`](../../../forgeplan-brownfield-pack/mappings/c4-to-forge.yaml). Step 7 above wires this automatically when `forgeplan` CLI is available.
+The output diagrams + docs map to forgeplan via [`c4-to-forge.yaml`](../../../forgeplan-brownfield-pack/mappings/c4-to-forge.yaml). Step 7 above wires this automatically — prefers MCP tools when available, CLI fallback otherwise.
 
 For Deep+ scope (irreversible architecture decisions surfaced during the interview):
 
+**MCP path**:
+```
+mcp__forgeplan__forgeplan_new(kind="adr", title="<system> — <key architecture decision>")
+# Or dispatch adr-architect agent for MADR 3.0 format
+mcp__forgeplan__forgeplan_link(source="ADR-NNN", target="EPIC-<system>", relation="informs")
+mcp__forgeplan__forgeplan_reason(id="ADR-NNN")     # ADI 3+ hypotheses
+```
+
+**CLI fallback**:
 ```bash
 forgeplan new adr "<system> — <key architecture decision>"
-# Body: Context, Decision, Alternatives Considered, Consequences
 forgeplan link ADR-NNN EPIC-<system> --relation informs
-forgeplan reason ADR-NNN          # ADI 3+ hypotheses on the architecture choice
+forgeplan reason ADR-NNN
 ```
 
 ### Want this orchestrated for you?

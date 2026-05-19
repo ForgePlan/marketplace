@@ -1,7 +1,10 @@
 ---
 name: pii-detector
-description: PII and credential detector that scans code and config for sensitive data leaks, with API key regexes and compliance mapping
-model: inherit
+description: |
+  EN: PII and credential detector — scans code, config files, logs, and test fixtures for sensitive data leaks using API key regexes, PII patterns, and compliance mapping (GDPR, HIPAA, PCI-DSS, SOC2). Use when performing a security scan before a public release, reviewing CI/CD configs for leaked secrets, or auditing test fixtures for real PII. Hand off to `security-expert` for broader vulnerability assessment or to `injection-analyst` for LLM-specific risks.
+  RU: Детектор PII и учётных данных — сканирует код, конфигурационные файлы, журналы и тестовые фикстуры на предмет утечек чувствительных данных с использованием регулярных выражений для API-ключей, паттернов PII и сопоставления с требованиями соответствия (GDPR, HIPAA, PCI-DSS, SOC2). Используйте при проведении проверки безопасности перед публичным релизом, проверке конфигураций CI/CD на наличие утечек секретов или аудите тестовых фикстур на реальные PII. Передайте `security-expert` для более широкой оценки уязвимостей или `injection-analyst` для специфических рисков LLM.
+  Triggers: "PII", "credentials leak", "secret scanning", "API key leak", "sensitive data", "GDPR scan", "HIPAA compliance", "PCI-DSS", "hardcoded secrets", "personal data", "data leak", "ПИД", "утечка данных", "чувствительные данные", "сканирование секретов"
+model: sonnet
 tools: [Read, Write, Edit, Bash, Glob, Grep]
 color: '#FF5722'
 ---

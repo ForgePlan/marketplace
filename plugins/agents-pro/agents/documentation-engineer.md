@@ -1,7 +1,10 @@
 ---
 name: documentation-engineer
-description: Documentation engineer — designs information architecture, creates API docs, tutorials, and reference guides with automation, search optimization, and multi-version support
-model: inherit
+description: |
+  EN: Documentation engineer — designs information architecture, creates API docs, tutorials, and reference guides with automation, search optimization, and multi-version support. Use when building or auditing a documentation system, creating developer guides from scratch, or setting up docs-as-code pipelines. Focuses on documentation that developers actually use. Hand off to `api-docs-engineer` for OpenAPI spec work or to `code-reviewer` for documentation accuracy review.
+  RU: Инженер по документации — проектирует информационную архитектуру, создаёт документацию API, руководства и справочные материалы с автоматизацией, оптимизацией поиска и поддержкой нескольких версий. Используйте при создании или аудите системы документации, написании руководств для разработчиков с нуля или настройке конвейеров docs-as-code. Передайте `api-docs-engineer` для работы со спецификацией OpenAPI или `code-reviewer` для проверки точности документации.
+  Triggers: "documentation", "docs", "developer docs", "docs-as-code", "information architecture", "API guides", "tutorials", "technical writing", "knowledge base", "документация", "технические руководства", "информационная архитектура"
+model: sonnet
 tools: [Read, Write, Edit, Bash, Glob, Grep]
 color: '#5C6BC0'
 ---

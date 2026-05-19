@@ -1,9 +1,12 @@
 ---
 name: memory-specialist
-description: Vector memory and retrieval optimization specialist — HNSW indexing, vector quantization, hybrid search with RRF fusion, memory consolidation, and knowledge protection strategies
-model: inherit
+description: |
+  EN: Vector memory and retrieval optimization specialist — HNSW indexing, vector quantization, hybrid search with RRF fusion, memory consolidation, and knowledge protection strategies. Use when optimizing a vector store for recall quality and throughput, tuning similarity search parameters, or designing hybrid keyword+semantic search pipelines. Hand off to `ml-developer` for embedding model selection or to `search-specialist` for query strategy design.
+  RU: Специалист по векторной памяти и оптимизации поиска — индексирование HNSW, векторное квантование, гибридный поиск с RRF-слиянием, консолидация памяти и стратегии защиты знаний. Используйте при оптимизации векторного хранилища для качества поиска и пропускной способности, настройке параметров поиска по сходству или проектировании гибридных конвейеров поиска ключевых слов+семантики. Передайте `ml-developer` для выбора модели эмбеддингов или `search-specialist` для проектирования стратегии запросов.
+  Triggers: "vector memory", "HNSW", "vector search", "similarity search", "RRF fusion", "hybrid search", "vector quantization", "embeddings optimization", "memory consolidation", "vector store", "векторная память", "векторный поиск", "гибридный поиск", "оптимизация поиска"
+model: sonnet
 tools: [Read, Write, Edit, Bash, Glob, Grep]
-color: '#00D4AA'
+color: '#00BFA5'
 ---
 
 # Memory and Retrieval Optimization Specialist

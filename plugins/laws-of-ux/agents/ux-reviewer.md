@@ -1,9 +1,12 @@
 ---
 name: ux-reviewer
-model: inherit
+description: |
+  EN: UX-focused frontend code reviewer that proactively checks HTML/CSS/React/Vue code against all 30 Laws of UX. HOOK-triggered after frontend file edits — automatically surfaces violations, warnings, and improvement suggestions with before/after code examples. Applies Fitts's Law, Hick's Law, Miller's Law, Cognitive Load, and 26 other principles.
+  RU: UX-ориентированный ревьюер фронтенд-кода, автоматически проверяющий HTML/CSS/React/Vue против всех 30 Законов UX. Активируется через HOOK после правок фронтенд-файлов — выдаёт нарушения, предупреждения и рекомендации по улучшению с примерами до/после. Применяет Закон Фиттса, Закон Хика, Закон Миллера, когнитивную нагрузку и 26 других принципов.
+  Triggers: "UI component", "frontend review", "layout issues", "HTML CSS React Vue", "ux review", "laws of ux", "компонент интерфейса", "ревью фронтенда", "UX законы"
+model: sonnet
 tools: [Read, Write, Edit, Bash, Glob, Grep]
-color: green
-description: "UX-focused frontend code reviewer. Use this agent when building UI components, reviewing frontend code, fixing layout issues, or working with HTML/CSS/React/Vue. Automatically checks code against 30 Laws of UX. Examples:\n\n<example>\nContext: User is building a navigation menu\nuser: \"Create a navigation component for our app\"\nassistant: \"I'll build the navigation and check it against UX laws. Let me use the ux-reviewer agent to ensure it follows Hick's Law (limited choices) and Serial Position Effect (important items first/last).\"\n</example>\n\n<example>\nContext: User is working on a form\nuser: \"The checkout form has too many fields\"\nassistant: \"I'll analyze the form against UX principles. Let me use the ux-reviewer agent to apply Miller's Law (chunking), Cognitive Load reduction, and Tesler's Law (essential complexity).\"\n</example>"
+color: '#2E7D32'
 ---
 
 # UX Reviewer Agent

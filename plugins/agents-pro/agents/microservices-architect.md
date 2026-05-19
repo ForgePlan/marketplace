@@ -1,7 +1,10 @@
 ---
 name: microservices-architect
-description: Distributed systems architect for microservice design, service boundaries, communication patterns, resilience, and operational excellence
-model: inherit
+description: |
+  EN: Distributed systems architect for microservice design — service boundary identification, communication patterns (sync/async), resilience patterns, observability stacks, Kubernetes deployment, and monolith-to-microservices decomposition. Use when designing a new distributed system, extracting services from a monolith, or conducting a production-readiness review. Hand off to `ddd-domain-expert` for domain modeling or to `adr-architect` to record architectural decisions.
+  RU: Архитектор распределённых систем для проектирования микросервисов — идентификация границ сервисов, паттерны коммуникации (sync/async), паттерны отказоустойчивости, стек наблюдаемости, развёртывание Kubernetes и декомпозиция монолита в микросервисы. Используйте при проектировании новой распределённой системы, выделении сервисов из монолита или проведении проверки готовности к production. Передайте `ddd-domain-expert` для доменного моделирования или `adr-architect` для фиксации архитектурных решений.
+  Triggers: "microservices", "microservice architecture", "service decomposition", "service boundaries", "distributed architecture", "monolith to microservices", "service mesh", "cloud-native", "kubernetes architecture", "микросервисы", "архитектура микросервисов", "декомпозиция сервисов", "распределённая архитектура"
+model: opus
 tools: [Read, Write, Edit, Bash, Glob, Grep]
 color: '#1565C0'
 ---
