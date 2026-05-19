@@ -1,6 +1,6 @@
 ---
 name: riper
-description: RIPER methodology orchestrator — Research → Innovate → Plan → Execute → Review. Thin wrapper that walks a task through the five RIPER phases by delegating to existing fpl-skills (/research, /refine or /fpf-decompose, /rfc create, /sprint or /forge-cycle, /audit) with explicit phase tracking. Pairs with /forge-cycle for users who prefer RIPER terminology over forgeplan's native Route/Shape/Build/Evidence/Activate. Triggers (EN/RU) — "riper", "research innovate plan execute review", "/riper", "пройди riper", "RIPER цикл".
+description: RIPER methodology orchestrator — Research → Innovate → Plan → Execute → Review. Thin wrapper that walks a task through the five RIPER phases by delegating to existing fpl-skills (/research, /refine or /fpf-decompose, /rfc create, /sprint or /forge-cycle, /audit) with explicit phase tracking. Pairs with /forge-cycle for users who prefer RIPER terminology over forgeplan's native Route/Shape/Build/Evidence/Activate. **MCP-first per PRD-022 Tier A** — each phase's forgeplan artifact creation uses `mcp__forgeplan__forgeplan_new` + `_link` + `_validate` when MCP is available; CLI fallback (`bash forgeplan ...`) only when MCP server not connected. Triggers (EN/RU) — "riper", "research innovate plan execute review", "/riper", "пройди riper", "RIPER цикл".
 disable-model-invocation: true
 allowed-tools: Read Write Edit Bash(test *) Bash(forgeplan *) Bash(command *) Bash(grep *) Bash(ls *)
 ---
@@ -125,19 +125,37 @@ Next: gh pr create (you do this; the skill stops here for safety).
 
 ---
 
-## Forgeplan integration
+## Forgeplan integration (MCP-first per PRD-022)
 
-When `forgeplan` CLI is on `$PATH`, each phase produces forgeplan artifacts that can be linked:
+Each phase produces forgeplan artifacts. Detect MCP availability first (`mcp__forgeplan__forgeplan_new` in tool list). Prefer MCP; CLI fallback when MCP server not connected.
 
-| Phase | Forgeplan artifacts |
-|---|---|
-| Research | (Optional) `forgeplan new note "research outcome"` linked to a future PRD |
-| Innovate | `forgeplan new prd "<task>"` + `forgeplan new adr "<key decision>"` |
-| Plan | `forgeplan new rfc "<approach>"` linked to PRD via `based_on` |
-| Execute | `forgeplan new evidence "<task>: tests pass, smoke OK"` linked to PRD |
-| Review | `forgeplan new evidence "<task>: audit findings — N HIGH resolved"` |
+### Per-phase artifact creation
 
-After all phases: `forgeplan link RFC PRD --relation based_on`, `forgeplan link EVID PRD`, `forgeplan score PRD`, `forgeplan activate PRD` (if R_eff > 0).
+| Phase | MCP path (preferred) | CLI fallback |
+|---|---|---|
+| Research | `mcp__forgeplan__forgeplan_new(kind="note", title="research outcome")` then `forgeplan_link` to future PRD | `forgeplan new note "research outcome"` |
+| Innovate | `mcp__forgeplan__forgeplan_new(kind="prd", title="<task>")` + `forgeplan_new(kind="adr", title="<key decision>")` (or `forgeplan_generate` for LLM-fill from report) | `forgeplan new prd "<task>"` + `forgeplan new adr "..."` |
+| Plan | `mcp__forgeplan__forgeplan_new(kind="rfc", title="<approach>")` + `forgeplan_link(source=RFC, target=PRD, relation="based_on")` | `forgeplan new rfc "<approach>"` + `forgeplan link RFC PRD --relation based_on` |
+| Execute | `mcp__forgeplan__forgeplan_new(kind="evidence", title="<task>: tests pass, smoke OK")` + `forgeplan_link` to PRD | `forgeplan new evidence "..."` |
+| Review | `mcp__forgeplan__forgeplan_new(kind="evidence", title="<task>: audit findings — N HIGH resolved")` | `forgeplan new evidence "..."` |
+
+### After all phases
+
+**MCP path**:
+```
+mcp__forgeplan__forgeplan_link(source="RFC-NNN", target="PRD-MMM", relation="based_on")
+mcp__forgeplan__forgeplan_link(source="EVID-XXX", target="PRD-MMM", relation="informs")
+mcp__forgeplan__forgeplan_score(id="PRD-MMM")
+# Activation requires Profile A or B agent (orchestrator) — not invoked from this skill directly
+```
+
+**CLI fallback**:
+```bash
+forgeplan link RFC-NNN PRD-MMM --relation based_on
+forgeplan link EVID-XXX PRD-MMM --relation informs
+forgeplan score PRD-MMM
+forgeplan activate PRD-MMM   # if R_eff > 0
+```
 
 ### Want this orchestrated for you?
 

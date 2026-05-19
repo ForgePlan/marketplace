@@ -1,6 +1,6 @@
 ---
 name: ddd-decompose
-description: Interview-driven Domain-Driven Design decomposition skill. Walks through identifying bounded contexts, aggregates, ubiquitous language, and domain events for a system or new feature. Outputs a DDD context map (Markdown + Mermaid) plus optional forgeplan artifacts (Epic + per-context PRDs + Spec). Pairs with /fpf-decompose (general decomposition) — use /ddd-decompose when DDD framing matters (multi-team boundaries, complex business domains). Triggers (EN/RU) — "ddd decompose", "bounded contexts", "ubiquitous language", "domain model", "разложи по DDD", "ограниченные контексты", "доменная модель", "/ddd-decompose".
+description: Interview-driven Domain-Driven Design decomposition skill. Walks through identifying bounded contexts, aggregates, ubiquitous language, and domain events for a system or new feature. Outputs a DDD context map (Markdown + Mermaid) plus optional forgeplan artifacts (Epic + per-context PRDs + Spec). Pairs with /fpf-decompose (general decomposition) — use /ddd-decompose when DDD framing matters (multi-team boundaries, complex business domains). **MCP-first per PRD-022 Tier A** — Epic/PRD/Spec/ADR creation uses `mcp__forgeplan__forgeplan_new` + `_link` + `_validate` + `_reason` when MCP available; CLI fallback when MCP server not connected. Triggers (EN/RU) — "ddd decompose", "bounded contexts", "ubiquitous language", "domain model", "разложи по DDD", "ограниченные контексты", "доменная модель", "/ddd-decompose".
 disable-model-invocation: true
 allowed-tools: Read Write Edit Bash(test *) Bash(forgeplan *) Bash(command *) Bash(grep *) Bash(ls *) Bash(mkdir *)
 ---
@@ -157,25 +157,35 @@ flowchart LR
 
 Save to `docs/architecture/ddd/context-map.md` (or include in the forgeplan artifact below).
 
-### 8. Forgeplan integration (if CLI available)
+### 8. Forgeplan integration (MCP-first)
 
-If `forgeplan` is on `$PATH`:
+Detect `mcp__forgeplan__forgeplan_new` availability first. Prefer MCP; CLI fallback when MCP unavailable.
 
-```bash
+**MCP path (preferred)**:
+```
 # Top-level Epic groups all contexts
-forgeplan new epic "<system name> domain decomposition"
-# One PRD per bounded context
-for ctx in <list of contexts>; do
-  forgeplan new prd "<system> — <ctx> bounded context"
-  # Body: filled from interview answers in step 3-5
-  forgeplan link PRD-<ctx> EPIC-<system> --relation based_on
-done
+mcp__forgeplan__forgeplan_new(kind="epic", title="<system name> domain decomposition")
+# One PRD per bounded context (or forgeplan_generate for LLM-fill from interview)
+for ctx in <list of contexts>:
+  mcp__forgeplan__forgeplan_new(kind="prd", title="<system> — <ctx> bounded context")
+  mcp__forgeplan__forgeplan_link(source="PRD-<ctx>", target="EPIC-<system>", relation="based_on")
 # Specs for cross-context contracts
-forgeplan new spec "<system> — domain events catalogue"
-forgeplan link SPEC-<events> EPIC-<system> --relation implements
+mcp__forgeplan__forgeplan_new(kind="spec", title="<system> — domain events catalogue")
+mcp__forgeplan__forgeplan_link(source="SPEC-<events>", target="EPIC-<system>", relation="based_on")
 ```
 
-If `forgeplan` is missing — just write the Markdown files under `docs/architecture/ddd/`.
+**CLI fallback (only when MCP unavailable)**:
+```bash
+forgeplan new epic "<system name> domain decomposition"
+for ctx in <list of contexts>; do
+  forgeplan new prd "<system> — <ctx> bounded context"
+  forgeplan link PRD-<ctx> EPIC-<system> --relation based_on
+done
+forgeplan new spec "<system> — domain events catalogue"
+forgeplan link SPEC-<events> EPIC-<system> --relation based_on
+```
+
+If neither MCP nor CLI available — just write the Markdown files under `docs/architecture/ddd/`.
 
 ### 9. Hand-off
 
@@ -194,20 +204,34 @@ Next steps:
 
 ---
 
-## Forgeplan integration
+## Forgeplan integration (MCP-first per PRD-022)
 
-If the `forgeplan` CLI is on `$PATH`, the decomposition produces Epic + PRDs + Spec naturally (step 8). For Deep+ depth (cross-team, multi-context system):
+The decomposition produces Epic + PRDs + Spec naturally (step 8). For Deep+ depth (cross-team, multi-context system), validate and reason via MCP:
 
+**MCP path**:
+```
+mcp__forgeplan__forgeplan_reason(id="EPIC-NNN")     # ADI 3+ hypotheses on boundary choices
+mcp__forgeplan__forgeplan_validate(id="EPIC-NNN")   # confirm MUST sections present
+```
+
+**CLI fallback**:
 ```bash
-forgeplan reason EPIC-NNN          # ADI 3+ hypotheses on the boundary choices
-forgeplan validate EPIC-NNN        # confirm MUST sections present
+forgeplan reason EPIC-NNN
+forgeplan validate EPIC-NNN
 ```
 
 DDR-style ADR for the **why** behind specific boundary decisions:
 
+**MCP path**:
+```
+mcp__forgeplan__forgeplan_new(kind="adr", title="<system> — bounded context boundaries: <key decision>")
+# Or dispatch adr-architect agent for MADR 3.0 format
+mcp__forgeplan__forgeplan_link(source="ADR-NNN", target="EPIC-NNN", relation="informs")
+```
+
+**CLI fallback**:
 ```bash
 forgeplan new adr "<system> — bounded context boundaries: <key decision>"
-# Body: Context (why this came up), Decision, Alternatives Considered, Consequences, Invariants
 forgeplan link ADR-NNN EPIC-NNN --relation informs
 ```
 

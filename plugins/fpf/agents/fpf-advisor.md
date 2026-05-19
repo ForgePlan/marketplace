@@ -1,24 +1,11 @@
 ---
 name: fpf-advisor
 description: |
-  FPF thinking advisor — activates when the user is working on architecture,
-  planning, or decision-making tasks where structured reasoning would help.
-
-  Examples of when to activate:
-  - User: "I need to design the architecture for our new payment system"
-    → Suggest /fpf-decompose to break the system into bounded contexts with clear roles and interfaces.
-  - User: "Should we use PostgreSQL or DynamoDB for this service?"
-    → Suggest /fpf-evaluate to score alternatives with evidence and F-G-R criteria.
-  - User: "Our deployment keeps failing and I can't figure out why"
-    → Suggest /fpf-reason to generate hypotheses and test them systematically.
-  - User: "We need to restructure the team around our new product domains"
-    → Suggest /fpf-decompose for domain decomposition, then /fpf-evaluate for team structure options.
-  - User: "I'm not sure if this RFC addresses all the risks"
-    → Suggest /fpf-evaluate to identify missing evidence and assumptions.
-
-  Do NOT activate for simple coding tasks, syntax questions, or routine file edits.
-model: inherit
-color: magenta
+  EN: FPF thinking advisor that surfaces structured-reasoning suggestions for architecture, planning, and decision-making tasks. HOOK-triggered background agent — recommends /fpf-decompose, /fpf-evaluate, or /fpf-reason based on context. Does not activate for simple coding tasks or routine edits.
+  RU: Советник FPF, предлагающий структурированное мышление для задач архитектуры, планирования и принятия решений. Фоновый агент через HOOK — рекомендует /fpf-decompose, /fpf-evaluate или /fpf-reason по контексту. Не активируется для простых задач кодирования или рутинных правок.
+  Triggers: "architecture design", "technology choice", "system decomposition", "decision making", "evaluate alternatives", "fpf-decompose", "fpf-evaluate", "fpf-reason", "проектирование архитектуры", "выбор технологии", "декомпозиция системы"
+model: sonnet
+color: '#607D8B'
 ---
 
 # FPF Advisor Agent

@@ -1,7 +1,10 @@
 ---
 name: distributed-systems-expert
-description: "Expert in distributed systems: consensus protocols (Raft, PBFT, Paxos), CRDTs, gossip protocols, quorum management, and distributed security"
-model: inherit
+description: |
+  EN: Expert in distributed systems theory and practice — consensus protocols (Raft, PBFT, Paxos), CRDTs, gossip protocols, quorum management, and distributed security. Use when selecting a consensus protocol, designing a fault-tolerant cluster, reasoning about CAP/FLP trade-offs, or evaluating Byzantine fault tolerance requirements. Hand off to `microservices-architect` for service-level architecture or to `adr-architect` to record protocol selection decisions.
+  RU: Эксперт в теории и практике распределённых систем — протоколы консенсуса (Raft, PBFT, Paxos), CRDT, gossip-протоколы, управление кворумом и распределённая безопасность. Используйте при выборе протокола консенсуса, проектировании отказоустойчивого кластера, анализе компромиссов CAP/FLP или оценке требований к византийской отказоустойчивости. Передайте `microservices-architect` для архитектуры на уровне сервисов или `adr-architect` для фиксации решений о выборе протокола.
+  Triggers: "Raft", "Paxos", "PBFT", "consensus protocol", "CRDTs", "gossip protocol", "quorum", "distributed systems", "Byzantine fault", "CAP theorem", "FLP impossibility", "distributed consistency", "распределённые системы", "протокол консенсуса", "кворум"
+model: opus
 tools: [Read, Write, Edit, Bash, Glob, Grep]
 color: '#E65100'
 ---

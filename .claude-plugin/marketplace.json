@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.41.0"
+    "version": "1.42.0"
   },
   "plugins": [
     {
@@ -35,8 +35,8 @@
     {
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
-      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 22 engineering skills + dev-advisor agent + 4 hooks. v1.17: PRD-022 Tier B \u2014 6 low-ops skills (do, team, bootstrap, setup, forge-report, migrate-from-dev-toolkit) annotated as orchestrator-aware/no-forgeplan in descriptions. v1.16: PRD-022 Phase 2 Batch 2 \u2014 research + refine MCP-first (Phase 1 incompletes closed). Cumulative MCP audit: 12 of 22 MCP-first + 6 Tier B explicitly marked = 18 of 22 audited. AGENT-AUTHORING-GUIDE.md + CRUD-R-A matrix + Profile D/Maintainer + forgeplan_generate primary creation. LR-1..LR-7 canonical-pattern lint rules.",
-      "version": "1.17.0",
+      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 22 engineering skills + dev-advisor agent + 4 hooks. v1.18: PRD-022 Tier A \u2014 4 high-traffic skills (riper, ddd-decompose, gh-project, c4-diagram) migrated to MCP-first with CLI fallback. ALL 16 of 22 skills now MCP-first; remaining 6 Tier B explicitly classified as no-forgeplan. PRD-022 Phase 2 COMPLETE. v1.17.1: dev-advisor canonical-lint. AGENT-AUTHORING-GUIDE + CRUD-R-A matrix + Profile D + forgeplan_generate primary. LR-1..LR-7 lint rules.",
+      "version": "1.18.0",
       "author": {
         "name": "ForgePlan"
       },
@@ -59,8 +59,8 @@
     {
       "name": "laws-of-ux",
       "source": "./plugins/laws-of-ux",
-      "description": "UX laws knowledge base and frontend code reviewer. Analyzes HTML/CSS/JS/React/Vue/Svelte code against 30 Laws of UX principles with actionable recommendations.",
-      "version": "1.4.0",
+      "description": "UX laws knowledge base and frontend code reviewer. Analyzes HTML/CSS/JS/React/Vue/Svelte code against 30 Laws of UX principles with actionable recommendations. v1.4.1: ux-reviewer agent canonical-lint compliant (LR-1..LR-3).",
+      "version": "1.4.1",
       "author": {
         "name": "ForgePlan"
       },
@@ -79,8 +79,8 @@
     {
       "name": "forgeplan-workflow",
       "source": "./plugins/forgeplan-workflow",
-      "description": "Structured engineering workflow for forgeplan users. Provides /forge-cycle (full SDLC cycle with Step 0.5 project-agent-matrix.yaml dispatch \u2014 PRD-026 Phase 6) and /forge-audit (multi-expert review), methodology knowledge base, quality gate hooks. Requires forgeplan CLI.",
-      "version": "1.9.0",
+      "description": "Structured engineering workflow for forgeplan users. Provides /forge-cycle (full SDLC cycle with Step 0.5 project-agent-matrix.yaml dispatch \u2014 PRD-026 Phase 6) and /forge-audit (multi-expert review), methodology knowledge base, quality gate hooks. Requires forgeplan CLI. v1.9.1: forge-advisor agent canonical-lint compliant (LR-1..LR-3).",
+      "version": "1.9.1",
       "author": {
         "name": "ForgePlan"
       },
@@ -100,8 +100,8 @@
     {
       "name": "dev-toolkit",
       "source": "./plugins/dev-toolkit",
-      "description": "[DEPRECATED \u2014 superseded by fpl-skills] Universal engineering toolkit: multi-expert audit, wave-based sprints, session context recall, card-based structured reports with auto-trigger hooks, and safety hooks. New users should install fpl-skills@ForgePlan-marketplace instead.",
-      "version": "1.6.2",
+      "description": "[DEPRECATED \u2014 superseded by fpl-skills] Universal engineering toolkit: multi-expert audit, wave-based sprints, session context recall, card-based structured reports with auto-trigger hooks, and safety hooks. New users should install fpl-skills@ForgePlan-marketplace instead. v1.6.3: dev-advisor agent canonical-lint compliant (LR-1..LR-3).",
+      "version": "1.6.3",
       "deprecated": true,
       "supersededBy": "fpl-skills",
       "author": {
@@ -123,8 +123,8 @@
     {
       "name": "fpf",
       "source": "./plugins/fpf",
-      "description": "First Principles Framework (FPF) \u2014 thinking amplifier for structured reasoning, decomposition, and decision-making. Enhanced plugin with /fpf command, applied patterns, forgeplan integration, and FPF advisor agent. Based on FPF by Anatoly Levenchuk.",
-      "version": "1.4.0",
+      "description": "First Principles Framework (FPF) \u2014 thinking amplifier for structured reasoning, decomposition, and decision-making. Enhanced plugin with /fpf command, applied patterns, forgeplan integration, and FPF advisor agent. Based on FPF by Anatoly Levenchuk. v1.4.1: fpf-advisor agent canonical-lint compliant (LR-1..LR-3).",
+      "version": "1.4.1",
       "author": {
         "name": "ForgePlan"
       },
@@ -143,8 +143,8 @@
     {
       "name": "forgeplan-orchestra",
       "source": "./plugins/forgeplan-orchestra",
-      "description": "Unified workflow: Forgeplan artifacts + Orchestra task tracking + Claude Code AI execution. Bidirectional sync, Session Start Protocol with Inbox Pattern, and methodology knowledge base. Requires forgeplan CLI + Orchestra MCP server.",
-      "version": "1.4.0",
+      "description": "Unified workflow: Forgeplan artifacts + Orchestra task tracking + Claude Code AI execution. Bidirectional sync, Session Start Protocol with Inbox Pattern, and methodology knowledge base. Requires forgeplan CLI + Orchestra MCP server. v1.4.1: orchestra-advisor agent canonical-lint compliant (LR-1..LR-3).",
+      "version": "1.4.1",
       "author": {
         "name": "ForgePlan"
       },
@@ -208,8 +208,8 @@
     {
       "name": "agents-pro",
       "source": "./plugins/agents-pro",
-      "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.7: 3 NEW generic CRUD-R-A agents \u2014 artifact-author (Profile A, forgeplan_generate primary), artifact-maintainer (Profile D, metadata maintenance \u2014 NEW canonical profile), artifact-reviewer (Profile B generic, artifact-health audit). Cumulative: 12 of 28 agents forgeplan-aware. v1.7.1: README refreshed (28 agents grouped by canonical profile + non-canonical specialists).",
-      "version": "1.7.1",
+      "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.8: 16 non-canonical specialists canonical-lint compliant (model: sonnet/opus, hex colors, bilingual descriptions with triggers). v1.7: 3 NEW generic CRUD-R-A agents \u2014 artifact-author (Profile A), artifact-maintainer (Profile D), artifact-reviewer (Profile B generic). Cumulative: 12 of 28 agents forgeplan-aware.",
+      "version": "1.8.0",
       "author": {
         "name": "ForgePlan"
       },

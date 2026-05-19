@@ -1,7 +1,7 @@
 {
   "name": "fpf",
-  "version": "1.4.0",
-  "description": "First Principles Framework (FPF) \u2014 thinking amplifier for structured reasoning, system decomposition, and decision-making. Enhanced version with applied patterns, forgeplan integration, and practical commands. Based on the FPF specification by Anatoly Levenchuk.",
+  "version": "1.4.1",
+  "description": "First Principles Framework (FPF) \u2014 thinking amplifier for structured reasoning, system decomposition, and decision-making. Enhanced version with applied patterns, forgeplan integration, and practical commands. Based on the FPF specification by Anatoly Levenchuk. v1.4.1: fpf-advisor agent canonical-lint compliant (LR-1..LR-3).",
   "author": {
     "name": "ForgePlan"
   },

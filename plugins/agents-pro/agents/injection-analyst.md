@@ -1,7 +1,10 @@
 ---
 name: injection-analyst
-description: Prompt injection and jailbreak analyst with 6-type threat taxonomy, evasion detection, sophistication scoring, and mitigation recommendations
-model: inherit
+description: |
+  EN: Prompt injection and jailbreak analyst — detects, classifies, and mitigates injection threats in LLM-powered applications using a 6-type threat taxonomy, evasion detection, and sophistication scoring. Use when auditing LLM integration code for injection surfaces, reviewing prompt templates, or implementing input/output filtering. Hand off to `security-expert` for full application security review or to `pii-detector` for concurrent sensitive data scanning.
+  RU: Аналитик инъекций промптов и джейлбрейков — обнаруживает, классифицирует и устраняет угрозы инъекций в приложениях на базе LLM с использованием таксономии из 6 типов угроз, обнаружения обхода и оценки сложности. Используйте при аудите кода интеграции LLM на наличие поверхностей инъекций, проверке шаблонов промптов или реализации фильтрации ввода/вывода. Передайте `security-expert` для полного аудита безопасности приложения или `pii-detector` для параллельного сканирования на чувствительные данные.
+  Triggers: "prompt injection", "jailbreak", "LLM security", "injection attack", "prompt manipulation", "AI security", "jailbreaking", "instruction override", "role switching attack", "инъекция промптов", "безопасность LLM", "джейлбрейк", "атака на промпт"
+model: sonnet
 tools: [Read, Write, Edit, Bash, Glob, Grep]
 color: '#9C27B0'
 ---

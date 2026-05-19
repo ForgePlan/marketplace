@@ -1,7 +1,7 @@
 {
   "name": "forgeplan-orchestra",
-  "version": "1.4.0",
-  "description": "Unified workflow: Forgeplan artifacts + Orchestra task tracking + Claude Code AI execution. Bidirectional sync, Session Start Protocol with Inbox Pattern, and methodology knowledge base. Requires forgeplan CLI (private app, access via project admin) + Orchestra MCP server.",
+  "version": "1.4.1",
+  "description": "Unified workflow: Forgeplan artifacts + Orchestra task tracking + Claude Code AI execution. Bidirectional sync, Session Start Protocol with Inbox Pattern, and methodology knowledge base. Requires forgeplan CLI (private app, access via project admin) + Orchestra MCP server. v1.4.1: orchestra-advisor agent canonical-lint compliant (LR-1..LR-3).",
   "author": {
     "name": "ForgePlan"
   },

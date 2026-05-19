@@ -1,6 +1,6 @@
 ---
 name: gh-project
-description: Project-agnostic GitHub Projects v2 integration. Reads per-project config from .forgeplan/state/gh-project.yaml; never hardcodes project numbers. Five operations — init (one-time setup), add-pr (current/given PR → board), link-prd (Standard+ PRD → matching GH issue + board entry with Forgeplan-ID field), sync-status (read forgeplan artifact status, write project board Status field), list (current items on board). Gracefully degrades when gh CLI scopes are missing or config absent. Triggers (EN/RU) — "gh-project", "add to project", "link prd to issue", "sync project status", "/gh-project", "добавь на доску", "связи с проектом", "обнови статус на доске".
+description: Project-agnostic GitHub Projects v2 integration. Reads per-project config from .forgeplan/state/gh-project.yaml; never hardcodes project numbers. Five operations — init (one-time setup), add-pr (current/given PR → board), link-prd (Standard+ PRD → matching GH issue + board entry with Forgeplan-ID field), sync-status (read forgeplan artifact status, write project board Status field), list (current items on board). **MCP-first read-only per PRD-022 Tier A** — uses `mcp__forgeplan__forgeplan_get` and `mcp__forgeplan__forgeplan_validate` when MCP available (no mutating ops on forgeplan side); CLI fallback (`bash forgeplan get|validate|list`) when MCP not connected. Gracefully degrades when gh CLI scopes are missing or config absent. Triggers (EN/RU) — "gh-project", "add to project", "link prd to issue", "sync project status", "/gh-project", "добавь на доску", "связи с проектом", "обнови статус на доске".
 disable-model-invocation: true
 allowed-tools: Read Write Edit Bash(test *) Bash(ls *) Bash(cat *) Bash(pwd *) Bash(command *) Bash(git *) Bash(gh *) Bash(forgeplan *) Bash(jq *) Bash(python3 *)
 ---
@@ -146,7 +146,9 @@ For Standard+ PRDs only. Creates GH issue + adds to board + sets Forgeplan-ID an
 ```bash
 PRD_ID="$1"
 
-# Read forgeplan artifact
+# Read forgeplan artifact — MCP-first per PRD-022, CLI fallback
+# Preferred: mcp__forgeplan__forgeplan_get(id=PRD_ID) returns structured JSON (.title field)
+# Fallback shown below when MCP unavailable:
 ART_TITLE=$(forgeplan get "$PRD_ID" 2>/dev/null | head -3 | tail -1 | sed 's/^# //')
 
 # Create issue
@@ -169,7 +171,7 @@ gh project item-add "$PROJ_NUM" --owner "$OWNER" --url "$ISSUE_URL"
 # Then gh project item-edit with Forgeplan-ID = $PRD_ID, Type = "PRD"
 ```
 
-If `forgeplan get $PRD_ID` shows depth=tactical, refuse with hint to use `/gh-project add-pr` for the eventual PR instead.
+If `mcp__forgeplan__forgeplan_get(id=PRD_ID)` (or CLI fallback `forgeplan get $PRD_ID`) shows depth=tactical, refuse with hint to use `/gh-project add-pr` for the eventual PR instead.
 
 ### `/gh-project sync-status <ARTIFACT-ID>`
 
@@ -177,7 +179,7 @@ Read forgeplan artifact status, write to project Status field.
 
 | Forgeplan status | Project Status |
 |---|---|
-| draft | Backlog (or Ready if validated — check via `forgeplan validate <id>`) |
+| draft | Backlog (or Ready if validated — check via `mcp__forgeplan__forgeplan_validate(id)` or CLI fallback `forgeplan validate <id>`) |
 | active | In Progress |
 | superseded | Done |
 | deprecated | Cancelled |

@@ -1,18 +1,11 @@
 ---
 name: dev-advisor
 description: |
-  Proactive development advisor that monitors your workflow and suggests best practices.
-
-  Example: After modifying several files, the advisor might suggest:
-  "You've changed 8 files across 3 modules — consider running /audit to catch any issues before committing."
-
-  Example: When adding a new exported function, the advisor might note:
-  "New public function `processPayment` added — consider writing a test for the happy path and key error cases."
-
-  Example: When editing authentication or input handling code, the advisor might warn:
-  "You're modifying auth logic in login.ts — be mindful of timing attacks and ensure tokens are validated server-side."
-model: inherit
-color: blue
+  EN: Proactive development advisor that monitors your workflow and suggests best practices. HOOK-triggered background agent — surfaces after file edits to recommend audits, tests, and security checks. Non-blocking: all suggestions are optional and session-deduplicated.
+  RU: Проактивный советник по разработке, мониторящий рабочий процесс и предлагающий лучшие практики. Фоновый агент, активируемый через HOOK после правок файлов — рекомендует аудит, тесты и проверки безопасности. Не блокирующий: все предложения опциональны и дедуплицируются в рамках сессии.
+  Triggers: "post-edit review", "audit suggestion", "test reminder", "security awareness", "complexity management", "проверка после правок", "напоминание о тестах"
+model: sonnet
+color: '#607D8B'
 ---
 
 # Dev Advisor — Proactive Development Assistant
