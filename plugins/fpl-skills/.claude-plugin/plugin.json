@@ -1,7 +1,7 @@
 {
   "name": "fpl-skills",
-  "version": "1.19.0",
-  "description": "Flagship workflow plugin for the ForgePlan ecosystem. 22 engineering skills + dev-advisor agent + 4 hooks. v1.19: /fpl-init operating contract v3 marker \u2014 closes PRD-022 AC-3 (idempotent injection). v3 contract reflects Phase 2 completion (16/22 skills MCP-first + 6 Tier B classified) + canonical B2 agent dispatch awareness (PRD-026). Idempotent v1\u2192v3 and v2\u2192v3 upgrade paths preserve user-customised content. v1.18: PRD-022 Tier A \u2014 4 high-traffic skills MCP-first with CLI fallback. PRD-022 Phase 2 + AC-3 COMPLETE. AGENT-AUTHORING-GUIDE + CRUD-R-A matrix + Profile D.",
+  "version": "1.20.0",
+  "description": "Flagship workflow plugin for the ForgePlan ecosystem. 23 engineering skills + dev-advisor agent + 5 hooks. v1.20: PRD-029 Sprint A \u2014 3 UX-layer autonomy deliverables: (1) /agent-advisor skill \u2014 consults mm-agent-selection mental model + embedded CRUD-R-A map \u2192 recommends specialist agent with profile/rationale/invocation snippet; (2) Subagent ask-back protocol \u2014 `<<NEED_USER_INPUT:...>>` sentinel documented in AGENT-AUTHORING-GUIDE with parser for /forge-cycle + /autorun; (3) prompt-router UserPromptSubmit hook \u2014 keyword classifier emits non-blocking skill suggestions in additionalContext. Closes Gap A (knowing-which-command), B (subagent-needs-input), E (right-agent-for-job) from the autonomy vision. v1.19: /fpl-init operating contract v3 marker. v1.18: PRD-022 Tier A \u2014 4 high-traffic skills MCP-first.",
   "author": {
     "name": "ForgePlan"
   },
@@ -41,6 +41,7 @@
       "dev-advisor"
     ],
     "skills": [
+      "agent-advisor",
       "audit",
       "autorun",
       "bootstrap",
@@ -68,7 +69,8 @@
       "SessionStart",
       "PreToolUse:Bash",
       "PostToolUse:Write|Edit|MultiEdit",
-      "PostToolUse:.*"
+      "PostToolUse:.*",
+      "UserPromptSubmit"
     ]
   }
 }

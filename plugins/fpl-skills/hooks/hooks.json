@@ -49,6 +49,17 @@
           }
         ]
       }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/prompt-router.sh",
+            "timeout": 1
+          }
+        ]
+      }
     ]
   }
 }

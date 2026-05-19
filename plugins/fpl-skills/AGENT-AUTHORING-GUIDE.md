@@ -598,9 +598,144 @@ Anything else — follow the canon. Drift compounds, and "we'll fix it later" ra
 
 ---
 
+## Subagent ask-back protocol (PRD-029)
+
+Subagents cannot invoke `AskUserQuestion` directly — that tool is only available to the main Claude Code conversation. When a subagent hits a knowledge gap mid-execution (e.g. `specification` needs to know the target latency SLO, `coder` needs to confirm an API contract decision), it MUST surface the question through the **ask-back protocol** so the orchestrator can ask the user and re-dispatch with the answer.
+
+### When to ask back
+
+DO ask back when:
+- A piece of information is **essential** to proceed correctly AND
+- That information **cannot be derived** from the project state (forgeplan artifacts, source code, mm-* mental models, AGENT-AUTHORING-GUIDE) AND
+- A wrong guess would produce **irreversible** or **costly-to-fix** output (writes wrong PRD section, picks wrong library, designs wrong schema)
+
+DO NOT ask back when:
+- The answer can be inferred from existing forgeplan artifacts or source code — read first, don't ask
+- The choice is reversible and low-cost — pick a reasonable default, document via FPF, continue
+- The question is about preference/style — apply canonical defaults from AGENT-AUTHORING-GUIDE
+- You're stalling on ambiguity that good craft would resolve — make a decision
+
+Excessive ask-back == agent failure. **Bias to ship**, ask only when truly blocked.
+
+### Sentinel format
+
+Subagent output to orchestrator MUST contain — at the **start of a line** — one of two sentinel forms:
+
+**Single-line variant (preferred for short questions)**:
+
+```
+<<NEED_USER_INPUT: What is the target p99 latency SLO for the auth endpoint?>>
+```
+
+**Multi-line variant (for questions needing context)**:
+
+```
+<<NEED_USER_INPUT_BEGIN>>
+question: What is the target p99 latency SLO for the auth endpoint?
+why: Determines whether to use synchronous token validation (250-500ms acceptable)
+     or async background refresh (sub-50ms required).
+options:
+  - 50ms — async refresh, more complex
+  - 250ms — sync validation, simpler
+  - 500ms — sync validation, simplest
+default_if_no_answer: 250ms (median of options, sync simpler)
+<<NEED_USER_INPUT_END>>
+```
+
+The `default_if_no_answer` field is critical — if the orchestrator detects ask-back loop is happening too many times in one session, it auto-applies defaults and continues (prevents agent from looping forever waiting for human attention).
+
+### What the orchestrator does
+
+`/forge-cycle` and `/autorun` (Phase 3 Build, Phase 4 Audit) parse subagent return for `<<NEED_USER_INPUT:` or `<<NEED_USER_INPUT_BEGIN>>` at start of a line. On detection:
+
+1. **Extract** the question (and optional context block)
+2. **Pause** subagent dispatch
+3. **Surface** to user via `AskUserQuestion`:
+   - Question text from sentinel
+   - 2-4 options if `options:` listed (multi-line variant), otherwise free-text answer
+   - Description includes `why:` line + `default_if_no_answer:` as recommendation
+4. **Wait** for user answer (with optional timeout in autorun mode — apply default after timeout)
+5. **Re-dispatch** the same subagent with the answer appended to its prompt:
+   ```
+   {original prompt}
+
+   ## User answer to ask-back
+
+   Question: {extracted question}
+   Answer: {user's response}
+   ```
+6. **Continue** the phase as if the question had been answered upfront
+
+### Parser implementation (orchestrator side)
+
+```python
+# Pseudo-code for orchestrator parsing — applies to /forge-cycle, /autorun, /sprint
+import re
+
+def parse_subagent_return(text):
+    # Try multi-line first
+    multi = re.search(
+        r'^<<NEED_USER_INPUT_BEGIN>>\n(.*?)\n<<NEED_USER_INPUT_END>>',
+        text, re.MULTILINE | re.DOTALL,
+    )
+    if multi:
+        return parse_multi_line(multi.group(1))  # yaml-like block
+
+    # Single-line fallback
+    single = re.search(
+        r'^<<NEED_USER_INPUT:\s*(.+?)>>',
+        text, re.MULTILINE,
+    )
+    if single:
+        return {"question": single.group(1).strip()}
+
+    return None  # no ask-back; continue normally
+```
+
+The parser MUST check `^...` (start of line) anchoring. This prevents false positives from PRD bodies that mention the sentinel literally (e.g. this guide).
+
+### Anti-loop guard
+
+If the same subagent emits ask-back for the same question 2 times in a row in the same session, the orchestrator MUST:
+
+1. Apply `default_if_no_answer` (if present) or skip the phase with a documented warning
+2. Record an EVIDENCE artifact with `verdict=CONCERNS` noting "Anti-loop guard triggered for {agent}: {question}"
+3. Continue — never block the pipeline indefinitely
+
+### What the subagent does NOT do
+
+- Subagent does NOT call `AskUserQuestion` (it's not in their tool list, will fail)
+- Subagent does NOT call `mcp__forgeplan__forgeplan_session` to surface — that's orchestrator-level state
+- Subagent does NOT chain its own retry loop — it returns ONCE with the sentinel; orchestrator re-dispatches if user answers
+
+### Smoke test for ask-back protocol
+
+To verify your subagent implements ask-back correctly:
+
+```
+# Prompt with deliberate gap (e.g. "Write a PRD for our cache strategy but I haven't told you what we cache yet")
+Task({ subagent_type: "agents-pro:artifact-author", prompt: "Write a PRD..." })
+
+# Expected: subagent returns sentinel on first line:
+#   <<NEED_USER_INPUT: What is the cache subject — auth tokens, API responses, user profiles, or something else?>>
+
+# Orchestrator parses, AskUserQuestion surfaces, user answers, subagent re-dispatched with answer
+```
+
+If your subagent guesses the cache subject without asking → it failed the protocol. If your subagent stalls in a tool-call loop without producing the sentinel → it failed.
+
+### Reference
+
+- Documented as part of PRD-029 (Sprint A — UX-layer autonomy skills)
+- Pairs with `agent-advisor` skill (recommends which agent, ask-back lets that agent gather missing info)
+- Pairs with `prompt-router` hook (UserPromptSubmit auto-routing classifies INITIAL prompt; ask-back handles MID-FLOW gaps)
+
+---
+
 ## References
 
 - **PRD-026** — Forgeplan-aware agent layer (canonical pattern + project config + fpl-init v2.0)
+- **PRD-029** — Sprint A: UX-layer autonomy skills (agent-advisor + ask-back protocol + auto-router)
 - **EVID-040** — POC migration audit (adr-architect v1.0 → v1.1)
 - **EVID-049** — SC-8 smoke pre-B2 (0/9 MCP calls — upstream blocker detected)
 - **EVID-050** — SC-8 smoke post-B2 (B2 FIX WORKS — `disallowedTools` restores MCP propagation, 2026-05-18)
@@ -608,3 +743,9 @@ Anything else — follow the canon. Drift compounds, and "we'll fix it later" ra
 - **NOTE-006** — Agent layer integration research synthesis
 - **RFC-003** — Multi-agent multi-CLI architecture (Layer 2 Agent Pack Dispatch)
 - **agents-pro/agents/adr-architect.md** — reference implementation (Profile A)
+
+### External resources (community catalogues — for authoring beyond canonical 17)
+
+- [VoltAgent/awesome-claude-code-subagents](https://github.com/VoltAgent/awesome-claude-code-subagents) — curated subagent examples (browse before authoring from scratch)
+- [VoltAgent/awesome-agent-skills](https://github.com/VoltAgent/awesome-agent-skills) — curated skill examples
+- [DenisSergeevitch/agents-best-practices](https://github.com/DenisSergeevitch/agents-best-practices) — best-practices guide for writing custom Claude Code agents
