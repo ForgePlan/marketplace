@@ -48,6 +48,22 @@ Task({ subagent_type: "architecture", prompt: "Design RFC for real-time chat ser
 Task({ subagent_type: "refinement", prompt: "Apply TDD to implement and optimize this feature" })
 ```
 
+## Version history
+
+- **v1.2.0** (current, 2026-05-19) — Sprint B canonical-lint compliance
+  - All 3 legacy agents (`sparc-orchestrator`, `pseudocode`, `refinement`) migrated to canonical pattern: `model: opus/sonnet`, hex colors, bilingual EN/RU/Triggers descriptions
+  - Forgeplan-aware agents (`specification`, `architecture`) include methodology citation as first line of description (SPARC-Specification / SPARC-Architecture profile labels)
+  - 100% of agents-sparc pack passes LR-1..LR-3; lint warnings eliminated
+- **v1.2.1** (in-flight, Sprint E) — Profile A agents patched with methodology citation convention; Step 9b N/A (no Profile B agents in this pack)
+
+For complete change history, see [`forgeplan-marketplace/CLAUDE.md`](../../CLAUDE.md) § Sprint A-E session.
+
+## Profile B sentinel emission (Sprint E)
+
+This pack contains only Profile A (Creator) forgeplan-aware agents — `specification` and `architecture`. Profile A agents create artifacts; they do not produce EVIDENCE and therefore do not emit `<<NEEDS_ACTIVATION>>`. The sentinel is emitted by Profile B reviewers in `agents-core` and `agents-pro`.
+
+Full spec: `plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md` → "Profile B Step 9b — Surface NEEDS_ACTIVATION sentinel".
+
 ## License
 
 MIT

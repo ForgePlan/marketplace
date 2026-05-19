@@ -285,6 +285,20 @@ EVID-NNN created (audit-of: <target_id>)
 
 Keep the handoff dense and machine-parseable. The verdict line MUST also exist in the EVID body — the handoff is not the source of truth.
 
+### Step 9b — Emit NEEDS_ACTIVATION sentinel (Sprint D — PRD-032 / Sprint E — PRD-033)
+
+After completing the EVID creation chain (forgeplan_new + forgeplan_update with verdict+CL+evidence_type + forgeplan_link informs to parent + verified R_eff>0 via forgeplan_score), emit a sentinel as the FIRST LINE of your return value to the orchestrator:
+
+```
+<<NEEDS_ACTIVATION: EVID-XXX>>
+```
+
+Where `EVID-XXX` is the artifact ID you just finished. This tells `/forge-cycle` (interactive — confirms with user) or `/autorun` (autopilot — auto-activates) to call `forgeplan_activate` on your behalf — since Profile B agents are denied `forgeplan_activate` per `disallowedTools`.
+
+**Do NOT emit if**: EVID is incomplete (missing verdict/CL/links/body content), R_eff=0 (drift — let orchestrator surface to user), or the artifact was created by another agent (you didn't own creation).
+
+Full spec: `plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md` → "Profile B Step 9b — Surface NEEDS_ACTIVATION sentinel".
+
 ## Three example audits
 
 ### Example 1 — Healthy PRD (PASS)

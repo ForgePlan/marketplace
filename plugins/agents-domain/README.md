@@ -28,6 +28,15 @@ Domain-specific language and framework specialist agents for Claude Code. Each a
 
 Agents are available as subagents after installation. Claude Code will automatically select the appropriate agent based on your project context, or you can invoke them directly.
 
+## Version history
+
+- **v1.1.0** (current, 2026-05-19) — Sprint B canonical-lint compliance
+  - All 11 agents migrated to canonical pattern: `model: sonnet`, hex colors, bilingual EN/RU/Triggers descriptions, ecosystem-themed colors
+  - Closed marketplace-wide lint warnings 121 → 0 (LR-1..LR-3 pass)
+- **v1.1.1** (in-flight, Sprint E) — documentation drift closed; no Profile B agents in this pack, Step 9b sentinel N/A
+
+For complete change history, see [`forgeplan-marketplace/CLAUDE.md`](../../CLAUDE.md) § Sprint A-E session.
+
 ## License
 
 MIT

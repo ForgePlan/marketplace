@@ -227,6 +227,36 @@ mcp__forgeplan__forgeplan_activate(id="PRD-002")
 
 ---
 
+## Шаг 5.5 — Новые скиллы из автономного фреймворка Sprint A-D
+
+После Sprint A-D пять новых fpl-skills дополняют канонический пайплайн. Каждый закрывает конкретный gap автономии:
+
+| Скилл | Что делает | Sprint | Закрытый gap |
+|---|---|---|---|
+| `/agent-advisor "<задача>"` | Рекомендует специализированного канонического агента для описанной задачи — консультирует mental model `mm-agent-selection` + встроенную CRUD-R-A карту | A | Gap E (правильный агент для задачи) |
+| `/agent-fetcher "<задача>"` | Предлагает агентов из других установленных маркетплейсов (cc-marketplace, claude-plugins-official) — только SUGGEST-ONLY, НИКОГДА не авто-устанавливает | B | Gap G (cross-marketplace fetcher) |
+| `/project-agent-scaffold` | Определяет tech stack проекта (package.json/Cargo.toml/и т.д.) → предлагает 1-3 агентов под проект → пользователь подтверждает каждый перед записью | B | Gap F (кастомный агент проекта) |
+| `/forge-progress` | Live read-only снимок состояния оркестратора (sprint/phase/wave/agents-in-flight/files-modified/ETA) | B (Wave 3) | Gap D (progress dashboard) |
+| `/forge-cleanup` | Просматривает черновики, классифицирует по 3 уровням (AUTO/ADI/USER) согласно фреймворку самовосстановления пайплайна | D | Anomaly #7 (застрявшие черновики) |
+
+### Хук авторутинга (Sprint A)
+
+UserPromptSubmit хук `prompt-router` (Sprint A) классифицирует ваш prompt на естественном языке и предлагает подходящий скилл в `additionalContext`. Можно просто описать что нужно — не обязательно запоминать имена команд. Попробуйте: "У меня идея для новой фичи" → хук предложит `/shape` или `/agent-fetcher`.
+
+### Протокол ask-back (Sprint A-D)
+
+Когда sub-агент сталкивается с информационным gap в середине потока, он emit'ит сентинел `<<NEED_USER_INPUT: вопрос>>`; оркестратор (`/forge-cycle`, `/autorun`) парсит + выводит через AskUserQuestion + переотправляет. Закрывает прежнее ограничение, когда sub-агенты не могли вызвать AskUserQuestion самостоятельно.
+
+### Сентинел активации (Sprint D-E)
+
+Когда Profile B reviewer-агент завершает EVIDENCE-артефакт, он emit'ит `<<NEEDS_ACTIVATION: EVID-XXX>>` — оркестратор активирует его без ручного вмешательства. Закрывает Anomaly #7 (EVID'ы застревали в draft, потому что Profile B запрещает activate).
+
+### Возобновление `/autorun` (Sprint C)
+
+`/autorun` записывает контрольную точку сессии в `.forgeplan/sessions/<id>.yaml` после каждой фазы. При блокере (timeout, ADI fail, red-line) завершается корректно с подсказкой для возобновления. `--resume <session-id>` восстанавливает состояние. `--list-sessions`/`--cleanup-sessions` управляют жизненным циклом сессий. Полная схема: `docs/SESSION-CHECKPOINT-SCHEMA.md`.
+
+---
+
 ## Шаг 6 — Тест представительских fpl-skills
 
 Запустите пару скиллов, проверяющих MCP-first диспатч + цепочки скиллов:
@@ -398,12 +428,13 @@ mcp__forgeplan__forgeplan_health
 
 ---
 
-## Известные limitations (по состоянию на v2.2.0)
+## Известные limitations (по состоянию на v2.3.0)
 
 1. **Нет `forgeplan_unlink` primitive** — mis-typed link relations остаются навсегда. Workaround: используйте `informs` для evidence; дважды проверяйте до link'ания. Tracking: [forgeplan#286](https://github.com/ForgePlan/forgeplan/issues/286).
 2. **Brownfield Discover Agent v3.2 — standalone**, не `/plugin install`able plugin. Blocked на 9 новых MCP-инструментов в forgeplan core. Tracking: [forgeplan#287](https://github.com/ForgePlan/forgeplan/issues/287).
 3. **MCP server cwd binding** — forgeplan MCP-сервер привязан к workspace где запущен Claude Code. Тест в другой директории через MCP пишет в `.forgeplan/` запущенного workspace, не в новую дир. Перезапустите Claude Code в целевой директории. У CLI этого ограничения нет.
 4. **Subagent MCP propagation** — использует `disallowedTools` denylist, не `tools:` allowlist. Wildcards в `tools:` молча strip'ят MCP-сервер. Уже обойдено во всех 17 forgeplan-aware агентах.
+5. **Сентинел `<<NEEDS_ACTIVATION>>` из Sprint D** — Profile B агенты теперь emit'ят его органически (Sprint E патчит body); оркестратор парсит + активирует. Больше нет ручной очистки в конце циклов.
 
 ---
 
