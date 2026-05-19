@@ -307,6 +307,48 @@ This ensures post-run review surfaces every question that ran without explicit u
 
 ---
 
+## NEEDS_ACTIVATION sentinel parsing (autopilot mode — Sprint D PRD-032)
+
+When subagents (Profile B reviewers) complete EVID creation in `/autorun`, scan their
+return for `^<<NEEDS_ACTIVATION: EVID-XXX>>` sentinel at the start of a line.
+
+**Parser** (apply to every subagent return in Phase 3 Build and Phase 4 Audit):
+
+```python
+import re
+
+def parse_needs_activation(return_text):
+    match = re.search(r'^<<NEEDS_ACTIVATION:\s*(EVID-\d+)>>', return_text, re.MULTILINE)
+    if match:
+        return match.group(1)
+    return None
+```
+
+**Autopilot activation procedure**:
+
+1. Extract `artifact_id` from sentinel.
+2. Verify R_eff via `mcp__forgeplan__forgeplan_score(id=artifact_id)` — R_eff>0 expected.
+3. **Autopilot semantics**: if R_eff>0, AUTO-ACTIVATE without user confirmation — `/autorun` is
+   unattended and `forgeplan_activate` is in `auto_approve` for EVID artifacts at level 4+.
+   Apply `gating_check("forgeplan_activate", project_config)` as usual; default built-in config
+   lists `forgeplan_activate` in `human_required` — update `project-config.yaml` to move it to
+   `auto_approve` for EVID kind if fully automated activation is desired.
+4. If R_eff=0, treat as drift anomaly: write to session.yaml `pending_anomalies[]` with
+   `kind: needs_activation_drift`, `tier: user`. Do NOT activate. Surface in the final report
+   under "Anomalies" section.
+5. Capture each activated `artifact_id` in session.yaml `completed_activations[]` for audit trail.
+
+**Anti-loop guard** (same precedent as autopilot 1-loop pattern): if the same EVID emits
+`<<NEEDS_ACTIVATION:>>` more than once across re-dispatches in the same session, it is a
+logic bug in the subagent — log to `pending_anomalies[]` with `kind: needs_activation_loop`
+and skip all subsequent activation attempts for that artifact_id.
+
+Cross-reference: `AGENT-AUTHORING-GUIDE.md` Profile B Step 9b (sentinel convention),
+`/forge-cycle` Step 7.5 (interactive variant — confirms with user before activating),
+PRD-032 Sprint D.
+
+---
+
 ## Session checkpointing (resume protocol)
 
 ### Session checkpoint lifecycle
