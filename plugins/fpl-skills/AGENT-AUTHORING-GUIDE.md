@@ -772,11 +772,76 @@ If your subagent guesses the cache subject without asking → it failed the prot
 
 ---
 
+## Profile B Step 9b — Surface NEEDS_ACTIVATION sentinel (Sprint D — PRD-032)
+
+Profile B agents are **denied** `forgeplan_activate` via `disallowedTools`. When a Profile B agent completes its full EVIDENCE creation chain and the EVID is ready for activation, it cannot activate it — that is orchestrator territory (LR-5 invariant). Step 9b is the mechanism by which the agent **signals readiness** to the orchestrator without bypassing the separation-of-duty constraint.
+
+### When to emit
+
+Emit the sentinel when ALL of the following are true for the **current dispatch**:
+
+1. `forgeplan_new(kind="evidence")` was called in this dispatch — the agent owns this EVID.
+2. `forgeplan_update` was applied with `verdict`, `congruence_level` (CL≥3), and `evidence_type` filled.
+3. `forgeplan_link(source=EVID, target=parent, relation="informs")` was called and succeeded.
+4. `forgeplan_score(id=EVID)` returned `r_eff > 0`.
+
+### Sentinel format
+
+Place as **line 1** of the agent's return value to the orchestrator — easy for regex to detect.
+
+**Single-line variant (preferred — EVID artifacts)**:
+
+```
+<<NEEDS_ACTIVATION: EVID-XXX>>
+```
+
+Where `EVID-XXX` is the artifact ID created in this dispatch.
+
+**Multi-line variant (for non-EVID Profile A artifacts — future use)**:
+
+```
+<<NEEDS_ACTIVATION_BEGIN>>
+artifact_id: ADR-019
+rationale: Created via MADR 3.0, linked to PRD-029 informs, R_eff=1.0 grade A
+recommendation: auto-activate (Tier AUTO)
+<<NEEDS_ACTIVATION_END>>
+```
+
+### When NOT to emit
+
+- EVID is **incomplete**: missing verdict, CL<3, no `informs` link, or `r_eff=0`. False positives cause the orchestrator to surface bad activations to the user — emit only when the chain is verifiably complete.
+- The artifact was created by **another agent** in a prior dispatch — only emit for artifacts created in **this** dispatch. Do not emit for parent PRDs, linked RFCs, or sibling EVIDs from other reviewers.
+
+### Anti-pattern
+
+Do not emit `<<NEEDS_ACTIVATION: EVID-XXX>>` for artifacts that were already `active` before this dispatch began. Check `forgeplan_get(id).status` before emitting if in doubt.
+
+### Step 9b procedure (append to existing Profile B step list)
+
+```
+Step 9b — Emit NEEDS_ACTIVATION sentinel
+  score = mcp__forgeplan__forgeplan_score(id=EVID_ID)
+  if score.r_eff > 0:
+      return_text = f"<<NEEDS_ACTIVATION: {EVID_ID}>>\n" + return_text
+  else:
+      # R_eff=0: drift; orchestrator will surface for investigation
+      # Do NOT emit sentinel — return normally; orchestrator sees absence as incomplete
+      pass
+```
+
+### Cross-reference
+
+- Parser logic lives in `/forge-cycle` Phase 6.5 section and `/autorun` NEEDS_ACTIVATION sentinel section.
+- Parallels the `<<NEED_USER_INPUT>>` sentinel convention from Sprint A (PRD-029) — same line-start anchor requirement, same orchestrator re-dispatch model.
+
+---
+
 ## References
 
 - **PRD-026** — Forgeplan-aware agent layer (canonical pattern + project config + fpl-init v2.0)
 - **PRD-029** — Sprint A: UX-layer autonomy skills (agent-advisor + ask-back protocol + auto-router)
 - **PRD-030** — Sprint B: Profile A memory_retain convention (Step 10 optional Hindsight lesson pattern)
+- **PRD-032** — Sprint D: pipeline self-healing framework (NEEDS_ACTIVATION sentinel convention + orchestrator parsers)
 - **EVID-040** — POC migration audit (adr-architect v1.0 → v1.1)
 - **EVID-049** — SC-8 smoke pre-B2 (0/9 MCP calls — upstream blocker detected)
 - **EVID-050** — SC-8 smoke post-B2 (B2 FIX WORKS — `disallowedTools` restores MCP propagation, 2026-05-18)

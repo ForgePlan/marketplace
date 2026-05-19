@@ -1,7 +1,7 @@
 {
   "name": "fpl-skills",
-  "version": "1.22.0",
-  "description": "Flagship workflow plugin for the ForgePlan ecosystem. 26 engineering skills + dev-advisor agent + 5 hooks. v1.22: PRD-031 Sprint C \u2014 /autorun resume protocol + session checkpoint schema. Closes Gap C (final autonomy gap), cumulative autonomy ~94% \u2192 ~98%. /autorun now writes .forgeplan/sessions/<id>.yaml at each phase, supports --resume/--list-sessions/--cleanup-sessions/--force-resume flags. Full schema doc at docs/SESSION-CHECKPOINT-SCHEMA.md (atomic write contract, drift detection, staleness rules, schema versioning). v1.21: PRD-030 Sprint B \u2014 7 deliverables (parser integration, methodology citation, retain convention, project-agent-scaffold, agent-fetcher, progress-dashboard). v1.20: PRD-029 Sprint A \u2014 agent-advisor + ask-back protocol + prompt-router.",
+  "version": "1.23.0",
+  "description": "Flagship workflow plugin for the ForgePlan ecosystem. 27 engineering skills + dev-advisor agent + 5 hooks. v1.23: PRD-032 Sprint D \u2014 pipeline self-healing framework. NEW /forge-cleanup skill (3-tier classification AUTO/ADI/USER), <<NEEDS_ACTIVATION>> sentinel convention in AGENT-AUTHORING-GUIDE Profile B Step 9b, parser integration into /forge-cycle Step 7.5 + /autorun autopilot mode. Closes Anomaly #7 (EVIDs stuck in draft because Profile B denies forgeplan_activate). Upstream tracking: forgeplan#288 (hygiene auto-activate), forgeplan#289 (forgeplan_anomalies MCP tool). Mental models: mm-draft-hygiene + mm-pipeline-anomalies. v1.22: Sprint C /autorun resume. v1.21: Sprint B 7 deliverables. v1.20: Sprint A UX-layer.",
   "author": {
     "name": "ForgePlan"
   },
@@ -52,6 +52,7 @@
       "ddd-decompose",
       "diagnose",
       "do",
+      "forge-cleanup",
       "forge-report",
       "fpl-init",
       "gh-project",

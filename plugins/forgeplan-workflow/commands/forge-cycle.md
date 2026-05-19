@@ -472,6 +472,49 @@ mcp__forgeplan__forgeplan_link(
 
 Reference: NOTE-004 (mail-as-beads pattern from Gas Town), PRD-025 FR-027.
 
+## Step 7.5: Parse NEEDS_ACTIVATION sentinel (Sprint D — PRD-032)
+
+After subagents (especially Profile B reviewers) complete in Steps 6.5–7, scan their
+return values for the `<<NEEDS_ACTIVATION:` sentinel at the start of a line. Pattern:
+
+```python
+# Pseudo-code — runs after each subagent return in Steps 6.5 and 7
+import re
+
+def parse_needs_activation(return_text):
+    match = re.search(r'^<<NEEDS_ACTIVATION:\s*(EVID-\d+)>>', return_text, re.MULTILINE)
+    if match:
+        return match.group(1)
+    return None
+
+artifact_id = parse_needs_activation(subagent_return)
+if artifact_id:
+    # Re-verify R_eff before activating (false-positive guard)
+    score = mcp__forgeplan__forgeplan_score(id=artifact_id)
+    if score.r_eff > 0:
+        # Interactive mode (/forge-cycle): confirm with user before activating
+        confirm = AskUserQuestion(
+            f"Reviewer signalled {artifact_id} is complete (R_eff={score.r_eff}). Activate now?",
+            options=["yes", "no — I'll review first"]
+        )
+        if confirm == "yes":
+            mcp__forgeplan__forgeplan_activate(id=artifact_id)
+    else:
+        # R_eff=0 means drift — surface to user for investigation
+        AskUserQuestion(
+            f"{artifact_id} claimed complete but R_eff=0 — possible drift. Investigate?",
+            options=["yes — show details", "skip for now"]
+        )
+```
+
+This closes Anomaly #7 from the Sprint A+B+C anomaly log: EVIDs stuck in draft because
+Profile B agents are physically denied `forgeplan_activate` per `disallowedTools`.
+The sentinel lets reviewers SIGNAL completion; the orchestrator performs the activate.
+
+Cross-reference: `AGENT-AUTHORING-GUIDE.md` Profile B Step 9b (sentinel convention),
+`<<NEED_USER_INPUT>>` precedent from Sprint A (PRD-029), `/autorun` NEEDS_ACTIVATION
+sentinel section (autopilot variant — auto-activates without confirmation).
+
 ## Step 8: Review and Activate
 
 Run the review process:
