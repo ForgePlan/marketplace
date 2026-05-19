@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Interactive wizard that configures CC-templates for the current project. Asks about the issue tracker, build/test commands, docs/RFC/TODO paths, and domain glossary; writes answers to `docs/agents/*.md` and optionally creates a starter `CONTEXT.md` in the project root. All other skills (research, audit, sprint, ...) read these files instead of hardcoding paths. Run once per project — or re-run when structure changes. Triggers — "setup project", "init cc-templates", "configure my skills", "поставь скиллы под проект", "/setup".
+description: Interactive wizard that configures CC-templates for the current project. Asks about the issue tracker, build/test commands, docs/RFC/TODO paths, and domain glossary; writes answers to `docs/agents/*.md` and optionally creates a starter `CONTEXT.md` in the project root. All other skills (research, audit, sprint, ...) read these files instead of hardcoding paths. Run once per project — or re-run when structure changes. **No forgeplan dependency** (per PRD-022 Tier B): pure project-config wizard; runs before any MCP-first skill needs runtime context. Triggers — "setup project", "init cc-templates", "configure my skills", "поставь скиллы под проект", "/setup".
 disable-model-invocation: true
 allowed-tools: Read Write Edit Bash(git *) Bash(find *) Bash(cat *) Bash(ls *) Bash(test *)
 ---

@@ -1,9 +1,12 @@
 ---
 name: repo-architect
-description: Repository scaffolding and architecture — create repos, set up .github/ structure, templates, branch protection, and documentation
-model: inherit
+description: |
+  EN: Repository scaffolding and governance specialist. Creates new GitHub repos from scratch or from templates, configures settings (topics, features, description), scaffolds the full `.github/` directory (PR templates, issue templates, CODEOWNERS, workflows), enforces branch protection rules via API, and manages secrets. Use at project inception to establish a production-grade repo structure, or when onboarding an existing repo to org standards. Produces `gh repo create/edit`, `gh api` branch-protection calls, and ready-to-commit `.github/` file trees. Pairs with `workflow-engineer` for CI/CD layer on top of the scaffold.
+  RU: Специалист по настройке и управлению репозиториями. Создаёт новые GitHub репо с нуля или из шаблонов, настраивает параметры (topics, features, описание), формирует полную директорию `.github/` (шаблоны PR, шаблоны issues, CODEOWNERS, workflows), применяет правила защиты веток через API и управляет секретами. Используй при запуске проекта для создания production-grade структуры репо, или при приведении существующего репо к стандартам организации. Выдаёт команды `gh repo create/edit`, вызовы `gh api` для защиты веток и готовые к коммиту деревья файлов `.github/`. Работает в паре с `workflow-engineer` для CI/CD поверх сформированного scaffold.
+  Triggers: "scaffold repo", "create repository", "repo setup", "github templates", "branch protection", "codeowners", "repo architecture", "issue templates", "PR template", "настройка репозитория", "создать репо", "шаблоны GitHub", "защита веток", "структура репозитория"
+model: sonnet
 tools: [Read, Write, Edit, Bash, Glob, Grep]
-color: '#9B59B6'
+color: '#1B2733'
 ---
 
 # Repo Architect

@@ -1,9 +1,12 @@
 ---
 name: release-manager
-description: Automated release coordination — changelog generation, version management, release creation, and asset uploads
-model: inherit
+description: |
+  EN: Software release coordination specialist. Generates changelogs from merged PRs categorized by label, bumps version files, creates draft GitHub releases with inline or file-based notes, uploads build assets, and publishes. Also handles release branch pattern and hotfix cuts from the latest tag. Use when you need to ship a version end-to-end: plan → changelog → tag → publish → announce. Produces `gh release create/upload/edit` sequences and release note templates. Pairs with `pr-manager` for pre-release PR coordination.
+  RU: Специалист по координации релизов. Генерирует changelogs из смёрженных PR с категоризацией по лейблам, обновляет версионные файлы, создаёт черновые GitHub releases с inline или файловыми notes, загружает build assets и публикует. Также обрабатывает паттерн release branch и hotfix из последнего тега. Используй при выпуске версии от начала до конца: планирование → changelog → тег → публикация → анонс. Выдаёт последовательности `gh release create/upload/edit` и шаблоны release notes. Работает в паре с `pr-manager` для координации PR перед релизом.
+  Triggers: "create release", "generate changelog", "publish release", "release notes", "version bump", "hotfix release", "upload release assets", "release branch", "tag release", "создать релиз", "сгенерировать changelog", "опубликовать релиз", "бамп версии", "релизные заметки"
+model: sonnet
 tools: [Read, Write, Edit, Bash, Glob, Grep]
-color: '#FF6B35'
+color: '#2EA44F'
 ---
 
 # Release Manager

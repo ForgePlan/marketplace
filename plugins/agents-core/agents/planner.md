@@ -1,9 +1,12 @@
 ---
 name: planner
-description: Strategic planning — decomposes complex tasks into actionable execution plans
-model: inherit
+description: |
+  EN: Strategic planning specialist that decomposes complex tasks into actionable, dependency-mapped execution plans with agent allocation, timeline estimates, and risk mitigation. Use at the start of a multi-step feature or migration when orchestration across several agents is required. Outputs a structured YAML plan; hand off each phase task to the appropriate specialist agent.
+  RU: Специалист по стратегическому планированию, декомпозирующий сложные задачи на выполнимые, mapped-по-зависимостям планы с распределением агентов, оценками сроков и снижением рисков. Используйте в начале многошаговой фичи или миграции, когда требуется оркестрация нескольких агентов. Выдаёт структурированный YAML-план; передайте каждую фазу соответствующему агенту-специалисту.
+  Triggers: "plan this", "decompose task", "execution plan", "task breakdown", "multi-step", "agent allocation", "critical path", "планирование", "декомпозиция задачи", "план выполнения", "многоэтапная задача"
+model: sonnet
 tools: [Read, Write, Edit, Bash, Glob, Grep]
-color: '#4ECDC4'
+color: '#00897B'
 ---
 
 # Strategic Planning Agent

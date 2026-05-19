@@ -1,7 +1,10 @@
 ---
 name: tdd-london
-description: TDD London School specialist — outside-in development, mock-driven design, behavior verification, and interaction testing for clean object collaboration
-model: inherit
+description: |
+  EN: TDD London School specialist driving outside-in development with mock-driven design, behavior verification, and interaction testing for clean object collaboration. Use when designing new systems where interface contracts need discovery, or when object collaboration and side-effect verification are the primary concern. Hand off to `tester` (Profile B) for coverage delta EVIDENCE, or to `refinement` (agents-sparc) for the red-green-refactor cycle on existing code.
+  RU: Специалист TDD London School, ведущий разработку снаружи внутрь с mock-driven дизайном, верификацией поведения и interaction testing для чистого взаимодействия объектов. Используйте при проектировании новых систем где нужно открыть контракты интерфейсов, или когда взаимодействие объектов и верификация side-effects — основная задача. Передайте `tester` (Profile B) для EVIDENCE delta покрытия или `refinement` (agents-sparc) для цикла red-green-refactor на существующем коде.
+  Triggers: "TDD London", "outside-in TDD", "mock-driven design", "interaction testing", "behavior verification", "outside-in development", "TDD London School", "TDD снаружи внутрь", "mock-driven дизайн", "верификация взаимодействия"
+model: sonnet
 tools: [Read, Write, Edit, Bash, Glob, Grep]
 color: '#E91E63'
 ---

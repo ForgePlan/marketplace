@@ -1,7 +1,7 @@
 {
   "name": "agents-github",
-  "version": "1.0.0",
-  "description": "GitHub operations agents: PR management, issue tracking, release automation, multi-repo coordination, project boards, workflow engineering, and repo architecture.",
+  "version": "1.1.0",
+  "description": "GitHub operations agents: PR management, issue tracking, release automation, multi-repo coordination, project boards, workflow engineering, and repo architecture. v1.1: 7 agents canonical-lint compliant (LR-1..LR-3) — sonnet model, hex colors, bilingual EN/RU/Triggers descriptions.",
   "author": {"name": "ForgePlan"},
   "homepage": "https://github.com/ForgePlan/marketplace",
   "repository": "https://github.com/ForgePlan/marketplace",

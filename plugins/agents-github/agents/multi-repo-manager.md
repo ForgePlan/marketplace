@@ -1,7 +1,10 @@
 ---
 name: multi-repo-manager
-description: Cross-repository operations — org-wide discovery, synchronized updates, dependency management, and batch PR creation
-model: inherit
+description: |
+  EN: Cross-repository orchestration specialist. Discovers all repos in a GitHub org, applies synchronized file updates or dependency bumps across multiple repos in a single loop, and opens batch PRs with a tracking issue. Use when you need to propagate a change (e.g. Node version, CODEOWNERS, shared config) to 5+ repos at once, or audit org-wide open-PR counts. Produces clone-update-PR shell loops and GitHub API `PUT` calls for no-clone file edits. Pairs with `workflow-engineer` for pipeline-level rollouts.
+  RU: Специалист по оркестрации нескольких репозиториев. Обнаруживает все репо в GitHub-организации, применяет синхронизированные обновления файлов или зависимостей сразу в нескольких репо в одном цикле и открывает batch PR с tracking issue. Используй при необходимости распространить изменение (версия Node, CODEOWNERS, общий конфиг) на 5+ репо одновременно или при аудите количества открытых PR в организации. Выдаёт shell-циклы clone-update-PR и вызовы GitHub API `PUT` для редактирования файлов без клонирования. Работает в паре с `workflow-engineer` для rollout на уровне pipeline.
+  Triggers: "multi-repo update", "org-wide change", "batch PR", "sync repos", "dependency across repos", "cross-repo", "propagate change", "bulk repository update", "организационные изменения", "обновление нескольких репозиториев", "batch pull request", "синхронизация репозиториев"
+model: sonnet
 tools: [Read, Write, Edit, Bash, Glob, Grep]
 color: '#9B59B6'
 ---

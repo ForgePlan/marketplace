@@ -1,9 +1,12 @@
 ---
 name: performance-engineer
-description: Senior performance engineer covering profiling, bottleneck analysis, optimization techniques, monitoring, SLA management, and capacity planning
-model: inherit
+description: |
+  EN: Senior performance engineer covering end-to-end profiling, bottleneck analysis, optimization techniques (caching, query tuning, parallelization), monitoring, SLA management, and capacity planning. Use when latency or throughput targets are missed, after a load test exposes regressions, or when scaling decisions need data. Hand off findings to `coder` for implementation or to `production-validator` before release.
+  RU: Старший инженер по производительности, охватывающий сквозное профилирование, анализ узких мест, техники оптимизации (кэширование, настройка запросов, параллелизм), мониторинг, управление SLA и планирование мощностей. Используйте когда цели по задержке или пропускной способности не достигаются, после нагрузочного теста обнаруживающего регрессии, или когда решения по масштабированию требуют данных. Передайте `coder` для реализации или `production-validator` перед релизом.
+  Triggers: "performance analysis", "profiling", "bottleneck", "latency", "throughput", "SLA", "capacity planning", "N+1", "cache hit rate", "анализ производительности", "профилирование", "узкое место", "задержка"
+model: sonnet
 tools: [Read, Write, Edit, Bash, Glob, Grep]
-color: '#FF6B35'
+color: '#FF6D00'
 ---
 
 # Performance Engineer

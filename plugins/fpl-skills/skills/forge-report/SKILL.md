@@ -1,6 +1,6 @@
 ---
 name: forge-report
-description: "Structured report formats for Claude — card-based, human-readable, no ASCII frame noise. Use when finishing a multi-step task (≥5 tool calls, ≥3 files modified, multi-task TaskList, or cross-system effects like git push/PR/deploy). Triggers on: report, summary, summarise, отчёт, итоги, завершение задачи, build complete, audit complete, deployment complete, decision recorded, incident resolved, migration done. Provides 5 templates (build/audit/decision/incident/migration), anchor conventions (section icons, plain-prose TL;DR, confidence labels), required sections (not-done, reversibility, drift-risks, next-steps), and 5 anti-patterns. Not for simple Q&A or single-file edits."
+description: "Structured report formats for Claude — card-based, human-readable, no ASCII frame noise. Use when finishing a multi-step task (≥5 tool calls, ≥3 files modified, multi-task TaskList, or cross-system effects like git push/PR/deploy). Output-only skill, no forgeplan dependency (per PRD-022 Tier B): reads no MCP state, produces plain markdown for the conversation. Triggers on: report, summary, summarise, отчёт, итоги, завершение задачи, build complete, audit complete, deployment complete, decision recorded, incident resolved, migration done. Provides 5 templates (build/audit/decision/incident/migration), anchor conventions (section icons, plain-prose TL;DR, confidence labels), required sections (not-done, reversibility, drift-risks, next-steps), and 5 anti-patterns. Not for simple Q&A or single-file edits."
 license: MIT
 ---
 

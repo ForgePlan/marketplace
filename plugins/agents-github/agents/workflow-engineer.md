@@ -1,9 +1,12 @@
 ---
 name: workflow-engineer
-description: GitHub Actions engineering — create workflows, analyze failures, optimize CI/CD pipelines, and manage workflow runs
-model: inherit
+description: |
+  EN: GitHub Actions CI/CD specialist. Inspects existing workflow runs and logs, diagnoses flaky or failing jobs, creates new workflow YAML files (matrix builds, path-filtered triggers, concurrency groups), and optimizes pipelines with dependency caching, conditional skips, and artifact uploads. Use when CI is broken, you need a new workflow from scratch, or want to reduce pipeline runtime. Produces ready-to-commit `.github/workflows/*.yml` files and `gh run/workflow` command sequences. Pairs with `repo-architect` for initial scaffold and `multi-repo-manager` for org-wide rollouts.
+  RU: Специалист по CI/CD с GitHub Actions. Проверяет существующие runs и логи, диагностирует нестабильные или падающие jobs, создаёт новые YAML-файлы workflows (matrix builds, path-filtered triggers, concurrency groups) и оптимизирует pipeline с кэшированием зависимостей, условными пропусками и загрузкой артефактов. Используй когда CI сломан, нужен новый workflow с нуля, или требуется сократить время выполнения pipeline. Выдаёт готовые к коммиту `.github/workflows/*.yml` файлы и последовательности команд `gh run/workflow`. Работает в паре с `repo-architect` для начального scaffold и `multi-repo-manager` для org-wide rollouts.
+  Triggers: "github actions", "workflow yml", "CI failing", "debug workflow", "optimize pipeline", "create workflow", "workflow run", "flaky CI", "matrix build", "github CI", "GitHub Actions", "сломался CI", "отладка workflow", "оптимизация pipeline", "создать workflow", "нестабильный CI"
+model: sonnet
 tools: [Read, Write, Edit, Bash, Glob, Grep]
-color: '#E74C3C'
+color: '#F0883E'
 ---
 
 # Workflow Engineer

@@ -1,9 +1,12 @@
 ---
 name: researcher
-description: Deep research and analysis — investigates codebases, finds patterns, synthesizes knowledge
-model: inherit
+description: |
+  EN: Deep research and analysis specialist that investigates codebases, identifies architectural patterns and anti-patterns, maps dependencies, and synthesizes findings into actionable recommendations. Use before implementing a feature in an unfamiliar codebase, when cross-cutting impact needs mapping, or to prepare context for `planner` or `coder`. Outputs structured YAML research findings.
+  RU: Специалист по глубокому исследованию и анализу, изучающий кодовые базы, выявляющий архитектурные паттерны и антипаттерны, картирующий зависимости и синтезирующий выводы в actionable рекомендации. Используйте перед реализацией фичи в незнакомой кодовой базе, когда нужно картировать cross-cutting влияние, или для подготовки контекста для `planner` или `coder`. Выдаёт структурированные YAML результаты исследования.
+  Triggers: "investigate codebase", "find patterns", "dependency mapping", "codebase analysis", "research", "understand architecture", "where is X used", "исследование кодовой базы", "найти паттерны", "картирование зависимостей", "анализ архитектуры"
+model: sonnet
 tools: [Read, Write, Edit, Bash, Glob, Grep]
-color: '#9B59B6'
+color: '#7B1FA2'
 ---
 
 # Research and Analysis Agent

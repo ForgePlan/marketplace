@@ -1,7 +1,7 @@
 {
   "name": "agents-core",
-  "version": "1.2.1",
-  "description": "Core development agents: debugger, code reviewer, error detective, performance engineer, production validator, plus a complete dev team (coder, planner, researcher, reviewer, tester, TDD London School). v1.2: coder migrated to forgeplan-aware Profile C-coder reference (PRD-026 Phase 3 batch 3 — Phase 3 complete). v1.1: code-reviewer + tester (batch 2).",
+  "version": "1.3.0",
+  "description": "Core development agents: debugger, code reviewer, error detective, performance engineer, production validator, plus a complete dev team (coder, planner, researcher, reviewer, tester, TDD London School). v1.3: 8 legacy specialists canonical-lint compliant (LR-1..LR-3) — model:sonnet, hex colors, bilingual descriptions with Triggers. v1.2: coder migrated to forgeplan-aware Profile C-coder reference (PRD-026 Phase 3 batch 3 — Phase 3 complete). v1.1: code-reviewer + tester (batch 2).",
   "author": {"name": "ForgePlan"},
   "homepage": "https://github.com/ForgePlan/marketplace",
   "repository": "https://github.com/ForgePlan/marketplace",

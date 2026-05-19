@@ -1,6 +1,6 @@
 ---
 name: do
-description: Meta-orchestrator — takes a natural-language task, classifies it (research / docs / feature / review / bug / refactor / status), builds a pipeline from other skills (research → write-doc → wave-sprint → audit), shows the plan, and executes with approval checkpoints. Use when the user wants "do X" without naming a specific skill. Triggers (EN/RU) — "do X", "implement and document", "research and write RFC", "сделай", "разберись и реализуй", "проведи ревью ветки", "/do".
+description: Meta-orchestrator — takes a natural-language task, classifies it (research / docs / feature / review / bug / refactor / status), builds a pipeline from other skills (research → write-doc → wave-sprint → audit), shows the plan, and executes with approval checkpoints. Use when the user wants "do X" without naming a specific skill. **MCP-first by delegation** (per PRD-022 Tier B): does not call forgeplan directly — delegates to sub-skills (research, refine, sprint, audit, briefing) that are themselves MCP-first with CLI fallback; the orchestration layer is forgeplan-agnostic. Triggers (EN/RU) — "do X", "implement and document", "research and write RFC", "сделай", "разберись и реализуй", "проведи ревью ветки", "/do".
 ---
 
 # Task Orchestrator
