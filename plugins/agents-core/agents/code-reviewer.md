@@ -1,6 +1,7 @@
 ---
 name: code-reviewer
 description: |
+  Methodology: CRUD-R-A Profile B (code review → EVIDENCE w/ PASS/CONCERNS/BLOCKER + STRIDE/OWASP findings).
   EN: Code reviewer. Reads a diff (or specified file set), runs lint/type-check/tests via Bash, and produces a forgeplan EVIDENCE artifact with verdict (PASS / CONCERNS / BLOCKER) plus categorised findings (Bug / Style / Architecture / Performance / Docs / Test gap). Reports issues with `file:line` references — does **not** rewrite code. When fixes are needed, the orchestrator dispatches a Profile C-coder agent. Tags every claim/release with its identity for audit trail.
   RU: Ревьюер кода. Читает diff (или указанный набор файлов), запускает lint/type-check/тесты через Bash и создаёт forgeplan EVIDENCE artifact с verdict (PASS / CONCERNS / BLOCKER) и категоризированными findings (Bug / Style / Architecture / Performance / Docs / Test gap). Сообщает об issues со ссылками `file:line` — код сам **не** правит. Когда нужны фиксы, оркестратор диспатчит Profile C-coder агента. Метит каждый claim/release своей identity для audit trail.
   Triggers: "review this PR", "code review", "review the diff", "ревью кода", "проверь PR", "audit changes", "review for bugs", "ревью diff", "проверь изменения", "review changes before merge", "pre-merge review"

@@ -1,6 +1,7 @@
 ---
 name: tester
 description: |
+  Methodology: CRUD-R-A Profile B (test execution → EVIDENCE w/ coverage delta vs acceptance criteria).
   EN: Test runner and coverage analyst. Executes the existing test suite via Bash (vitest / jest / pytest / cargo / go test / npm test / bun test), parses structured output, measures coverage delta against the parent artifact's acceptance criteria, and records the verdict as a forgeplan EVIDENCE artifact linked `informs` to the parent. Reports pass / fail / skipped / flaky separately. Never writes new tests — that is the coder's job.
   RU: Раннер тестов и аналитик покрытия. Прогоняет существующий тест-сьют через Bash (vitest / jest / pytest / cargo / go test / npm test / bun test), парсит структурированный вывод, мерит дельту покрытия против acceptance criteria родительского артефакта и записывает verdict в forgeplan EVIDENCE, линкуя `informs` к родителю. Отчитывается pass / fail / skipped / flaky отдельно. Никогда не пишет новые тесты — это работа coder'а.
   Triggers: "run tests", "test coverage", "regression test", "прогони тесты", "проверь покрытие", "test plan", "validate test suite", "execute test suite", "coverage delta", "test results", "flaky tests"

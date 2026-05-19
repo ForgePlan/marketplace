@@ -141,6 +141,8 @@ disallowedTools: Write, Edit, NotebookEdit, mcp__forgeplan__forgeplan_activate
 
 **Default model**: `opus` — creating an artifact involves judging trade-offs.
 
+> **Optional Step 10** — after releasing the claim, Profile A creators may save a structured lesson to Hindsight. See "Step 10 (optional, Profile A only)" in the canonical procedure section below.
+
 ### Profile B — Consumer + EVID recorder
 
 **Examples**: `code-reviewer`, `security-expert`, `tester`, `architect-reviewer`.
@@ -304,6 +306,44 @@ Numbered steps, one MCP call per step.
 
 ### Step N — Release
 …
+
+### Step 10 (optional, Profile A only) — Save lesson to Hindsight
+
+**When to do it**: after Step 9 release, before returning to orchestrator, IF artifact creation surfaced ≥1 non-obvious decision, workaround, or key trade-off.
+
+**When NOT to do it**: routine creation with no notable decisions. Do not retain "I created a PRD" — that is already in the forgeplan activity log.
+
+**Sentinel content shape** (≤200 words):
+- 1 line: artifact ID + kind + 1-sentence summary of what was decided
+- 1–3 bullets: key decisions with rationale (1 sentence each)
+- 1 line: tags for retrieval (kind + domain + relevant techniques)
+
+**Tool**:
+```
+mcp__plugin_fpl-hsmem_hindsight__memory_retain(
+  content = "...",
+  context = "<agent-name> <date> <parent-artifact-id> <domain>",
+  tags    = ["<kind>", "<domain>", "<technique>"]
+)
+```
+
+**Example** (adr-architect creating ADR-019):
+```
+memory_retain(
+  content="ADR-019 chose magic-link auth over password+TOTP. Reasoning: \
+           target users are low-frequency (quarterly logins), magic-link \
+           eliminates password reset support burden. Trade-off accepted: \
+           requires reliable email delivery (SES SLO 99.9%).",
+  context="adr-architect 2026-05-19 PRD-029 auth decision",
+  tags=["adr", "auth", "magic-link", "decision-rationale"]
+)
+```
+
+**Anti-pattern**: do not retain the artifact body itself — it lives in forgeplan. Retain the WHY behind decisions, not the WHAT.
+
+**Mental model auto-refresh**: after retain, relevant `mm-*` pages (e.g. `mm-agent-selection`, `mm-pipeline-methodology`) auto-refresh on the next consolidation cycle — lessons accumulate semantically across sessions.
+
+**Why optional vs mandatory**: Profile B reviewers have `memory_retain` explicitly denied (`disallowedTools`) — they produce EVIDENCE, not lessons. Profile A creators do not have it denied, so they CAN call it. Blanket mandatory retain risks Hindsight bloat; optional + structured pattern is the correct balance.
 
 ## HARD RULES
 
@@ -529,7 +569,7 @@ When migrating an existing agent from generic v1.0 to canonical v2.0:
 - [ ] Replace `description: <single line>` with bilingual EN+RU+Triggers
 - [ ] Replace `color: red` (named) with hex `#RRGGBB`
 - [ ] Replace `tools:` allowlist (v1.0 / B1 paradigm) with `disallowedTools:` denylist using the profile-specific blocked set (B2 canon)
-- [ ] Rewrite body around the **9-step MCP usage pattern** (Profile A) or **6-step EVID pattern** (Profile B) or **synthesis pattern** (Profile C)
+- [ ] Rewrite body around the **9-step MCP usage pattern** (Profile A creators follow a 9-step procedure, or 10-step with optional Hindsight retain — see "Step 10 (optional, Profile A only)" in the canonical procedure section) or **6-step EVID pattern** (Profile B) or **synthesis pattern** (Profile C)
 - [ ] Add **Identity & audit** section near the top
 - [ ] Add **HARD RULES** section with the 3–7 invariants the whitelist cannot enforce
 - [ ] Add **Output to orchestrator** section with the structured handoff template
@@ -736,6 +776,7 @@ If your subagent guesses the cache subject without asking → it failed the prot
 
 - **PRD-026** — Forgeplan-aware agent layer (canonical pattern + project config + fpl-init v2.0)
 - **PRD-029** — Sprint A: UX-layer autonomy skills (agent-advisor + ask-back protocol + auto-router)
+- **PRD-030** — Sprint B: Profile A memory_retain convention (Step 10 optional Hindsight lesson pattern)
 - **EVID-040** — POC migration audit (adr-architect v1.0 → v1.1)
 - **EVID-049** — SC-8 smoke pre-B2 (0/9 MCP calls — upstream blocker detected)
 - **EVID-050** — SC-8 smoke post-B2 (B2 FIX WORKS — `disallowedTools` restores MCP propagation, 2026-05-18)

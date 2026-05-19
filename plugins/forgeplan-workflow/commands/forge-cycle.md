@@ -331,6 +331,46 @@ Full matrix: RFC-003 Layer 2 (Agent Pack Dispatch Matrix) — superseded by `.fo
 
 **Why unconditional (PRD-020)**: prior to v1.6.0 of forgeplan-workflow, /forge-cycle spawned SPARC agents directly via Task tool with zero forgeplan claim wiring. Now every SPARC phase is visible in `forgeplan_claims`.
 
+## Step 5.5a: Ask-back protocol handling (PRD-029)
+
+Subagents dispatched in Step 5 (Build) may emit a `<<NEED_USER_INPUT:...>>` sentinel when they hit a knowledge gap that cannot be resolved from existing artifacts. This is not an error — it is the ask-back protocol (PRD-029). The orchestrator must detect, surface, and re-dispatch; never ignore sentinels silently.
+
+**Detection**: after each subagent returns, scan the output for `^<<NEED_USER_INPUT:` or `^<<NEED_USER_INPUT_BEGIN>>` (line-start anchor prevents false positives from literal mentions in PRD bodies).
+
+**Parser** (apply to every subagent return in Step 5 and Step 6.5):
+
+```python
+def parse_subagent_return(text):
+    # Multi-line variant (question + why + options + default_if_no_answer)
+    multi = re.search(
+        r'^<<NEED_USER_INPUT_BEGIN>>\n(.*?)\n<<NEED_USER_INPUT_END>>',
+        text, re.MULTILINE | re.DOTALL)
+    if multi:
+        return parse_multi_line(multi.group(1))  # yaml-like block
+
+    # Single-line variant (preferred for short questions)
+    single = re.search(r'^<<NEED_USER_INPUT:\s*(.+?)>>', text, re.MULTILINE)
+    if single:
+        return {"question": single.group(1).strip()}
+
+    return None  # no ask-back; continue normally
+```
+
+**Surface**: call `AskUserQuestion` with the extracted question text; use `default_if_no_answer` as the recommendation hint (description field).
+
+**Re-dispatch**: invoke the same subagent with its original prompt plus:
+```
+## User answer to ask-back
+Question: {extracted question}
+Answer: {user's response}
+```
+
+**Anti-loop guard**: if the same subagent emits the same question 2 times in one session, apply `default_if_no_answer` (or skip with a warning if absent), record an EVIDENCE artifact with `verdict=CONCERNS` noting "Anti-loop guard triggered for {agent}: {question}", and continue — never block the pipeline indefinitely.
+
+Full protocol spec: `plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md` — section "Subagent ask-back protocol (PRD-029)".
+
+---
+
 ## Step 6: Run Tests
 
 Execute the project's test suite:

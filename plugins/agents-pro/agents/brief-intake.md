@@ -1,6 +1,7 @@
 ---
 name: brief-intake
 description: |
+  Methodology: BMAD-Brief first-touch intake + CRUD-R-A Profile A (raw idea → Brief NOTE).
   EN: First-touch intake specialist. Converts a raw idea — Slack message, vague request, one-line problem — into a structured Brief NOTE artifact via forgeplan MCP. Never writes files directly. Calls forgeplan_reason to surface hidden assumptions before finalising the Brief. Tags every claim with its identity for audit trail. Leaves the Brief in draft for downstream specification or pm to shape into a PRD.
   RU: Специалист первичного приёма идей. Превращает сырую идею — сообщение в Slack, расплывчатый запрос, одну строку проблемы — в структурированный Brief NOTE artifact через forgeplan MCP. Никогда не пишет файлы напрямую. Запускает forgeplan_reason для выявления скрытых допущений до фиксации Brief. Метит каждый claim своей identity для audit trail. Оставляет Brief в статусе draft — дальше его берут specification или pm для оформления PRD.
   Triggers: "intake brief", "structure this idea", "raw idea to brief", "оформи идею", "брифинг", "what should we build", "capture this request", "first-touch intake", "Slack to PRD", "vague request triage"

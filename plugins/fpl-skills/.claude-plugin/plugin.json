@@ -1,7 +1,7 @@
 {
   "name": "fpl-skills",
-  "version": "1.20.0",
-  "description": "Flagship workflow plugin for the ForgePlan ecosystem. 23 engineering skills + dev-advisor agent + 5 hooks. v1.20: PRD-029 Sprint A \u2014 3 UX-layer autonomy deliverables: (1) /agent-advisor skill \u2014 consults mm-agent-selection mental model + embedded CRUD-R-A map \u2192 recommends specialist agent with profile/rationale/invocation snippet; (2) Subagent ask-back protocol \u2014 `<<NEED_USER_INPUT:...>>` sentinel documented in AGENT-AUTHORING-GUIDE with parser for /forge-cycle + /autorun; (3) prompt-router UserPromptSubmit hook \u2014 keyword classifier emits non-blocking skill suggestions in additionalContext. Closes Gap A (knowing-which-command), B (subagent-needs-input), E (right-agent-for-job) from the autonomy vision. v1.19: /fpl-init operating contract v3 marker. v1.18: PRD-022 Tier A \u2014 4 high-traffic skills MCP-first.",
+  "version": "1.21.0",
+  "description": "Flagship workflow plugin for the ForgePlan ecosystem. 26 engineering skills + dev-advisor agent + 5 hooks. v1.21: PRD-030 Sprint B autonomy closure pack \u2014 7 deliverables in 3 waves: Wave 1 (parser integration into /forge-cycle + /autorun for runtime ask-back loop closure, methodology citation in all 17 forgeplan-aware agents, Profile A optional Step 10 Hindsight retain convention), Wave 2 (new /project-agent-scaffold + /agent-fetcher skills \u2014 tech-stack auto-detection + cross-marketplace suggestion, both confirm-before-write), Wave 3 (new /forge-progress skill \u2014 live read-only orchestrator state snapshot). Cumulative autonomy ~82% \u2192 ~95% \u2014 closes Gaps C/D/F/G/H/I from autonomy vision. v1.20: PRD-029 Sprint A \u2014 agent-advisor + ask-back protocol + prompt-router. v1.19: /fpl-init operating contract v3. v1.18: PRD-022 Tier A.",
   "author": {
     "name": "ForgePlan"
   },
@@ -42,6 +42,7 @@
     ],
     "skills": [
       "agent-advisor",
+      "agent-fetcher",
       "audit",
       "autorun",
       "bootstrap",
@@ -55,6 +56,8 @@
       "fpl-init",
       "gh-project",
       "migrate-from-dev-toolkit",
+      "progress-dashboard",
+      "project-agent-scaffold",
       "refine",
       "research",
       "restore",

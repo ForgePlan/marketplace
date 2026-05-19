@@ -266,6 +266,47 @@ Use `forge-report` skill if available. Otherwise generate inline using the templ
 
 ---
 
+## Ask-back protocol (Sprint B closure of Sprint A)
+
+Subagents dispatched mid-autorun (coder, specification, security-expert, etc.) may emit `<<NEED_USER_INPUT:...>>` sentinels when they hit an irreversible information gap that ADI cannot resolve — e.g. a schema decision that affects downstream artifacts. Because `/autorun` runs unattended, it must surface these questions asynchronously, apply defaults on timeout, and record unresolved questions as EVIDENCE so a post-run reviewer can audit every decision taken without user input. This is the same parser as `/forge-cycle` but with a **tighter anti-loop guard** (1 loop, not 2 — rationale below).
+
+**Detection** — after each subagent returns, scan the output for `^<<NEED_USER_INPUT:` (line-start anchor, `re.MULTILINE`).
+
+**Parser (apply to every subagent return):**
+
+```python
+# Pseudo-code — same as /forge-cycle; apply in /autorun Phase 3 (Build) and Phase 4 (Audit)
+def parse_subagent_return(text):
+    multi = re.search(
+        r'^<<NEED_USER_INPUT_BEGIN>>\n(.*?)\n<<NEED_USER_INPUT_END>>',
+        text, re.MULTILINE | re.DOTALL)
+    if multi:
+        return parse_multi_line(multi.group(1))   # yaml-like block → dict
+    single = re.search(r'^<<NEED_USER_INPUT:\s*(.+?)>>', text, re.MULTILINE)
+    if single:
+        return {"question": single.group(1).strip()}
+    return None   # no ask-back; continue normally
+```
+
+**Surface step** — when a sentinel is detected:
+1. Pause subagent dispatch.
+2. Call `AskUserQuestion` with: question text, options (if `options:` present in multi-line variant), and `default_if_no_answer` as the recommended answer.
+3. **TIMEOUT (autopilot mode): 60 seconds.** If user does not answer within 60s, apply `default_if_no_answer` (or a documented best-guess if absent) and continue — autopilot cannot stall waiting for human attention.
+
+**Re-dispatch step** — if user answered within timeout: re-dispatch the same subagent with the original prompt plus appended `## User answer to ask-back` block (question + answer). Continue phase normally.
+
+**AUTOPILOT ANTI-LOOP (tighter than `/forge-cycle`):** If the same subagent emits ask-back for the **same question 1 time** in the same session (i.e., after re-dispatch with the answer it still emits the same sentinel), autorun MUST apply `default_if_no_answer` immediately and continue. `/forge-cycle` allows 2 same-question loops because a human is watching; `/autorun` has no human watching closely — one loop is the ceiling.
+
+**EVIDENCE emission on default applied** — whenever a default is applied (timeout elapsed OR anti-loop triggered), autorun MUST emit an EVIDENCE artifact:
+- `verdict: CONCERNS`
+- Body: `"Unresolved ask-back during autorun: {question}. Default applied: {default_value}. Subagent: {agent_name}."`
+- Link to the parent RFC/PRD being implemented.
+This ensures post-run review surfaces every question that ran without explicit user input.
+
+**Cross-reference**: `plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md` → "Subagent ask-back protocol (PRD-029)" — sentinel format, `default_if_no_answer` field, and subagent authoring rules.
+
+---
+
 ## Autopilot directive (paste into every delegated skill's prompt)
 
 ```

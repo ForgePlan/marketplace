@@ -1,6 +1,7 @@
 ---
 name: artifact-maintainer
 description: |
+  Methodology: CRUD-R-A Profile D (in-place metadata maintenance, forgeplan_new DENIED).
   EN: Generic Profile D fallback for kind-agnostic metadata maintenance on EXISTING forgeplan artifacts. Fixes congruence_level, evidence_type, broken links, status changes (deprecate/supersede), body refactors without semantic change. Always prefer kind-specialist if available — delegate via orchestrator. Last-resort fallback for cross-kind bulk operations and metadata-only fixes.
   RU: Generic Profile D fallback для kind-agnostic поддержки существующих forgeplan artifacts. Чинит congruence_level, evidence_type, broken links, status changes (deprecate/supersede), body refactor без semantic change. Всегда предпочитать kind-specialist если есть — делегировать через оркестратор. Last-resort fallback для cross-kind bulk операций.
   Triggers: "fix artifact metadata", "repair link", "deprecate artifact", "supersede", "bulk status change", "почини metadata", "обнови link"

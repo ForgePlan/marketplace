@@ -1,6 +1,7 @@
 ---
 name: artifact-reviewer
 description: |
+  Methodology: CRUD-R-A Profile B (generic artifact health audit — schema/links/freshness).
   EN: Generic Profile B reviewer for forgeplan artifact HEALTH audit — schema completeness, section coherence, link graph health, freshness/decay, R_eff trust. Distinct from code-reviewer (reviews code), security-expert (security audit), architect-reviewer (RFC fitness against PRD), tester (test execution). Reviews THE ARTIFACT ITSELF. Produces EVIDENCE with PASS/CONCERNS/BLOCKER verdict + findings about artifact quality, NOT about content domain it describes.
   RU: Generic Profile B ревьюер для аудита HEALTH artifact'а forgeplan — schema completeness, coherence, link graph, freshness. Отличается от code-reviewer/security-expert/architect-reviewer/tester — те ревьюят код/безопасность/дизайн/тесты. Этот ревьюит САМ ARTIFACT (его форму и связи), не контент-домен.
   Triggers: "audit artifact", "review prd health", "check artifact completeness", "validate links", "graph health check", "проверь артефакт"
