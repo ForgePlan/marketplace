@@ -295,7 +295,7 @@ def parse_subagent_return(text):
 
 **Re-dispatch step** — if user answered within timeout: re-dispatch the same subagent with the original prompt plus appended `## User answer to ask-back` block (question + answer). Continue phase normally.
 
-**AUTOPILOT ANTI-LOOP (tighter than `/forge-cycle`):** If the same subagent emits ask-back for the **same question 1 time** in the same session (i.e., after re-dispatch with the answer it still emits the same sentinel), autorun MUST apply `default_if_no_answer` immediately and continue. `/forge-cycle` allows 2 same-question loops because a human is watching; `/autorun` has no human watching closely — one loop is the ceiling.
+**AUTOPILOT ANTI-LOOP (tighter than `/forge-cycle`):** If the same subagent emits ask-back for the **same question 1 time** in the same session (i.e., after re-dispatch with the answer it still emits the same sentinel), autorun MUST apply `default_if_no_answer` immediately and continue. `/forge-cycle` allows 2 same-question loops because a human is watching; `/autorun` has no human watching closely — one loop is the ceiling. When the 1-loop anti-loop triggers (autopilot mode), the checkpoint also captures the unresolved question in `pending_user_inputs[]` for inspection on resume.
 
 **EVIDENCE emission on default applied** — whenever a default is applied (timeout elapsed OR anti-loop triggered), autorun MUST emit an EVIDENCE artifact:
 - `verdict: CONCERNS`
@@ -304,6 +304,56 @@ def parse_subagent_return(text):
 This ensures post-run review surfaces every question that ran without explicit user input.
 
 **Cross-reference**: `plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md` → "Subagent ask-back protocol (PRD-029)" — sentinel format, `default_if_no_answer` field, and subagent authoring rules.
+
+---
+
+## Session checkpointing (resume protocol)
+
+### Session checkpoint lifecycle
+
+At `/autorun` start: generate `session_id` (format `SESS-YYYYMMDD-HHMMSS-<rand4>`) and create `.forgeplan/sessions/<session_id>.yaml` with initial state (`status: active`, `current_phase: 1`, `completed_phases: []`).
+
+After each phase completes (Route, Shape, Build per wave, Audit, Evidence, Activate, Commit): write checkpoint — update `current_phase`, append to `completed_phases[]`, record `last_checkpoint_at`.
+
+On any blocker exit (ADI fail, `NEED_USER_INPUT` timeout, anti-loop, red-line): write checkpoint with `blocker_state` set to the trigger reason, `status: paused`, and surface resume hint: `"Session paused — resume with: /autorun --resume <session_id>"`.
+
+Checkpoint write is **atomic**: write to `.forgeplan/sessions/<session_id>.yaml.tmp` then `mv` to `.yaml` — prevents partial-write corruption on unexpected stop. Full field schema: `docs/SESSION-CHECKPOINT-SCHEMA.md`.
+
+### Resume flag (`--resume <session-id>`)
+
+Parse `.forgeplan/sessions/<session-id>.yaml`. Validate:
+- File exists (else: `"Session <id> not found — run --list-sessions"`).
+- `status == paused` (else refuse: `active` means another run is live; `completed` cannot be resumed).
+- Age ≤ 24h since `last_checkpoint_at` — if older, require `--force-resume` (emits explicit staleness warning: results may differ due to drifted state).
+
+**Drift detection** — for each artifact ID in `pending_artifacts[]`, call `forgeplan_get(id)`. If any artifact is deleted, superseded, or missing: refuse resume and surface which artifact drifted.
+
+**State re-hydration** — set `current_phase` = last completed + 1; load `completed_waves[]` summary into orchestrator context.
+
+**Pending answers** — if `pending_user_inputs[]` is not empty AND user supplied `--with-answers <file.yaml>`: merge answers from file (keyed by question hash). Otherwise, prompt user for each unanswered question before continuing dispatch.
+
+Continue dispatch from `current_phase` forward; identity tags on resumed subagents append `-resumed-from-<original-tag>` suffix.
+
+### List flag (`--list-sessions`)
+
+Scan `.forgeplan/sessions/*.yaml`. Render table sorted by `last_checkpoint_at` DESC:
+
+```
+SESSION_ID               STATUS     STARTED              LAST_CHECKPOINT      PHASE  TASK (60 chars)
+SESS-20260519-034521-A7  paused     2026-05-19 03:45     2026-05-19 04:12     4      Implement auth service with JWT ...
+SESS-20260518-210033-B2  completed  2026-05-18 21:00     2026-05-18 23:15     7      Refactor DB layer to repository ...
+SESS-20260517-140011-C1  paused     2026-05-17 14:00     2026-05-17 15:30     3  ⚠ STALE — needs --force-resume
+```
+
+Sessions where age > 24h are marked `STALE — needs --force-resume`.
+
+### Cleanup flag (`--cleanup-sessions`)
+
+Remove `status == completed` session files immediately — no prompt (these are safe to delete; run completed successfully).
+
+For sessions where `age > 7 days` OR (`status == paused` AND `age > 24h`): prompt user before deletion. Print one confirmation line per candidate file.
+
+Print summary on completion: `"N completed sessions removed. M stale sessions surfaced for review."`
 
 ---
 
