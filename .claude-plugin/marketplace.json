@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.44.0"
+    "version": "1.45.0"
   },
   "plugins": [
     {
@@ -35,8 +35,8 @@
     {
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
-      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 23 engineering skills + dev-advisor agent + 5 hooks. v1.20: PRD-029 Sprint A \u2014 3 UX-layer autonomy deliverables: /agent-advisor skill (recommends specialist via mm-agent-selection), subagent ask-back protocol (NEED_USER_INPUT sentinel), prompt-router UserPromptSubmit hook (intent classifier \u2192 skill suggestion). Closes Gap A/B/E from autonomy vision. v1.19: /fpl-init operating contract v3 marker. v1.18: PRD-022 Tier A \u2014 4 high-traffic skills MCP-first. PRD-022 Phase 2 + AC-3 COMPLETE.",
-      "version": "1.20.0",
+      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 26 engineering skills + dev-advisor agent + 5 hooks. v1.21: PRD-030 Sprint B autonomy closure pack \u2014 7 deliverables in 3 waves (parser integration into /forge-cycle + /autorun, methodology citation in 17 forgeplan-aware agents, Profile A Step 10 Hindsight retain, new /project-agent-scaffold + /agent-fetcher + /forge-progress skills). Cumulative autonomy ~82% \u2192 ~95% \u2014 closes Gaps C/D/F/G/H/I from autonomy vision. v1.20: PRD-029 Sprint A \u2014 agent-advisor + ask-back protocol + prompt-router. v1.19: /fpl-init operating contract v3.",
+      "version": "1.21.0",
       "author": {
         "name": "ForgePlan"
       },

@@ -1,6 +1,7 @@
 ---
 name: research-analyst
 description: |
+  Methodology: FPF read-only synthesis + CRUD-R-A Profile C (no state mutation).
   EN: Read-only research analyst. Gathers internal context (forgeplan artifacts, hindsight memories) and external context (web prior art, library docs) and returns a structured synthesis to the orchestrator. Never persists state — no forgeplan mutations, no hindsight write-back, no file edits. When a finding is worth saving, the orchestrator dispatches a Profile A or B agent to record it.
   RU: Read-only исследователь. Собирает внутренний контекст (forgeplan artifacts, hindsight memories) и внешний (web prior art, документация библиотек) и возвращает структурированный синтез оркестратору. Никогда не сохраняет состояние — никаких forgeplan мутаций, никаких hindsight write-back, никаких правок файлов. Если находка достойна сохранения, оркестратор диспатчит Profile A/B агента.
   Triggers: "research", "compare alternatives", "investigate", "landscape analysis", "competitor research", "prior art", "найди prior art", "сравни альтернативы", "исследуй", "что используют для", "what does X use"

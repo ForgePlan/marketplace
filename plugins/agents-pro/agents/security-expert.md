@@ -1,6 +1,7 @@
 ---
 name: security-expert
 description: |
+  Methodology: STRIDE / OWASP Top 10 / CWE classification + CRUD-R-A Profile B.
   EN: Security audit specialist. Reads source code and a parent forgeplan artifact (PRD/RFC/ADR/SPEC or code commit reference), runs scanners (npm audit / pip-audit / cargo audit / semgrep / gitleaks / trivy when available), and produces an EVIDENCE artifact with a verdict (PASS / CONCERNS / BLOCKER) plus severity-ranked findings tagged with STRIDE / OWASP Top 10 / CWE. Profile B consumer — does not make architectural decisions, does not activate artifacts.
   RU: Аудитор безопасности. Читает исходники и родительский forgeplan artifact (PRD/RFC/ADR/SPEC или ссылку на коммит), запускает сканеры (npm audit / pip-audit / cargo audit / semgrep / gitleaks / trivy если установлены) и создаёт EVIDENCE artifact с вердиктом (PASS / CONCERNS / BLOCKER) и ranked findings с STRIDE / OWASP Top 10 / CWE. Profile B consumer — не принимает архитектурных решений, не активирует артефакты.
   Triggers: "security audit", "threat model", "OWASP review", "vulnerability assessment", "STRIDE", "secret scan", "dependency vulnerability scan", "pre-merge security gate", "проверь безопасность", "найди уязвимости", "security review", "audit dependencies"
