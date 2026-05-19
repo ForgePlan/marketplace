@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.43.0"
+    "version": "1.44.0"
   },
   "plugins": [
     {
@@ -35,8 +35,8 @@
     {
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
-      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 22 engineering skills + dev-advisor agent + 4 hooks. v1.19: /fpl-init operating contract v3 marker \u2014 closes PRD-022 AC-3 (idempotent injection). v3 reflects Phase 2 completion + canonical B2 agent dispatch awareness. Idempotent v1\u2192v3 and v2\u2192v3 upgrade paths. v1.18: PRD-022 Tier A \u2014 4 high-traffic skills MCP-first with CLI fallback. PRD-022 Phase 2 + AC-3 COMPLETE.",
-      "version": "1.19.0",
+      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 23 engineering skills + dev-advisor agent + 5 hooks. v1.20: PRD-029 Sprint A \u2014 3 UX-layer autonomy deliverables: /agent-advisor skill (recommends specialist via mm-agent-selection), subagent ask-back protocol (NEED_USER_INPUT sentinel), prompt-router UserPromptSubmit hook (intent classifier \u2192 skill suggestion). Closes Gap A/B/E from autonomy vision. v1.19: /fpl-init operating contract v3 marker. v1.18: PRD-022 Tier A \u2014 4 high-traffic skills MCP-first. PRD-022 Phase 2 + AC-3 COMPLETE.",
+      "version": "1.20.0",
       "author": {
         "name": "ForgePlan"
       },
