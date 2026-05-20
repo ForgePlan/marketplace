@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.58.0"
+    "version": "1.59.0"
   },
   "plugins": [
     {
@@ -35,8 +35,8 @@
     {
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
-      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 27 engineering skills + dev-advisor agent + 5 hooks. v1.24.3: Sprint O PRD-041 \u2014 link_direction_footgun detection script (scripts/detect_link_footguns.sh, 76 LOC bash, NDJSON output, surfaced 4 live findings on first run). v1.24.2: Sprint M PRD-039 conventions. v1.24.1: Sprint J+K closure pack. v1.23: Sprint D self-healing framework + <<NEEDS_ACTIVATION>> sentinel.",
-      "version": "1.24.3",
+      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 27 engineering skills + dev-advisor agent + 5 hooks. v1.24.4: Sprint S PRD-045 \u2014 AGENT-AUTHORING-GUIDE Step 9c filesystem verification convention codifying ML-11. v1.24.3: Sprint O detection script. v1.24.2: Sprint M conventions. v1.24.1: Sprint J+K closure. v1.23: Sprint D self-healing framework.",
+      "version": "1.24.4",
       "author": {
         "name": "ForgePlan"
       },
@@ -121,8 +121,8 @@
     {
       "name": "forgeplan-workflow",
       "source": "./plugins/forgeplan-workflow",
-      "description": "Structured engineering workflow for forgeplan users. Provides /forge-cycle (full SDLC cycle with Step 0.5 project-agent-matrix.yaml dispatch \u2014 PRD-026 Phase 6) and /forge-audit (multi-expert review), methodology knowledge base, quality gate hooks. Requires forgeplan CLI. v1.10.1: PRD-034 Sprint F + Sprint J+K Phase 7.3 \u2014 /forge-cycle template clarified (Anomaly #1) + Step 7.7 live-smoke discipline check (Anomaly #11 wiring) + release_notes invocation pattern (Sprint J+K). v1.9.1: forge-advisor canonical-lint.",
-      "version": "1.10.1",
+      "description": "Structured engineering workflow for forgeplan users. Provides /forge-cycle (full SDLC cycle) and /forge-audit. v1.10.2: Sprint S PRD-045 \u2014 Phase 6.5.1 auto-ingest activated artifacts into Hindsight bank via document_ingest_file (HIGH gap closure from Sprint R Hindsight optimization). v1.10.1: Sprint F + J+K Phase 7.3 release_notes wire. v1.9.1: forge-advisor canonical-lint.",
+      "version": "1.10.2",
       "author": {
         "name": "ForgePlan"
       },

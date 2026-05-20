@@ -1,10 +1,10 @@
 # ForgePlan Marketplace — Claude Code Configuration
 
 **Repo**: [ForgePlan/marketplace](https://github.com/ForgePlan/marketplace)
-**Catalog version**: 1.58.0
+**Catalog version**: 1.59.0
 **Plugins**: 15 (9 workflow + 5 agent packs + 1 memory plugin fpl-hsmem)
-**Agents**: 17 of ~65 forgeplan-aware (PRD-026 canonical B2 paradigm — `disallowedTools` denylist + Sprint Q PRD-042 ASM-canon frontmatter: skills preload + isolation:worktree for coder + maxTurns for all 17. **`memory: project` REJECTED Sprint R** (force-enable Read/Write/Edit overrides denylist — Hindsight covers use case instead). 5 profiles A/B/C/C-coder/D)
-**Last Updated**: 2026-05-21 (post Sprint A-R: PRD-044 memory architecture + polyglot + ML-11 discovery — 5 polyglot recipes + Hindsight optimization doc + NOTE-012 deferral + Anomaly #21 documented, 22 anomalies + 11 ML + 10 mental models, catalog v1.58.0)
+**Agents**: 17 of ~65 forgeplan-aware (PRD-026 canonical B2 paradigm — `disallowedTools` denylist + Sprint Q PRD-042 ASM-canon frontmatter + Sprint S Step 9c filesystem verification discipline. **`memory: project` REJECTED Sprint R** — Hindsight covers use case.)
+**Last Updated**: 2026-05-21 (post Sprint A-S: PRD-045 logical closure — Step 9c convention codified + document_ingest_file auto-wire to Phase 6.5 + graph verified healthy + chaos testing 5 scenarios with honest error budget (5.2% Sprint A-R, 67% correct FSM gates), 22 anomalies + 11 ML + 10 mental models, catalog v1.59.0)
 **Project board**: [orgs/ForgePlan/projects/5](https://github.com/orgs/ForgePlan/projects/5)
 
 ---
@@ -226,15 +226,15 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # Rulesets
 
 ---
 
-## Plugin versions (catalog v1.58.0)
+## Plugin versions (catalog v1.59.0)
 
 ### Workflow plugins
 
 | Plugin | Version |
 |--------|:-------:|
-| **fpl-skills** | 1.24.3 |
+| **fpl-skills** | **1.24.4** (Sprint S: Step 9c convention) |
 | **fpl-hsmem** | 2.1.0 |
-| **forgeplan-workflow** | 1.10.1 |
+| **forgeplan-workflow** | **1.10.2** (Sprint S: Phase 6.5.1 auto-ingest) |
 | **forgeplan-orchestra** | 1.4.1 |
 | **forgeplan-brownfield-pack** | 1.3.2 |
 | **fpf** | 1.4.1 |
