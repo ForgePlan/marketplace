@@ -1,6 +1,6 @@
 {
   "name": "forgeplan-workflow",
-  "version": "1.10.0",
+  "version": "1.10.1",
   "description": "Structured engineering workflow for forgeplan users. Provides /forge-cycle (full SDLC cycle: Hindsight v2 memory bootstrap + parallel subagent dispatch via forgeplan_dispatch + Task tool + multi-reviewer audit with 4 parallel agents + mail-as-beads autonomous decisions logging + MCP-first per PRD-021/022 + claim/release per PRD-020 — implements RFC-003/PRD-025) and /forge-audit (multi-expert review), methodology knowledge base, quality gate hooks. Requires forgeplan CLI. v1.10: PRD-034 Sprint F — /forge-cycle template clarified (Anomaly #1 fix) + Phase 6.7/Step 7.7 live-smoke discipline check (Anomaly #11 wiring). v1.9.1: forge-advisor agent canonical-lint compliant.",
   "author": {
     "name": "ForgePlan"
