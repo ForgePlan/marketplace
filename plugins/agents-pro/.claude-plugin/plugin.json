@@ -1,6 +1,6 @@
 {
   "name": "agents-pro",
-  "version": "1.8.1",
+  "version": "1.8.2",
   "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.8.1: 5 Profile B forgeplan-aware agents (architect-reviewer, artifact-reviewer, evidence-recorder, security-expert, system-dev) bodies patched with Step 9b NEEDS_ACTIVATION sentinel emit instruction per Sprint E PRD-033. Verified organically via live smoke test EVID-060 = GREEN. v1.8: 16 non-canonical specialists canonical-lint compliant. v1.7: 3 NEW generic CRUD-R-A agents. Cumulative: 12 of 28 agents forgeplan-aware.",
   "author": {"name": "ForgePlan"},
   "homepage": "https://github.com/ForgePlan/marketplace",

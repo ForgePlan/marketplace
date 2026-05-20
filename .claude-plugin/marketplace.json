@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.56.0"
+    "version": "1.57.0"
   },
   "plugins": [
     {
@@ -59,8 +59,8 @@
     {
       "name": "fp-cookbook",
       "source": "./plugins/fp-cookbook",
-      "description": "Practical cookbook of forgeplan CLI recipes — 26 task-oriented recipes across 8 categories (getting-started, recipes-prd, recipes-evidence, recipes-workflow, recipes-multiplugin, recipes-ai-pair, troubleshooting, cli-cheatsheet). Each recipe follows uniform Цель → Команда → Пример → Common errors structure. 5 troubleshooting recipes address Sprint A-O anomalies (#5 R_eff cascade, #7 EVID stuck draft, #13 restore-to-draft, #15/#16 link direction, #17 EVID body convention). cli-cheatsheet provides one-page reference for both CLI and MCP tools. v1.0.0 PRD-013 Sprint P 2026-05-20.",
-      "version": "1.0.0",
+      "description": "Practical cookbook of forgeplan CLI recipes — 26 task-oriented recipes across 8 categories. v1.1.0: Sprint Q PRD-042 — added evals/evals.json (5 substantive prompts per ASM §6, covering recipes-prd + recipes-evidence + recipes-workflow + troubleshooting + cli-cheatsheet). v1.0.0 PRD-013 Sprint P — 26 recipes shipped, 5 troubleshooting addressing Sprint A-O anomalies, cli-cheatsheet covers CLI + MCP tools.",
+      "version": "1.1.0",
       "author": {
         "name": "ForgePlan"
       },
@@ -80,8 +80,8 @@
     {
       "name": "agentic-rag",
       "source": "./plugins/agentic-rag",
-      "description": "Methodology skill for writing skills in agentic RAG format — SKILL.md as router + sections/_index.md + content files (~30-50 LOC each). 6 sections (when-to-use, structure, description-craft, content-quality, templates, distribution) covering everything from decision tree to copy-pasteable starter-kit. Real-world examples from fpf-knowledge (224 sections) and laws-of-ux (30 laws). v1.0.0 PRD-014 Sprint O 2026-05-20 — ships as marketplace plugin (standalone repo deferred per NOTE-003 trigger-driven design).",
-      "version": "1.0.0",
+      "description": "Methodology skill for writing skills in agentic RAG format — SKILL.md as router + sections/_index.md + content files (~30-50 LOC each). 6 sections (when-to-use, structure, description-craft, content-quality, templates, distribution). v1.1.0: Sprint Q PRD-042 — added evals/evals.json (5 substantive prompts per ASM §6) + refactored anti-patterns to good/bad pair structure per ASM §5 Layer 2 (15 new pair files in references/anti-patterns/). v1.0.0 PRD-014 Sprint O.",
+      "version": "1.1.0",
       "author": {
         "name": "ForgePlan"
       },
@@ -228,8 +228,8 @@
     {
       "name": "agents-core",
       "source": "./plugins/agents-core",
-      "description": "Core development agents: debugger, code reviewer, error detective, performance engineer, production validator, plus complete dev team (coder, planner, researcher, reviewer, tester, TDD). v1.3.1: code-reviewer + tester (Profile B) bodies patched with Step 9b NEEDS_ACTIVATION sentinel emit per Sprint E PRD-033 \u2014 verified organically via live smoke EVID-060 GREEN. v1.3: 8 legacy canonical-lint compliant.",
-      "version": "1.3.1",
+      "description": "Core development agents: debugger, code reviewer, error detective, performance engineer, production validator, plus complete dev team (coder, planner, researcher, reviewer, tester, TDD). v1.3.2: Sprint Q PRD-042 \u2014 ASM-canon frontmatter added to 3 forgeplan-aware agents (skills preload, maxTurns; coder gets isolation:worktree as only writer; code-reviewer + tester get memory:project as learners). v1.3.1: Sprint E body patches.",
+      "version": "1.3.2",
       "author": {
         "name": "ForgePlan"
       },
@@ -250,8 +250,8 @@
     {
       "name": "agents-pro",
       "source": "./plugins/agents-pro",
-      "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.8.1: 5 Profile B forgeplan-aware agents (architect-reviewer, artifact-reviewer, evidence-recorder, security-expert, system-dev) bodies patched with Step 9b NEEDS_ACTIVATION sentinel emit per Sprint E PRD-033. v1.8: 16 non-canonical canonical-lint compliant. v1.7: 3 generic CRUD-R-A agents. Cumulative: 12 of 28 forgeplan-aware.",
-      "version": "1.8.1",
+      "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.8.2: Sprint Q PRD-042 — ASM-canon frontmatter added to 12 forgeplan-aware agents (skills preload, maxTurns, MCP deps comments; 5 learners get memory:project: architect-reviewer/adr-architect/goal-planner/security-expert/system-dev). v1.8.1: Sprint E body patches.",
+      "version": "1.8.2",
       "author": {
         "name": "ForgePlan"
       },
@@ -272,8 +272,8 @@
     {
       "name": "agents-sparc",
       "source": "./plugins/agents-sparc",
-      "description": "SPARC development methodology: orchestrator with quality gates plus 4 phase specialists (specification, pseudocode, architecture, refinement). v1.2: ALL 5 agents canonical-lint compliant — sparc-orchestrator + pseudocode + refinement migrated to valid model + hex color + bilingual EN/RU/Triggers descriptions. 100% pack passes LR-1..LR-3. specification + architecture remain forgeplan-aware Profile A (PRD-026 Phase 3 batch 1).",
-      "version": "1.2.0",
+      "description": "SPARC development methodology: orchestrator with quality gates plus 4 phase specialists (specification, pseudocode, architecture, refinement). v1.2.1: Sprint Q PRD-042 — ASM-canon frontmatter added to 2 forgeplan-aware agents (specification + architecture get skills preload + maxTurns; architecture gets memory:project as learner). v1.2: ALL 5 agents canonical-lint compliant.",
+      "version": "1.2.1",
       "author": {
         "name": "ForgePlan"
       },

@@ -8,6 +8,14 @@ description: |
 model: opus
 color: "#E53935"
 disallowedTools: Write, Edit, NotebookEdit, mcp__forgeplan__forgeplan_activate, mcp__forgeplan__forgeplan_reason, mcp__forgeplan__forgeplan_claims, mcp__plugin_fpl-hsmem_hindsight__memory_retain
+# MCP dependencies (informational — for future allowlist migration when Anthropic #53865 fixed):
+#   - forgeplan: forgeplan_get, forgeplan_new, forgeplan_update, forgeplan_link, forgeplan_validate, forgeplan_score, forgeplan_claim, forgeplan_release
+#   - hindsight: memory_recall, mental_model_get
+skills:
+  - fp-cookbook
+  - forgeplan-methodology
+memory: project
+maxTurns: 20
 ---
 
 You are a security expert. You read code and artifacts, run scanners, and produce a forgeplan **EVIDENCE artifact** with verdict + severity-ranked findings. You do **not** make architectural decisions (that's an architect/reviewer's job) — you report what you find.

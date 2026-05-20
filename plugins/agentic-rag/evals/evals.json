@@ -1,0 +1,125 @@
+{
+  "skill_name": "agentic-rag",
+  "evals": [
+    {
+      "id": 1,
+      "eval_name": "large_skill_structuring",
+      "prompt": "I want to create a Claude Code skill with 50+ topics covering an entire framework's documentation. The total content will be around 800 lines. How should I structure it so the agent loads only what is relevant rather than the whole knowledge base on every query?",
+      "expected_output": "Response should route to the `structure` section and explain: (1) SKILL.md as a thin router (60-100 lines, navigation only, no knowledge content), (2) sections/ directory with one subdirectory per topic group, (3) each subdirectory has an _index.md listing files with line counts, (4) content files targeting 30-50 lines each with a hard limit of 70 lines. Should mention the router table format mapping user need to section path, and the 3-step navigation pattern (identify need → read _index.md → read specific file). May also reference the file-budget.md conventions for _index.md format.",
+      "assertions": [
+        {
+          "text": "Response mentions SKILL.md size target of 60-100 lines (or equivalent: router is thin/navigation-only)",
+          "type": "manual"
+        },
+        {
+          "text": "Response mentions content file budget of 30-50 lines (or 30-70 line range)",
+          "type": "manual"
+        },
+        {
+          "text": "Response mentions _index.md as the section table-of-contents mechanism",
+          "type": "manual"
+        },
+        {
+          "text": "Response does NOT instruct user to put knowledge content inside SKILL.md (anti-pattern AP-3)",
+          "type": "manual"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "eval_name": "flat_vs_rag_decision",
+      "prompt": "I have two skill ideas: (A) a 60-line cheat-sheet for git commands — one coherent reference, users always want the full thing; (B) a documentation skill covering 8 distinct subsystems, each 100 lines, users typically ask about one subsystem at a time. Should I use agentic RAG for both, one, or neither? Walk me through the decision.",
+      "expected_output": "Response should route to the `when-to-use` section and apply the decision tree: Skill A (60-line, coherent, users want whole thing) should stay flat — below the 300-line threshold, single purpose, no benefit to RAG navigation overhead. Skill B (800 lines total, 8 distinct topics, users request one at a time) should use agentic RAG — exceeds 300-line threshold, >5 distinct topics, user requests one sub-topic at a time. Response should mention the anti-pattern warning: a 5-file skill split into sections is over-engineered, and that 'if your entire skill fits in ~200 lines, keep it flat'.",
+      "assertions": [
+        {
+          "text": "Response correctly recommends FLAT for skill A (60-line cheat-sheet)",
+          "type": "manual"
+        },
+        {
+          "text": "Response correctly recommends RAG for skill B (800 lines, 8 subsystems)",
+          "type": "manual"
+        },
+        {
+          "text": "Response references at least one concrete decision criterion (line count >300, topics >5, or 'user requests one sub-topic at a time')",
+          "type": "manual"
+        },
+        {
+          "text": "Response warns against over-engineering small skills with RAG structure",
+          "type": "manual"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "eval_name": "starter_kit_template_retrieval",
+      "prompt": "Show me a starter template for a new RAG-pattern skill that I can fork right now. I need: the SKILL.md router file with all required frontmatter fields, an example _index.md for one section, and the directory layout I should create. My skill is called 'payment-patterns' and will cover 4 topics.",
+      "expected_output": "Response should route to the `templates` section, specifically to starter-kit/SKILL.md and starter-kit/sections/my-topic/_index.md. Should show: (1) SKILL.md template with YAML frontmatter fields (name, description, triggers), section INDEX table, and 'how to navigate' block with MY_SKILL_* placeholders replaced with payment-patterns equivalents, (2) _index.md template with Contents table (File | Description | Lines columns), (3) directory structure: skills/payment-patterns/SKILL.md + sections/<topic>/_index.md + sections/<topic>/<content-file>.md. Should advise not to create empty section directories.",
+      "assertions": [
+        {
+          "text": "Response shows or describes SKILL.md frontmatter with name, description, and triggers fields",
+          "type": "manual"
+        },
+        {
+          "text": "Response shows or describes _index.md with a Contents table listing files with descriptions and line counts",
+          "type": "manual"
+        },
+        {
+          "text": "Response shows a directory structure with sections/ subdirectory",
+          "type": "manual"
+        },
+        {
+          "text": "Response references the starter-kit or templates section (not inventing its own structure from scratch)",
+          "type": "manual"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "eval_name": "skill_description_anti_patterns",
+      "prompt": "I wrote the following SKILL.md description for my skill: 'This skill contains a lot of useful information about databases. It has many topics covered in detail including schema design, indexing, query optimization, transactions, and more. Very comprehensive.' What's wrong with this description and how should I rewrite it for effective Claude Code skill triggering?",
+      "expected_output": "Response should route to the `description-craft` section (description-format.md and triggers.md). Should identify problems: (1) vague trigger phrases ('a lot of useful', 'very comprehensive') that won't match specific user intents, (2) missing explicit trigger keywords in the frontmatter triggers: list, (3) description is product-marketing prose rather than a routing signal to the model. Should explain that description: must answer 'when should the model load this skill' and triggers: must list exact phrases users type. A rewritten example should include: a 2-3 sentence description with specific use-case signals ('Use when user asks about schema normalization, index design, query optimization, or transaction isolation') plus a triggers: list with concrete phrases like 'schema design', 'index optimization', 'query performance'.",
+      "assertions": [
+        {
+          "text": "Response identifies that the description lacks specific trigger signals / is too vague",
+          "type": "manual"
+        },
+        {
+          "text": "Response explains the role of the triggers: frontmatter field for model-invocation routing",
+          "type": "manual"
+        },
+        {
+          "text": "Response provides a rewritten description or concrete example of what a good description looks like",
+          "type": "manual"
+        },
+        {
+          "text": "Response does NOT suggest the description is fine as-is",
+          "type": "manual"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "eval_name": "distribution_channel_decision",
+      "prompt": "I've published a methodology skill as a marketplace plugin. Two users have asked me on GitHub if they can install it with 'npx skills add' for use with Gemini CLI. Should I create a standalone repo now? What are the tradeoffs and what does the ForgePlan ecosystem recommend?",
+      "expected_output": "Response should route to the `distribution` section (plugin-vs-standalone.md). Should explain: (1) the trigger-driven promotion pattern — ship as plugin first, promote to standalone only at >=3 demand signals (the user has 2 signals, below threshold), (2) tradeoffs: standalone requires maintaining 2 repos (marketplace + standalone), but enables cross-ecosystem users (Gemini CLI, Codex CLI, Goose), (3) recommendation: wait for 1 more signal before creating the standalone repo, (4) when ready: create ForgePlan/<skill-name>-standalone repo with SKILL.md in root, wire CI sync workflow. Should mention NOTE-003 trigger-driven design pattern.",
+      "assertions": [
+        {
+          "text": "Response mentions the >=3 demand signals threshold for standalone promotion",
+          "type": "manual"
+        },
+        {
+          "text": "Response correctly identifies the user is below the threshold (2 signals vs 3 required) and recommends waiting",
+          "type": "manual"
+        },
+        {
+          "text": "Response explains the two-repo maintenance cost of the standalone channel",
+          "type": "manual"
+        },
+        {
+          "text": "Response mentions trigger-driven design / NOTE-003 or equivalent concept (ship plugin first, promote on demand)",
+          "type": "manual"
+        }
+      ]
+    }
+  ]
+}
