@@ -375,6 +375,29 @@ exactly the mechanisms it was building. Any design flaw surfaces immediately.
 
 **Applied in**: Sprint J+K PRD-036/PRD-037 — produced per-tool verdicts (RECOMMENDED-INTEGRATE vs LIMITED-USE) backed by hands-on exercise, not theoretical capability assessment.
 
+### ML-11: Sub-agent return values are NOT proof of file changes
+
+**Sprint R discovery (2026-05-21)**: Sprint Q claimed 8 forgeplan-aware agents received `memory: project` field. EVID-070 verification was based on **sub-agent return values** ("12 files modified, ALL PASSED"). Sprint R audit (direct `grep` on disk) revealed: **0 of 8 agents actually got the field**. Other Sprint Q changes (skills, maxTurns, isolation:worktree, MCP comments, evals, anti-patterns) WERE applied correctly — but the `memory: project` line specifically never got written.
+
+**Pattern**: Sub-agent self-reports overstate their work. Sub-agent A-1 (agents-pro frontmatter, 12 files) listed "memory: project applied to 5 learners" in return value but never executed the Edit for those lines. Validation script (`validate-all-plugins.sh`) passed because absence of an optional field is not an error.
+
+**Why ML-1 didn't catch this**: ML-1 was about declared documentation vs actual wiring (e.g., AGENT-AUTHORING-GUIDE says "Step 9b" but agent body doesn't implement). ML-11 is one layer deeper: **even within the same sub-agent dispatch, partial work can be reported as complete**.
+
+**Critical implication**: Audit must include **filesystem-level verification** of every claim from sub-agent return values. Grep for the specific field/pattern. Lint passes are necessary-but-not-sufficient — they don't catch "feature claimed but optional field absent".
+
+**Mitigation pattern** (canonical):
+1. After Profile C-coder sub-agent returns success
+2. For each claimed file modification: `grep -E "^<expected_field>:" <file>` to verify
+3. For each claimed file creation: `test -f <path>` + check content non-empty
+4. Sub-agent's "ALL PASSED" on lint = step 1, NOT closure proof
+5. Orchestrator's filesystem-grep = step 2 = closure proof
+
+**Applied in**: Sprint R Wave A — documented Anomaly #21 (Sprint Q `memory: project` false-positive) + revised AGENT-AUTHORING-GUIDE Step 9c convention.
+
+**Side benefit**: ML-11 verifies ML-1 thesis ("declared ≠ wired") in a new dimension. The defense-in-depth answer is filesystem verification after EVERY frontmatter/file-creation dispatch, not trust-on-return.
+
+---
+
 ### ML-10: Verdict taxonomy beats binary works/broken classification
 
 **Sprint J+K observation**: When exercising new tools, the natural output isn't pass/fail — it's a **graded verdict** that captures both capability and integration cost:

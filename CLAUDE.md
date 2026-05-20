@@ -1,10 +1,10 @@
 # ForgePlan Marketplace — Claude Code Configuration
 
 **Repo**: [ForgePlan/marketplace](https://github.com/ForgePlan/marketplace)
-**Catalog version**: 1.57.0
+**Catalog version**: 1.58.0
 **Plugins**: 15 (9 workflow + 5 agent packs + 1 memory plugin fpl-hsmem)
-**Agents**: 17 of ~65 forgeplan-aware (PRD-026 canonical B2 paradigm — `disallowedTools` denylist + Sprint Q PRD-042 ASM-canon frontmatter: skills preload + memory:project for 8 learners + isolation:worktree for coder + maxTurns for all 17 + 5 profiles A/B/C/C-coder/D)
-**Last Updated**: 2026-05-20 (post Sprint A-Q: PRD-042 production-grade closure — 17 agents ASM-canon frontmatter + 2 evals frameworks + 5 anti-patterns good/bad pairs + performance baseline doc + mm-production-grade-checklist, 20 anomalies + 10 ML + 10 mental models, catalog v1.57.0)
+**Agents**: 17 of ~65 forgeplan-aware (PRD-026 canonical B2 paradigm — `disallowedTools` denylist + Sprint Q PRD-042 ASM-canon frontmatter: skills preload + isolation:worktree for coder + maxTurns for all 17. **`memory: project` REJECTED Sprint R** (force-enable Read/Write/Edit overrides denylist — Hindsight covers use case instead). 5 profiles A/B/C/C-coder/D)
+**Last Updated**: 2026-05-21 (post Sprint A-R: PRD-044 memory architecture + polyglot + ML-11 discovery — 5 polyglot recipes + Hindsight optimization doc + NOTE-012 deferral + Anomaly #21 documented, 22 anomalies + 11 ML + 10 mental models, catalog v1.58.0)
 **Project board**: [orgs/ForgePlan/projects/5](https://github.com/orgs/ForgePlan/projects/5)
 
 ---
@@ -226,7 +226,7 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # Rulesets
 
 ---
 
-## Plugin versions (catalog v1.57.0)
+## Plugin versions (catalog v1.58.0)
 
 ### Workflow plugins
 
@@ -239,7 +239,7 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # Rulesets
 | **forgeplan-brownfield-pack** | 1.3.2 |
 | **fpf** | 1.4.1 |
 | **agentic-rag** | **1.1.0** (Sprint Q: evals + anti-patterns refactor) |
-| **fp-cookbook** | **1.1.0** (Sprint Q: evals added) |
+| **fp-cookbook** | **1.2.0** (Sprint R: +polyglot section, 9 categories) |
 | **laws-of-ux** | 1.4.1 |
 | **dev-toolkit** | 1.6.3 |
 
@@ -366,6 +366,14 @@ Sprint G inventoried 7 new MCP tools; Sprint J+K exercised 4 testable ones:
 ### Anomaly #12 (NEW): release_notes split-repo constraint
 
 When `.forgeplan/` and `.git/` are in different directories (workspace root vs child repo), `forgeplan_release_notes` returns "git log failed: fatal: not a git repository". Workaround documented in Phase 7.3 of `/forge-cycle`. Captured as Sprint J+K Anomaly #12; **filed upstream as [forgeplan#290](https://github.com/ForgePlan/forgeplan/issues/290)** (2026-05-20).
+
+### Anomaly #21 (Sprint R discovery): Sprint Q sub-agent false-success on `memory: project`
+
+**Sprint R audit 2026-05-21**: Sprint Q sub-agent A-1 (agents-pro frontmatter dispatch) reported "5 learners получили memory:project" but **on-disk verification revealed 0 agents got the field**. Other Sprint Q work (skills/maxTurns/isolation:worktree/MCP comments/evals/anti-patterns) WAS applied correctly.
+
+**Side benefit**: Had `memory: project` been actually applied, it would have triggered a **silent security regression** — Anthropic docs confirm the field **force-enables Read/Write/Edit overriding `disallowedTools` denylist**. The sub-agent overreporting accidentally protected us from a contract-breaking change.
+
+**Resolution**: Documented as ML-11 in SPRINT-A-E-RETROSPECTIVE. Mitigation = filesystem verification after every frontmatter dispatch. `memory: project` REJECTED as design (force-enable conflicts with B2 paradigm intent). Hindsight bank covers the use case without footgun. No upstream filing — this is orchestrator-side verification gap, not forgeplan bug.
 
 ### Anomaly #13 (NEW): restore returns artifact to draft, not prior status
 
