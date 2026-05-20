@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.54.0"
+    "version": "1.55.0"
   },
   "plugins": [
     {
@@ -35,8 +35,8 @@
     {
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
-      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 27 engineering skills + dev-advisor agent + 5 hooks. v1.24.2: Sprint M PRD-039 \u2014 AGENT-AUTHORING-GUIDE gains Step 9b.1 (EVID body bold-pattern not YAML) + Step 11 (Profile A affected_files declaration) + /forge-cleanup 9th anomaly kind link_direction_footgun. v1.24.1: PRD-034 Sprint F + Sprint J+K closure pack (PRD-038). v1.23: Sprint D self-healing framework + <<NEEDS_ACTIVATION>> sentinel. v1.22: Sprint C resume. v1.21: Sprint B. v1.20: Sprint A.",
-      "version": "1.24.2",
+      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 27 engineering skills + dev-advisor agent + 5 hooks. v1.24.3: Sprint O PRD-041 \u2014 link_direction_footgun detection script (scripts/detect_link_footguns.sh, 76 LOC bash, NDJSON output, surfaced 4 live findings on first run). v1.24.2: Sprint M PRD-039 conventions. v1.24.1: Sprint J+K closure pack. v1.23: Sprint D self-healing framework + <<NEEDS_ACTIVATION>> sentinel.",
+      "version": "1.24.3",
       "author": {
         "name": "ForgePlan"
       },
@@ -54,6 +54,27 @@
         "autorun",
         "bootstrap",
         "methodology"
+      ]
+    },
+    {
+      "name": "agentic-rag",
+      "source": "./plugins/agentic-rag",
+      "description": "Methodology skill for writing skills in agentic RAG format — SKILL.md as router + sections/_index.md + content files (~30-50 LOC each). 6 sections (when-to-use, structure, description-craft, content-quality, templates, distribution) covering everything from decision tree to copy-pasteable starter-kit. Real-world examples from fpf-knowledge (224 sections) and laws-of-ux (30 laws). v1.0.0 PRD-014 Sprint O 2026-05-20 — ships as marketplace plugin (standalone repo deferred per NOTE-003 trigger-driven design).",
+      "version": "1.0.0",
+      "author": {
+        "name": "ForgePlan"
+      },
+      "homepage": "https://github.com/ForgePlan/marketplace",
+      "license": "MIT",
+      "category": "developer-tools",
+      "keywords": [
+        "skills",
+        "agentic-rag",
+        "methodology",
+        "knowledge-base",
+        "skill-authoring",
+        "rag",
+        "claude-code"
       ]
     },
     {

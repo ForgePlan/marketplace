@@ -1,0 +1,33 @@
+{
+  "name": "agentic-rag",
+  "version": "1.0.0",
+  "description": "Agentic RAG methodology for Claude Code skills — how to structure large knowledge bases with SKILL.md as a thin router + sections/_index.md + 30-50 line content files. Use when building a skill with >300 lines or >5 topics. Includes 5+ anti-patterns, copy-pasteable starter-kit, and distribution recipes. Triggers on: agentic RAG, SKILL.md structure, sections pattern, skill methodology, knowledge base design, how to write a skill.",
+  "author": {
+    "name": "ForgePlan"
+  },
+  "homepage": "https://github.com/ForgePlan/marketplace",
+  "repository": "https://github.com/ForgePlan/marketplace",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "agentic-rag",
+    "methodology",
+    "knowledge-base",
+    "skill-authoring",
+    "developer-tools",
+    "sections-pattern"
+  ],
+  "category": "developer-tools",
+  "requires": {
+    "cli": [],
+    "mcp": [],
+    "plugins": []
+  },
+  "supersedes": {},
+  "components": {
+    "commands": [],
+    "agents": [],
+    "skills": ["agentic-rag"],
+    "hooks": []
+  }
+}
