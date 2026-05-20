@@ -7,6 +7,25 @@ You are executing the **forgeplan engineering cycle** — a structured workflow 
 
 Follow these steps in order. Do NOT skip steps. If a step fails, stop and report the issue.
 
+---
+
+## How this template actually runs (read this first)
+
+This template uses `/sprint`, `/team-up`, `/audit`, `/fpf-simple` as semantic markers — **they are NOT auto-invoked inline by this template**. The orchestrator (main Claude / CLI session) reads each phase and performs the **equivalent operation manually**:
+
+| Template reads | Orchestrator does |
+|---|---|
+| `/sprint <task>` (Phase 2 — wave plan) | Drafts wave-based plan as structured TaskList + dispatches sub-agents per wave |
+| `/team-up <task>` (Phase 3 — build) | Dispatches multiple coder/specialist sub-agents in parallel via Task() |
+| `/audit <task>` (Phase 4 — review) | Dispatches code-reviewer / security-expert / architect-reviewer / tester sub-agents in parallel |
+| `/fpf-simple <task>` (Phase 1c — FPF decision) | Generates 3 hypotheses → deduces consequences → applies WLNK + reversibility → chooses (no separate skill invocation) |
+
+When you see those tokens anywhere in this template, treat them as "**execute the equivalent sub-agent dispatch + MCP calls**" — orchestrator does the equivalent inline. If you DO want to literally invoke them as skills (when supported by your CLI), check `~/.claude/plugins/marketplaces/` for whether each is installed and use the Skill tool — but the **canonical execution path is direct orchestrator action**.
+
+This template can be invoked by Claude Code, Gemini CLI, Codex CLI, or any other AI tool — the semantics travel via this contract, not via tool-specific slash-command resolution. Each CLI reads this file and performs its own equivalent dispatch; no CLI auto-chains slash commands from within a loaded template.
+
+---
+
 ## Reading Forgeplan Output (v0.25.0+)
 
 After **every** `forgeplan` command in this cycle, read the contract marker:
@@ -514,6 +533,32 @@ The sentinel lets reviewers SIGNAL completion; the orchestrator performs the act
 Cross-reference: `AGENT-AUTHORING-GUIDE.md` Profile B Step 9b (sentinel convention),
 `<<NEED_USER_INPUT>>` precedent from Sprint A (PRD-029), `/autorun` NEEDS_ACTIVATION
 sentinel section (autopilot variant — auto-activates without confirmation).
+
+## Step 7.7 (Phase 6.7): Live smoke verification (Sprint F — PRD-034 / Anomaly #11)
+
+Before declaring Sprint done + commit, **dispatch at least 1 live sub-agent** that exercises the changes you just shipped. This is **encouragement, not enforcement** — but skipping it accumulates declared-vs-wired gaps (the Sprint A-E meta-lesson — see `docs/SPRINT-A-E-RETROSPECTIVE.md`).
+
+> Discipline check label: **Phase 6.7 — Live smoke verification**
+
+**When to skip**:
+- Sprint scope is purely additive documentation (no behavioural change)
+- Live smoke would consume disproportionate tokens/time vs the change size
+- The change IS itself a live smoke verification of prior work
+
+**When to do it**:
+- New skill or hook added — dispatch a sub-agent that uses it
+- Agent body patched — dispatch that agent with a representative task
+- Orchestrator parser added — emit a test sentinel and verify parser fires
+- Sentinel convention extended — verify organic emission
+
+**Outcome shape**:
+- GREEN: sub-agent behaviour matches Sprint claim → commit
+- YELLOW: minor issues found but not blocking → fix inline OR record as follow-up EVID
+- RED: Sprint claim doesn't match reality → STOP, return to Step 5 Build
+
+**Meta-lesson** (from Sprint A-E retrospective): "declared ≠ wired ≠ verified live". Sprint A through D wrote documentation; Sprint E live-smoke (W2-F) was the first time NEEDS_ACTIVATION sentinel actually fired in production. Without that smoke, Anomaly #10 (declared-vs-wired gap) would have persisted indefinitely.
+
+Cross-reference: `docs/SPRINT-A-E-RETROSPECTIVE.md` "Patterns that worked" section #5 (audit-driven closure) + Meta-lesson ML-1.
 
 ## Step 8: Review and Activate
 

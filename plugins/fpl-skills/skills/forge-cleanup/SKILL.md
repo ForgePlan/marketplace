@@ -1,9 +1,9 @@
 ---
 name: forge-cleanup
 description: |
-  Methodology: 3-tier pipeline self-healing (AUTO / ADI / USER classification per PRD-032 Sprint D).
-  EN: Explicit draft sweep skill for marketplace workspaces. Scans all draft artifacts via mcp__forgeplan__forgeplan_list, classifies each into 4 outcomes (ready_to_activate / incomplete / stale_unreferenced / ambiguous) mapped to 3 resolution tiers (AUTO = silent activate with batch confirmation, ADI = FPF reasoning loop, USER = per-artifact explicit decision). Executes AUTO tier after user batch-confirm; dispatches ADI sub-agents for ambiguous cases; surfaces USER tier per artifact for explicit decisions. Use at end of /forge-cycle or /autorun runs, or manually when forgeplan_health shows accumulating drafts. Closes Anomaly #7 from Sprint A+B+C log.
-  RU: Explicit-скилл для draft sweep маркетплейс воркспейсов. Сканирует все draft артефакты через MCP, классифицирует в 4 исхода (ready_to_activate / incomplete / stale_unreferenced / ambiguous), мапит на 3 tier resolution (AUTO молча активирует, ADI запускает FPF reasoning loop, USER через AskUserQuestion). Применяет AUTO batch с подтверждением; диспатчит ADI sub-agents для ambiguous; surfaces USER per артефакт.
+  Methodology: 3-tier pipeline self-healing (AUTO / ADI / USER classification per PRD-032 Sprint D; extended with 4 new anomaly kinds in Sprint F PRD-034).
+  EN: Explicit draft sweep skill for marketplace workspaces. Scans all draft artifacts via mcp__forgeplan__forgeplan_list, classifies each into 8 outcomes (ready_to_activate / incomplete / stale_unreferenced / ambiguous / orphan_link / mistyped_based_on / expired_evidence / phase_mismatch) mapped to 3 resolution tiers (AUTO = silent activate with batch confirmation, ADI = FPF reasoning loop, USER = per-artifact explicit decision). Executes AUTO tier after user batch-confirm; dispatches ADI sub-agents for ambiguous cases; surfaces USER tier per artifact for explicit decisions. Use at end of /forge-cycle or /autorun runs, or manually when forgeplan_health shows accumulating drafts. Closes Anomaly #7 from Sprint A+B+C log.
+  RU: Explicit-скилл для draft sweep маркетплейс воркспейсов. Сканирует все draft артефакты через MCP, классифицирует в 8 исходов (4 оригинальных + 4 новых: orphan_link / mistyped_based_on / expired_evidence / phase_mismatch), мапит на 3 tier resolution (AUTO молча активирует, ADI запускает FPF reasoning loop, USER через AskUserQuestion). Применяет AUTO batch с подтверждением; диспатчит ADI sub-agents для ambiguous; surfaces USER per артефакт.
   Triggers: "forge cleanup", "draft sweep", "clean up drafts", "почисти drafts", "разгрести drafts", "/forge-cleanup"
 disable-model-invocation: true
 allowed-tools: Read Bash(test *) Bash(ls *) Bash(date *)
@@ -54,11 +54,36 @@ CLI fallback: `forgeplan score <ID>`.
 
 ### Step 3 — Classify (first match wins)
 
+**Original 4 outcomes (Sprint D):**
+
 1. kind=evid AND verdict set AND CL>0 AND links exist AND r_eff>0 → `ready_to_activate` (AUTO)
 2. kind=evid AND (verdict missing OR CL=0 OR no links) → `incomplete` (LEAVE)
 3. age_days>7 AND no incoming links AND no outgoing links → `stale_unreferenced` (USER)
 4. partial completion, unclear state → `ambiguous` (ADI)
 5. anything else work-in-progress → `incomplete` (LEAVE)
+
+**Extended 4 anomaly kinds (Sprint F PRD-034):**
+
+| Outcome | Detection rule | Tier | Action |
+|---|---|---|---|
+| `orphan_link` | artifact has `links[].target` pointing to nonexistent artifact ID (`forgeplan_get` returns 404) | USER | Emit `<<NEED_USER_INPUT>>` — propose manual review (deleted? renamed? typo?) |
+| `mistyped_based_on` | EVID linked to PRD via `based_on` relation (should be `informs`) — cascades CL penalty in R_eff scoring | USER (until forgeplan#286 ships unlink primitive — then ADI) | Until unlink available: add parallel `informs` link + note cascade is stuck — surface to user |
+| `expired_evidence` | EVID with `valid_until` in past, still linked active to parent | USER | Emit `<<NEED_USER_INPUT>>` — propose: refresh evidence (re-test/re-audit) OR waive with note |
+| `phase_mismatch` | artifact has status=active AND phase=shape/validate (early-cycle phase) AND r_eff>0 | AUTO | Advance phase via `mcp__forgeplan__forgeplan_phase_advance` |
+
+## New anomaly kinds (Sprint F PRD-034 extension)
+
+Four anomaly kinds from the `mm-pipeline-anomalies` catalog added to the classification sweep.
+
+1. **orphan_link** — Usually means an artifact was deleted or superseded after another had already linked to it. Surfaced to user because the semantic intent is ambiguous: should the dead link be removed? Should the target be recreated? Should the source artifact be deprecated? Auto-resolution is unsafe — requires human judgement.
+
+2. **mistyped_based_on** — Session-wide footgun observed in Sprint A+B+C+D era (PRD-021/022 stuck R_eff=0 due to CL cascade from wrong relation type). Upstream `forgeplan#286` will add a `forgeplan_unlink` primitive to fix properly. Until that ships, `/forge-cleanup` surfaces the artifact to the user with a concrete workaround: add a parallel `informs` link so R_eff recovers, and note the `based_on` link is stuck and pending cleanup once the primitive lands.
+
+3. **expired_evidence** — Supports forgeplan's evidence decay model (B.3.4). An EVID with a `valid_until` date in the past silently degrades R_eff of the parent artifact without any visible signal. Without active surface, pipelines accumulate invisible technical debt in confidence scoring. User must choose: re-test/re-audit to produce fresh evidence, or explicitly waive with a documented justification.
+
+4. **phase_mismatch** — Common after sprint closure when `forgeplan_phase_advance` is omitted. An artifact can have `status=active` (correct) but `phase=shape` or `validate` (stale early-cycle value). AUTO tier is safe here because phase advancement is append-only in the audit log — it is reversible in principle and carries no semantic loss. Multi-signal gate (status=active AND early phase AND R_eff>0) prevents false positives on genuinely incomplete artifacts.
+
+---
 
 ### Step 4 — Display summary and prompt
 
@@ -156,6 +181,7 @@ After execution, append:
 | `mcp__forgeplan__forgeplan_get` | Full body for ADI context | `forgeplan get <id>` |
 | `mcp__forgeplan__forgeplan_activate` | Execute AUTO resolutions | `forgeplan activate <id>` |
 | `mcp__forgeplan__forgeplan_deprecate` | Confirmed USER deprecations | `forgeplan deprecate <id> --reason ...` |
+| `mcp__forgeplan__forgeplan_phase_advance` | Advance phase for `phase_mismatch` AUTO resolution | `forgeplan phase-advance <id>` |
 
 This skill never calls: `forgeplan_new`, `forgeplan_update`, `forgeplan_link`, `forgeplan_claim`, `forgeplan_release`.
 Any call to those is a bug — raise to orchestrator.
