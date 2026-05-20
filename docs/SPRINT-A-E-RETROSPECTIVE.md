@@ -458,7 +458,11 @@ are tracked for future sprints or upstream work.
 - #289 — `forgeplan_anomalies` MCP tool (9 anomaly kinds + 3-tier resolution model) — **CLOSED**, MCP pending v0.32
 - #290 — `forgeplan_release_notes` split-repo constraint (Anomaly #12) — **OPEN**, filed 2026-05-20
 - #291 — `forgeplan_restore` returns-to-draft FSM gap (Anomaly #13) — **OPEN**, filed 2026-05-20
-- (no number yet) — `forgeplan_drift` markdown-table affected_files false-negative (Anomaly #18, Sprint M PRD-039) — verification documented, upstream filing deferred to post-v0.32
+- #292 — `forgeplan_discover_finding` response status ambiguous (Anomaly #14) — **OPEN**, filed 2026-05-20
+- #293 — `forgeplan_drift` markdown-table affected_files false-negative (Anomaly #18) — **OPEN**, filed 2026-05-20
+- #294 — `forgeplan_activate` error UX for missing-evidence gate (Anomaly #20) — **OPEN**, filed 2026-05-20
+- #295 — Feature: `forgeplan_new(kind="evidence", parent_id=...)` auto-link (related Anomaly #20) — **OPEN**, filed 2026-05-20
+- Anomaly #19 (zsh `_encode/_decode` noise) — **NOT filed**, confirmed user-side zsh-completion setup, not forgeplan bug
 
 ---
 
