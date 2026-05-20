@@ -54,6 +54,19 @@ CLI fallback: `forgeplan score <ID>`.
 
 ### Step 3 — Classify (first match wins)
 
+**Pre-pass: link_direction_footgun detection (PRD-041)**
+
+Before applying classification rules, run the graph-walk helper to surface directional violations:
+
+```bash
+# Requires: forgeplan CLI v0.31.0+, jq
+# Output: NDJSON — one finding per line, or empty if graph is clean
+scripts/detect_link_footguns.sh
+```
+
+CLI fallback note: script uses only `forgeplan graph --json` + `forgeplan get <id> --json` — no MCP required.
+Any findings are added to the USER tier queue before the main classification sweep.
+
 **Original 4 outcomes (Sprint D):**
 
 1. kind=evid AND verdict set AND CL>0 AND links exist AND r_eff>0 → `ready_to_activate` (AUTO)

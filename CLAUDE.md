@@ -1,10 +1,10 @@
 # ForgePlan Marketplace — Claude Code Configuration
 
 **Repo**: [ForgePlan/marketplace](https://github.com/ForgePlan/marketplace)
-**Catalog version**: 1.54.0
-**Plugins**: 13 (7 workflow + 5 agent packs + 1 memory plugin fpl-hsmem)
+**Catalog version**: 1.55.0
+**Plugins**: 14 (8 workflow + 5 agent packs + 1 memory plugin fpl-hsmem) — added `agentic-rag` v1.0.0 Sprint O
 **Agents**: 17 of ~65 forgeplan-aware (PRD-026 canonical B2 paradigm — `disallowedTools` denylist + `forgeplan_generate` primary creation path + 5 profiles A/B/C/C-coder/D)
-**Last Updated**: 2026-05-20 (post Sprint A-N: PRD-040 doc sync + mm-evid-body-convention mental model, 18 anomalies + 10 ML, catalog v1.54.0)
+**Last Updated**: 2026-05-20 (post Sprint A-O: PRD-014 agentic-rag shipped + PRD-041 link footgun detection + 4 LIVE findings surfaced, 19 anomalies + 10 ML, catalog v1.55.0)
 **Project board**: [orgs/ForgePlan/projects/5](https://github.com/orgs/ForgePlan/projects/5)
 
 ---
@@ -226,18 +226,19 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # Rulesets
 
 ---
 
-## Plugin versions (catalog v1.54.0)
+## Plugin versions (catalog v1.55.0)
 
 ### Workflow plugins
 
 | Plugin | Version |
 |--------|:-------:|
-| **fpl-skills** | 1.24.2 |
+| **fpl-skills** | 1.24.3 |
 | **fpl-hsmem** | 2.1.0 |
 | **forgeplan-workflow** | 1.10.1 |
 | **forgeplan-orchestra** | 1.4.1 |
 | **forgeplan-brownfield-pack** | 1.3.2 |
 | **fpf** | 1.4.1 |
+| **agentic-rag** | **1.0.0** (NEW Sprint O) |
 | **laws-of-ux** | 1.4.1 |
 | **dev-toolkit** | 1.6.3 |
 
