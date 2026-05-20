@@ -10,9 +10,12 @@
 ## TL;DR
 
 Built and shipped an autonomy framework where AI sub-agents work autonomously on
-engineering tasks, with humans only providing information. Closed 9 vision gaps
-+ 11 anomalies across 5 sprints, dogfooding `/forge-cycle` with 22+ parallel
-sub-agent dispatches. Final state: catalog v1.48.0, 27 skills, 68 agents,
+engineering tasks, with humans only providing information. Originally closed 9
+vision gaps + 11 anomalies across 5 sprints (A-E); extended Sprint F-N adding
+7 more anomalies (#12-18) + 2 more ML (ML-9 + ML-10) — **18 total anomalies,
+10 meta-lessons** across 13 sprints (A through N). Dogfooding `/forge-cycle`
+with 35+ parallel sub-agent dispatches and 8+ inline orchestrator-only mini-sprints.
+Final state (post-Sprint N): catalog v1.54.0+, 27 skills, 68 agents,
 all wired and live-verified.
 
 **Key meta-pattern: declared ≠ wired ≠ verified live.**
@@ -156,7 +159,7 @@ LOW non-blocking findings). Closes Anomaly #3 (sentinel never live-tested), #9 (
 
 ---
 
-## 11 anomalies — evolution table
+## 18 anomalies — evolution table (Sprint A-N cumulative)
 
 Anomalies were surfaced incrementally. By EVID-060, 11 had been logged.
 

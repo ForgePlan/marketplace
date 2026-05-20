@@ -1,10 +1,10 @@
 # ForgePlan Marketplace — Claude Code Configuration
 
 **Repo**: [ForgePlan/marketplace](https://github.com/ForgePlan/marketplace)
-**Catalog version**: 1.53.0
+**Catalog version**: 1.54.0
 **Plugins**: 13 (7 workflow + 5 agent packs + 1 memory plugin fpl-hsmem)
 **Agents**: 17 of ~65 forgeplan-aware (PRD-026 canonical B2 paradigm — `disallowedTools` denylist + `forgeplan_generate` primary creation path + 5 profiles A/B/C/C-coder/D)
-**Last Updated**: 2026-05-20 (post Sprint A-M: PRD-038 closure + Sprint L + Sprint M non-blocking improvements + Anomaly #18, 14 anomalies + 10 ML, catalog v1.53.0)
+**Last Updated**: 2026-05-20 (post Sprint A-N: PRD-040 doc sync + mm-evid-body-convention mental model, 18 anomalies + 10 ML, catalog v1.54.0)
 **Project board**: [orgs/ForgePlan/projects/5](https://github.com/orgs/ForgePlan/projects/5)
 
 ---
@@ -226,7 +226,7 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # Rulesets
 
 ---
 
-## Plugin versions (catalog v1.53.0)
+## Plugin versions (catalog v1.54.0)
 
 ### Workflow plugins
 
