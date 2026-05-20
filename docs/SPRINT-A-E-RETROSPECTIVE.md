@@ -359,6 +359,42 @@ exactly the mechanisms it was building. Any design flaw surfaces immediately.
 
 **Applied in**: Sprint G PRD-035 — adapted scope from "modernize /forge-cleanup with native forgeplan_anomalies" to "leverage CLI unlink for Anomaly #5 + document the partial-adoption pattern".
 
+### ML-9: Live exercise surfaces gaps that desk review misses
+
+**Sprint J+K discovery (2026-05-20)**: Sprint G inventoried 7 new MCP tools by reading their schemas and CLI help. Tools looked complete. Sprint J+K **exercised** 4 of them on real workflow scenarios — and immediately surfaced **two integration gaps** (Anomaly #12 release_notes split-repo, Anomaly #13 restore-always-returns-to-draft) that schema reading would never have caught.
+
+**Pattern**:
+1. After tool inventory (read schema, list flags), schedule a **dogfood sprint** exercising tools on real workflows.
+2. Don't integrate a new tool into a load-bearing path until at least one full roundtrip has run successfully on production-like data.
+3. Surface integration gaps as **anomalies** (not bugs) — anomaly classification (split-repo constraint = ADI tier workaround; FSM gap = USER tier escalation) preserves the signal for upstream filing.
+
+**Why it works**: schema reading captures intent; exercise captures **operational reality**. A tool can be schema-complete and still violate workspace assumptions (e.g. `.forgeplan/` + `.git/` co-located requirement was not in `forgeplan_release_notes` schema).
+
+**Applied in**: Sprint J+K PRD-036/PRD-037 — produced per-tool verdicts (RECOMMENDED-INTEGRATE vs LIMITED-USE) backed by hands-on exercise, not theoretical capability assessment.
+
+### ML-10: Verdict taxonomy beats binary works/broken classification
+
+**Sprint J+K observation**: When exercising new tools, the natural output isn't pass/fail — it's a **graded verdict** that captures both capability and integration cost:
+
+| Verdict | Meaning | Action |
+|---|---|---|
+| **RECOMMENDED-INTEGRATE** | Works in our setup, value > cost, wire into orchestrator | Add to skill body + dashboard + reference docs |
+| **LIMITED-USE** | Works but constrained by setup or pattern | Document workaround in CLAUDE.md, optional integration |
+| **DEFERRED** | Lacks external context (mapping YAML, playbook artifact, brownfield repo) to exercise | Park until context arrives — don't force-integrate |
+| **BROKEN** | Schema mismatch, runtime error, security violation | File upstream issue, blocker for adoption |
+
+**Why binary is wrong**: a `WORKS` verdict on `forgeplan_release_notes` would have hidden Anomaly #12 (split-repo constraint). A `BROKEN` verdict would have over-stated severity (tool works in standard layouts). `LIMITED-USE` captures the truth and tells future sessions when to reach for it.
+
+**Pattern**: every Sprint J+K-style tool exercise produces verdicts in this taxonomy, recorded in the EVID. Future sprints reading the EVID know exactly which tools to integrate vs which to skip — without re-running the exercise.
+
+**Cumulative example** (post-Sprint J+K + Sprint L):
+- RECOMMENDED-INTEGRATE: `forgeplan_restore`, `forgeplan_activity_stats`, `forgeplan_fpf_rules`, `forgeplan_journal`, `forgeplan_phase`, `forgeplan_calibrate`, `forgeplan_phase_advance` (schema verified, no mutation tested)
+- LIMITED-USE: `forgeplan_release_notes` (split-repo workaround), `forgeplan_dispatch` (requires PRDs to declare `affected_files` in frontmatter for non-serial bucketing; without it 26/37 PRDs fell to serial queue)
+- WORKS-AS-INTENDED (initially looked broken): `forgeplan_supersede` (FSM correctly rejects deprecated→superseded, error message lists allowed transitions — caller error not tool error)
+- DEFERRED: `forgeplan_discover_*` Sprint H scaffold done, ready for full migration post-v0.32; `forgeplan_playbook_run` needs playbook artifact + `yes: true`; `forgeplan_ingest` needs mapping YAML
+
+**Sprint L (post-Sprint J+K closure pack) finding**: exercising 6 untested MCP tools in one inline batch revealed a **convention nudge** — `forgeplan_dispatch` rewards artifacts that declare `affected_files` in their frontmatter with parallel bucketing; absent declaration triggers serial-queue fallback. This is not a bug; it's a tool teaching the user a discipline. Should be added to PRD authoring templates.
+
 ---
 
 ## Future work (post-Sprint F)
@@ -368,12 +404,14 @@ are tracked for future sprints or upstream work.
 
 | Item | Tracking | Notes |
 |------|----------|-------|
-| `/forge-cycle` template referential gap (Anomaly #1) | ADI tier, future sprint | Rewrite template to make Task() dispatch explicit vs command syntax |
-| forgeplan core hygiene auto-activate (#288) | Upstream | Plugin-layer sentinel works without it; core support would replace workaround |
-| forgeplan core `forgeplan_anomalies` MCP tool (#289) | Upstream | Foundation built plugin-layer first; eventual core replaces |
-| forgeplan core unlink primitive (#286) | Upstream | R_eff based_on cascade footgun — workaround: use `informs` only |
-| forgeplan core brownfield MCP tools (#287) | Upstream | Separate epic |
-| Additional anomaly kinds in /forge-cleanup | Incremental | Foundation (stuck_draft) shipped; orphan_link, mistyped_based_on etc. added per-need |
+| `/forge-cycle` template referential gap (Anomaly #1) | ✅ RESOLVED Sprint F | Phase 6.7/Step 7.7 + template explicit Task() dispatch |
+| forgeplan core hygiene auto-activate (#288) | CLOSED upstream, MCP pending v0.32 | Plugin-layer 4-layer defense works; v0.32 may let us simplify NEEDS_ACTIVATION sentinel |
+| forgeplan core `forgeplan_anomalies` MCP tool (#289) | CLOSED upstream, MCP pending v0.32 | Sprint I scope — modernise `/forge-cleanup` to native primitive when surfaced |
+| forgeplan core unlink primitive (#286) | CLOSED upstream, CLI works v0.31, MCP pending v0.32 | Sprint G used CLI for Anomaly #5 partial fix |
+| forgeplan core brownfield MCP tools (#287) | OPEN upstream (Epic) | Sprint H scope — `discover_*` already surfaced for pre-work |
+| **Anomaly #12 — release_notes split-repo constraint** | forgeplan#290 (OPEN, filed Sprint A-J+K post-session) | Workaround documented in `/forge-cycle` Phase 7.3; awaiting v0.32 fix |
+| **Anomaly #13 — restore-always-returns-to-draft FSM gap** | forgeplan#291 (OPEN, filed Sprint A-J+K post-session) | Workaround: explicit re-activate before transition; awaiting v0.32 fix |
+| Additional anomaly kinds in /forge-cleanup | ✅ Sprint F added 4 (orphan_link, mistyped_based_on, expired_evidence, phase_mismatch) | 8 outcomes total; extensible pattern |
 | Live cross-CLI verification (Gemini/Codex/Goose read AGENTS.md) | Exploratory | AGENTS.md shipped Sprint E; cross-CLI smoke not yet run |
 | Concurrent /autorun protection | Deferred PRD | Schema notes "abandoned" status; multi-concurrent use case not yet real |
 
@@ -397,6 +435,7 @@ are tracked for future sprints or upstream work.
 - `mm-pipeline-anomalies` — 9 initial anomaly kinds, 3-tier AUTO/ADI/USER classification
 - `mm-agent-selection` — canonical agent → pipeline phase mapping
 - `mm-pipeline-methodology` — Sprint A-E methodology citations
+- `mm-fpf-active-rules` — 5 default FPF rules driving EXPLORE/INVESTIGATE/EXPLOIT actions (added post-Sprint J+K)
 
 ### Files
 
@@ -410,10 +449,12 @@ are tracked for future sprints or upstream work.
 
 ### Upstream issues (forgeplan/forgeplan)
 
-- #286 — Unlink primitive (R_eff cascade footgun)
-- #287 — Brownfield MCP tools epic
-- #288 — Pipeline hygiene auto-activate + stale-draft + chain hint
-- #289 — `forgeplan_anomalies` MCP tool (9 anomaly kinds + 3-tier resolution model)
+- #286 — Unlink primitive (R_eff cascade footgun) — **CLOSED**, CLI ships v0.31, MCP pending v0.32
+- #287 — Brownfield MCP tools epic — **OPEN** (Epic; `discover_*` surfaced for Sprint H pre-work)
+- #288 — Pipeline hygiene auto-activate + stale-draft + chain hint — **CLOSED**, MCP pending v0.32
+- #289 — `forgeplan_anomalies` MCP tool (9 anomaly kinds + 3-tier resolution model) — **CLOSED**, MCP pending v0.32
+- #290 — `forgeplan_release_notes` split-repo constraint (Anomaly #12) — **OPEN**, filed 2026-05-20
+- #291 — `forgeplan_restore` returns-to-draft FSM gap (Anomaly #13) — **OPEN**, filed 2026-05-20
 
 ---
 
