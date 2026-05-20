@@ -1,7 +1,7 @@
 {
   "name": "fpl-skills",
-  "version": "1.24.1",
-  "description": "Flagship workflow plugin for the ForgePlan ecosystem. 27 engineering skills + dev-advisor agent + 5 hooks. v1.24: PRD-034 Sprint F \u2014 /forge-cleanup classification table extended with 4 new anomaly kinds (orphan_link, mistyped_based_on, expired_evidence, phase_mismatch) \u2014 8 outcomes total. v1.23: Sprint D self-healing framework + <<NEEDS_ACTIVATION>> sentinel. v1.22: Sprint C /autorun resume. v1.21: Sprint B 7 deliverables. v1.20: Sprint A UX-layer.",
+  "version": "1.24.2",
+  "description": "Flagship workflow plugin for the ForgePlan ecosystem. 27 engineering skills + dev-advisor agent + 5 hooks. v1.24.2: Sprint M PRD-039 \u2014 AGENT-AUTHORING-GUIDE Step 9b.1 (EVID body bold-pattern NOT YAML \u2014 closes Anomaly #17) + Step 11 (Profile A affected_files declaration \u2014 closes Sprint L ML-10 nudge) + /forge-cleanup 9th anomaly kind link_direction_footgun (closes Anomalies #15/#16). v1.24.1: Sprint J+K closure pack. v1.24: PRD-034 Sprint F \u2014 /forge-cleanup 8 outcomes total. v1.23: Sprint D self-healing framework + <<NEEDS_ACTIVATION>> sentinel. v1.22: Sprint C /autorun resume. v1.21: Sprint B 7 deliverables. v1.20: Sprint A UX-layer.",
   "author": {
     "name": "ForgePlan"
   },
