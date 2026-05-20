@@ -518,6 +518,20 @@ if artifact_id:
         )
         if confirm == "yes":
             mcp__forgeplan__forgeplan_activate(id=artifact_id)
+            # Phase 6.5.1: Auto-ingest activated artifact into Hindsight bank
+            # (Sprint S — PRD-045 / Sprint R HIGH gap closure)
+            # Activated artifacts become semantic-searchable for future sub-agents.
+            try:
+                artifact = mcp__forgeplan__forgeplan_get(id=artifact_id)
+                kind = artifact.kind  # prd / rfc / adr / evid / spec / epic / note
+                projection_path = f".forgeplan/{kind}s/{artifact_id}-*.md"
+                mcp__plugin_fpl-hsmem_hindsight__document_ingest_file(
+                    path=projection_path,
+                    tags=[kind, "active", "auto-ingest"]
+                )
+            except Exception as e:
+                # Non-fatal — log and continue. Activation succeeded; ingest is bonus persistence.
+                print(f"Hindsight ingest skipped (non-fatal): {e}")
     else:
         # R_eff=0 means drift — surface to user for investigation
         AskUserQuestion(
@@ -529,6 +543,22 @@ if artifact_id:
 This closes Anomaly #7 from the Sprint A+B+C anomaly log: EVIDs stuck in draft because
 Profile B agents are physically denied `forgeplan_activate` per `disallowedTools`.
 The sentinel lets reviewers SIGNAL completion; the orchestrator performs the activate.
+
+### Phase 6.5.1 — Auto-ingest activated artifact (Sprint S PRD-045)
+
+Immediately after `forgeplan_activate` succeeds, the orchestrator calls
+`document_ingest_file` to ingest the artifact projection (`.forgeplan/<kind>s/<ID>-*.md`)
+into the Hindsight bank with tags `[<kind>, "active", "auto-ingest"]`. This closes the
+HIGH-priority gap identified in `docs/HINDSIGHT-OPTIMIZATION-SPRINT-R.md`:
+
+- Pre-Sprint S: 70+ activated PRDs in workspace, 79 documents in bank → most active PRDs
+  NOT ingested → future sub-agents cannot semantic-search over PRD bodies via Hindsight
+- Post-Sprint S: every newly-activated artifact auto-ingests. Backlog catch-up requires
+  one-time bootstrap (`/fpl-hsmem:bootstrap`).
+
+Failure mode is **non-fatal** — activation already succeeded; ingest is persistence-layer
+bonus. A `try/except` around the ingest call ensures forge-cycle doesn't fail because
+Hindsight server is unavailable.
 
 Cross-reference: `AGENT-AUTHORING-GUIDE.md` Profile B Step 9b (sentinel convention),
 `<<NEED_USER_INPUT>>` precedent from Sprint A (PRD-029), `/autorun` NEEDS_ACTIVATION

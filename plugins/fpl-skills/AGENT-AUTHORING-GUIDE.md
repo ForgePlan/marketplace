@@ -955,6 +955,103 @@ affected_files:
 
 ---
 
+## Orchestrator Step 9c — Filesystem verification after every dispatch claim (Sprint S — PRD-045, ML-11)
+
+This is an **orchestrator-side discipline**, not a sub-agent step. After every Profile C-coder sub-agent dispatch that claims file modifications or creations, the orchestrator MUST verify on disk before accepting closure. Sub-agent return values are NOT proof of file changes — they're claims.
+
+### Why this exists
+
+Sprint Q PRD-042 (2026-05-20): sub-agent A-1 returned "12 files modified, 5 learners получили memory:project, ALL PASSED". Sprint R audit (2026-05-21) discovered via direct `grep`: **0 of 8 agents actually got the field**. Skills/maxTurns/isolation:worktree/MCP-comments were applied correctly, but the `memory: project` line specifically was not written.
+
+Sub-agent's own lint check passed because absence of an optional field is not a lint error. The validation script gave a green light. Only orchestrator-side `grep` revealed the gap.
+
+Sprint R audit dispatch demonstrated the **opposite direction**: it actually performed removal but reported "0 found, no modifications". So sub-agent return values are unreliable in BOTH directions — false positive (claim done, not done) AND false negative (claim nothing, actually did work).
+
+### When to apply
+
+After every sub-agent dispatch where the prompt asks for:
+- File creation
+- Frontmatter field addition/removal
+- Specific marker insertion (e.g., NEEDS_ACTIVATION sentinel emit instruction)
+- Content rewrite with measurable artifact (line count, section count)
+
+### Procedure (orchestrator pseudocode)
+
+```python
+# After sub-agent return:
+return_value = dispatch_result  # what sub-agent claims
+
+# For each file the sub-agent claims to have modified:
+for file_path in return_value.claimed_files:
+    # Filesystem existence check
+    if return_value.action == "create":
+        assert os.path.exists(file_path), f"Sub-agent claimed created {file_path}, missing"
+        assert os.path.getsize(file_path) > 0, f"File exists but empty: {file_path}"
+
+    # Marker/field grep check
+    if return_value.expected_markers:
+        for marker in return_value.expected_markers:
+            grep_result = subprocess.run(["grep", "-c", marker, file_path])
+            assert grep_result.returncode == 0, f"Marker '{marker}' not found in {file_path}"
+
+# Only after all checks pass: accept the dispatch as closed
+mark_task_complete(task_id)
+```
+
+### Concrete examples
+
+**Example 1 — adding frontmatter field**:
+```bash
+# Sub-agent claimed "added skills: preload to adr-architect.md"
+grep -E "^skills:" plugins/agents-pro/agents/adr-architect.md
+# Must return non-empty line; if empty → re-dispatch with explicit instruction
+```
+
+**Example 2 — creating new content file**:
+```bash
+# Sub-agent claimed created plugins/agentic-rag/evals/evals.json
+test -f plugins/agentic-rag/evals/evals.json && \
+  python3 -c "import json; json.load(open('plugins/agentic-rag/evals/evals.json'))"
+# File must exist AND be valid JSON; both required
+```
+
+**Example 3 — marker insertion**:
+```bash
+# Sub-agent claimed Step 9b body patches in 7 Profile B agents
+for f in plugins/agents-*/agents/{code-reviewer,architect-reviewer,...}.md; do
+  grep -q "Step 9b" "$f" || echo "FAIL: $f"
+done
+# Empty output = all passed; any line = re-dispatch
+```
+
+### What to do on mismatch
+
+1. **Log the gap** — Anomaly #X candidate (sub-agent claimed vs actual)
+2. **Re-dispatch** with explicit instruction including the missing marker as a check requirement
+3. **If second dispatch also fails** — escalate to user. Sub-agent may misunderstand requirement (Anomaly #22-style adapter behavior)
+4. **NEVER accept closure** until grep proves on-disk state
+
+### Cost vs benefit
+
+- **Cost**: 5-30 seconds of orchestrator-side grep per dispatch (small)
+- **Benefit**: Catches Sprint Q-style silent partial-application BEFORE merge. Prevents downstream sessions inheriting false-positive state. Closes the only documented sub-agent-honesty gap in 45+ Sprint A-R dispatches.
+
+### Anti-pattern
+
+Do **not** rely on:
+- Sub-agent's own "ALL PASSED" return string
+- Validation script success (it only catches structural lint, not feature presence)
+- TaskList "completed" status update (it's orchestrator-controlled, not evidence)
+
+### Cross-reference
+
+- Original surfacing: Sprint Q PRD-042 / EVID-070 (false positive) + Sprint R audit dispatch (false negative same session 2026-05-20/21)
+- ML-11 entry in `docs/SPRINT-A-E-RETROSPECTIVE.md`
+- Anomaly #21 in CLAUDE.md (marketplace)
+- Mental model `mm-pipeline-anomalies` may extend with "sub_agent_overreport" anomaly kind
+
+---
+
 ## References
 
 - **PRD-026** — Forgeplan-aware agent layer (canonical pattern + project config + fpl-init v2.0)
