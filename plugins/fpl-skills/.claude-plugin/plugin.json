@@ -1,7 +1,7 @@
 {
   "name": "fpl-skills",
-  "version": "1.23.0",
-  "description": "Flagship workflow plugin for the ForgePlan ecosystem. 27 engineering skills + dev-advisor agent + 5 hooks. v1.23: PRD-032 Sprint D \u2014 pipeline self-healing framework. NEW /forge-cleanup skill (3-tier classification AUTO/ADI/USER), <<NEEDS_ACTIVATION>> sentinel convention in AGENT-AUTHORING-GUIDE Profile B Step 9b, parser integration into /forge-cycle Step 7.5 + /autorun autopilot mode. Closes Anomaly #7 (EVIDs stuck in draft because Profile B denies forgeplan_activate). Upstream tracking: forgeplan#288 (hygiene auto-activate), forgeplan#289 (forgeplan_anomalies MCP tool). Mental models: mm-draft-hygiene + mm-pipeline-anomalies. v1.22: Sprint C /autorun resume. v1.21: Sprint B 7 deliverables. v1.20: Sprint A UX-layer.",
+  "version": "1.24.0",
+  "description": "Flagship workflow plugin for the ForgePlan ecosystem. 27 engineering skills + dev-advisor agent + 5 hooks. v1.24: PRD-034 Sprint F \u2014 /forge-cleanup classification table extended with 4 new anomaly kinds (orphan_link, mistyped_based_on, expired_evidence, phase_mismatch) \u2014 8 outcomes total. v1.23: Sprint D self-healing framework + <<NEEDS_ACTIVATION>> sentinel. v1.22: Sprint C /autorun resume. v1.21: Sprint B 7 deliverables. v1.20: Sprint A UX-layer.",
   "author": {
     "name": "ForgePlan"
   },
