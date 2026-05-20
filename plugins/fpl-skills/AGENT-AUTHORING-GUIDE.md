@@ -836,6 +836,125 @@ Step 9b — Emit NEEDS_ACTIVATION sentinel
 
 ---
 
+## Profile B Step 9b.1 — EVID body MUST use markdown bold-pattern, NOT YAML frontmatter (Sprint L — PRD-038, Anomaly #17)
+
+The forgeplan EVID body parser reads `congruence_level`, `verdict`, and `evidence_type` **only** from markdown bold-pattern lines inside the body. **YAML frontmatter fields with the same names are silently ignored by the scoring engine.**
+
+### Verified parsing pattern
+
+The parser looks for these EXACT patterns (case-sensitive, leading `**` required):
+
+```markdown
+**Verdict**: PASS
+
+**Congruence level**: 3
+
+**Evidence type**: artifact_inspection
+```
+
+- `Verdict` accepts: `PASS` / `CONCERNS` / `BLOCKER`
+- `Congruence level` accepts: integer 0..3 (NOT "low"/"medium"/"high" — those map to 0)
+- `Evidence type` accepts: free-text identifier (`artifact_inspection`, `live_verification`, `code_review`, `test_run`, etc.)
+
+### Failure mode (Anomaly #17 — confirmed 2026-05-20 PRD-038)
+
+Writing these as YAML frontmatter fields like:
+
+```yaml
+---
+verdict: PASS
+congruence_level: high
+evidence_type: artifact_inspection
+---
+```
+
+→ silently fails. `forgeplan_score` reports `congruence_level: 0`, R_eff capped at ~0.10. Looks like a quality problem when it's actually a parsing mismatch.
+
+### Mitigation
+
+**Always include the markdown bold-pattern block** as the first content block after the title — even if you also include a YAML frontmatter (which is harmless but redundant). The reference template:
+
+```markdown
+# EVID-XXX: <title>
+
+## Verdict
+
+**Verdict**: PASS — <one-sentence justification>
+
+- **Congruence level**: 3 (<what was directly observed: live tool invocation / structured output / cross-system verification>)
+- **Evidence type**: <artifact_inspection | live_verification | code_review | test_run | manual_qa>
+- **Method**: <how the evidence was gathered — inline orchestrator / sub-agent dispatch / external system query>
+```
+
+This is the canonical EVID-063 / EVID-064 / EVID-060 body shape. Copy-paste from those references when in doubt.
+
+### Anti-pattern
+
+Do **not** rely on YAML frontmatter for these three fields. Frontmatter is for metadata that doesn't affect R_eff (status, created, title). Score-affecting fields live in the body as bold-pattern markdown.
+
+### Self-check (orchestrator can run this)
+
+After EVID creation + update, call `forgeplan_score(id=EVID)`. If `congruence_level` returned as `0` while you intended `3`, the body uses YAML frontmatter instead of bold-pattern. Fix the body and re-score.
+
+### Cross-reference
+
+- Original surfacing: EVID-064 (Anomaly #17), 2026-05-20 — PRD-038 R_eff was 0.10 with YAML frontmatter; 0.90 grade A after switching to bold-pattern body.
+- Mental model `mm-evid-body-convention` (proposed — captures this rule for future-session retrieval).
+
+---
+
+## Profile A Step 11 — Declare `affected_files` for parallel dispatch (Sprint L — PRD-038, ML-10 nudge)
+
+Profile A creators of PRDs (and RFCs) should declare an `affected_files` list in the artifact body (or frontmatter — both readable by `forgeplan_dispatch`). This is **not enforced** but unlocks the parallel-bucketing optimization in `forgeplan_dispatch(agents=N)`.
+
+### Why
+
+`forgeplan_dispatch` packs PRDs/RFCs into N parallel buckets based on file-conflict overlap (Jaccard threshold default 0.3). Artifacts without `affected_files` fall to the **serial queue** as "shared-ground, deferred for safety" — limiting orchestrator parallelism.
+
+### Verified observation (Sprint L)
+
+`forgeplan_dispatch(agents=3, kind=prd, status=any)` on our workspace returned 11/37 PRDs in parallel buckets, **26 in serial queue** — every PRD without `affected_files` fell to serial. 0 conflicts detected.
+
+### How to declare
+
+In the PRD/RFC body, add a clearly-labelled section:
+
+```markdown
+## Affected Files
+
+- `plugins/fpl-skills/skills/<name>/SKILL.md`
+- `plugins/forgeplan-workflow/commands/forge-cycle.md`
+- `docs/SPRINT-A-E-RETROSPECTIVE.md`
+```
+
+OR in frontmatter:
+
+```yaml
+affected_files:
+  - plugins/fpl-skills/skills/<name>/SKILL.md
+  - plugins/forgeplan-workflow/commands/forge-cycle.md
+```
+
+`forgeplan_dispatch` reads either form.
+
+### Cost vs benefit
+
+- **Cost**: 30 seconds per PRD to enumerate likely files.
+- **Benefit**: N-way parallel sub-agent dispatch by `/forge-cycle` Phase 3 vs. serial fallback.
+
+### When to skip
+
+- One-off Tactical artifacts (no parallel work expected).
+- ADRs (decision-only, no implementation surface).
+- NOTEs (informational, not dispatchable).
+
+### Cross-reference
+
+- Original surfacing: PRD-038 Sprint L (forgeplan_dispatch verdict = LIMITED-USE precisely because of this nudge).
+- Mental model candidate: extend `mm-pipeline-methodology` with "PRD authoring → include affected_files for dispatch".
+
+---
+
 ## References
 
 - **PRD-026** — Forgeplan-aware agent layer (canonical pattern + project config + fpl-init v2.0)

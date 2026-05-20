@@ -455,6 +455,7 @@ are tracked for future sprints or upstream work.
 - #289 — `forgeplan_anomalies` MCP tool (9 anomaly kinds + 3-tier resolution model) — **CLOSED**, MCP pending v0.32
 - #290 — `forgeplan_release_notes` split-repo constraint (Anomaly #12) — **OPEN**, filed 2026-05-20
 - #291 — `forgeplan_restore` returns-to-draft FSM gap (Anomaly #13) — **OPEN**, filed 2026-05-20
+- (no number yet) — `forgeplan_drift` markdown-table affected_files false-negative (Anomaly #18, Sprint M PRD-039) — verification documented, upstream filing deferred to post-v0.32
 
 ---
 

@@ -1,10 +1,10 @@
 # ForgePlan Marketplace — Claude Code Configuration
 
 **Repo**: [ForgePlan/marketplace](https://github.com/ForgePlan/marketplace)
-**Catalog version**: 1.52.0
+**Catalog version**: 1.53.0
 **Plugins**: 13 (7 workflow + 5 agent packs + 1 memory plugin fpl-hsmem)
 **Agents**: 17 of ~65 forgeplan-aware (PRD-026 canonical B2 paradigm — `disallowedTools` denylist + `forgeplan_generate` primary creation path + 5 profiles A/B/C/C-coder/D)
-**Last Updated**: 2026-05-20 (post Sprint A-J+K + post-closure-pack PRD-038 + Sprint L: 13 anomalies + 10 ML, catalog v1.52.0)
+**Last Updated**: 2026-05-20 (post Sprint A-M: PRD-038 closure + Sprint L + Sprint M non-blocking improvements + Anomaly #18, 14 anomalies + 10 ML, catalog v1.53.0)
 **Project board**: [orgs/ForgePlan/projects/5](https://github.com/orgs/ForgePlan/projects/5)
 
 ---
@@ -226,13 +226,13 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # Rulesets
 
 ---
 
-## Plugin versions (catalog v1.52.0)
+## Plugin versions (catalog v1.53.0)
 
 ### Workflow plugins
 
 | Plugin | Version |
 |--------|:-------:|
-| **fpl-skills** | 1.24.1 |
+| **fpl-skills** | 1.24.2 |
 | **fpl-hsmem** | 2.1.0 |
 | **forgeplan-workflow** | 1.10.1 |
 | **forgeplan-orchestra** | 1.4.1 |
@@ -358,6 +358,10 @@ When `.forgeplan/` and `.git/` are in different directories (workspace root vs c
 ### Anomaly #13 (NEW): restore returns artifact to draft, not prior status
 
 `forgeplan_restore` after `_deprecate` or `_delete` returns artifact to `status=draft`, not prior status. FSM forbids `draft → deprecated` direct path, so operators must re-`_activate` then re-`_deprecate`. Captured as Sprint J+K Anomaly #13; **filed upstream as [forgeplan#291](https://github.com/ForgePlan/forgeplan/issues/291)** (2026-05-20).
+
+### Anomaly #18 (Sprint M PRD-039): `forgeplan_drift` partial false-negative on markdown-table affected_files
+
+Sprint M verification: `forgeplan_drift` returned `changed_files: []` for ADR-005 despite `git log --since=2026-05-16` showing 3 of its 10 affected_files (`autorun/SKILL.md`, `fpl-skills/plugin.json`, `marketplace.json`) demonstrably changed post-creation. Suspected root cause: parser fails on markdown-table syntax (ADR-005 stores affected_files as ` `path` | hash | ` table rows with backticks/pipes). 7 of 10 listed files never existed (legitimately skipped). Workaround: use `git log --since=<artifact_created>` directly. Filed-upstream-decision deferred until forgeplan v0.32.0 ship verifies whether parser is updated.
 
 ### Artifacts (Sprint J+K)
 - PRD-037 (active) — Sprint J+K scope (PRD-036 superseded as transient duplicate)
