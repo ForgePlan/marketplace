@@ -11,7 +11,6 @@ disallowedTools: Write, Edit, NotebookEdit, mcp__forgeplan__forgeplan_activate, 
 skills:
   - fp-cookbook
   - forgeplan-methodology
-memory: project        # learner (accumulates test-failure patterns)
 maxTurns: 30
 # MCP dependencies (informational):
 #   - forgeplan: forgeplan_new (evidence), forgeplan_update, forgeplan_link, forgeplan_score

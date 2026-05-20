@@ -14,7 +14,6 @@ disallowedTools: Write, Edit, NotebookEdit, mcp__forgeplan__forgeplan_activate
 skills:
   - fp-cookbook
   - forgeplan-methodology
-memory: project
 maxTurns: 30
 ---
 

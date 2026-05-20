@@ -12,7 +12,6 @@ skills:
   - fp-cookbook
   - forgeplan-methodology
   - agentic-rag
-memory: project
 maxTurns: 30
 # MCP dependencies (informational):
 #   - forgeplan: forgeplan_new, forgeplan_update, forgeplan_link, forgeplan_validate, forgeplan_get, forgeplan_reason, forgeplan_decompose
