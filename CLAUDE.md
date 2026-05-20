@@ -4,7 +4,7 @@
 **Catalog version**: 1.56.0
 **Plugins**: 15 (9 workflow + 5 agent packs + 1 memory plugin fpl-hsmem) — added `fp-cookbook` v1.0.0 Sprint P
 **Agents**: 17 of ~65 forgeplan-aware (PRD-026 canonical B2 paradigm — `disallowedTools` denylist + `forgeplan_generate` primary creation path + 5 profiles A/B/C/C-coder/D)
-**Last Updated**: 2026-05-20 (post Sprint A-P: PRD-013 fp-cookbook shipped + 4 USER-tier findings fixed + Anomaly #20 surfaced, 20 anomalies + 10 ML, catalog v1.56.0)
+**Last Updated**: 2026-05-20 (post Sprint A-P: PRD-013 fp-cookbook + 4 USER-tier link fixes + 4 upstream issues filed (#292/#293/#294/#295) + Anomaly #19 confirmed user-side, 20 anomalies + 10 ML, catalog v1.56.0)
 **Project board**: [orgs/ForgePlan/projects/5](https://github.com/orgs/ForgePlan/projects/5)
 
 ---
@@ -363,7 +363,23 @@ When `.forgeplan/` and `.git/` are in different directories (workspace root vs c
 
 ### Anomaly #18 (Sprint M PRD-039): `forgeplan_drift` partial false-negative on markdown-table affected_files
 
-Sprint M verification: `forgeplan_drift` returned `changed_files: []` for ADR-005 despite `git log --since=2026-05-16` showing 3 of its 10 affected_files (`autorun/SKILL.md`, `fpl-skills/plugin.json`, `marketplace.json`) demonstrably changed post-creation. Suspected root cause: parser fails on markdown-table syntax (ADR-005 stores affected_files as ` `path` | hash | ` table rows with backticks/pipes). 7 of 10 listed files never existed (legitimately skipped). Workaround: use `git log --since=<artifact_created>` directly. Filed-upstream-decision deferred until forgeplan v0.32.0 ship verifies whether parser is updated.
+Sprint M verification: `forgeplan_drift` returned `changed_files: []` for ADR-005 despite `git log --since=2026-05-16` showing 3 of its 10 affected_files (`autorun/SKILL.md`, `fpl-skills/plugin.json`, `marketplace.json`) demonstrably changed post-creation. Suspected root cause: parser fails on markdown-table syntax (ADR-005 stores affected_files as ` `path` | hash | ` table rows with backticks/pipes). 7 of 10 listed files never existed (legitimately skipped). Workaround: use `git log --since=<artifact_created>` directly. **Filed upstream as [forgeplan#293](https://github.com/ForgePlan/forgeplan/issues/293)** (2026-05-20).
+
+### Anomaly #14 (Sprint H pre-work PRD-013): `forgeplan_discover_finding` response `status` ambiguous
+
+The `status: active` field in `discover_finding` response refers to session state, NOT artifact state. Created artifact is in `status=draft`. Subsequent `forgeplan_deprecate` fails with FSM error. Workaround: orchestrator must `forgeplan_activate(force=true)` after each finding. **Filed upstream as [forgeplan#292](https://github.com/ForgePlan/forgeplan/issues/292)** (2026-05-20).
+
+### Anomaly #19 (Sprint O): `_encode/_decode` zsh stderr noise — CONFIRMED USER-SIDE
+
+`forgeplan` CLI emits `zsh: command not found: _encode/_decode` to stderr. Bash test confirmed clean output → this is user's zsh-completion setup, NOT a forgeplan bug. **NOT filed upstream.** Workaround for affected scripts: `grep -v "_encode\|_decode"`. Fix on user side: review `~/.zshrc` for stale completion plugin.
+
+### Anomaly #20 (Sprint P): `forgeplan_activate` error UX for missing-evidence gate
+
+PRD activation fails pre-evidence-link with "No evidence linked — create evidence and link it before activating. Use --force to override." Error doesn't suggest correct order. Operators reach for `--force` instead of fixing order. **Filed upstream as [forgeplan#294](https://github.com/ForgePlan/forgeplan/issues/294)** (2026-05-20).
+
+### Feature request (related to Anomaly #20)
+
+`forgeplan_new(kind="evidence", parent_id="PRD-XXX")` should auto-create `informs` link on creation, reducing 3-step EVID-creation flow to 2 steps. 100% of our Sprint A-P EVIDs (14 created) used this pattern. **Filed upstream as [forgeplan#295](https://github.com/ForgePlan/forgeplan/issues/295)** (2026-05-20).
 
 ### Artifacts (Sprint J+K)
 - PRD-037 (active) — Sprint J+K scope (PRD-036 superseded as transient duplicate)
