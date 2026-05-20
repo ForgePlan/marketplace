@@ -334,3 +334,29 @@ Sprint G inventory only; live verification deferred to Sprint H+.
 - PRD-035 (active) — Sprint G scope + partial-adoption documentation
 - EVID-062 (active) — verification of Anomaly #5 partial fix + 7-tool discovery
 - v1.49.0 → **v1.50.0** catalog (this Sprint G milestone)
+
+## Sprint J+K 2026-05-20 — 4 new MCP tools verified live
+
+Sprint G inventoried 7 new MCP tools; Sprint J+K exercised 4 testable ones:
+
+| Tool | Verdict | Canonical example | Notes |
+|---|---|---|---|
+| `forgeplan_release_notes` | **Limited use** in split-repo layouts | `forgeplan_release_notes(since="v2.3.0")` | Requires `.forgeplan/` + `.git/` co-located; workaround via shell from git repo |
+| `forgeplan_restore` | **Delivers value** | `forgeplan_restore(id="NOTE-XXX")` after deprecate/supersede/delete | Verified roundtrip Sprint J+K K2; body preserves `## Deprecation` section |
+| `forgeplan_activity_stats` | **Delivers value** | `forgeplan_activity_stats(since_hours=24)` | Use to find slow tools / error counts; this session 133 calls / 3 errs / forgeplan_score slowest p95=3.5s |
+| `forgeplan_fpf_rules` | **Delivers value** | `forgeplan_fpf_rules(summary=true)` | 5 default rules: blind-spot, weak-evidence, orphan-active, medium-quality, ready-to-build |
+
+3 tools NOT yet exercised (need external context):
+- `forgeplan_discover_*` — needs brownfield codebase context (Sprint H+ scope)
+- `forgeplan_playbook_run` — needs playbook artifact + security gate (`yes: true`)
+- `forgeplan_ingest` — needs mapping YAML + source file
+
+### Anomaly #12 (NEW): release_notes split-repo constraint
+
+When `.forgeplan/` and `.git/` are in different directories (workspace root vs child repo), `forgeplan_release_notes` returns "git log failed: fatal: not a git repository". Workaround documented in Phase 7.3 of `/forge-cycle`. Captured as Sprint J+K Anomaly #12; not a blocker (tool works in standard setups).
+
+### Artifacts (Sprint J+K)
+- PRD-036 (active) — Sprint J+K scope
+- EVID-063 (active) — per-tool verdicts + K2 roundtrip log + activity stats snapshot
+- catalog v1.50.0 → **v1.51.0**
+- forgeplan-workflow v1.10.0 → v1.10.1 (Phase 7.3 added)

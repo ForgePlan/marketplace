@@ -36,6 +36,7 @@ Does **not** write files, store state, or introduce any new event system.
 | `.forgeplan/session.yaml` | Sprint name, phase, wave meta (written by `/sprint` and `/autorun`) | 5 |
 | `git log --oneline -10` | Recent commits — derive "files modified" count via `--shortstat` | 6 |
 | `.forgeplan/state/<id>.yaml` | Per-artifact phase state (read only when session.yaml references an artifact) | 7 |
+| Recent release notes | `mcp__forgeplan__forgeplan_release_notes(since=<prev-tag>)` or CLI fallback `forgeplan release-notes` | Auto-generated changelog from artifact graph between previous tag and HEAD — useful for "what shipped this cycle" view | 8 |
 
 **MCP-first (per PRD-022):** prefer `mcp__forgeplan__forgeplan_claims/health/list` when MCP available.
 CLI fallback: `forgeplan claims` / `forgeplan health` / `forgeplan list status=draft`.
@@ -122,6 +123,12 @@ All times in local wall-clock or ISO-8601 UTC — whichever is available.
    <EVID-NNN> — <title>  (most recent, from git log or forgeplan_list)
    — none yet —          (if no EVID commits found)
 
+ RECENT RELEASE NOTES (since v<prev-tag>)
+   Added (N):    PRD-029, PRD-030, ...
+   Changed (M):  RFC-002, ADR-005, ...
+   Fixed (K):    PROB-001, ...
+   Security:     (none) | EVID-XXX
+
  ETA: ~<X> min remaining  (<basis>)
       (rough estimate — varies with agent dispatch parallelism)
 ═══════════════════════════════════════════════════════════════════
@@ -132,6 +139,7 @@ All times in local wall-clock or ISO-8601 UTC — whichever is available.
 - AGENTS IN FLIGHT: MCP and CLI both unavailable (note this in a one-line warning above the block)
 - TASKS: no TaskList in current session
 - FILES MODIFIED / RECENT EVID: `git` not available in context
+- RECENT RELEASE NOTES: MCP and CLI both unavailable, or no previous tag found
 - ETA: insufficient signal (see ETA heuristic)
 
 ---
@@ -189,6 +197,9 @@ This skill is **read-only** across all forgeplan tools it touches:
 | `mcp__forgeplan__forgeplan_claims` | Active agent claims — agents in flight | `bash forgeplan claims` |
 | `mcp__forgeplan__forgeplan_health` | Artifact health verdict + counts | `bash forgeplan health` |
 | `mcp__forgeplan__forgeplan_list` | Draft/in-progress artifacts (max 5) | `bash forgeplan list status=draft` |
+| `mcp__forgeplan__forgeplan_release_notes` | Recent release notes panel — what shipped this cycle | `bash forgeplan release-notes --since <tag>` |
+
+**Tool selection**: prefer `mcp__forgeplan__forgeplan_release_notes` when MCP available; CLI fallback `forgeplan release-notes --since <tag>`. Omit the panel entirely if neither is reachable or no previous tag exists.
 
 This skill never calls: `forgeplan_new`, `forgeplan_update`, `forgeplan_link`,
 `forgeplan_activate`, `forgeplan_claim`, `forgeplan_release`. If you see a call to

@@ -583,6 +583,46 @@ Stage all changes and commit using conventional commit format:
 
 Include the PRD reference in the commit body: `Refs: PRD-XXX`
 
+### Phase 7.3: Auto-changelog via forgeplan_release_notes (Sprint J+K — PRD-036)
+
+When creating PR after a Sprint, draft changelog automatically from artifacts touched since last tag:
+
+```python
+mcp__forgeplan__forgeplan_release_notes(since="v2.3.0", draft=False)
+```
+
+Returns a structured payload — touched PRDs grouped Added/Fixed/Security/Changed by kind. Inject into PR body as starting point; refine narrative manually.
+
+**Setup constraint** (Sprint J+K finding): tool requires `.forgeplan/` and `.git/` in the SAME directory. In multi-repo workspaces where `.forgeplan/` is at workspace root but git lives in a child repo, `forgeplan_release_notes` returns "git log failed: fatal: not a git repository". Workaround: run via shell `forgeplan release-notes --since v2.3.0` from inside the git repo (with `.forgeplan/` symlinked or co-located).
+
+**Quality gate**: by default only active artifacts with R_eff > 0 are included (`draft=False`). Pass `draft=True` to include all touched artifacts including drafts. Do not pass `draft=True` for production releases — that bypasses the quality gate.
+
+### Step 9.5: Auto-generate changelog before PR (Sprint J — PRD-037)
+
+Before `gh pr create`, query the forgeplan artifact graph for a changelog block. Prefer MCP-first; CLI fallback when MCP not connected.
+
+**MCP path** (preferred):
+```python
+mcp__forgeplan__forgeplan_release_notes(
+    since="v<previous-tag>",   # omit for auto-detect latest tag
+    until="HEAD",              # default
+    draft=False                # quality gate: only active artifacts / r_eff > 0
+)
+```
+
+**CLI fallback**:
+```bash
+forgeplan release-notes --since v<previous-tag> --until HEAD
+```
+
+The tool returns a Keep-a-Changelog–shaped structured payload (Added/Changed/Fixed/Security buckets), classified by artifact kind: PRD→Added, PROB→Fixed, EVID-on-security→Security, RFC/ADR→Changed. Quality gate (default): only `status==active` or `r_eff>0` artifacts included.
+
+**Use as PR body baseline**: paste the structured output as the "What's changed" section of `gh pr create --body`, then optionally append hand-curated context. This eliminates per-PR hand-writing of changelog blocks.
+
+**Anti-pattern**: do not pass `draft=True` for production releases — that bypasses the quality gate and includes incomplete artifacts.
+
+Cross-reference: `plugins/fpl-skills/skills/progress-dashboard/SKILL.md` includes a "Recent release notes" panel reading from this same tool.
+
 ## Error Handling
 
 - If `forgeplan` commands fail, check `forgeplan health` output and report the issue.
