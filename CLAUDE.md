@@ -1,10 +1,10 @@
 # ForgePlan Marketplace — Claude Code Configuration
 
 **Repo**: [ForgePlan/marketplace](https://github.com/ForgePlan/marketplace)
-**Catalog version**: 1.56.0
-**Plugins**: 15 (9 workflow + 5 agent packs + 1 memory plugin fpl-hsmem) — added `fp-cookbook` v1.0.0 Sprint P
-**Agents**: 17 of ~65 forgeplan-aware (PRD-026 canonical B2 paradigm — `disallowedTools` denylist + `forgeplan_generate` primary creation path + 5 profiles A/B/C/C-coder/D)
-**Last Updated**: 2026-05-20 (post Sprint A-P: PRD-013 fp-cookbook + 4 USER-tier link fixes + 4 upstream issues filed (#292/#293/#294/#295) + Anomaly #19 confirmed user-side, 20 anomalies + 10 ML, catalog v1.56.0)
+**Catalog version**: 1.57.0
+**Plugins**: 15 (9 workflow + 5 agent packs + 1 memory plugin fpl-hsmem)
+**Agents**: 17 of ~65 forgeplan-aware (PRD-026 canonical B2 paradigm — `disallowedTools` denylist + Sprint Q PRD-042 ASM-canon frontmatter: skills preload + memory:project for 8 learners + isolation:worktree for coder + maxTurns for all 17 + 5 profiles A/B/C/C-coder/D)
+**Last Updated**: 2026-05-20 (post Sprint A-Q: PRD-042 production-grade closure — 17 agents ASM-canon frontmatter + 2 evals frameworks + 5 anti-patterns good/bad pairs + performance baseline doc + mm-production-grade-checklist, 20 anomalies + 10 ML + 10 mental models, catalog v1.57.0)
 **Project board**: [orgs/ForgePlan/projects/5](https://github.com/orgs/ForgePlan/projects/5)
 
 ---
@@ -226,7 +226,7 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # Rulesets
 
 ---
 
-## Plugin versions (catalog v1.56.0)
+## Plugin versions (catalog v1.57.0)
 
 ### Workflow plugins
 
@@ -238,10 +238,20 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # Rulesets
 | **forgeplan-orchestra** | 1.4.1 |
 | **forgeplan-brownfield-pack** | 1.3.2 |
 | **fpf** | 1.4.1 |
-| **agentic-rag** | 1.0.0 |
-| **fp-cookbook** | **1.0.0** (NEW Sprint P) |
+| **agentic-rag** | **1.1.0** (Sprint Q: evals + anti-patterns refactor) |
+| **fp-cookbook** | **1.1.0** (Sprint Q: evals added) |
 | **laws-of-ux** | 1.4.1 |
 | **dev-toolkit** | 1.6.3 |
+
+### Agent packs (post-Sprint Q)
+
+| Plugin | Version | Sprint Q changes |
+|--------|:-------:|---|
+| **agents-core** | **1.3.2** | 3 frontmatter (coder: isolation:worktree; code-reviewer + tester: memory:project) |
+| **agents-domain** | 1.1.0 | — |
+| **agents-pro** | **1.8.2** | 12 frontmatter (5 learners get memory:project) |
+| **agents-github** | 1.1.0 | — |
+| **agents-sparc** | **1.2.1** | 2 frontmatter (architecture gets memory:project) |
 
 ### Agent packs
 

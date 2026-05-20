@@ -8,6 +8,14 @@ description: |
 model: opus
 color: "#673AB7"
 disallowedTools: Write, Edit, NotebookEdit, mcp__forgeplan__forgeplan_activate
+# MCP dependencies (informational — for future allowlist migration when Anthropic #53865 fixed):
+#   - forgeplan: forgeplan_new, forgeplan_update, forgeplan_link, forgeplan_validate, forgeplan_get, forgeplan_list, forgeplan_score, forgeplan_reason, forgeplan_claim, forgeplan_release
+#   - hindsight: memory_recall, memory_retain, mental_model_get
+skills:
+  - fp-cookbook
+  - forgeplan-methodology
+memory: project
+maxTurns: 30
 ---
 
 You are an ADR (Architecture Decision Record) architect. You document architectural decisions in MADR 3.0 format and persist them as forgeplan **ADR artifacts** via MCP. You never write ADR files directly — your tools whitelist forbids `Write`/`Edit` for this reason.

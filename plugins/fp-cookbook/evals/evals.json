@@ -1,0 +1,133 @@
+{
+  "skill_name": "fp-cookbook",
+  "evals": [
+    {
+      "id": 1,
+      "eval_name": "first_prd_walkthrough",
+      "prompt": "I'm new to forgeplan. I want to ship my first PRD for a small feature. Walk me through the complete flow from creating the PRD to it showing as active, including what fields I must fill in and what the validate step checks.",
+      "expected_output": "Response should route to the `getting-started` section (first-prd-walkthrough.md). Must include: (1) exact CLI sequence — `forgeplan new prd`, `forgeplan validate PRD-NNN`, `forgeplan activate PRD-NNN`, (2) required body sections — Vision, Goals (>=1 G1 item), Functional Requirements (>=1 FR-NNN), Acceptance Criteria (>=1 AC-N), (3) common errors table — BLOCKER: missing acceptance-criteria fix, 'no evidence' gate for deep+ artifacts, (4) validate returns PASS before proceeding to activate. Should NOT recommend skipping validate. Should mention that status moves draft → active on successful activate.",
+      "assertions": [
+        {
+          "text": "Response includes the `forgeplan new prd` command",
+          "type": "manual"
+        },
+        {
+          "text": "Response includes the `forgeplan validate PRD-NNN` step before activate",
+          "type": "manual"
+        },
+        {
+          "text": "Response includes the `forgeplan activate PRD-NNN` step",
+          "type": "manual"
+        },
+        {
+          "text": "Response mentions at least 3 of the required body fields (Vision, Goals, FRs, ACs)",
+          "type": "manual"
+        },
+        {
+          "text": "Response does NOT say validate is optional or skippable",
+          "type": "manual"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "eval_name": "r_eff_zero_despite_evidence",
+      "prompt": "My PRD-042 has R_eff = 0 even though I created EVID-070 and linked it. `forgeplan get PRD-042` shows the evidence in the links list. What's going on? How do I diagnose and fix this?",
+      "expected_output": "Response should route to `troubleshooting` section and cover two most likely causes: (1) EVID is in draft status (Anomaly #7) — Profile B agents cannot self-activate, EVID stays draft, R_eff counts only active evidence; fix: `forgeplan activate EVID-070`; (2) EVID linked with wrong relation (Anomaly #5) — if relation is based_on instead of informs, cascade penalty applies; fix: `forgeplan unlink EVID-070 PRD-042 --relation based_on` then `forgeplan link EVID-070 PRD-042 --relation informs`. Diagnosis step: `forgeplan get EVID-070` to check status AND relation. Should mention `forgeplan score PRD-042` to verify fix.",
+      "assertions": [
+        {
+          "text": "Response identifies EVID stuck in draft as a likely cause (Anomaly #7 or equivalent)",
+          "type": "manual"
+        },
+        {
+          "text": "Response identifies wrong link relation (based_on vs informs, Anomaly #5) as a likely cause",
+          "type": "manual"
+        },
+        {
+          "text": "Response includes `forgeplan activate EVID-NNN` as a fix action",
+          "type": "manual"
+        },
+        {
+          "text": "Response does NOT say R_eff=0 with linked evidence is expected/normal behavior",
+          "type": "manual"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "eval_name": "link_direction_informs",
+      "prompt": "I need to link EVID-071 to PRD-043. Show me the exact CLI command with the correct relation and direction. Also tell me what happens if I accidentally use based_on instead of informs, and how to fix it if I already made that mistake.",
+      "expected_output": "Response should route to `recipes-evidence/informs-not-based-on.md` or `recipes-prd/link-direction-rules.md`. Must include: (1) correct command: `forgeplan link EVID-071 PRD-043 --relation informs` (evidence is source, PRD is target), (2) explanation that based_on creates a hard dependency cascade penalizing R_eff (Anomaly #5), (3) fix if already set: `forgeplan unlink EVID-071 PRD-043 --relation based_on` then re-link with informs (requires CLI v0.31.0+). Should include the mnemonic: 'EVID informs the PRD' (evidence gives info to PRD). Common error: `forgeplan unlink` not found = upgrade to v0.31.0+.",
+      "assertions": [
+        {
+          "text": "Response shows exact command `forgeplan link EVID-071 PRD-043 --relation informs` (or equivalent with correct source/target/relation)",
+          "type": "manual"
+        },
+        {
+          "text": "Response explains that based_on causes R_eff cascade penalty",
+          "type": "manual"
+        },
+        {
+          "text": "Response includes the unlink + re-link fix sequence for the based_on mistake",
+          "type": "manual"
+        },
+        {
+          "text": "Response does NOT show the link with PRD as source and EVID as target (wrong direction)",
+          "type": "manual"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "eval_name": "activate_order_evid_before_prd",
+      "prompt": "What's the correct order: should I activate the PRD first, then create and activate the EVID? Or create and activate EVID first, then activate the PRD? I keep getting an error when I try to activate the PRD.",
+      "expected_output": "Response should route to `recipes-workflow/route-shape-build-audit-activate.md` or `getting-started/first-prd-walkthrough.md`. Must clarify the correct order: (1) PRD is created first (draft), validated, but NOT yet activated, (2) EVID is created, body filled, linked to PRD with `informs`, then activated, (3) PRD is activated AFTER EVID is active (for depth=deep+, evidence gate requires active evidence). Common error explained: activating PRD before evidence exists returns 'No evidence linked — create evidence and link it before activating'. Mention `--force` bypass exists but should be avoided (use correct order instead). For depth=standard PRDs, evidence is optional.",
+      "assertions": [
+        {
+          "text": "Response states EVID must be activated before PRD activation (for deep+ depth artifacts)",
+          "type": "manual"
+        },
+        {
+          "text": "Response mentions the error message or evidence gate that blocks PRD activation",
+          "type": "manual"
+        },
+        {
+          "text": "Response gives the correct 5-stage sequence (or equivalent ordering: create PRD → build → create+activate EVID → activate PRD)",
+          "type": "manual"
+        },
+        {
+          "text": "Response does NOT recommend using --force as the primary fix (should recommend fixing order instead)",
+          "type": "manual"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "eval_name": "full_sdlc_command_sequence",
+      "prompt": "Show me the canonical CLI commands for a complete forgeplan SDLC cycle: from initial routing through PRD creation, building, evidence creation and linking, all the way to activating both EVID and PRD. I want the exact commands in order, not just the concepts.",
+      "expected_output": "Response should route to `recipes-workflow/route-shape-build-audit-activate.md` and provide the full 5-stage command sequence: Stage 1 ROUTE: `forgeplan route 'describe your task'`; Stage 2 SHAPE: `forgeplan new prd 'Feature name'`, `forgeplan validate PRD-NNN`; Stage 3 BUILD: compile/lint/typecheck (language-appropriate); Stage 4 AUDIT: `forgeplan new evidence 'Feature name verification'`, `forgeplan link EVID-NNN PRD-NNN --relation informs`, `forgeplan activate EVID-NNN`; Stage 5 ACTIVATE: `forgeplan activate PRD-NNN`. Should mention stage gates (validate must PASS before BUILD, R_eff check before PRD activate for deep+). May mention /forge-cycle as automation for this sequence.",
+      "assertions": [
+        {
+          "text": "Response includes `forgeplan route` as the first step",
+          "type": "manual"
+        },
+        {
+          "text": "Response includes `forgeplan validate` before the build stage",
+          "type": "manual"
+        },
+        {
+          "text": "Response includes `forgeplan link EVID-NNN PRD-NNN --relation informs` (correct relation and direction)",
+          "type": "manual"
+        },
+        {
+          "text": "Response shows EVID activated before PRD activated (correct order)",
+          "type": "manual"
+        },
+        {
+          "text": "Response lists at least 4 of the 5 stages with concrete CLI commands",
+          "type": "manual"
+        }
+      ]
+    }
+  ]
+}
