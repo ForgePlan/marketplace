@@ -4,7 +4,7 @@
 >
 > **Бюджет времени**: ~30 минут на полный hands-on прогон. Если нужно только доказательство что работает — листайте в самый низ к секции "Smoke-результаты".
 >
-> **Тестовое окружение этого гайда**: macOS Darwin 25.1.0, Claude Code 2.1.143, forgeplan CLI v0.31.0, catalog v1.43.0, сессия 2026-05-19.
+> **Тестовое окружение этого гайда**: macOS Darwin 25.1.0, Claude Code 2.1.143, forgeplan CLI v0.31.0, catalog v1.53.0+, сессия 2026-05-19+ (последняя проверка 2026-05-20 Sprint N).
 >
 > **Verified state**: 68 marketplace-агентов 0 errors 0 warns, 100 forgeplan-артефактов в тестовом workspace, `forgeplan_health` verdict=`healthy`.
 
@@ -59,7 +59,7 @@ brew install gh && gh auth login
 
 **Проверка** (в Claude Code, быстрый чек):
 - Введите `/help` — должны увидеть в списке `/fpl-init`, `/forge-cycle`, `/forge-audit`
-- Или посмотрите файл `~/.claude/plugins/marketplaces/ForgePlan-marketplace/.claude-plugin/marketplace.json` — должна быть catalog v1.43.0
+- Или посмотрите файл `~/.claude/plugins/marketplaces/ForgePlan-marketplace/.claude-plugin/marketplace.json` — должна быть catalog v1.53.0+ (на момент Sprint N closure)
 
 > ⚠️ **Подводный камень с кешем плагинов**: если `/plugin install` говорит "already installed", но новой версии нет — сначала запустите `/plugin marketplace update ForgePlan-marketplace`. Версия в catalog metadata управляет тем, когда обновления подтягиваются.
 

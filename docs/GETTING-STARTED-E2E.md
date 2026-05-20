@@ -4,7 +4,7 @@
 >
 > **Time budget**: ~30 minutes for a full hands-on walkthrough. Skip to "Smoke results" at the bottom if you just want proof that things work.
 >
-> **Test environment for this guide**: macOS Darwin 25.1.0, Claude Code 2.1.143, forgeplan CLI v0.31.0, catalog v1.43.0, session 2026-05-19.
+> **Test environment for this guide**: macOS Darwin 25.1.0, Claude Code 2.1.143, forgeplan CLI v0.31.0, catalog v1.53.0+, session 2026-05-19+ (last verified 2026-05-20 Sprint N).
 >
 > **Verified state**: 68 marketplace agents 0 errors 0 warns, 100 forgeplan artifacts in test workspace, `forgeplan_health` verdict `healthy`.
 
@@ -59,7 +59,7 @@ Then install the flagship plugins:
 
 **Verify** (in Claude Code, run a quick check):
 - Type `/help` — you should see `/fpl-init`, `/forge-cycle`, `/forge-audit` listed
-- Or check `~/.claude/plugins/marketplaces/ForgePlan-marketplace/.claude-plugin/marketplace.json` for catalog v1.43.0
+- Or check `~/.claude/plugins/marketplaces/ForgePlan-marketplace/.claude-plugin/marketplace.json` for catalog v1.53.0+ (Sprint N closure date)
 
 > ⚠️ **Plugin cache gotcha**: if `/plugin install` says "already installed" but you don't see the latest version, run `/plugin marketplace update ForgePlan-marketplace` first. Catalog metadata version controls when updates pull.
 
