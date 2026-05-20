@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.55.0"
+    "version": "1.56.0"
   },
   "plugins": [
     {
@@ -54,6 +54,27 @@
         "autorun",
         "bootstrap",
         "methodology"
+      ]
+    },
+    {
+      "name": "fp-cookbook",
+      "source": "./plugins/fp-cookbook",
+      "description": "Practical cookbook of forgeplan CLI recipes — 26 task-oriented recipes across 8 categories (getting-started, recipes-prd, recipes-evidence, recipes-workflow, recipes-multiplugin, recipes-ai-pair, troubleshooting, cli-cheatsheet). Each recipe follows uniform Цель → Команда → Пример → Common errors structure. 5 troubleshooting recipes address Sprint A-O anomalies (#5 R_eff cascade, #7 EVID stuck draft, #13 restore-to-draft, #15/#16 link direction, #17 EVID body convention). cli-cheatsheet provides one-page reference for both CLI and MCP tools. v1.0.0 PRD-013 Sprint P 2026-05-20.",
+      "version": "1.0.0",
+      "author": {
+        "name": "ForgePlan"
+      },
+      "homepage": "https://github.com/ForgePlan/marketplace",
+      "license": "MIT",
+      "category": "developer-tools",
+      "keywords": [
+        "forgeplan",
+        "cookbook",
+        "recipes",
+        "cli",
+        "getting-started",
+        "troubleshooting",
+        "reference"
       ]
     },
     {

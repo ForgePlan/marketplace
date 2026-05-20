@@ -1,0 +1,36 @@
+{
+  "name": "fp-cookbook",
+  "version": "1.0.0",
+  "description": "Practical cookbook of forgeplan CLI recipes — task-oriented how-to guides covering getting-started, PRD authoring, Evidence patterns, workflow cycles, multi-plugin discipline, AI-pair dispatch, troubleshooting Sprint A-O anomalies, and CLI/MCP quick-reference. Each recipe: Цель → Команда → Пример → Common errors. / Практическая поваренная книга рецептов forgeplan CLI — пошаговые руководства по онбордингу, PRD, Evidence, рабочим циклам, мультиплагинной дисциплине, диспетчеризации AI-агентов, устранению аномалий и справочнику CLI/MCP.",
+  "author": {
+    "name": "ForgePlan"
+  },
+  "homepage": "https://github.com/ForgePlan/marketplace",
+  "repository": "https://github.com/ForgePlan/marketplace",
+  "license": "MIT",
+  "keywords": [
+    "forgeplan",
+    "cookbook",
+    "recipes",
+    "cli",
+    "getting-started",
+    "developer-tools",
+    "how-to",
+    "prd",
+    "evidence",
+    "workflow"
+  ],
+  "category": "developer-tools",
+  "requires": {
+    "cli": [],
+    "mcp": [],
+    "plugins": []
+  },
+  "supersedes": {},
+  "components": {
+    "commands": [],
+    "agents": [],
+    "skills": ["fp-cookbook"],
+    "hooks": []
+  }
+}
