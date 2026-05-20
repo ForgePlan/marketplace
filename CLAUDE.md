@@ -1,10 +1,10 @@
 # ForgePlan Marketplace — Claude Code Configuration
 
 **Repo**: [ForgePlan/marketplace](https://github.com/ForgePlan/marketplace)
-**Catalog version**: 1.47.0
+**Catalog version**: 1.52.0
 **Plugins**: 13 (7 workflow + 5 agent packs + 1 memory plugin fpl-hsmem)
 **Agents**: 17 of ~65 forgeplan-aware (PRD-026 canonical B2 paradigm — `disallowedTools` denylist + `forgeplan_generate` primary creation path + 5 profiles A/B/C/C-coder/D)
-**Last Updated**: 2026-05-19 (post Sprint A-E session: autonomy framework GA v2.3.0, catalog v1.47.0)
+**Last Updated**: 2026-05-20 (post Sprint A-J+K + post-closure-pack PRD-038 + Sprint L: 13 anomalies + 10 ML, catalog v1.52.0)
 **Project board**: [orgs/ForgePlan/projects/5](https://github.com/orgs/ForgePlan/projects/5)
 
 ---
@@ -226,17 +226,17 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # Rulesets
 
 ---
 
-## Plugin versions (catalog v1.47.0)
+## Plugin versions (catalog v1.52.0)
 
 ### Workflow plugins
 
 | Plugin | Version |
 |--------|:-------:|
-| **fpl-skills** | 1.23.0 |
+| **fpl-skills** | 1.24.1 |
 | **fpl-hsmem** | 2.1.0 |
-| **forgeplan-workflow** | 1.9.1 |
+| **forgeplan-workflow** | 1.10.1 |
 | **forgeplan-orchestra** | 1.4.1 |
-| **forgeplan-brownfield-pack** | 1.3.1 |
+| **forgeplan-brownfield-pack** | 1.3.2 |
 | **fpf** | 1.4.1 |
 | **laws-of-ux** | 1.4.1 |
 | **dev-toolkit** | 1.6.3 |
@@ -353,10 +353,48 @@ Sprint G inventoried 7 new MCP tools; Sprint J+K exercised 4 testable ones:
 
 ### Anomaly #12 (NEW): release_notes split-repo constraint
 
-When `.forgeplan/` and `.git/` are in different directories (workspace root vs child repo), `forgeplan_release_notes` returns "git log failed: fatal: not a git repository". Workaround documented in Phase 7.3 of `/forge-cycle`. Captured as Sprint J+K Anomaly #12; not a blocker (tool works in standard setups).
+When `.forgeplan/` and `.git/` are in different directories (workspace root vs child repo), `forgeplan_release_notes` returns "git log failed: fatal: not a git repository". Workaround documented in Phase 7.3 of `/forge-cycle`. Captured as Sprint J+K Anomaly #12; **filed upstream as [forgeplan#290](https://github.com/ForgePlan/forgeplan/issues/290)** (2026-05-20).
+
+### Anomaly #13 (NEW): restore returns artifact to draft, not prior status
+
+`forgeplan_restore` after `_deprecate` or `_delete` returns artifact to `status=draft`, not prior status. FSM forbids `draft → deprecated` direct path, so operators must re-`_activate` then re-`_deprecate`. Captured as Sprint J+K Anomaly #13; **filed upstream as [forgeplan#291](https://github.com/ForgePlan/forgeplan/issues/291)** (2026-05-20).
 
 ### Artifacts (Sprint J+K)
-- PRD-036 (active) — Sprint J+K scope
+- PRD-037 (active) — Sprint J+K scope (PRD-036 superseded as transient duplicate)
 - EVID-063 (active) — per-tool verdicts + K2 roundtrip log + activity stats snapshot
 - catalog v1.50.0 → **v1.51.0**
 - forgeplan-workflow v1.10.0 → v1.10.1 (Phase 7.3 added)
+
+## Sprint L 2026-05-20 — 6 more MCP tools exercised (post-Sprint J+K closure pack)
+
+Continuation of Sprint J+K methodology. PRD-038 wrapped 4 closure deliverables (issues filed + ML-9/10 + mm-fpf-active-rules + Sprint H scaffolding); Sprint L extended with 6 more MCP tool verdicts inline within the same session.
+
+| Tool | Verdict | Canonical example | Notes |
+|---|---|---|---|
+| `forgeplan_journal` | **RECOMMENDED-INTEGRATE** | `forgeplan_journal(kind="adr")` | Decision-kind timeline (ADR/Note/Problem/Solution) with R_eff + evidence count |
+| `forgeplan_phase` | **RECOMMENDED-INTEGRATE** | `forgeplan_phase(id="PRD-XXX")` | Advisory lifecycle phase + append-only history; never blocks |
+| `forgeplan_phase_advance` | **READY-TO-USE** | `forgeplan_phase_advance(id, to="audit")` | Schema verified; out-of-order jumps allowed (advisory layer) |
+| `forgeplan_calibrate` | **RECOMMENDED-INTEGRATE** | `forgeplan_calibrate(id="PRD-XXX")` | Depth suggestions (Tactical/Standard/Deep/Critical) from dependency_links + section_count + body_length |
+| `forgeplan_dispatch` | **LIMITED-USE** | `forgeplan_dispatch(agents=N, status="any")` | Requires PRDs to declare `affected_files` in frontmatter for parallel bucketing; 26/37 our PRDs lack it → serial fallback |
+| `forgeplan_supersede` | **WORKS-AS-INTENDED** | `forgeplan_supersede(id="active-X", by="new-X")` | FSM correctly rejects non-active source (must be active or stale); helpful error message |
+
+### Sprint L artifacts
+
+- PRD-038 (active, R_eff=0.90 grade A) — closure-pack scope
+- EVID-064 (active, R_eff=1.0) — verifies PRD-038 against 6 AC
+- mm-fpf-active-rules — new mental model
+- forgeplan#290, #291 — upstream issues filed
+- SCAFFOLDING.md (brownfield-pack/agents/discover/) — Sprint H pre-work
+
+### Anomalies surfaced (Sprint L)
+
+- **Anomaly #14** — `discover_finding` response `status` field is session status, not artifact status (captured in EVID-064, deferred upstream filing post-v0.32)
+- **Anomaly #15** — `forgeplan_link supersedes` direction is source→target (newer→older), can be set backwards silently
+- **Anomaly #16** — `forgeplan_link informs` direction same risk as #15 — informs follows source-gives-info-to-target
+- **Anomaly #17** — Custom YAML frontmatter fields ignored; congruence_level/verdict/evidence_type only parsed from markdown bold-pattern body (`**Congruence level**: N` numeric)
+
+### Sprint L tools NOT exercised
+
+`forgeplan_capture` — needs domain context (state capture for what?), DEFERRED
+`forgeplan_session` — needs session lifecycle context, DEFERRED
+`forgeplan_undo_last` — would mutate workspace state, DEFERRED until needed
