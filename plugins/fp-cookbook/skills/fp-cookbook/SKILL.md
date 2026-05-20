@@ -29,6 +29,11 @@ triggers:
   - как создать PRD
   - forgeplan рецепт
   - как начать работу с forgeplan
+  - polyglot monorepo
+  - rust go typescript python
+  - worktree cold start
+  - language_stack
+  - affected_files frontmatter
 ---
 
 # fp-cookbook — Practical Forgeplan Recipes
@@ -66,11 +71,12 @@ Complements `forgeplan-methodology` (what-is). This skill answers **how to**.
 | 01 | [getting-started](sections/getting-started/_index.md) | 3 | Install CLI, init workspace, first PRD end-to-end |
 | 02 | [recipes-prd](sections/recipes-prd/_index.md) | 4 | Create / validate / activate PRDs; FR vs Goals; link rules |
 | 03 | [recipes-evidence](sections/recipes-evidence/_index.md) | 3 | Evidence body pattern; informs vs based_on; R_eff ≥ 0.9 |
-| 04 | [recipes-workflow](sections/recipes-workflow/_index.md) | 3 | Full SDLC cycle; wave dispatch; dogfood activate discipline |
+| 04 | [recipes-workflow](sections/recipes-workflow/_index.md) | 8 | Full SDLC cycle; wave dispatch; dogfood activate discipline |
 | 05 | [recipes-multiplugin](sections/recipes-multiplugin/_index.md) | 3 | Version-bump policy; catalog discipline; cross-plugin supersedes |
 | 06 | [recipes-ai-pair](sections/recipes-ai-pair/_index.md) | 3 | Profile A/B/C/D selection; task dispatch; sentinel conventions |
 | 07 | [troubleshooting](sections/troubleshooting/_index.md) | 5 | Sprint A-O anomalies: cascade, EVID draft, FSM, footguns |
 | 08 | [cli-cheatsheet](sections/cli-cheatsheet/_index.md) | 2 | One-page CLI + MCP quick reference |
+| 09 | [polyglot](sections/polyglot/_index.md) | 5 | Rust+Go+TypeScript+Python monorepos: CLAUDE.md cascade, AC gates, worktree cold start, dispatch bucketing, tester scoping |
 
 ## Real artifact cross-references (FR-005)
 

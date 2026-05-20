@@ -15,7 +15,6 @@ skills:
   - fp-cookbook
   - forgeplan-methodology
   - agentic-rag
-memory: project
 maxTurns: 30
 ---
 

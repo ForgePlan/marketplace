@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.57.0"
+    "version": "1.58.0"
   },
   "plugins": [
     {
@@ -59,8 +59,8 @@
     {
       "name": "fp-cookbook",
       "source": "./plugins/fp-cookbook",
-      "description": "Practical cookbook of forgeplan CLI recipes — 26 task-oriented recipes across 8 categories. v1.1.0: Sprint Q PRD-042 — added evals/evals.json (5 substantive prompts per ASM §6, covering recipes-prd + recipes-evidence + recipes-workflow + troubleshooting + cli-cheatsheet). v1.0.0 PRD-013 Sprint P — 26 recipes shipped, 5 troubleshooting addressing Sprint A-O anomalies, cli-cheatsheet covers CLI + MCP tools.",
-      "version": "1.1.0",
+      "description": "Practical cookbook of forgeplan CLI recipes. v1.2.0: Sprint R PRD-044 — added polyglot section (9th category, 5 recipes covering claude-md-cascade + per-language-ac-gates + worktree-cold-start + affected-files-discipline + tester-multi-runner-scope) for Rust/Go/TypeScript/Python projects. v1.1.0: Sprint Q evals/evals.json. v1.0.0: 26 recipes shipped Sprint P.",
+      "version": "1.2.0",
       "author": {
         "name": "ForgePlan"
       },
