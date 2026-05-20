@@ -303,3 +303,34 @@ Five consecutive sprints shipped the full autonomy framework. All PRDs closed R_
 | 8 | `NEED_USER_INPUT` sentinel not emitted organically by Profile B agents | Resolved Sprint E (PRD-033): 7 agent body patches |
 | 9 | Documentation drift — catalog v1.37 vs actual v1.47 | Resolved Sprint E (PRD-033): this sync |
 | 10 | AGENTS.md missing (cross-CLI context shim) | Resolved Sprint E (PRD-033) |
+
+## Sprint G 2026-05-20 — Forgeplan core adoption + R_eff cascade fix
+
+Five issues filed earlier closed upstream during Sprint A-F (forgeplan core was building in parallel):
+- **#286** `forgeplan_unlink` — CLOSED (CLI v0.31.0 ships it; MCP surface pending)
+- **#287** Brownfield extraction MCP epic — STILL OPEN
+- **#288** Pipeline hygiene (auto-activate + stale-draft + chain hint) — CLOSED (MCP surface pending)
+- **#289** `forgeplan_anomalies` MCP tool — CLOSED (MCP surface pending)
+
+Partial adoption pattern: when an issue is closed in core repo, its MCP surface may not be in our session's binary yet. Sprint G adapts:
+
+**Anomaly #5 (R_eff cascade footgun) — PARTIAL FIX**:
+- Used `forgeplan unlink PRD-021 EVID-033 --relation based_on` CLI (works in v0.31.0)
+- PRD-021 weakest_link moved from EVID-033 to PRD-018 (cascade deeper than expected)
+- Specific anomaly link RESOLVED at surface; deeper PRD-018 → NOTE-003 draft chain remains as follow-up
+
+**7 NEW MCP tools discovered** (landed during Sprint A-F):
+- `forgeplan_discover_*` — brownfield protocol (start/finding/complete)
+- `forgeplan_release_notes` — auto-generated changelog
+- `forgeplan_ingest` — mapping-driven artifact import
+- `forgeplan_restore` — soft-delete recovery
+- `forgeplan_playbook_run` — playbook orchestration
+- `forgeplan_activity` + `_stats` — tool-use audit log
+- `forgeplan_fpf_rules` — FPF rule introspection
+
+Sprint G inventory only; live verification deferred to Sprint H+.
+
+### Artifacts (Sprint G)
+- PRD-035 (active) — Sprint G scope + partial-adoption documentation
+- EVID-062 (active) — verification of Anomaly #5 partial fix + 7-tool discovery
+- v1.49.0 → **v1.50.0** catalog (this Sprint G milestone)

@@ -166,7 +166,7 @@ Anomalies were surfaced incrementally. By EVID-060, 11 had been logged.
 | 2 | W1-I schema doc 643 lines vs 250-350 target — sub-agent self-justified | Sprint C (EVID-058) | Resolved post-mortem same sprint: accepted, documented schema-doc exception | CLOSED, pattern documented |
 | 3 | NEED_USER_INPUT sentinel never fired in production — protocol exists, parsers exist, but no organic emission | Sprint A (EVID-056 gap) | Sprint E W2-F live smoke — confirmed smoke scenarios don't require it; sentinel fires only when sub-agent genuinely lacks info | CLOSED Sprint E |
 | 4 | Plugin cache lag — user session shows catalog v1.36.0, origin is 10 bumps newer | Sprint C (EVID-058) | User-side: `/plugin marketplace update ForgePlan-marketplace` — documented; structural gap | OPEN, user-side workaround |
-| 5 | R_eff `based_on` cascade footgun — accidentally cascades CL penalty when linking EVID to PRD | Sprint A-B era | Upstream forgeplan#286 filed; workaround: use `informs` relation only | UPSTREAM TRACKED |
+| 5 | R_eff `based_on` cascade footgun — accidentally cascades CL penalty when linking EVID to PRD | Sprint A-B era | Upstream forgeplan#286 filed; workaround: use `informs` relation only | PARTIAL Sprint G — CLI unlink applied; deeper cascade (PRD-018 → NOTE-003 draft) remains as follow-up |
 | 6 | Concurrent `/autorun` protection not spec'd — schema doc notes "abandoned" status but no race protection | Sprint C (EVID-058) | Deferred — v1 acceptable; revisit if multi-concurrent /autorun becomes real use case | DEFERRED |
 | 7 | EVIDs accumulate in draft (8-16 per session) — Profile B denied `forgeplan_activate`, orchestrator forgets | Sprint A+B+C (each session, every time) | Sprint D: NEEDS_ACTIVATION sentinel + parsers in both orchestrators + /forge-cleanup manual recovery | RESOLVED Sprint D |
 | 8 | Anomaly #7 recurred across 4 sprints despite awareness — detection-only is insufficient | Sprint D design insight | Sprint D: system-level prevention via sentinel+parser pattern | META-LESSON CAPTURED |
@@ -345,6 +345,19 @@ Sprints B-E all used `/forge-cycle` wave-based dispatch to build and ship featur
 `/forge-cycle` itself. This is the strongest possible validation: the pipeline shipped 20
 parallel sub-agents, handled version bumps, ran validation, and produced evidence — using
 exactly the mechanisms it was building. Any design flaw surfaces immediately.
+
+### ML-8: Upstream issue closed ≠ MCP surface available
+
+**Sprint G discovery (2026-05-20)**: Issues filed in Sprint A-D (forgeplan#286, #288, #289) were closed in core repo during Sprint A-F. Sprint G assumed those features would be available via MCP — but found CLI v0.31.0 ships them while MCP surface pending. New tools surface incrementally; closed upstream issue doesn't guarantee tool availability in your session's binary.
+
+**Pattern**:
+1. Verify tool availability via `ToolSearch` before assuming feature is available
+2. Always have a CLI fallback path documented alongside MCP path
+3. When upstream issue closes, check both CLI (`<binary> <cmd> --help`) AND MCP (`ToolSearch select:tool_name`) before assuming the feature is usable
+
+**Side benefit**: New MCP tools may land that you didn't file issues for — Sprint G inventory found 7 new tools (discover_*, release_notes, ingest, restore, playbook_run, activity, fpf_rules) that surfaced without being on our issue radar.
+
+**Applied in**: Sprint G PRD-035 — adapted scope from "modernize /forge-cleanup with native forgeplan_anomalies" to "leverage CLI unlink for Anomaly #5 + document the partial-adoption pattern".
 
 ---
 
