@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.49.0"
+    "version": "1.50.0"
   },
   "plugins": [
     {
