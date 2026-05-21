@@ -56,10 +56,11 @@ emit_finding() {
   local src_created="${6:-}" tgt_created="${7:-}"
   local fix
 
+  # v0.32.1 update: MCP forgeplan_unlink now available; prefer MCP, CLI remains as fallback
   if [ "$pattern" = "supersedes_inversion" ]; then
-    fix="forgeplan unlink $src_id $tgt_id --relation supersedes && forgeplan link $tgt_id $src_id --relation supersedes"
+    fix="MCP: mcp__forgeplan__forgeplan_unlink(source=\"$src_id\", target=\"$tgt_id\", relation=\"supersedes\") + forgeplan_link(source=\"$tgt_id\", target=\"$src_id\", relation=\"supersedes\") | CLI fallback: forgeplan unlink $src_id $tgt_id --relation supersedes && forgeplan link $tgt_id $src_id --relation supersedes"
   else
-    fix="forgeplan unlink $src_id $tgt_id --relation informs && forgeplan link $tgt_id $src_id --relation informs"
+    fix="MCP: mcp__forgeplan__forgeplan_unlink(source=\"$src_id\", target=\"$tgt_id\", relation=\"informs\") + forgeplan_link(source=\"$tgt_id\", target=\"$src_id\", relation=\"informs\") | CLI fallback: forgeplan unlink $src_id $tgt_id --relation informs && forgeplan link $tgt_id $src_id --relation informs"
   fi
 
   jq -n --compact-output \

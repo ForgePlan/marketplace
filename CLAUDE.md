@@ -1,10 +1,10 @@
 # ForgePlan Marketplace — Claude Code Configuration
 
 **Repo**: [ForgePlan/marketplace](https://github.com/ForgePlan/marketplace)
-**Catalog version**: 1.59.0
+**Catalog version**: 1.60.0
 **Plugins**: 15 (9 workflow + 5 agent packs + 1 memory plugin fpl-hsmem)
-**Agents**: 17 of ~65 forgeplan-aware (PRD-026 canonical B2 paradigm — `disallowedTools` denylist + Sprint Q PRD-042 ASM-canon frontmatter + Sprint S Step 9c filesystem verification discipline. **`memory: project` REJECTED Sprint R** — Hindsight covers use case.)
-**Last Updated**: 2026-05-21 (post Sprint A-S: PRD-045 logical closure — Step 9c convention codified + document_ingest_file auto-wire to Phase 6.5 + graph verified healthy + chaos testing 5 scenarios with honest error budget (5.2% Sprint A-R, 67% correct FSM gates), 22 anomalies + 11 ML + 10 mental models, catalog v1.59.0)
+**Agents**: 17 of ~65 forgeplan-aware (PRD-026 canonical B2 paradigm — `disallowedTools` denylist + Sprint Q PRD-042 ASM-canon frontmatter + Sprint S Step 9c filesystem verification + Sprint T v0.32.1 native MCP adoption. **`memory: project` REJECTED Sprint R** — Hindsight covers use case.)
+**Last Updated**: 2026-05-21 (post Sprint A-T: PRD-046 v0.32.1 adoption — 5/6 fixes verified live (#290/#291/#293/#294/#295) + 3 new MCP tools wired (anomalies/unlink/parent_id) in 11 files + 82 historical anomalies root-caused as Anomaly #17 pre-Sprint M YAML → Sprint U scope, 24 anomalies + 11 ML + 10 mental models, catalog v1.60.0)
 **Project board**: [orgs/ForgePlan/projects/5](https://github.com/orgs/ForgePlan/projects/5)
 
 ---
@@ -226,20 +226,20 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # Rulesets
 
 ---
 
-## Plugin versions (catalog v1.59.0)
+## Plugin versions (catalog v1.60.0)
 
 ### Workflow plugins
 
 | Plugin | Version |
 |--------|:-------:|
-| **fpl-skills** | **1.24.4** (Sprint S: Step 9c convention) |
+| **fpl-skills** | **1.24.5** (Sprint T: forge-cleanup Step 2.5 + Profile B EVID 2-step) |
 | **fpl-hsmem** | 2.1.0 |
-| **forgeplan-workflow** | **1.10.2** (Sprint S: Phase 6.5.1 auto-ingest) |
+| **forgeplan-workflow** | **1.10.3** (Sprint T: forgeplan_unlink MCP adopted) |
 | **forgeplan-orchestra** | 1.4.1 |
 | **forgeplan-brownfield-pack** | 1.3.2 |
 | **fpf** | 1.4.1 |
 | **agentic-rag** | **1.1.0** (Sprint Q: evals + anti-patterns refactor) |
-| **fp-cookbook** | **1.2.0** (Sprint R: +polyglot section, 9 categories) |
+| **fp-cookbook** | **1.2.1** (Sprint T: recipes updated к v0.32.1 patterns) |
 | **laws-of-ux** | 1.4.1 |
 | **dev-toolkit** | 1.6.3 |
 

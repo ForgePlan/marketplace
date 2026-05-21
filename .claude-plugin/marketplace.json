@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.59.0"
+    "version": "1.60.0"
   },
   "plugins": [
     {
@@ -35,8 +35,8 @@
     {
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
-      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 27 engineering skills + dev-advisor agent + 5 hooks. v1.24.4: Sprint S PRD-045 \u2014 AGENT-AUTHORING-GUIDE Step 9c filesystem verification convention codifying ML-11. v1.24.3: Sprint O detection script. v1.24.2: Sprint M conventions. v1.24.1: Sprint J+K closure. v1.23: Sprint D self-healing framework.",
-      "version": "1.24.4",
+      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 27 engineering skills + dev-advisor agent + 5 hooks. v1.24.5: Sprint T PRD-046 \u2014 /forge-cleanup Step 2.5 native forgeplan_anomalies MCP primary + AGENT-AUTHORING-GUIDE Profile B EVID-creation canonical procedure (2-step parent_id auto-link via #295). v1.24.4: Sprint S Step 9c convention. v1.24.3: Sprint O detection script. v1.24.2: Sprint M conventions.",
+      "version": "1.24.5",
       "author": {
         "name": "ForgePlan"
       },
@@ -59,8 +59,8 @@
     {
       "name": "fp-cookbook",
       "source": "./plugins/fp-cookbook",
-      "description": "Practical cookbook of forgeplan CLI recipes. v1.2.0: Sprint R PRD-044 — added polyglot section (9th category, 5 recipes covering claude-md-cascade + per-language-ac-gates + worktree-cold-start + affected-files-discipline + tester-multi-runner-scope) for Rust/Go/TypeScript/Python projects. v1.1.0: Sprint Q evals/evals.json. v1.0.0: 26 recipes shipped Sprint P.",
-      "version": "1.2.0",
+      "description": "Practical cookbook of forgeplan CLI recipes. v1.2.1: Sprint T PRD-046 — recipes updated to v0.32.1 patterns (EVID 2-step parent_id auto-link via #295, MCP unlink primary + CLI fallback per #286). v1.2.0: Sprint R polyglot section. v1.1.0: Sprint Q evals. v1.0.0: 26 recipes Sprint P.",
+      "version": "1.2.1",
       "author": {
         "name": "ForgePlan"
       },
@@ -121,8 +121,8 @@
     {
       "name": "forgeplan-workflow",
       "source": "./plugins/forgeplan-workflow",
-      "description": "Structured engineering workflow for forgeplan users. Provides /forge-cycle (full SDLC cycle) and /forge-audit. v1.10.2: Sprint S PRD-045 \u2014 Phase 6.5.1 auto-ingest activated artifacts into Hindsight bank via document_ingest_file (HIGH gap closure from Sprint R Hindsight optimization). v1.10.1: Sprint F + J+K Phase 7.3 release_notes wire. v1.9.1: forge-advisor canonical-lint.",
-      "version": "1.10.2",
+      "description": "Structured engineering workflow for forgeplan users. Provides /forge-cycle (full SDLC cycle) and /forge-audit. v1.10.3: Sprint T PRD-046 \u2014 forgeplan_unlink MCP adopted (replaces Sprint G CLI workaround per #286). v1.10.2: Sprint S Phase 6.5.1 document_ingest_file wire. v1.10.1: Sprint F + J+K Phase 7.3.",
+      "version": "1.10.3",
       "author": {
         "name": "ForgePlan"
       },
