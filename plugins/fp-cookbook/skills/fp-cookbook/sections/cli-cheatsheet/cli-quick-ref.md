@@ -2,6 +2,8 @@
 
 All `forgeplan <command>` commands. Requires `forgeplan` ≥ v0.31.0.
 
+> **MCP-first**: when MCP server is connected, prefer `mcp__forgeplan__forgeplan_*` tools over CLI. CLI commands are the authoritative fallback when MCP is unavailable.
+
 ## Workspace
 
 | Command | Synopsis | Example |
@@ -53,7 +55,7 @@ All `forgeplan <command>` commands. Requires `forgeplan` ≥ v0.31.0.
 | Command | Synopsis | Example |
 |---------|----------|---------|
 | `forgeplan link SRC TGT --relation REL` | Create link between artifacts | `forgeplan link EVID-069 PRD-013 --relation informs` |
-| `forgeplan unlink SRC TGT --relation REL` | Remove link (v0.31.0+) | `forgeplan unlink EVID-033 PRD-021 --relation based_on` |
+| `forgeplan unlink SRC TGT --relation REL` | Remove link (v0.31.0+). MCP: `mcp__forgeplan__forgeplan_unlink(source, target, relation)` (v0.32.1+) | `forgeplan unlink EVID-033 PRD-021 --relation based_on` |
 
 ## Routing
 

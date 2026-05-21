@@ -539,7 +539,11 @@ disallowedTools: Write, Edit, NotebookEdit, mcp__forgeplan__forgeplan_activate, 
 ---
 ```
 
-Body procedure: claim parent → get parent body → run lints/tests via Bash → `forgeplan_new(kind="evidence")` → fill verdict + findings → link `informs` to parent → validate → release.
+Body procedure (2-step, PRIMARY — v0.32.1+): claim parent → get parent body → run lints/tests via Bash → `forgeplan_new(kind="evidence", parent_id="PRD-NNN")` (auto-links `informs`) → fill verdict + findings via `forgeplan_update` → validate → release.
+
+Fallback (3-step, when parent unknown at creation time OR multi-parent `informs` needed): claim parent → get parent body → run lints/tests via Bash → `forgeplan_new(kind="evidence")` → fill verdict + findings → `forgeplan_link(source=EVID, target=PRD, relation="informs")` → validate → release.
+
+> **v0.32.1 note**: `forgeplan_new(kind="evidence", parent_id="PRD-XXX")` auto-creates the `informs` link in the same call. Response includes `auto_linked: "PRD-XXX"` field — verify presence before skipping the explicit `forgeplan_link` step. Ref: forgeplan#295 (closed), PRD-046 Sprint T Wave D.
 
 ### Profile C — `research-analyst` (sketch)
 
@@ -900,6 +904,80 @@ After EVID creation + update, call `forgeplan_score(id=EVID)`. If `congruence_le
 
 - Original surfacing: EVID-064 (Anomaly #17), 2026-05-20 — PRD-038 R_eff was 0.10 with YAML frontmatter; 0.90 grade A after switching to bold-pattern body.
 - Mental model `mm-evid-body-convention` (proposed — captures this rule for future-session retrieval).
+
+---
+
+## Profile B EVID-creation canonical procedure (Sprint T — PRD-046, Wave D — v0.32.1 `parent_id`)
+
+> **v0.32.1 added `parent_id` parameter to `forgeplan_new` for `kind=evidence`.**
+> This reduces EVID-creation from 3 steps to 2 steps. Adopted as canonical PRIMARY pattern.
+> Ref: forgeplan#295 (closed), PRD-046 Sprint T.
+
+### PRIMARY: 2-step pattern (v0.32.1+, parent known at creation time)
+
+Use when you know the parent PRD/RFC at the time of EVID creation — which is the common case for all Profile B dispatches.
+
+```python
+# Step 1 — Create EVID with auto-link
+evid = mcp__forgeplan__forgeplan_new(
+    kind="evidence",
+    title="<descriptive title>",
+    parent_id="PRD-XXX"          # auto-creates informs link in same call
+)
+# Verify auto-link succeeded:
+assert evid.get("auto_linked") == "PRD-XXX", "auto_linked field missing — fall back to 3-step"
+
+# Step 2 — Fill body (bold-pattern fields REQUIRED — see Step 9b.1)
+mcp__forgeplan__forgeplan_update(
+    id=evid["id"],
+    body="""
+**Verdict**: PASS
+
+- **Congruence level**: 3
+- **Evidence type**: live_verification
+- **Method**: ...
+
+## Findings
+...
+"""
+)
+
+# forgeplan_link NOT needed — auto_linked already handles informs
+```
+
+Benefits of the 2-step pattern:
+- Reduces Anomaly #15/#16 direction-footgun risk (explicit `forgeplan_link` can be set backwards silently)
+- One fewer MCP roundtrip per EVID
+- `auto_linked` field in response provides immediate confirmation
+
+### FALLBACK: 3-step pattern (pre-v0.32.1 OR parent unknown OR multi-parent informs needed)
+
+Use as fallback when: LLM response missing `auto_linked` field, parent is not known at creation time, or you need to link the EVID to multiple parents.
+
+```python
+# Step 1 — Create EVID
+evid = mcp__forgeplan__forgeplan_new(kind="evidence", title="<title>")
+
+# Step 2 — Fill body
+mcp__forgeplan__forgeplan_update(id=evid["id"], body="...")
+
+# Step 3 — Link explicitly (source → target direction: EVID informs PRD)
+mcp__forgeplan__forgeplan_link(
+    source=evid["id"],
+    target="PRD-XXX",
+    relation="informs"
+)
+```
+
+### Decision rule
+
+```
+parent known at creation time AND v0.32.1+ MCP available?
+  → YES: use 2-step (parent_id=)
+  → NO:  use 3-step fallback
+```
+
+After either path: run `forgeplan_update` (body), `forgeplan_validate`, `forgeplan_score`, emit `<<NEEDS_ACTIVATION: EVID-XXX>>` sentinel per Step 9b.
 
 ---
 

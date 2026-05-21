@@ -16,3 +16,10 @@ and pass congruence checks correctly.
 Anomaly #17: Writing `congruence_level: 3` in YAML frontmatter.
 This is **silently ignored**. Use `**Congruence level**: 3` in the body.
 See `bold-pattern-body.md` for the full pattern.
+
+## New in v0.32.1 — `parent_id` auto-link
+
+`forgeplan new evidence "..." --parent PRD-NNN` creates the `informs` link in a single call
+(response includes `auto_linked: "PRD-NNN"`). This 2-step pattern is now canonical PRIMARY
+in `r-eff-grade-a.md` — use the 3-step fallback only when parent is unknown at creation time.
+Ref: forgeplan#295, PRD-046 Sprint T Wave D.

@@ -14,12 +14,33 @@ if the EVID itself has a weak upstream dependency.
 
 ## Fix
 
+> **v0.32.1 update**: `mcp__forgeplan__forgeplan_unlink` MCP tool is now available (issue #286 closed).
+> Prefer MCP; CLI remains valid as fallback when MCP server is unavailable.
+
+**MCP (preferred — v0.32.1+):**
+```
+# Step 1 — identify the bad link
+mcp__forgeplan__forgeplan_get(id="PRD-NNN")
+# Look for: links[] with relation=based_on pointing to EVID
+
+# Step 2 — unlink via MCP
+mcp__forgeplan__forgeplan_unlink(source="EVID-NNN", target="PRD-NNN", relation="based_on")
+
+# Step 3 — re-link correctly
+mcp__forgeplan__forgeplan_link(source="EVID-NNN", target="PRD-NNN", relation="informs")
+
+# Step 4 — re-score
+mcp__forgeplan__forgeplan_score(id="PRD-NNN")
+# Expected: R_eff improves
+```
+
+**CLI fallback (when MCP unavailable — requires CLI v0.31.0+):**
 ```bash
 # Step 1 — identify the bad link
 forgeplan get PRD-NNN
 # Look for: links[] with relation=based_on pointing to EVID
 
-# Step 2 — unlink (requires CLI v0.31.0+)
+# Step 2 — unlink
 forgeplan unlink EVID-NNN PRD-NNN --relation based_on
 
 # Step 3 — re-link correctly
@@ -38,8 +59,13 @@ Before:
   → weakest_link: EVID-033  (relation: based_on)
   → R_eff: 0.62
 
+  # Sprint G used CLI (v0.31.0 workaround — MCP not yet available):
   forgeplan unlink PRD-021 EVID-033 --relation based_on
   forgeplan link   EVID-033 PRD-021 --relation informs
+
+  # v0.32.1+: use MCP instead:
+  # mcp__forgeplan__forgeplan_unlink(source="PRD-021", target="EVID-033", relation="based_on")
+  # mcp__forgeplan__forgeplan_link(source="EVID-033", target="PRD-021", relation="informs")
 
 After:
   forgeplan score PRD-021
@@ -61,9 +87,10 @@ Never use `based_on` for EVID → PRD links. Only correct relations:
 
 | Error | Fix |
 |-------|-----|
-| `forgeplan unlink` not found | Upgrade to CLI v0.31.0+: `cargo install forgeplan --force` |
+| `mcp__forgeplan__forgeplan_unlink` not found | MCP server not connected or pre-v0.32.1 — fall back to CLI: `forgeplan unlink` (v0.31.0+) |
+| `forgeplan unlink` CLI not found | Upgrade to CLI v0.31.0+: `cargo install forgeplan --force` |
 | R_eff still low after unlink | Deeper chain — repeat on new weakest_link |
-| `unlink` accepts but score unchanged | Re-score explicitly: `forgeplan score PRD-NNN` |
+| `unlink` accepts but score unchanged | Re-score explicitly: `forgeplan score PRD-NNN` or `mcp__forgeplan__forgeplan_score(id="PRD-NNN")` |
 
 ## Refs
 

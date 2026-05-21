@@ -31,10 +31,29 @@ and drift detection.
 
 ## Fix
 
+> **v0.32.1 update**: `mcp__forgeplan__forgeplan_unlink` MCP tool is now available (issue #286 closed).
+> Prefer MCP; CLI remains valid as fallback when MCP server is unavailable.
+
+**MCP (preferred — v0.32.1+):**
+```
+# For each inverted supersedes link reported:
+
+# Step 1 — remove wrong-direction link
+mcp__forgeplan__forgeplan_unlink(source="OLD", target="NEW", relation="supersedes")
+
+# Step 2 — add correct-direction link (newer → older)
+mcp__forgeplan__forgeplan_link(source="NEW", target="OLD", relation="supersedes")
+
+# For informs footgun:
+mcp__forgeplan__forgeplan_unlink(source="PRD-NNN", target="EVID-NNN", relation="informs")
+mcp__forgeplan__forgeplan_link(source="EVID-NNN", target="PRD-NNN", relation="informs")
+```
+
+**CLI fallback (when MCP unavailable — requires CLI v0.31.0+):**
 ```bash
 # For each inverted link reported:
 
-# Step 1 — remove wrong-direction link (CLI v0.31.0+)
+# Step 1 — remove wrong-direction link
 forgeplan unlink OLD NEW --relation supersedes
 
 # Step 2 — add correct-direction link
@@ -64,7 +83,8 @@ CI integration: add to `.github/workflows/validate-plugins.yml` (Sprint O scope)
 | Error | Fix |
 |-------|-----|
 | Script not found | It lives in `scripts/detect_link_footguns.sh` — check repo root |
-| `forgeplan unlink` not available | Upgrade CLI to v0.31.0+: `cargo install forgeplan --force` |
+| `mcp__forgeplan__forgeplan_unlink` not found | MCP server not connected or pre-v0.32.1 — fall back to CLI: `forgeplan unlink` (v0.31.0+) |
+| `forgeplan unlink` CLI not available | Upgrade CLI to v0.31.0+: `cargo install forgeplan --force` |
 | Footgun re-introduced after fix | Add detection script to CI so it catches future inversions |
 
 ## Refs

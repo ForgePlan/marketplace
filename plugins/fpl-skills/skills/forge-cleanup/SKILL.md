@@ -52,7 +52,62 @@ CLI fallback: `forgeplan list --status draft`.
 MCP: `mcp__forgeplan__forgeplan_score(id="<ID>")` → extract `r_eff`, `verdict`, `congruence_level`, `age_days`.
 CLI fallback: `forgeplan score <ID>`.
 
-### Step 3 — Classify (first match wins)
+### Step 2.5 — Native anomaly detection (PRIMARY — v0.32.1+)
+
+Call `mcp__forgeplan__forgeplan_anomalies` as the **primary detection source** before falling back to plugin-side classification in Step 3. Native MCP is source of truth; plugin table in Step 3 is secondary (used for rendering suggested actions + when MCP unavailable).
+
+```
+mcp__forgeplan__forgeplan_anomalies(
+  kind?,       # optional filter: stuck_draft | orphan_link | mistyped_based_on |
+               #   missing_must_section | expired_evidence | weakest_link_unresolvable |
+               #   phase_mismatch | circular_dependency | duplicate_artifact |
+               #   link_direction_footgun
+  severity?,   # optional filter: high | medium | low
+  since?       # optional ISO timestamp to scope detection window
+)
+```
+
+**Response shape:**
+```json
+{
+  "anomalies": [
+    {
+      "id": "...", "kind": "...", "affected": ["EVID-051"],
+      "description": "...", "severity": "high|medium|low",
+      "tier": "auto|adi|user", "observed_at": "...",
+      "suggested_resolution": {
+        "action": "...", "rationale": "...", "target": "...", "tier": "auto|adi|user"
+      }
+    }
+  ],
+  "by_severity": { "high": N, "medium": N, "low": N },
+  "by_tier":     { "auto": N, "adi": N, "user": N },
+  "total": N
+}
+```
+
+**Building the working set from Step 2.5 results:**
+
+1. For each anomaly returned, merge `affected` IDs with the draft list from Step 1.
+   - Anomalies may point to active artifacts (e.g. `phase_mismatch`, `expired_evidence`) — include those too.
+2. Assign tier from `anomaly.tier` (native, authoritative). Plugin-side classification in Step 3 applies only to:
+   - Draft artifacts NOT covered by any `forgeplan_anomalies` result (Step 3 fills the gap), AND
+   - Display/render logic (human-readable action text, fallback labels).
+3. If `forgeplan_anomalies` is **unavailable** (MCP not connected, tool not found, returns error):
+   - Log: `"forgeplan_anomalies unavailable — falling back to plugin-side classification (Step 3 full sweep)"`
+   - Proceed to Step 3 as before; plugin table is now the complete working set.
+
+**CLI fallback** (when MCP unavailable): `forgeplan anomalies` (v0.32.1+); if CLI also fails, proceed to Step 3 full sweep.
+
+Cross-reference: Sprint T PRD-046 (modernise forge-cleanup to native `forgeplan_anomalies`). Closes Sprint I scope item "modernise to native MCP primitive" (issue #289 now shipped in v0.32.1).
+
+---
+
+### Step 3 — Classify (first match wins; uses Step 2.5 working set as primary input)
+
+**Note:** When Step 2.5 returns anomalies, their `tier` assignments are authoritative. Step 3 classification applies to:
+(a) draft artifacts from Step 1 not covered by any Step 2.5 result, and
+(b) rendering human-readable action text for all tiers.
 
 **Pre-pass: link_direction_footgun detection (PRD-041)**
 
@@ -83,7 +138,7 @@ Any findings are added to the USER tier queue before the main classification swe
 | `mistyped_based_on` | EVID linked to PRD via `based_on` relation (should be `informs`) — cascades CL penalty in R_eff scoring | USER (until forgeplan#286 ships unlink primitive — then ADI) | Until unlink available: add parallel `informs` link + note cascade is stuck — surface to user |
 | `expired_evidence` | EVID with `valid_until` in past, still linked active to parent | USER | Emit `<<NEED_USER_INPUT>>` — propose: refresh evidence (re-test/re-audit) OR waive with note |
 | `phase_mismatch` | artifact has status=active AND phase=shape/validate (early-cycle phase) AND r_eff>0 | AUTO | Advance phase via `mcp__forgeplan__forgeplan_phase_advance` |
-| `link_direction_footgun` | `supersedes` link where source is older than target (newer artifact is target instead of source) OR `informs` link from PRD/RFC to EVID (should be EVID→PRD; new artifacts inform old, not vice versa) | USER | Emit `<<NEED_USER_INPUT>>` — propose: unlink + relink in correct direction (use CLI `forgeplan unlink` v0.31+ then `forgeplan_link`) |
+| `link_direction_footgun` | `supersedes` link where source is older than target (newer artifact is target instead of source) OR `informs` link from PRD/RFC to EVID (should be EVID→PRD; new artifacts inform old, not vice versa) | ADI (v0.32.1+) | v0.32.1+: use `mcp__forgeplan__forgeplan_unlink(source, target, relation)` then `forgeplan_link` — upgraded to ADI tier; CLI fallback: `forgeplan unlink SRC TGT --relation REL` (v0.31+) |
 
 ## New anomaly kinds (Sprint F PRD-034 extension)
 
@@ -91,7 +146,7 @@ Four anomaly kinds from the `mm-pipeline-anomalies` catalog added to the classif
 
 1. **orphan_link** — Usually means an artifact was deleted or superseded after another had already linked to it. Surfaced to user because the semantic intent is ambiguous: should the dead link be removed? Should the target be recreated? Should the source artifact be deprecated? Auto-resolution is unsafe — requires human judgement.
 
-2. **mistyped_based_on** — Session-wide footgun observed in Sprint A+B+C+D era (PRD-021/022 stuck R_eff=0 due to CL cascade from wrong relation type). Upstream `forgeplan#286` will add a `forgeplan_unlink` primitive to fix properly. Until that ships, `/forge-cleanup` surfaces the artifact to the user with a concrete workaround: add a parallel `informs` link so R_eff recovers, and note the `based_on` link is stuck and pending cleanup once the primitive lands.
+2. **mistyped_based_on** — Session-wide footgun observed in Sprint A+B+C+D era (PRD-021/022 stuck R_eff=0 due to CL cascade from wrong relation type). Upstream `forgeplan#286` shipped `mcp__forgeplan__forgeplan_unlink` in v0.32.1 — use it as the primary fix. MCP: `mcp__forgeplan__forgeplan_unlink(source=EVID, target=PRD, relation="based_on")` then `mcp__forgeplan__forgeplan_link(source=EVID, target=PRD, relation="informs")`. CLI fallback: `forgeplan unlink EVID PRD --relation based_on` then `forgeplan link EVID PRD --relation informs`.
 
 3. **expired_evidence** — Supports forgeplan's evidence decay model (B.3.4). An EVID with a `valid_until` date in the past silently degrades R_eff of the parent artifact without any visible signal. Without active surface, pipelines accumulate invisible technical debt in confidence scoring. User must choose: re-test/re-audit to produce fresh evidence, or explicitly waive with a documented justification.
 
@@ -100,7 +155,7 @@ Four anomaly kinds from the `mm-pipeline-anomalies` catalog added to the classif
 5. **link_direction_footgun** (Sprint M PRD-039 — Anomalies #15/#16) — `forgeplan_link` accepts source→target for any direction; backward links create semantically wrong relations silently. Two detection patterns:
    - **supersedes inversion**: source.created_at < target.created_at AND relation=supersedes (newer should supersede older; source is older means it's the loser, not the winner)
    - **informs inversion**: source.kind in {prd, rfc} AND target.kind=evidence AND relation=informs (evidence gives info to PRD/RFC, not other way around)
-   USER tier because auto-detection has edge cases (informs PRD→PRD for refines-style relationships is legitimate). Surfaces with explicit unlink+relink CLI commands ready to paste. Workaround for v0.31.0: `forgeplan unlink <src> <dst> --relation <rel>` works in CLI. Once forgeplan v0.32.0 lands `forgeplan_unlink` MCP, this anomaly kind upgrades to ADI tier.
+   ADI tier (upgraded from USER in v0.32.1 — `mcp__forgeplan__forgeplan_unlink` now available). Auto-detection has edge cases (informs PRD→PRD for refines-style relationships is legitimate), so surface with explicit unlink+relink suggestions ready to paste. v0.32.1+: `mcp__forgeplan__forgeplan_unlink(source="<src>", target="<dst>", relation="<rel>")` then `mcp__forgeplan__forgeplan_link`. CLI fallback: `forgeplan unlink <src> <dst> --relation <rel>` (v0.31.0+).
 
 ---
 
@@ -195,14 +250,16 @@ After execution, append:
 
 | MCP tool | Usage | CLI fallback |
 |---|---|---|
-| `mcp__forgeplan__forgeplan_list` | Collect draft artifacts | `forgeplan list --status draft` |
-| `mcp__forgeplan__forgeplan_score` | R_eff + verdict + CL | `forgeplan score <id>` |
-| `mcp__forgeplan__forgeplan_get` | Full body for ADI context | `forgeplan get <id>` |
-| `mcp__forgeplan__forgeplan_activate` | Execute AUTO resolutions | `forgeplan activate <id>` |
-| `mcp__forgeplan__forgeplan_deprecate` | Confirmed USER deprecations | `forgeplan deprecate <id> --reason ...` |
-| `mcp__forgeplan__forgeplan_phase_advance` | Advance phase for `phase_mismatch` AUTO resolution | `forgeplan phase-advance <id>` |
+| `mcp__forgeplan__forgeplan_anomalies` | **PRIMARY** detection — Step 2.5 native sweep (v0.32.1+) | `forgeplan anomalies` |
+| `mcp__forgeplan__forgeplan_list` | Collect draft artifacts — Step 1 | `forgeplan list --status draft` |
+| `mcp__forgeplan__forgeplan_score` | R_eff + verdict + CL — Step 2 | `forgeplan score <id>` |
+| `mcp__forgeplan__forgeplan_get` | Full body for ADI context — Step 3/5 | `forgeplan get <id>` |
+| `mcp__forgeplan__forgeplan_activate` | Execute AUTO resolutions — Step 5 | `forgeplan activate <id>` |
+| `mcp__forgeplan__forgeplan_deprecate` | Confirmed USER deprecations — Step 5 | `forgeplan deprecate <id> --reason ...` |
+| `mcp__forgeplan__forgeplan_phase_advance` | Advance phase for `phase_mismatch` AUTO resolution — Step 5 | `forgeplan phase-advance <id>` |
+| `mcp__forgeplan__forgeplan_unlink` | Remove mis-directed link for `link_direction_footgun` / `mistyped_based_on` ADI resolution — Step 5 (v0.32.1+) | `forgeplan unlink <src> <tgt> --relation <rel>` |
 
-This skill never calls: `forgeplan_new`, `forgeplan_update`, `forgeplan_link`, `forgeplan_claim`, `forgeplan_release`.
+This skill never calls: `forgeplan_new`, `forgeplan_update`, `forgeplan_claim`, `forgeplan_release`.
 Any call to those is a bug — raise to orchestrator.
 
-References: PRD-032 FR-004, FR-005 (Sprint D — Pipeline self-healing framework).
+References: PRD-032 FR-004, FR-005 (Sprint D — Pipeline self-healing framework). PRD-046 (Sprint T Wave B — native `forgeplan_anomalies` adoption; closes Sprint I "modernise to native" scope). Issue #289 shipped in forgeplan v0.32.1.

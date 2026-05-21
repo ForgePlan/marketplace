@@ -17,13 +17,39 @@ All three must be correct simultaneously. Fixing two out of three still leaves R
 
 ## Команда
 
+### PRIMARY: 2-step (v0.32.1+ — `parent_id` auto-link)
+
+> v0.32.1 added `parent_id` to `forgeplan new evidence`. The `informs` link is created
+> in the same call, reducing Anomaly #15/#16 direction-footgun risk (explicit link can
+> be set backwards silently). Ref: forgeplan#295 (closed), PRD-046 Sprint T Wave D.
+
+```bash
+# 1. Create evidence with auto-link (informs link created in same call)
+forgeplan new evidence "Feature X verification" --parent PRD-NNN
+# Response includes: auto_linked: "PRD-NNN" — verify before skipping step 3
+
+# 2. Write body with bold-pattern fields + all AC verification findings
+#    (forgeplan update EVID-NNN via MCP or CLI)
+
+# 3. NO explicit link needed — auto_linked handles it
+
+# 4. Activate (Profile B denied activate — orchestrator does this)
+forgeplan activate EVID-NNN
+
+# 5. Score the parent PRD
+forgeplan score PRD-NNN
+# Expected: R_eff ≥ 0.9, grade A
+```
+
+### FALLBACK: 3-step (pre-v0.32.1, parent unknown at creation, or multi-parent)
+
 ```bash
 # 1. Create evidence
 forgeplan new evidence "Feature X verification"
 
 # 2. Write body with bold-pattern fields + all AC verification findings
 
-# 3. Link correctly
+# 3. Link correctly (source → target: EVID informs PRD)
 forgeplan link EVID-NNN PRD-NNN --relation informs
 
 # 4. Activate (Profile B denied activate — orchestrator does this)
