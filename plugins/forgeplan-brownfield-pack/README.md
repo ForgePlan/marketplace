@@ -82,7 +82,8 @@ This separation prevents the most common failure: presenting hypotheses as facts
 
 ```
 forgeplan init                                  # if not already done
-# Run a brownfield discovery pass (Discover Agent in agents/discover/)
+# Run a brownfield discovery pass (Discover Agent in plugins/forgeplan-brownfield-pack/agents/discover/)
+# Dispatch: Task(subagent_type="forgeplan-brownfield-pack:discover", ...)
 
 # Then chain extraction skills (typical order):
 ubiquitous-language     → docs/glossary.md

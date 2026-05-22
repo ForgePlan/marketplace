@@ -220,22 +220,25 @@
 
 ---
 
-## Standalone агенты
+## Brownfield-разведка
 
-### [discover](agents/discover/)
+### [discover](plugins/forgeplan-brownfield-pack/agents/discover/)
 
-> Онбординг brownfield-проектов — структурированный анализ с multi-pass discovery и приоритетом источников. Код первым, документация последней.
+> Онбординг brownfield-проектов — структурированный анализ с приоритетом источников через канонический 7-фазный MCP-протокол разведки. Код первым, документация последней.
+
+Перенесён из standalone-агента в плагин `forgeplan-brownfield-pack` в Sprint V (PRD-048, v1.4.0). Агент в плагине следует каноническому паттерну Profile A и оборачивает MCP-интерфейс `forgeplan_discover_*`.
 
 | Режим | Для | Что происходит |
 |-------|-----|----------------|
-| `default` | <100K LOC | Один агент, 4 слоя последовательно (~15-30 мин) |
-| `--deep` | 100K-2M LOC | Команда агентов, параллельные модули + углубление (~1-2 часа) |
-| `--full` | 2M+ LOC | Deep + синтез: анализ пробелов, карта влияния (~2-4 часа) |
+| `default` | <100K LOC | Один агент, 7-фазная MCP-разведка (~15-30 мин) |
+| `--deep` | 100K-2M LOC | Pass 1 + Pass 2 углубления (планируется; multi-session) |
+| `--full` | 2M+ LOC | Pass 1 + Pass 2 + Pass 3 синтез (планируется) |
 
-**3 прохода**: Discovery → Deepening → Synthesis
+**7 фаз**: detect → structure → code → git → tests → docs → synthesize
 **3 уровня доверия**: Код (T1) > Тесты (T2) > Документация (T3)
 
-Подробнее: [agents/discover/README.md](agents/discover/README.md)
+Запуск: `Task(subagent_type="forgeplan-brownfield-pack:discover", ...)`.
+Подробнее: [plugins/forgeplan-brownfield-pack/agents/discover/README.md](plugins/forgeplan-brownfield-pack/agents/discover/README.md). Версия до миграции лежит в архиве `agents/_archive/discover-pre-sprint-v/`.
 
 ---
 
