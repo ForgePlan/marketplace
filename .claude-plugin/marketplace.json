@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.60.0"
+    "version": "1.61.0"
   },
   "plugins": [
     {
@@ -205,8 +205,8 @@
     {
       "name": "forgeplan-brownfield-pack",
       "source": "./plugins/forgeplan-brownfield-pack",
-      "description": "Brownfield extraction pack: 12 extraction skills + 2 playbooks + 3 integrations + 5 mappings (c4, ddd, madr, obsidian, autoresearch) + templates + examples. Two-tier extraction (Factum vs Intent) with confidence taxonomy and ADI cycle. v1.3.2: Sprint H pre-work — agents/discover/SCAFFOLDING.md documents MCP discover_* roundtrip GREEN + Anomaly #14 + standalone-vs-MCP gap analysis + design decisions for v0.32.0 migration.",
-      "version": "1.3.2",
+      "description": "Brownfield extraction pack: 12 extraction skills + 2 playbooks + 3 integrations + 5 mappings (c4, ddd, madr, obsidian, autoresearch) + templates + examples. Two-tier extraction (Factum vs Intent) with confidence taxonomy and ADI cycle. v1.4.0: Sprint V (PRD-048) — discover agent migrated from standalone to plugin (canonical Profile A pattern, MCP-first 7-phase procedure, 9 brownfield MCP primitives wired).",
+      "version": "1.4.0",
       "author": {
         "name": "ForgePlan"
       },

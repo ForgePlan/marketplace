@@ -1,10 +1,10 @@
 # ForgePlan Marketplace — Claude Code Configuration
 
 **Repo**: [ForgePlan/marketplace](https://github.com/ForgePlan/marketplace)
-**Catalog version**: 1.60.0
-**Plugins**: 15 (9 workflow + 5 agent packs + 1 memory plugin fpl-hsmem)
-**Agents**: 17 of ~65 forgeplan-aware (PRD-026 canonical B2 paradigm — `disallowedTools` denylist + Sprint Q PRD-042 ASM-canon frontmatter + Sprint S Step 9c filesystem verification + Sprint T v0.32.1 native MCP adoption. **`memory: project` REJECTED Sprint R** — Hindsight covers use case.)
-**Last Updated**: 2026-05-21 (post Sprint A-T: PRD-046 v0.32.1 adoption — 5/6 fixes verified live (#290/#291/#293/#294/#295) + 3 new MCP tools wired (anomalies/unlink/parent_id) in 11 files + 82 historical anomalies root-caused as Anomaly #17 pre-Sprint M YAML → Sprint U scope, 24 anomalies + 11 ML + 10 mental models, catalog v1.60.0)
+**Catalog version**: 1.61.0
+**Plugins**: 15 (9 workflow + 5 agent packs + 1 memory plugin fpl-hsmem) — brownfield-pack now ships canonical Profile A `discover` agent
+**Agents**: 18 of ~65 forgeplan-aware (PRD-026 canonical B2 paradigm — `disallowedTools` denylist + Sprint Q PRD-042 ASM-canon frontmatter + Sprint S Step 9c filesystem verification + Sprint T v0.32.1 native MCP adoption + Sprint V PRD-048 brownfield Discover Agent migrated to plugin. **`memory: project` REJECTED Sprint R** — Hindsight covers use case.)
+**Last Updated**: 2026-05-22 (post Sprint U/V/adopt-#288 autonomous run: Sprint U pivot empirically refuted Resume Prompt batch-fix premise + filed forgeplan#325 (leaf EVID self_score gap); Sprint V migrated brownfield Discover Agent to plugin v1.4.0 via 4 sub-agents (3 coder + 1 reviewer, 1 BLOCKER caught+fixed); Sprint adopt-#288 ADI decision KEEP CURRENT 4-layer sentinel (ADR-006), 25-28 anomalies + 13 ML + 10 mental models, catalog v1.61.0)
 **Project board**: [orgs/ForgePlan/projects/5](https://github.com/orgs/ForgePlan/projects/5)
 
 ---
@@ -438,3 +438,60 @@ Continuation of Sprint J+K methodology. PRD-038 wrapped 4 closure deliverables (
 `forgeplan_capture` — needs domain context (state capture for what?), DEFERRED
 `forgeplan_session` — needs session lifecycle context, DEFERRED
 `forgeplan_undo_last` — would mutate workspace state, DEFERRED until needed
+
+## Sprint U/V/adopt-#288 session 2026-05-22 — autonomous 3-sprint run
+
+User-mandated autonomous execution (no per-step confirmation): Sprint U → audit → Sprint V → audit → Sprint adopt-#288 → audit → final closure. All 3 sprints closed inline with ADI for disputes, parallel sub-agent dispatch where applicable.
+
+| PRD | Sprint | Deliverable |
+|-----|--------|-------------|
+| **PRD-047** (active) | Sprint U **PIVOT** | ADI investigation: Resume Prompt batch-fix premise EMPIRICALLY REFUTED. 3-EVID test (YAML / mixed bold / strict canonical) all r_eff=0. Filed [forgeplan#325](https://github.com/ForgePlan/forgeplan/issues/325). mm-evid-body-convention updated with "necessary but not sufficient" qualifier. 0 sub-agents (saved ~145k tokens) |
+| **PRD-048** (active) | Sprint V | Brownfield Discover Agent migrated standalone → `plugins/forgeplan-brownfield-pack/agents/discover/`. 4 sub-agents (3 coder Wave 1 + 1 reviewer Wave 2), 1 BLOCKER caught (missing Write/Edit/NotebookEdit) + fixed inline. Plugin v1.3.2 → v1.4.0, catalog v1.60.0 → v1.61.0 |
+| **PRD-049** + **ADR-006** (both active) | Sprint adopt-#288 | ADI decision: KEEP CURRENT 4-layer NEEDS_ACTIVATION sentinel; defer native `auto_activate_source_if_complete` until forgeplan#325 unblocks. Revisit trigger documented. 0 sub-agents (decision-only) |
+
+### Evidence (Sprint U/V/adopt-#288)
+
+- **EVID-074** — Sprint U pivot closure (informs PRD-047) — empirical 3-EVID test case + upstream issue reference
+- **EVID-075** — Sprint V closure (informs PRD-048) — 4-sub-agent dispatch + Profile B reviewer findings + post-fix verification
+- **EVID-076** — Sprint adopt-#288 closure (informs PRD-049 + ADR-006) — full ADI synthesis
+
+All 3 EVIDs created via `forgeplan_new(kind="evidence", parent_id="PRD-XXX")` (#295 auto-link feature) — **4 consecutive live demos** of #295 in Sprint T/U/V/adopt-#288 arc.
+
+### Mental models updated
+
+- **mm-evid-body-convention** — refreshed with Sprint U finding: bold-pattern is NECESSARY but NOT SUFFICIENT for r_eff > 0. Leaf EVIDs need either child evidence or upstream #325 fix to score > 0. Pattern: bold-pattern raises `granularity` 0.0 → 0.2, but `self_score` stays 0 until child evidence exists.
+
+### Anomalies surfaced (Sprint U/V/adopt-#288)
+
+- **Anomaly #25** (Sprint U) — `forgeplan_score` formula does not self-score leaf EVIDs from canonical bold-pattern body. Affects 82+ EVIDs in production marketplace graph. Filed upstream as [forgeplan#325](https://github.com/ForgePlan/forgeplan/issues/325). Severity: Low (cosmetic; no functional regression). Status: filed, accept as structural noise pending upstream fix.
+- **Anomaly #26** (Sprint U process) — Resume Prompt session-handoff documents MUST be ADI-verified against current binary before launching multi-agent waves. Sprint U premise was confidently described "high ROI low risk" but premise failed empirical test in 5 minutes. ML-12 captured.
+- **Anomaly #27** (Sprint V) — `scripts/validate-all-plugins.sh` LR-1..LR-7 lint rules check allowlist coverage but do NOT enforce Profile A `disallowedTools` denylist must-contain (`Write`, `Edit`, `NotebookEdit`). Allowed Sprint V BLOCKER to pass CI before Profile B reviewer audit. Recommended fix: add LR-8 rule in future hardening sprint.
+- **Anomaly #28** (Sprint V observed) — Canonical agent frontmatter schema in AGENT-AUTHORING-GUIDE.md doesn't list `skills:` or `maxTurns:` fields, yet 18+ forgeplan-aware agents use them. Schema drift from documented spec. Low severity, GUIDE update sprint deferred.
+
+### Meta-lessons (Sprint U/V/adopt-#288)
+
+- **ML-12 (NEW)** — Resume Prompt scope claims MUST be ADI-verified against current binary before launching multi-agent waves. Pattern: "investigate first, dispatch only what survives investigation". Saved ~145k tokens + ~50 min wall-clock in Sprint U alone.
+- **ML-13 (NEW)** — Profile B reviewer is mandatory even when Profile C-coder self-reports "ALL CHECKS PASS". Sprint V Coder A self-verified 7 grep checks but missed Profile A canon (Write/Edit/NotebookEdit denials). Reviewer reading the GUIDE caught it. Lesson: lint scripts check what's spec'd; reviewer reads spec to find what should be spec'd.
+
+### Upstream issues filed (Sprint U)
+
+| Issue | Description | Status |
+|-------|-------------|--------|
+| [forgeplan#325](https://github.com/ForgePlan/forgeplan/issues/325) | `forgeplan_score` returns r_eff=0 for leaf EVIDs with canonical bold-pattern bodies. 3-EVID reproducer + suggested formula change. Affects 82+ marketplace EVIDs. | Filed 2026-05-22; awaiting upstream triage |
+
+### Sub-agent dispatch summary
+
+| Sprint | Sub-agents | Tokens | Outcome |
+|---|---:|---:|---|
+| Sprint U pivot | 0 | ~5k | ADI refuted premise → no dispatch |
+| Sprint V migration | 4 | ~333k | 3 parallel coder Wave 1 + 1 reviewer Wave 2, 0 failures, 1 BLOCKER caught+fixed |
+| Sprint adopt-#288 | 0 | ~3k | Decision-only, inline orchestrator |
+| **3-sprint total** | **4** | **~341k** | 14th-15th consecutive zero-failure sub-agent series |
+
+### Production-grade outcomes
+
+- Plugin layer **v1.61.0 baseline** — brownfield Discover Agent now canonical (Profile A pattern, 9 MCP brownfield tools wired)
+- `forgeplan_health` = healthy post-cycle (147 artifacts, 134 active, 1 unrelated pre-existing draft)
+- 18 forgeplan-aware agents (up from 17 with discover migration)
+- Plugin manifest changes: brownfield-pack v1.3.2 → v1.4.0; catalog v1.60.0 → v1.61.0
+- Zero modifications to non-Sprint-V plugin files (decision-only Sprint adopt-#288 + investigation-only Sprint U)
