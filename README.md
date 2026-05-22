@@ -245,24 +245,27 @@ Install any pack: `/plugin install <pack-name>@ForgePlan-marketplace`
 
 ---
 
-## Standalone Agents
+## Brownfield Discovery
 
-### [discover](agents/discover/)
+### [discover](plugins/forgeplan-brownfield-pack/agents/discover/)
 
-> Brownfield codebase onboarding — structured analysis of existing projects with multi-pass discovery and tiered source priority. Code first, docs last.
+> Brownfield codebase onboarding — structured analysis of existing projects with tiered source priority via the canonical 7-phase MCP discovery protocol. Code first, docs last.
+
+Migrated from a standalone agent to the `forgeplan-brownfield-pack` plugin in Sprint V (PRD-048, v1.4.0). The plugin agent follows the canonical Profile A pattern and wraps the `forgeplan_discover_*` MCP surface.
 
 Three modes for any project size:
 
 | Mode | For | What happens |
 |------|-----|-------------|
-| `default` | <100K LOC | Single agent, 4 layers sequentially (~15-30 min) |
-| `--deep` | 100K-2M LOC | Team of agents, parallel modules + deepening (~1-2 hours) |
-| `--full` | 2M+ LOC | Deep + synthesis: gap analysis, impact mapping (~2-4 hours) |
+| `default` | <100K LOC | Single agent, 7-phase MCP discovery (~15-30 min) |
+| `--deep` | 100K-2M LOC | Pass 1 + Pass 2 deepening (planned; multi-session) |
+| `--full` | 2M+ LOC | Pass 1 + Pass 2 + Pass 3 synthesis (planned) |
 
-**3 passes**: Discovery (layers 1-4) → Deepening (per artifact) → Synthesis (cross-reference)
+**7 phases**: detect → structure → code → git → tests → docs → synthesize
 **3 source tiers**: Code (T1, highest trust) > Tests (T2) > Docs (T3, lowest)
 
-See [agents/discover/README.md](agents/discover/README.md) for full documentation.
+Dispatch via `Task(subagent_type="forgeplan-brownfield-pack:discover", ...)`.
+See [plugins/forgeplan-brownfield-pack/agents/discover/README.md](plugins/forgeplan-brownfield-pack/agents/discover/README.md) for full documentation. The pre-migration standalone is archived at `agents/_archive/discover-pre-sprint-v/`.
 
 ---
 

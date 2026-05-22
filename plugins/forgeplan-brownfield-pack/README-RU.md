@@ -82,7 +82,8 @@
 
 ```
 forgeplan init                                  # если ещё не настроен
-# Запускаем brownfield-разведку (Discover Agent в agents/discover/)
+# Запускаем brownfield-разведку (Discover Agent в plugins/forgeplan-brownfield-pack/agents/discover/)
+# Запуск: Task(subagent_type="forgeplan-brownfield-pack:discover", ...)
 
 # Дальше связка скиллов извлечения (типичный порядок):
 ubiquitous-language     → docs/glossary.md

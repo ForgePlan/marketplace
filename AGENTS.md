@@ -143,11 +143,13 @@ Checks: marketplace.json valid JSON, plugin.json required fields, v2 optional fi
 - **Push protection**: enabled
 - **Dependabot**: enabled
 
-## Standalone agents
+## Brownfield discovery
 
-### Discover Agent (`agents/discover/`)
+### Discover Agent (`plugins/forgeplan-brownfield-pack/agents/discover/`)
 
-Brownfield codebase onboarding — protocol v3.2.0. Standalone agent (не плагин). Станет плагином после добавления MCP tools в ForgePlan CLI.
+Brownfield codebase onboarding via the 7-phase MCP discovery protocol. Migrated from a standalone agent into the `forgeplan-brownfield-pack` plugin in Sprint V (PRD-048, v1.4.0). Pre-migration version archived at `agents/_archive/discover-pre-sprint-v/`.
+
+Dispatch: `Task(subagent_type="forgeplan-brownfield-pack:discover", ...)`.
 
 ## Quick reference
 

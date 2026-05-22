@@ -267,7 +267,7 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # rulesets
 
 ---
 
-## Plugin versions (catalog v1.60.0)
+## Plugin versions (catalog v1.61.0)
 
 ### Workflow plugins
 
