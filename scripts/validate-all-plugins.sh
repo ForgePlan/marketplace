@@ -137,8 +137,8 @@ else
 fi
 
 # ============================================================
-# Canonical agent-pattern lint rules (LR-1..LR-7)
-# Per PRD-026 Phase 4 + EVID-044 Section G.
+# Canonical agent-pattern lint rules (LR-1..LR-8)
+# Per PRD-026 Phase 4 + EVID-044 Section G + PRD-050 Sprint W (LR-8).
 #
 # Forgeplan-aware agents (those whose tools whitelist contains any
 # `mcp__forgeplan__*` tool) MUST conform to the canon — failures are
@@ -155,6 +155,12 @@ fi
 #        NOT have {forgeplan_reason, forgeplan_claims, memory_retain}
 #   LR-7 HARD RULES list items use plain bold, no emoji prefixes
 #        (🔴 / 🟠 / 🟡 / 🔵 as bullet prefix is forbidden)
+#   LR-8 Profile A/B/D canon — disallowedTools MUST include
+#        {Write, Edit, NotebookEdit} when denying forgeplan_activate.
+#        Exception: Profile C-coder (denies ALL forgeplan_new/update/link)
+#        legitimately needs file-write access. Per AGENT-AUTHORING-GUIDE
+#        line 136 — file-write blocks force MCP path for artifact ops.
+#        Added Sprint W (PRD-050) to close Sprint V Anomaly #27.
 #
 # Pass `--strict-agents` to also fail on legacy WARNINGS.
 # ============================================================
@@ -181,6 +187,7 @@ LR_DESCRIPTIONS = {
     'LR-5': 'forgeplan_activate must not appear in any agent whitelist (orchestrator/guardian territory)',
     'LR-6': 'Profile B agent has forbidden tools (forgeplan_reason/claims/memory_retain)',
     'LR-7': 'HARD RULES list items must not have emoji prefix (use plain **Never**/**Always**)',
+    'LR-8': 'Profile A/B/D canon — disallowedTools must include Write/Edit/NotebookEdit when denying forgeplan_activate (Profile C-coder exception)',
 }
 
 def parse_frontmatter(text):
@@ -292,6 +299,25 @@ def check_agent(plugin, agent_path):
                 if re.match(r'^\s*[0-9]+\.\s+[🔴🟠🟡🔵]', line):
                     findings.append(('LR-7', f"HARD RULES emoji-prefixed line: {line.strip()[:60]}..."))
                     break  # first hit is enough
+
+    # LR-8: Profile A/B/D canon — file-write blocks baseline
+    # Per AGENT-AUTHORING-GUIDE line 136 — agents that deny forgeplan_activate
+    # (Profile A creators, Profile B reviewers, Profile D maintainers) MUST
+    # also deny Write/Edit/NotebookEdit. Profile C-coder is the exception:
+    # they need file-write access to modify source code, identified by
+    # denying ALL forgeplan_new/update/link (no artifact mutations allowed).
+    denies_activate = 'mcp__forgeplan__forgeplan_activate' in disallowed_set
+    forgeplan_mutators_all = {
+        'mcp__forgeplan__forgeplan_new',
+        'mcp__forgeplan__forgeplan_update',
+        'mcp__forgeplan__forgeplan_link',
+    }
+    is_profile_c_coder = forgeplan_mutators_all.issubset(disallowed_set)
+    if denies_activate and not is_profile_c_coder:
+        file_write_blocks = {'Write', 'Edit', 'NotebookEdit'}
+        missing_blocks = file_write_blocks - disallowed_set
+        if missing_blocks:
+            findings.append(('LR-8', f"Profile A/B/D canon — disallowedTools missing file-write blocks: {sorted(missing_blocks)}"))
 
     # Report findings
     for rule, msg in findings:

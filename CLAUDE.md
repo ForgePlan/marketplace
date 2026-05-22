@@ -4,7 +4,7 @@
 **Catalog version**: 1.61.0
 **Plugins**: 15 (9 workflow + 5 agent packs + 1 memory plugin fpl-hsmem) — brownfield-pack now ships canonical Profile A `discover` agent
 **Agents**: 18 of ~65 forgeplan-aware (PRD-026 canonical B2 paradigm — `disallowedTools` denylist + Sprint Q PRD-042 ASM-canon frontmatter + Sprint S Step 9c filesystem verification + Sprint T v0.32.1 native MCP adoption + Sprint V PRD-048 brownfield Discover Agent migrated to plugin. **`memory: project` REJECTED Sprint R** — Hindsight covers use case.)
-**Last Updated**: 2026-05-22 (post Sprint U/V/adopt-#288 autonomous run: Sprint U pivot empirically refuted Resume Prompt batch-fix premise + filed forgeplan#325 (leaf EVID self_score gap); Sprint V migrated brownfield Discover Agent to plugin v1.4.0 via 4 sub-agents (3 coder + 1 reviewer, 1 BLOCKER caught+fixed); Sprint adopt-#288 ADI decision KEEP CURRENT 4-layer sentinel (ADR-006), 25-28 anomalies + 13 ML + 10 mental models, catalog v1.61.0)
+**Last Updated**: 2026-05-22 (post Sprint U/V/adopt-#288/W autonomous run: Sprint U pivot empirically refuted Resume Prompt batch-fix premise + filed forgeplan#325; Sprint V migrated brownfield Discover Agent to plugin v1.4.0; Sprint adopt-#288 ADR-006 KEEP CURRENT 4-layer sentinel; Sprint W closed Anomaly #27+#28 — LR-8 lint rule active + canonical frontmatter schema formalises skills:/maxTurns:/isolation: fields. 28 anomalies (24 resolved) + 13 ML + 10 mental models, catalog v1.61.0)
 **Project board**: [orgs/ForgePlan/projects/5](https://github.com/orgs/ForgePlan/projects/5)
 
 ---
@@ -495,3 +495,41 @@ All 3 EVIDs created via `forgeplan_new(kind="evidence", parent_id="PRD-XXX")` (#
 - 18 forgeplan-aware agents (up from 17 with discover migration)
 - Plugin manifest changes: brownfield-pack v1.3.2 → v1.4.0; catalog v1.60.0 → v1.61.0
 - Zero modifications to non-Sprint-V plugin files (decision-only Sprint adopt-#288 + investigation-only Sprint U)
+
+## Sprint W 2026-05-22 — Anomaly #27 + #28 closure
+
+Inline tactical sprint post-Sprint-V closure. Closed 2 process anomalies that escaped Sprint V CI:
+
+| PRD | Sprint | Deliverable |
+|-----|--------|-------------|
+| **PRD-050** (active, EVID-077 informs) | Sprint W | LR-8 lint rule added to validate-all-plugins.sh + AGENT-AUTHORING-GUIDE schema formalises `skills:`, `maxTurns:`, `isolation:` fields. Synthetic violation test verified LR-8 catches missing Write/Edit/NotebookEdit in <100ms. 0 sub-agents, ~5k tokens, ~20 min wall-clock |
+
+### LR-8 — Profile A/B/D canon enforcement
+
+New lint rule per AGENT-AUTHORING-GUIDE.md line 136. Agents that deny `forgeplan_activate` (Profile A creators, Profile B reviewers, Profile D maintainers) MUST also deny `Write`, `Edit`, `NotebookEdit` to enforce MCP-path-for-artifact-ops canon. Profile C-coder exception: identified by denying ALL forgeplan mutators (new/update/link), legitimately needs file-write access.
+
+Pre-flight audit: 0/16 forgeplan-aware agents fail in current state (Sprint V discover.md fix already aligned the last outlier). Synthetic violator test verified rule fires correctly with exact error message: `"Profile A/B/D canon — disallowedTools missing file-write blocks: ['Edit', 'NotebookEdit', 'Write']"`.
+
+### Frontmatter schema additions
+
+Three previously-undocumented but widely-used fields now formalised in AGENT-AUTHORING-GUIDE canonical schema:
+
+| Field | Used by | Why |
+|---|---|---|
+| `skills` | 18+ agents (adr-architect, specification, architecture, discover, ...) | Documents which skills agent orchestrates |
+| `maxTurns` | coder (60), discover (60), Profile A/B agents (30-50) | Caps autonomous turn budget |
+| `isolation: worktree` | agents-core:coder exclusively | Profile C-coder pattern — isolated git worktree for parallel safety |
+
+### Sprint W metrics
+
+- 0 sub-agents (decision-only inline work)
+- ~5k tokens net
+- ~20 min wall-clock
+- 5th consecutive forgeplan#295 live demo (EVID-077 via parent_id auto-link)
+- Cumulative session token spend: ~351k across 4 sprints
+- Cumulative anomalies: 28 (24 resolved post-Sprint W: 12 internal + 6 upstream-filed-and-closed + 1 user-side + 5 process)
+
+### Anomalies resolved Sprint W
+
+- **#27** (Sprint V) → RESOLVED. LR-8 rule live; would catch exact Sprint V BLOCKER class in CI.
+- **#28** (Sprint V) → RESOLVED. Canonical schema formalises de-facto fields used by 18+ agents.

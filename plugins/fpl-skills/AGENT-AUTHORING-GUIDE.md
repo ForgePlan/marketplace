@@ -95,19 +95,26 @@ color: "#RRGGBB"                       # required, hex format (no named colors)
 disallowedTools:                       # required, denylist (B2 canon — NOT tools: allowlist)
   - <tool-name-to-block>
   - <tool-name-to-block>
+skills:                                # optional — formalised Sprint W (PRD-050) from de-facto pattern
+  - <plugin-name>:<skill-name>
+maxTurns: <integer>                    # optional — formalised Sprint W; caps sub-agent turn budget
+isolation: worktree                    # optional — Profile C-coder pattern; runs in isolated git worktree
 ---
 ```
 
 ### Field rules
 
-| Field | Rule | Why |
-|---|---|---|
-| `name` | kebab-case, ≤32 chars, matches filename | dispatched as `subagent_type="pack:name"` |
-| `description.EN/RU` | imperative, ≤2 sentences each | shown in dispatcher pickers |
-| `description.Triggers` | comma-separated quoted phrases | enables fuzzy intent matching by orchestrator |
-| `model` | one of `opus`/`sonnet`/`haiku` | cost-aware dispatch (RFC-003 Layer 2) |
-| `color` | hex `#RRGGBB` only | UI rendering; named colors break terminals |
-| `disallowedTools` | explicit denylist of strings | **runtime gate** — blocks specific tools; all others inherited from parent session. See "Why disallowedTools, not tools" |
+| Field | Required | Rule | Why |
+|---|:---:|---|---|
+| `name` | ✓ | kebab-case, ≤32 chars, matches filename | dispatched as `subagent_type="pack:name"` |
+| `description.EN/RU` | ✓ | imperative, ≤2 sentences each | shown in dispatcher pickers |
+| `description.Triggers` | ✓ | comma-separated quoted phrases | enables fuzzy intent matching by orchestrator |
+| `model` | ✓ | one of `opus`/`sonnet`/`haiku` | cost-aware dispatch (RFC-003 Layer 2) |
+| `color` | ✓ | hex `#RRGGBB` only | UI rendering; named colors break terminals |
+| `disallowedTools` | ✓ | explicit denylist of strings | **runtime gate** — blocks specific tools; all others inherited from parent session. See "Why disallowedTools, not tools" |
+| `skills` | optional | list of `<plugin>:<skill>` identifiers the agent orchestrates | Documents which skills the agent will invoke; helps orchestrator pre-load skill knowledge into agent context. Formalised Sprint W (PRD-050) post-Anomaly #28 schema drift discovery. Used by 18+ canonical agents incl. `adr-architect`, `architecture`, `specification`, `discover`. |
+| `maxTurns` | optional | positive integer (typical 20-80) | Caps agent's autonomous turn budget; prevents runaway loops. Defaults to harness-level cap when omitted. Formalised Sprint W. Used by `coder` (60), `discover` (60), and most agent-pro Profile A/B agents (30-50). |
+| `isolation` | optional | currently only `worktree` | Profile C-coder pattern — runs agent in isolated git worktree to prevent source-file conflicts during parallel dispatch. Used by `agents-core:coder` exclusively. |
 
 ### `model` selection heuristic
 
