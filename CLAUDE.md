@@ -9,6 +9,47 @@
 
 ---
 
+## User-facing communication style (product manager language)
+
+When replying to the user (especially on status questions like "what was done / what's left / what's next") — write **like a PM talking to a PM, not like an engineer talking to an engineer**. Internal artifacts and technical methodology stay in your head and in forgeplan artifacts; give the user the outcome.
+
+This rule applies to the **assistant's chat replies to the user**, not to the bodies of forgeplan artifacts, agent definitions, skill bodies, or code. Those keep technical language where it belongs.
+
+### Principles
+
+1. **One language per reply.** If the conversation is in Russian, write in Russian — do not sprinkle English words where a normal Russian word exists. If the conversation is in English, write in English. Don't mix.
+2. **Internal codenames only when necessary.** Artifact IDs (PRD-049, EVID-076, ADR-006), upstream issue numbers (forgeplan#325), file and command names — fine. Methodology codenames (ML-12, ADI, FPF, Profile B) — fine inside technical sections of structured reports, but in plain "what's next" replies translate them into their meaning.
+3. **Conclusion first, justification second.** Start with a short factual statement. If needed, add reasoning below it. Don't lead with the reasoning.
+4. **Short concrete phrases.** "Waiting on the forgeplan core team" instead of "awaiting upstream triage". "Need your decision" instead of "requires human decision". "Nothing to do on this right now" instead of "no high-confidence next action".
+5. **If there is genuinely nothing to do, say so.** Do not dress it up as "production-grade baseline". "Everything is closed, waiting for your next task" is a perfectly acceptable answer.
+
+### Anti-patterns (Russian conversation — what NOT to write)
+
+These exact phrasings illustrate the failure mode when the user writes in Russian. The English-sprinkled style is the problem:
+
+- ❌ «Все open items требуют ЛИБО external trigger (upstream issues), ЛИБО human decision (PRD-015 — multi-day commit), ЛИБО external target»
+- ❌ «Все loose ends либо closed, либо explicitly deferred с trigger»
+- ❌ «Если автономно продолжать в этом состоянии — будет manufacturing работы ради работы, что нарушает ML-12 (ADI gate перед dispatch)»
+- ❌ «Это и есть production-grade baseline — состояние когда у автономного агента нет high-confidence next action»
+- ❌ «Session готова к compact или к новой задаче»
+
+### How to phrase the same meaning in plain Russian
+
+- ✅ «Незакрытых задач три, все ждут внешнего сигнала: одна — ответа от разработчиков forgeplan по нашему запросу, вторая — твоего решения по большому проекту, третья — нужен реальный сторонний репозиторий чтобы протестировать»
+- ✅ «Всё, что можно было закрыть в этой сессии — закрыто. Дальше пойдём, когда дашь новую задачу или когда придёт ответ по issue #325»
+- ✅ «Если продолжу сам — начну выдумывать работу. У нас есть правило: каждое следующее действие должно иметь явное обоснование, иначе останавливаюсь и жду»
+
+### When English terms are acceptable in any conversation language
+
+- File names, paths, commands: `forgeplan_health`, `validate-all-plugins.sh`, `gh pr merge`.
+- Artifact identifiers: PRD-049, ADR-006, EVID-076, forgeplan#325.
+- Agent profile names in technical context: Profile A, Profile B, Profile C-coder, Profile D.
+- Technical terms with no settled Russian equivalent: frontmatter, denylist, allowlist, hook, sentinel, MCP.
+
+If you are unsure whether an English term is appropriate, try the local-language version first. If it sounds awkward or three times longer, keep the English. Borderline cases — keep English in quotes or with a parenthetical gloss on first mention.
+
+---
+
 <!-- gh-project-convention:v1 -->
 ## GitHub Projects integration (this project)
 
@@ -27,34 +68,34 @@ This project tracks work via GitHub Projects v2 board: [orgs/ForgePlan/projects/
 
 ## Git Workflow
 
-**CRITICAL: Только feature branches + PR. Прямой push в `main` и `dev` запрещён.**
+**CRITICAL: feature branches + PR only. Direct push to `main` and `dev` is forbidden.**
 
 ```
 feature-branch → push → PR → CI pass → merge
 ```
 
-### Ветки
+### Branches
 
-| Ветка | Назначение | Protection |
+| Branch | Purpose | Protection |
 |-------|-----------|------------|
-| `main` | Production. Стабильный релиз | PR + 1 review + CI strict |
-| `dev` | Интеграция. Следующий релиз | PR + CI |
-| `feat/*`, `fix/*`, `chore/*`, `docs/*` | Рабочие ветки | Нет ограничений |
+| `main` | Production. Stable release | PR + 1 review + CI strict |
+| `dev` | Integration. Next release | PR + CI |
+| `feat/*`, `fix/*`, `chore/*`, `docs/*` | Working branches | No restrictions |
 
-### Формат коммитов
+### Commit message format
 
 ```
-тип(модуль): что сделал
+type(module): short summary
 
 Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
 ```
 
-Типы: `feat`, `fix`, `docs`, `audit`, `chore`
+Types: `feat`, `fix`, `docs`, `audit`, `chore`.
 
-### Формат веток
+### Branch name format
 
 ```
-тип/описание        # feat/new-plugin, fix/hook-regex, docs/readme-update
+type/description        # feat/new-plugin, fix/hook-regex, docs/readme-update
 ```
 
 ---
@@ -65,7 +106,7 @@ Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
 
 - PR required, `required_approving_review_count: 1`
 - CI check `validate` must pass
-- `strict: true` — PR должен быть up-to-date с main
+- `strict: true` — PR must be up-to-date with main
 - No deletion, no force-push
 - Merge methods: merge, squash
 - Bypass: admin only (`--admin` flag)
@@ -80,7 +121,7 @@ Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
 
 ### Tags
 
-- Только admin может создавать/обновлять/удалять tags
+- Only admins can create / update / delete tags.
 
 ---
 
@@ -90,19 +131,19 @@ Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
 **Job name**: `validate`
 **Triggers**: push to `main`/`dev`, PR to `main`/`dev`
 
-### Что проверяет
+### What it checks
 
-1. `marketplace.json` — валидный JSON
-2. `plugin.json` — name, version, description обязательны
-3. v2 optional fields — category, components (info)
-4. Command collisions — уникальность имён команд
-5. Marketplace completeness — все плагины на диске есть в каталоге
-6. `hooks.json` — валидный JSON
-7. `SKILL.md` — наличие YAML frontmatter
+1. `marketplace.json` — valid JSON
+2. `plugin.json` — `name`, `version`, `description` required
+3. v2 optional fields — `category`, `components` (info)
+4. Command collisions — command name uniqueness
+5. Marketplace completeness — every plugin on disk is in the catalog
+6. `hooks.json` — valid JSON
+7. `SKILL.md` — has YAML frontmatter
 
 ### Path filters
 
-CI запускается только при изменениях в:
+CI runs only when changes touch:
 - `plugins/**`
 - `.claude-plugin/marketplace.json`
 - `.github/workflows/**`
@@ -111,18 +152,18 @@ CI запускается только при изменениях в:
 
 ## Security
 
-- **Secret scanning**: enabled — GitHub сканирует код на токены/ключи
-- **Push protection**: enabled — push с секретами блокируется
-- **Dependabot**: enabled — алерты о CVE в зависимостях
+- **Secret scanning**: enabled — GitHub scans code for tokens / keys
+- **Push protection**: enabled — pushes with secrets are blocked
+- **Dependabot**: enabled — alerts for CVEs in dependencies
 
 ---
 
 ## Local Hooks
 
-**Файл**: `.claude/hooks/safety-hook.sh`
+**File**: `.claude/hooks/safety-hook.sh`
 **Config**: `.claude/settings.json`
 
-### Что блокирует (PreToolUse → Bash)
+### What it blocks (PreToolUse → Bash)
 
 - `git push --force` / `git push -f`
 - `git push origin main` / `git push origin dev`
@@ -132,46 +173,46 @@ CI запускается только при изменениях в:
 - `DROP TABLE` / `DROP DATABASE`
 - `git branch -D main` / `git branch -D dev`
 
-### Как обойти (если нужно)
+### How to bypass (only if you must)
 
-Admin bypass для rulesets: `gh pr merge --admin`
-Hook bypass: временно убрать из `.claude/settings.json` (не рекомендуется)
+Admin bypass for rulesets: `gh pr merge --admin`.
+Hook bypass: temporarily remove the entry from `.claude/settings.json` (not recommended).
 
 ---
 
-## Запрещено
+## Forbidden
 
-- `git push --force` — НИКОГДА
-- `git push origin main` / `git push origin dev` — только через PR
-- `git add .` / `git add -A` — только конкретные файлы
-- `--no-verify` — не пропускать hooks
-- Merge без зелёного CI
-- Файлы с секретами (.env, credentials, tokens)
+- `git push --force` — NEVER.
+- `git push origin main` / `git push origin dev` — only through a PR.
+- `git add .` / `git add -A` — stage specific files only.
+- `--no-verify` — do not skip hooks.
+- Merging without green CI.
+- Files containing secrets (`.env`, credentials, tokens).
 
 ---
 
 ## Version Bumping
 
-При изменении плагина — bump version в двух местах:
+When a plugin changes, bump version in two places:
 
 1. `plugins/X/.claude-plugin/plugin.json` → `version`
-2. `.claude-plugin/marketplace.json` → соответствующий плагин `version`
+2. `.claude-plugin/marketplace.json` → the corresponding plugin's `version`
 
-| Изменение | Bump |
+| Change | Bump |
 |-----------|------|
 | Typo, README | patch (1.2.0 → 1.2.1) |
 | Bug fix, hook fix | minor (1.2.0 → 1.3.0) |
-| Новый command/agent, breaking change | major (1.2.0 → 2.0.0) |
+| New command / agent, breaking change | major (1.2.0 → 2.0.0) |
 
 ---
 
 ## Validation
 
-Перед PR всегда:
+Always run before opening a PR:
 
 ```bash
-./scripts/validate-all-plugins.sh          # Все плагины
-./scripts/validate-all-plugins.sh plugin-name  # Один плагин
+./scripts/validate-all-plugins.sh              # all plugins
+./scripts/validate-all-plugins.sh plugin-name  # one plugin
 ```
 
 ---
@@ -193,17 +234,17 @@ If users report that updates to canonical agents don't appear after `/plugin mar
 
 ## Standalone Agents
 
-### Discover Agent (agents/discover/)
+### Discover Agent — migrated to plugin in Sprint V (2026-05-22)
 
-Brownfield codebase onboarding — protocol v3.2.0.
+The brownfield Discover Agent now ships as part of the `forgeplan-brownfield-pack` plugin (v1.4.0).
 
-| Файл | Назначение |
-|------|-----------|
-| `agent.md` | Claude Code agent config — 3 modes, 3 passes, progress tracking |
-| `protocol.json` | Machine-readable protocol — layers, phases, rules, state schema |
-| `README.md` | Документация + примеры + manual workflow |
+| Location | Purpose |
+|----------|---------|
+| `plugins/forgeplan-brownfield-pack/agents/discover/discover.md` | Canonical Profile A agent — 7-phase MCP discovery procedure, B2 frontmatter |
+| `plugins/forgeplan-brownfield-pack/agents/discover/README.md` | Dispatch examples, modes, skill orchestration, Anomaly #14 handling |
+| `agents/_archive/discover-pre-sprint-v/` | Archived pre-MCP standalone (agent.md / protocol.json / README.md) — kept as historical reference |
 
-**Не плагин** — standalone agent. Станет плагином после добавления MCP tools в ForgePlan CLI.
+The standalone tree was removed in Sprint V; the archive preserves the original 1466-line implementation for traceability.
 
 ---
 
@@ -211,17 +252,17 @@ Brownfield codebase onboarding — protocol v3.2.0.
 
 ```bash
 # Workflow
-git checkout -b feat/my-feature        # Создать ветку
-git push -u origin feat/my-feature     # Push ветку
-gh pr create                           # Создать PR
-gh pr merge --merge --admin            # Merge (admin bypass review)
+git checkout -b feat/my-feature        # create a branch
+git push -u origin feat/my-feature     # push the branch
+gh pr create                           # open a PR
+gh pr merge --merge --admin            # merge (admin bypass review)
 
-# Проверки
-gh pr checks <N>                       # Статус CI
-gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # Rulesets
+# Inspection
+gh pr checks <N>                       # CI status
+gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # rulesets
 
-# Валидация
-./scripts/validate-all-plugins.sh      # Перед PR
+# Validation
+./scripts/validate-all-plugins.sh      # before PR
 ```
 
 ---
@@ -239,7 +280,7 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # Rulesets
 | **forgeplan-brownfield-pack** | 1.3.2 |
 | **fpf** | 1.4.1 |
 | **agentic-rag** | **1.1.0** (Sprint Q: evals + anti-patterns refactor) |
-| **fp-cookbook** | **1.2.1** (Sprint T: recipes updated к v0.32.1 patterns) |
+| **fp-cookbook** | **1.2.1** (Sprint T: recipes updated to v0.32.1 patterns) |
 | **laws-of-ux** | 1.4.1 |
 | **dev-toolkit** | 1.6.3 |
 
@@ -369,7 +410,7 @@ When `.forgeplan/` and `.git/` are in different directories (workspace root vs c
 
 ### Anomaly #21 (Sprint R discovery): Sprint Q sub-agent false-success on `memory: project`
 
-**Sprint R audit 2026-05-21**: Sprint Q sub-agent A-1 (agents-pro frontmatter dispatch) reported "5 learners получили memory:project" but **on-disk verification revealed 0 agents got the field**. Other Sprint Q work (skills/maxTurns/isolation:worktree/MCP comments/evals/anti-patterns) WAS applied correctly.
+**Sprint R audit 2026-05-21**: Sprint Q sub-agent A-1 (agents-pro frontmatter dispatch) reported "5 learners received memory:project" but **on-disk verification revealed 0 agents got the field**. Other Sprint Q work (skills/maxTurns/isolation:worktree/MCP comments/evals/anti-patterns) WAS applied correctly.
 
 **Side benefit**: Had `memory: project` been actually applied, it would have triggered a **silent security regression** — Anthropic docs confirm the field **force-enables Read/Write/Edit overriding `disallowedTools` denylist**. The sub-agent overreporting accidentally protected us from a contract-breaking change.
 
