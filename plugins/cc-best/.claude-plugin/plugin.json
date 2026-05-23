@@ -1,0 +1,38 @@
+{
+  "name": "cc-best",
+  "version": "1.0.0",
+  "description": "Claude Code ecosystem reference — opinionated guide for CLAUDE.md, plugins, agents, hooks, MCP, and anti-patterns. Synthesises 47+ audit findings from ForgePlan marketplace work into a navigable skill. Initial release ships the claude-md section (file structure, hierarchy, patterns, anti-patterns); 5 more sections queued via RFC-005..RFC-009.",
+  "author": {
+    "name": "ForgePlan"
+  },
+  "homepage": "https://github.com/ForgePlan/marketplace",
+  "repository": "https://github.com/ForgePlan/marketplace",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "best-practices",
+    "claude-md",
+    "plugins",
+    "agents",
+    "hooks",
+    "mcp",
+    "anti-patterns",
+    "opinionated-guide",
+    "reference"
+  ],
+  "category": "knowledge",
+  "requires": {
+    "cli": [],
+    "mcp": [],
+    "plugins": []
+  },
+  "supersedes": {},
+  "components": {
+    "commands": [],
+    "agents": [],
+    "skills": [
+      "cc-best"
+    ],
+    "hooks": []
+  }
+}

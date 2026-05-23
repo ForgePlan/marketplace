@@ -5,14 +5,14 @@
     "url": "https://github.com/ForgePlan"
   },
   "metadata": {
-    "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.61.0"
+    "description": "Official ForgePlan plugin marketplace for Claude Code — UX, frontend, workflow, and developer tools",
+    "version": "1.62.0"
   },
   "plugins": [
     {
       "name": "fpl-hsmem",
       "source": "./plugins/fpl-hsmem",
-      "description": "ForgePlan Hindsight memory plugin for Claude Code. Long-term cross-session memory wrapping Hindsight (vectorize-io). Provides 13 MCP tools (memory_* + mental_model_* + document_ingest_*), 3 auto-hooks (recall on UserPromptSubmit, retain on Stop, force-retain on SessionEnd), and 5 helper skills (/status, /bootstrap, /mental-model, /diagnose, /export-bank). Three activation modes: plugin install (default-on, bank derived from cwd), per-project setup CLI (explicit `.mcp.json`), or direct MCP wire-up (standalone bundle). v2.1.0 \u2014 full documentation set (GETTING-STARTED, CONFIGURATION, USAGE, TROUBLESHOOTING, CHANGELOG) and source code colocation.",
+      "description": "ForgePlan Hindsight memory plugin for Claude Code. Long-term cross-session memory wrapping Hindsight (vectorize-io). Provides 13 MCP tools (memory_* + mental_model_* + document_ingest_*), 3 auto-hooks (recall on UserPromptSubmit, retain on Stop, force-retain on SessionEnd), and 5 helper skills (/status, /bootstrap, /mental-model, /diagnose, /export-bank). Three activation modes: plugin install (default-on, bank derived from cwd), per-project setup CLI (explicit `.mcp.json`), or direct MCP wire-up (standalone bundle). v2.1.0 — full documentation set (GETTING-STARTED, CONFIGURATION, USAGE, TROUBLESHOOTING, CHANGELOG) and source code colocation.",
       "version": "2.1.0",
       "author": {
         "name": "ForgePlan"
@@ -35,7 +35,7 @@
     {
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
-      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 27 engineering skills + dev-advisor agent + 5 hooks. v1.24.5: Sprint T PRD-046 \u2014 /forge-cleanup Step 2.5 native forgeplan_anomalies MCP primary + AGENT-AUTHORING-GUIDE Profile B EVID-creation canonical procedure (2-step parent_id auto-link via #295). v1.24.4: Sprint S Step 9c convention. v1.24.3: Sprint O detection script. v1.24.2: Sprint M conventions.",
+      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 27 engineering skills + dev-advisor agent + 5 hooks. v1.24.5: Sprint T PRD-046 — /forge-cleanup Step 2.5 native forgeplan_anomalies MCP primary + AGENT-AUTHORING-GUIDE Profile B EVID-creation canonical procedure (2-step parent_id auto-link via #295). v1.24.4: Sprint S Step 9c convention. v1.24.3: Sprint O detection script. v1.24.2: Sprint M conventions.",
       "version": "1.24.5",
       "author": {
         "name": "ForgePlan"
@@ -121,7 +121,7 @@
     {
       "name": "forgeplan-workflow",
       "source": "./plugins/forgeplan-workflow",
-      "description": "Structured engineering workflow for forgeplan users. Provides /forge-cycle (full SDLC cycle) and /forge-audit. v1.10.3: Sprint T PRD-046 \u2014 forgeplan_unlink MCP adopted (replaces Sprint G CLI workaround per #286). v1.10.2: Sprint S Phase 6.5.1 document_ingest_file wire. v1.10.1: Sprint F + J+K Phase 7.3.",
+      "description": "Structured engineering workflow for forgeplan users. Provides /forge-cycle (full SDLC cycle) and /forge-audit. v1.10.3: Sprint T PRD-046 — forgeplan_unlink MCP adopted (replaces Sprint G CLI workaround per #286). v1.10.2: Sprint S Phase 6.5.1 document_ingest_file wire. v1.10.1: Sprint F + J+K Phase 7.3.",
       "version": "1.10.3",
       "author": {
         "name": "ForgePlan"
@@ -142,7 +142,7 @@
     {
       "name": "dev-toolkit",
       "source": "./plugins/dev-toolkit",
-      "description": "[DEPRECATED \u2014 superseded by fpl-skills] Universal engineering toolkit: multi-expert audit, wave-based sprints, session context recall, card-based structured reports with auto-trigger hooks, and safety hooks. New users should install fpl-skills@ForgePlan-marketplace instead. v1.6.3: dev-advisor agent canonical-lint compliant (LR-1..LR-3).",
+      "description": "[DEPRECATED — superseded by fpl-skills] Universal engineering toolkit: multi-expert audit, wave-based sprints, session context recall, card-based structured reports with auto-trigger hooks, and safety hooks. New users should install fpl-skills@ForgePlan-marketplace instead. v1.6.3: dev-advisor agent canonical-lint compliant (LR-1..LR-3).",
       "version": "1.6.3",
       "deprecated": true,
       "supersededBy": "fpl-skills",
@@ -165,7 +165,7 @@
     {
       "name": "fpf",
       "source": "./plugins/fpf",
-      "description": "First Principles Framework (FPF) \u2014 thinking amplifier for structured reasoning, decomposition, and decision-making. Enhanced plugin with /fpf command, applied patterns, forgeplan integration, and FPF advisor agent. Based on FPF by Anatoly Levenchuk. v1.4.1: fpf-advisor agent canonical-lint compliant (LR-1..LR-3).",
+      "description": "First Principles Framework (FPF) — thinking amplifier for structured reasoning, decomposition, and decision-making. Enhanced plugin with /fpf command, applied patterns, forgeplan integration, and FPF advisor agent. Based on FPF by Anatoly Levenchuk. v1.4.1: fpf-advisor agent canonical-lint compliant (LR-1..LR-3).",
       "version": "1.4.1",
       "author": {
         "name": "ForgePlan"
@@ -228,7 +228,7 @@
     {
       "name": "agents-core",
       "source": "./plugins/agents-core",
-      "description": "Core development agents: debugger, code reviewer, error detective, performance engineer, production validator, plus complete dev team (coder, planner, researcher, reviewer, tester, TDD). v1.3.2: Sprint Q PRD-042 \u2014 ASM-canon frontmatter added to 3 forgeplan-aware agents (skills preload, maxTurns; coder gets isolation:worktree as only writer; code-reviewer + tester get memory:project as learners). v1.3.1: Sprint E body patches.",
+      "description": "Core development agents: debugger, code reviewer, error detective, performance engineer, production validator, plus complete dev team (coder, planner, researcher, reviewer, tester, TDD). v1.3.2: Sprint Q PRD-042 — ASM-canon frontmatter added to 3 forgeplan-aware agents (skills preload, maxTurns; coder gets isolation:worktree as only writer; code-reviewer + tester get memory:project as learners). v1.3.1: Sprint E body patches.",
       "version": "1.3.2",
       "author": {
         "name": "ForgePlan"
@@ -279,6 +279,38 @@
       },
       "homepage": "https://github.com/ForgePlan/marketplace",
       "license": "MIT"
+    },
+    {
+      "name": "cc-best",
+      "source": "./plugins/cc-best",
+      "description": "Claude Code ecosystem reference — opinionated guide for CLAUDE.md, plugins, agents, hooks, MCP, and anti-patterns. Synthesises 47+ audit findings from ForgePlan marketplace work into a navigable agentic-RAG skill. Initial release ships the claude-md section (file structure, hierarchy, patterns, anti-patterns, examples); 5 more sections (plugins, agents, hooks, mcp, antipatterns) queued via RFC-005..RFC-009.",
+      "version": "1.0.0",
+      "author": {
+        "name": "ForgePlan"
+      },
+      "homepage": "https://github.com/ForgePlan/marketplace",
+      "license": "MIT",
+      "category": "knowledge",
+      "keywords": [
+        "claude-code",
+        "best-practices",
+        "claude-md",
+        "plugins",
+        "agents",
+        "hooks",
+        "mcp",
+        "anti-patterns",
+        "opinionated-guide",
+        "reference"
+      ],
+      "components": {
+        "commands": [],
+        "agents": [],
+        "skills": [
+          "cc-best"
+        ],
+        "hooks": []
+      }
     }
   ]
 }
