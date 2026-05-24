@@ -52,7 +52,16 @@ For each hypothesis, score by the rubric in the template:
 - **G** (Granularity): 0 if "slow", 9 if "p99=47ms @ 10k RPS"
 - **R** (Reliability): 0 if "Slack anecdote", 9 if "peer-reviewed or our prod benchmark"
 
-If the chosen hypothesis's F+G+R sum <12, OFFER to dispatch the `evidence-gatherer` agent (Sprint Z4 PRD-055) for more rigorous evidence collection. Do NOT force this — it's user's choice whether the rigour is worth the time.
+If the chosen hypothesis's F+G+R sum <12, OFFER to dispatch the `evidence-gatherer` agent for rigorous evidence collection. Do NOT force this — it's user's choice whether the rigour is worth the time.
+
+```
+Task(
+  subagent_type = "agents-pro:evidence-gatherer",
+  prompt = "Gather evidence for hypothesis '<H>'. Current F+G+R sum is <N> (below 12). Search 20-30 sources across 5+ classes, score R per source, ask user for production data if applicable, return per-source breakdown."
+)
+```
+
+When the agent returns, take its synthesis EVID's aggregate F+G+R and re-score the hypothesis. Update the light ADR's Evidence table with the new numbers + cite the evidence-gatherer EVID by ID. If still <12 after rigorous gathering — be honest about the weak foundation in the Decision section ("chose this despite weak evidence because <reason>").
 
 ### Step 4 — Create the ADR
 
