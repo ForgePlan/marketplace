@@ -89,18 +89,25 @@ The decision is **reversible / irreversible** by design (one-liner: how to back 
 
 ## Compliance / Revisit Trigger — MUST
 
-**This decision MUST be re-opened** when ALL of the following are true:
+**This decision MUST be re-opened** when ALL of the parseable triggers below fire. Use the same syntax as `adr-light.md` for `/decay-watch` skill compatibility:
 
-1. <Concrete trigger — upstream release, metric, date>
-2. <Concrete verification — what observation confirms revisit is needed>
-3. <Concrete next-action — what artifact to create next (ADR-N+1 supersede plan)>
+- [ ] **Type**: date — <e.g., "2027-01-01" or "+6 months from creation">
+- [ ] **Type**: metric — <e.g., "p99 latency drops below 50ms", "records > 100k">
+- [ ] **Type**: event — <e.g., "upstream forgeplan#XXX closes", "production incident X happens">
+
+For full ADRs the trigger list MAY include additional context per trigger:
+
+- **Verification step** — what observation confirms the trigger has actually fired (avoid false positives).
+- **Next-action** — what artifact to create when re-opening (typically ADR-N+1 with `supersedes` link).
+
+**Mark `[x]` to flag a trigger as fired.** Guardian agent will BLOCKER any artifact relying on an ADR with `[x]` triggers until either the ADR is superseded OR the trigger is unchecked with justification.
 
 **Operational support**:
 
 - `scripts/<monitor-name>.sh` — one-shot status check (if applicable)
 - `docs/POST-<TRIGGER>-ACTIONS.md` — ready-to-run checklist (if applicable)
 
-Sprint Z2 (PRD-053) wires `decay-watch` skill that reads this section and alerts.
+Sprint Z2 (PRD-053) wires `/decay-watch` skill + `decay-reminder.sh` SessionStart hook + guardian Step 4b enforcement.
 
 ## Invariants — SHOULD
 

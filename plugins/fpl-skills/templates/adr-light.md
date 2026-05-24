@@ -52,13 +52,15 @@ F+G+R scoring (0-9 each, sum ≥12 = OK to commit):
 
 ## Revisit Trigger (Evidence Decay) — MUST
 
-Re-open this ADR when ANY of:
+Re-open this ADR when ANY of the triggers below fires. **Use parseable syntax** so `/decay-watch` skill and `decay-reminder.sh` hook can detect fired triggers:
 
-1. <Concrete event — e.g., "we cross 100k records">
-2. <Concrete metric — e.g., "p99 latency drops below 50ms">
-3. <Date — e.g., "2027-01-01" or "+6 months from creation">
+- [ ] **Type**: date — <e.g., "2027-01-01" or "+6 months from creation">
+- [ ] **Type**: metric — <e.g., "p99 latency drops below 50ms", "records > 100k">
+- [ ] **Type**: event — <e.g., "upstream forgeplan#XXX closes", "production incident X happens">
 
-Sprint Z2 enforcement (PRD-053): guardian agent + decay-watch skill will alert when any trigger fires.
+**Mark `[x]` to flag a trigger as fired.** Guardian agent will BLOCKER any artifact relying on an ADR with `[x]` triggers until either the ADR is superseded OR the trigger is unchecked with justification.
+
+Sprint Z2 enforcement (PRD-053): `/decay-watch` enumerates, `decay-reminder.sh` reminds at SessionStart, guardian agent blocks.
 
 ---
 
