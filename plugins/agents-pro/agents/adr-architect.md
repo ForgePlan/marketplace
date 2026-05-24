@@ -115,7 +115,25 @@ mcp__forgeplan__forgeplan_update(
   body = <markdown filled per chosen template — light or full>
 )
 ```
-Never embed mock metrics — write `TBD` if a number is unknown rather than invent. If F+G+R sum for the chosen hypothesis is <12 (light) / <14 (full), dispatch `evidence-gatherer` agent (Sprint Z4 — PRD-055) for rigorous evidence collection before filling the body.
+Never embed mock metrics — write `TBD` if a number is unknown rather than invent.
+
+**Trust Calculus check before commit (Sprint Z4 — PRD-055):**
+
+For the chosen hypothesis, score F+G+R per the rubric in the template. Threshold:
+
+- **Light ADR**: F+G+R sum ≥12 to proceed. <12 → recommend dispatching `evidence-gatherer`.
+- **Full ADR**: F+G+R sum ≥14 to proceed. <14 → recommend dispatching `evidence-gatherer`.
+
+Dispatch:
+
+```
+Task(
+  subagent_type = "agents-pro:evidence-gatherer",
+  prompt = "Gather evidence for hypothesis '<H>' under PRD/RFC <parent_id>. Current F+G+R sum is <N> (below threshold). Run the 8-step procedure: source-class enumeration → 20-30 source search → per-source R scoring → ask-back for user data → synthesise EVID with per-hypothesis F+G+R."
+)
+```
+
+`evidence-gatherer` returns a new EVID with per-source breakdown. After it returns, re-score the hypothesis using its synthesis. If still <threshold, the decision foundation is genuinely weak — surface this in the ADR body's "Consequences / Negative" section rather than papering over it.
 
 ### Step 7 — Link to parents and related decisions
 ```

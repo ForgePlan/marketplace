@@ -136,7 +136,9 @@ Procedure:
 
 Shortcut: instead of inline parsing, the orchestrator may dispatch the `/decay-watch` skill from `fpl-skills` for the same logic. Guardian's responsibility is to **incorporate the decay verdict into the gate decision**, not to re-implement the parser.
 
-Record in EVID body under a new section `## Revisit Trigger check` — list each linked ADR + verdict for its triggers + impact on the gate decision (BLOCKER / CONCERNS / PASS contribution).
+**Additional check (Sprint Z4 — PRD-055)**: for each linked ADR, also inspect its Evidence section per-source F+G+R scores (if present). If the chosen hypothesis's aggregate F+G+R sum is below threshold (12 light / 14 full) AND the ADR was last revisited >30 days ago, render this as **CONCERNS** (not BLOCKER — weak evidence isn't an automatic block, but it surfaces a known risk). Recommend dispatching `evidence-gatherer` (`agents-pro:evidence-gatherer`) to strengthen the evidence before next activation cycle.
+
+Record in EVID body under a new section `## Revisit Trigger check` — list each linked ADR + verdict for its triggers + F+G+R aggregate + impact on the gate decision (BLOCKER / CONCERNS / PASS contribution).
 
 ### Step 5 — Reason about the gate decision (mental reasoning, NOT `forgeplan_reason`)
 
