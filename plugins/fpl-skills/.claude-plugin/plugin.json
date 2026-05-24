@@ -1,7 +1,7 @@
 {
   "name": "fpl-skills",
-  "version": "1.24.5",
-  "description": "Flagship workflow plugin for the ForgePlan ecosystem. 27 engineering skills + dev-advisor agent + 5 hooks. v1.24.3: Sprint O PRD-041 \u2014 scripts/detect_link_footguns.sh ships (76 LOC bash, NDJSON output, walks forgeplan graph detecting supersedes-inversion + informs-inversion; surfaced 4 real findings on first run validating Anomaly #15/#16 patterns). v1.24.2: Sprint M PRD-039 conventions (Step 9b.1 + Step 11 + 9th anomaly kind). v1.24.1: Sprint J+K closure pack. v1.24: PRD-034 Sprint F \u2014 /forge-cleanup 8 outcomes total. v1.23: Sprint D self-healing framework + <<NEEDS_ACTIVATION>> sentinel.",
+  "version": "1.25.0",
+  "description": "Flagship workflow plugin for the ForgePlan ecosystem. 27 engineering skills + dev-advisor agent + 5 hooks. v1.24.3: Sprint O PRD-041 — scripts/detect_link_footguns.sh ships (76 LOC bash, NDJSON output, walks forgeplan graph detecting supersedes-inversion + informs-inversion; surfaced 4 real findings on first run validating Anomaly #15/#16 patterns). v1.24.2: Sprint M PRD-039 conventions (Step 9b.1 + Step 11 + 9th anomaly kind). v1.24.1: Sprint J+K closure pack. v1.24: PRD-034 Sprint F — /forge-cleanup 8 outcomes total. v1.23: Sprint D self-healing framework + <<NEEDS_ACTIVATION>> sentinel. v1.25.0: Sprint Z1 PRD-052 — added /decision skill + templates/adr-light.md + templates/adr-full.md (DDR-style decision records with mandatory Revisit Trigger).",
   "author": {
     "name": "ForgePlan"
   },
@@ -67,7 +67,8 @@
       "setup",
       "shape",
       "sprint",
-      "team"
+      "team",
+      "decision"
     ],
     "hooks": [
       "SessionStart",
