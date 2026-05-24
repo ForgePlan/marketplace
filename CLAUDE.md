@@ -267,42 +267,33 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # rulesets
 
 ---
 
-## Plugin versions (catalog v1.61.0)
+## Plugin versions (catalog v1.66.0)
 
 ### Workflow plugins
 
 | Plugin | Version |
 |--------|:-------:|
-| **fpl-skills** | **1.24.5** (Sprint T: forge-cleanup Step 2.5 + Profile B EVID 2-step) |
+| **fpl-skills** | **1.26.0** (Sprint Z2: /decay-watch skill + decay-reminder.sh SessionStart hook; Sprint Z1: /decision skill + adr templates) |
+| **cc-best** | **1.0.0** (Sprint Y phase 1: claude-md section + 5 STUB sections) |
 | **fpl-hsmem** | 2.1.0 |
-| **forgeplan-workflow** | **1.10.3** (Sprint T: forgeplan_unlink MCP adopted) |
+| **forgeplan-workflow** | 1.10.3 |
 | **forgeplan-orchestra** | 1.4.1 |
-| **forgeplan-brownfield-pack** | 1.3.2 |
+| **forgeplan-brownfield-pack** | 1.4.0 (Sprint V: Discover Agent migrated) |
 | **fpf** | 1.4.1 |
-| **agentic-rag** | **1.1.0** (Sprint Q: evals + anti-patterns refactor) |
-| **fp-cookbook** | **1.2.1** (Sprint T: recipes updated to v0.32.1 patterns) |
+| **agentic-rag** | 1.1.0 |
+| **fp-cookbook** | 1.2.1 |
 | **laws-of-ux** | 1.4.1 |
 | **dev-toolkit** | 1.6.3 |
 
-### Agent packs (post-Sprint Q)
-
-| Plugin | Version | Sprint Q changes |
-|--------|:-------:|---|
-| **agents-core** | **1.3.2** | 3 frontmatter (coder: isolation:worktree; code-reviewer + tester: memory:project) |
-| **agents-domain** | 1.1.0 | — |
-| **agents-pro** | **1.8.2** | 12 frontmatter (5 learners get memory:project) |
-| **agents-github** | 1.1.0 | — |
-| **agents-sparc** | **1.2.1** | 2 frontmatter (architecture gets memory:project) |
-
 ### Agent packs
 
-| Plugin | Version |
-|--------|:-------:|
-| **agents-core** | 1.3.0 |
-| **agents-domain** | 1.1.0 |
-| **agents-pro** | 1.8.0 |
-| **agents-github** | 1.1.0 |
-| **agents-sparc** | 1.2.0 |
+| Plugin | Version | Last sprint |
+|--------|:-------:|---|
+| **agents-core** | 1.3.2 | Sprint Q |
+| **agents-domain** | 1.1.0 | — |
+| **agents-pro** | **1.9.1** | Sprint Z4 (evidence-gatherer agent) + Sprint Z-audit (guardian Step 5 verdict matrix row) |
+| **agents-github** | 1.1.0 | — |
+| **agents-sparc** | 1.2.1 | Sprint Q |
 
 > Source of truth: `.claude-plugin/marketplace.json` and `plugins/*/.claude-plugin/plugin.json`. Always verify before PR.
 

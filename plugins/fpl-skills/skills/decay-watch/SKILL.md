@@ -50,7 +50,7 @@ OR
 - [ ] **Type**: event — upstream #325 closes
 ```
 
-Each line matches regex: `^- \[([ x])\] \*\*Type\*\*: (date|metric|event) — (.+)$`
+Each line matches regex: `^- \[([ x])\] \*\*Type\*\*:\s*(date|metric|event)\s*[—\-]\s*(.+)$` (tolerates both em-dash `—` and en-dash `-` — editors with smart-typography off may normalise; the hook and guardian use the same character class).
 
 ### Step 3 — Classify each trigger
 

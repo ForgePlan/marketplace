@@ -169,6 +169,7 @@ This step is **deliberate mental reasoning**, *not* a call to `mcp__forgeplan__f
 | `require_audit_pass: true` AND no Profile B EVIDENCE with `verdict=PASS` in chain | **CONCERNS** |
 | Step 4b: any linked ADR has FIRED Revisit Trigger AND artifact relies on that ADR | **BLOCKER** (decision foundation expired — Sprint Z2 PRD-053) |
 | Step 4b: linked ADR uses pre-Z2 prose-only Compliance section | **CONCERNS** (manual review required — `/decay-watch` cannot parse) |
+| Step 4b: any linked ADR's chosen-hypothesis F+G+R aggregate sum < threshold (12 light / 14 full) AND ADR last revisited > 30 days ago | **CONCERNS** (weak evidence on aging decision — recommend dispatching `agents-pro:evidence-gatherer` to refresh before next activation cycle — Sprint Z4 PRD-055) |
 
 Verdict derivation rule (no exceptions, no judgement-soft):
 

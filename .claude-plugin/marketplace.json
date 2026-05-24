@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code — UX, frontend, workflow, and developer tools",
-    "version": "1.65.0"
+    "version": "1.66.0"
   },
   "plugins": [
     {
@@ -250,8 +250,8 @@
     {
       "name": "agents-pro",
       "source": "./plugins/agents-pro",
-      "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.8.2: Sprint Q PRD-042 — ASM-canon frontmatter added to 12 forgeplan-aware agents (skills preload, maxTurns, MCP deps comments; 5 learners get memory:project: architect-reviewer/adr-architect/goal-planner/security-expert/system-dev). v1.8.1: Sprint E body patches. v1.9.0: Sprint Z4 PRD-055 — evidence-gatherer agent.",
-      "version": "1.9.0",
+      "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.8.2: Sprint Q PRD-042 — ASM-canon frontmatter added to 12 forgeplan-aware agents (skills preload, maxTurns, MCP deps comments; 5 learners get memory:project: architect-reviewer/adr-architect/goal-planner/security-expert/system-dev). v1.8.1: Sprint E body patches. v1.9.0: Sprint Z4 PRD-055 — evidence-gatherer agent. v1.9.1: Sprint Z-audit fix.",
+      "version": "1.9.1",
       "author": {
         "name": "ForgePlan"
       },
