@@ -82,14 +82,40 @@ mcp__forgeplan__forgeplan_new(
 ```
 Returns `ADR-NNN`. Keep `NNN` for later steps.
 
-### Step 6 — Fill the body in MADR 3.0
+### Step 5b — Choose template: light or full (Sprint Z1 — PRD-052)
+
+Two canonical templates exist in `plugins/fpl-skills/templates/`:
+
+- **`adr-light.md`** — 6-section DDR, ≤400 lines. Default choice.
+- **`adr-full.md`** — full MADR 3.0, 9 sections. Use only when criteria below are met.
+
+Switch to `adr-full.md` when ANY of:
+
+1. Decision touches ≥3 modules in the system.
+2. ADI surfaced ≥3 unresolved trade-offs that each need their own subsection.
+3. The decision supersedes or refines an existing **active** ADR.
+4. User explicitly said "full ADR" / "major architectural decision".
+5. The decision is irreversible (one-way door — can't roll back cheaply).
+
+Otherwise — **default to `adr-light.md`**. Easier to escalate from light to full than to compress full into light.
+
+Read the chosen template:
+```
+Read /Users/explosovebit/Work/ForgePlanMarketplace/forgeplan-marketplace/plugins/fpl-skills/templates/adr-light.md
+# OR
+Read /Users/explosovebit/Work/ForgePlanMarketplace/forgeplan-marketplace/plugins/fpl-skills/templates/adr-full.md
+```
+
+Both templates make **`## Revisit Trigger`** (Evidence Decay) a MUST field — not optional. Sprint Z2 (PRD-053) enforces this via `guardian` agent + `/decay-watch` skill.
+
+### Step 6 — Fill the body using the chosen template
 ```
 mcp__forgeplan__forgeplan_update(
   id = ADR-NNN,
-  body = <MADR 3.0 markdown — see template below>
+  body = <markdown filled per chosen template — light or full>
 )
 ```
-Use the template at the bottom of this file. Never embed mock metrics — write `TBD` if a number is unknown rather than invent.
+Never embed mock metrics — write `TBD` if a number is unknown rather than invent. If F+G+R sum for the chosen hypothesis is <12 (light) / <14 (full), dispatch `evidence-gatherer` agent (Sprint Z4 — PRD-055) for rigorous evidence collection before filling the body.
 
 ### Step 7 — Link to parents and related decisions
 ```
