@@ -52,6 +52,48 @@ OR
 
 Each line matches regex: `^- \[([ x])\] \*\*Type\*\*:\s*(date|metric|event)\s*[—\-]\s*(.+)$` (tolerates both em-dash `—` and en-dash `-` — editors with smart-typography off may normalise; the hook and guardian use the same character class).
 
+### Step 2b — Scan NOTE-013 deferred items (Sprint Z5 PRD-056)
+
+NOTE-013 «Deferred items tracker» is the central catalog of all deferred / pending work. Each row uses parseable syntax similar to ADR triggers but with `**Kind**:` instead of `**Type**:` (4 kinds: `issue` / `metric` / `date` / `event`).
+
+```python
+note_body = forgeplan_get(id="NOTE-013")
+```
+
+Parse with regex: `^- \[([ x])\] \*\*Kind\*\*:\s*(issue|metric|date|event)\s*[—\-]\s*(.+)$` (note `Kind` not `Type`; same dash tolerance as ADR triggers).
+
+For each row:
+- `[x]` → CLOSED (deferred item resolved, archived)
+- `[ ]` AND `kind=date` AND past ISO date → DATE-FIRED
+- `[ ]` AND `kind=issue` AND issue URL present → check via `gh issue view <number> --json state`; if state=CLOSED → ISSUE-FIRED
+- `[ ]` AND `kind=metric` or `event` → PENDING (cannot auto-verify)
+
+### Step 2c — Run check-issue scripts (Sprint Z5 PRD-056)
+
+For each script in `scripts/check-issue-*.sh`:
+
+```bash
+bash scripts/check-issue-NNN-status.sh
+```
+
+Parse output `state=OPEN|CLOSED`. If CLOSED — surface alert + point to corresponding `docs/POST-NNN-ACTIONS.md` checklist if present.
+
+### Step 2d — ADR line-count check (Sprint Z5 PRD-056 — closes audit Finding #4)
+
+For each active ADR, check body length vs template threshold:
+
+```python
+adr_body = forgeplan_get(id=adr.id).body
+line_count = adr_body.count('\n') + 1
+# Detect template by header presence:
+#   Light ADR — body starts with "# ADR-NNN: <title>" + has "## Revisit Trigger (Evidence Decay)"
+#   Full ADR — body has "## Compliance / Revisit Trigger" + "## Decision drivers" + "## Considered options"
+if is_light_adr(adr_body) and line_count > 400:
+    surface LINE-LIMIT-EXCEEDED — recommend either: (a) split into smaller decisions, or (b) migrate to adr-full template
+```
+
+Full ADRs have no hard limit (typical 800-2000 lines) — only warn if exceeds 3000 (likely scope creep).
+
 ### Step 3 — Classify each trigger
 
 Three categories:
@@ -65,44 +107,62 @@ Three categories:
 
 ### Step 4 — Output structured report
 
-When invoked silently (by hook) — output ONLY if there are FIRED or DATE-FIRED items:
+When invoked silently (by hook) — output ONLY if there are FIRED / DATE-FIRED / ISSUE-FIRED / LINE-LIMIT-EXCEEDED items across any of the 4 sources:
 
 ```
-🔔 N ADR(s) with fired Revisit Triggers:
-  - ADR-XXX: <one-line trigger description>
-  - ADR-YYY: <one-line trigger description>
+🔔 N item(s) need attention:
+  - ADR-XXX trigger fired (date): <one-line>
+  - NOTE-013 deferred item closed (issue): forgeplan#NNN
+  - check-issue-NNN: state changed OPEN → CLOSED
+  - ADR-YYY exceeds 400-line limit (current: NNN)
 Run /decay-watch for details.
 ```
 
-When invoked directly by user — output full report:
+When invoked directly by user — output full multi-source report:
 
 ```markdown
 ## Decay Watch Report
 
-### FIRED (immediate action needed)
+### 1. ADR Revisit Triggers
 
+#### FIRED (immediate action needed)
 - **ADR-XXX**: <title>
   - Trigger: <description>
   - Action: supersede with ADR-(XXX+1), OR uncheck with justification
 
-### PENDING VERIFICATION
+#### PENDING VERIFICATION
+- **ADR-YYY**: <title> — needs human check
 
-- **ADR-YYY**: <title>
-  - Trigger (metric): <description>
-  - Question for user: has this metric been crossed?
+#### LEGACY FORMAT (pre-Sprint Z2)
+- **ADR-ZZZ**: prose-only Compliance section — manual review
 
-### LEGACY FORMAT (pre-Sprint Z2)
+### 2. NOTE-013 Deferred items (Sprint Z5)
 
-- **ADR-ZZZ**: <title>
-  - Body uses prose Compliance section (pre-Z2 PRD-053 format)
-  - Recommend manual review
+#### FIRED — deferred item trigger reached
+- **DEFER-NNN**: <description from NOTE-013 row>
+  - Source: <url or path>
+  - Action: open corresponding follow-up plan (e.g., POST-NNN-ACTIONS.md)
+
+#### PENDING — needs human / time / external event
+- Count: N (full list available in NOTE-013)
+
+### 3. Upstream issue check-scripts
+
+#### CLOSED upstream — action checklist ready
+- **forgeplan#NNN**: closed YYYY-MM-DD — run `docs/POST-NNN-ACTIONS.md`
+
+### 4. ADR line-count violations (Sprint Z5)
+
+- **ADR-XXX (light)**: 432 lines — exceeds 400 limit
+  - Recommend: split into 2 light ADRs, OR migrate to adr-full template
 
 ### SUMMARY
 
-- Total active ADRs: N
-- Fired: N
-- Pending verification: N
-- Legacy format: N
+- Total active ADRs: N (M light / K full)
+- ADR triggers: N fired / N pending / N legacy
+- NOTE-013 deferred: N total / N fired / N pending
+- Upstream issues: N watched / N newly CLOSED
+- Line-count violations: N
 ```
 
 ## Hard rules
@@ -121,8 +181,10 @@ When invoked directly by user — output full report:
 
 ## Integration points
 
-- **decay-reminder.sh hook** (`hooks/decay-reminder.sh`) — calls this skill silently at SessionStart.
-- **guardian agent Step 4b** — calls this skill before rendering pre-activation verdict; if any FIRED triggers for ADRs linked to the artifact under review → BLOCKER.
+- **decay-reminder.sh hook** (`hooks/scripts/decay-reminder.sh`) — calls this skill silently at SessionStart, alerts on any source type.
+- **guardian agent Step 4b** — calls this skill before rendering pre-activation verdict; if any FIRED triggers for ADRs linked to the artifact under review → BLOCKER. Also checks NOTE-013 for related deferred items.
+- **NOTE-013** (Sprint Z5 PRD-056) — central deferred catalog; Step 2b reads it.
+- **`scripts/check-issue-*.sh`** — Sprint Z2/Z5 per-issue monitor scripts; Step 2c invokes them.
 - **`/forge-cycle`** — could optionally call before phase advance (not in Sprint Z2 scope).
 
 ## References

@@ -191,6 +191,33 @@ Hook bypass: temporarily remove the entry from `.claude/settings.json` (not reco
 
 ---
 
+## Defer discipline (Sprint Z5 — PRD-056)
+
+When you (or a sub-agent) decide to **defer** any item — file an upstream issue then wait, postpone a decision, skip a non-goal — **the item MUST land as a row in NOTE-013 «Deferred items tracker»** within the same sprint.
+
+Rules:
+
+1. Every defer goes into NOTE-013 as `- [ ] **Kind**: issue|metric|date|event — description — source — last_checked` row.
+2. If a defer is **not** in NOTE-013 — it is not deferred, it is **forgotten**.
+3. `/decay-watch` skill scans NOTE-013 on every invocation (4 source-types total: ADR triggers / NOTE-013 / `scripts/check-issue-*.sh` / ADR line-count).
+4. `decay-reminder.sh` SessionStart hook silently alerts when any NOTE-013 trigger fires (date past due, upstream issue closed, etc.).
+5. `guardian` agent Step 4b cross-references NOTE-013 when gating any artifact that depends on a deferred item.
+
+Quick path for a defer:
+
+```bash
+# In the EVID body documenting the defer decision:
+# - state WHY this is deferred
+# - cite the NOTE-013 row added (e.g., "tracked as DEFER-NNN in NOTE-013")
+
+# In NOTE-013 body (forgeplan_update):
+- [ ] **Kind**: issue — forgeplan#NNN <description> — https://... — 2026-MM-DD
+```
+
+`/decay-watch` and the SessionStart hook do the rest — you don't have to remember.
+
+---
+
 ## Version Bumping
 
 When a plugin changes, bump version in two places:
