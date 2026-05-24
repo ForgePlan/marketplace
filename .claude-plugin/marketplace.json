@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code — UX, frontend, workflow, and developer tools",
-    "version": "1.63.0"
+    "version": "1.64.0"
   },
   "plugins": [
     {
@@ -35,8 +35,8 @@
     {
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
-      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 27 engineering skills + dev-advisor agent + 5 hooks. v1.24.5: Sprint T PRD-046 — /forge-cleanup Step 2.5 native forgeplan_anomalies MCP primary + AGENT-AUTHORING-GUIDE Profile B EVID-creation canonical procedure (2-step parent_id auto-link via #295). v1.24.4: Sprint S Step 9c convention. v1.24.3: Sprint O detection script. v1.24.2: Sprint M conventions. v1.25.0: Sprint Z1 PRD-052 — added /decision skill + adr-light/adr-full templates with mandatory Revisit Trigger.",
-      "version": "1.25.0",
+      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 27 engineering skills + dev-advisor agent + 5 hooks. v1.24.5: Sprint T PRD-046 — /forge-cleanup Step 2.5 native forgeplan_anomalies MCP primary + AGENT-AUTHORING-GUIDE Profile B EVID-creation canonical procedure (2-step parent_id auto-link via #295). v1.24.4: Sprint S Step 9c convention. v1.24.3: Sprint O detection script. v1.24.2: Sprint M conventions. v1.25.0: Sprint Z1 PRD-052 — added /decision skill + adr-light/adr-full templates with mandatory Revisit Trigger. v1.26.0: Sprint Z2 PRD-053 — Evidence Decay enforcement.",
+      "version": "1.26.0",
       "author": {
         "name": "ForgePlan"
       },

@@ -118,6 +118,26 @@ command -v forgeplan >/dev/null && forgeplan health
 
 Do **not** fabricate validation output if a tool is missing or a script is absent. Record `skipped (not present)` in the EVID `Methodology` section. **Skipping a validator under time pressure or because "the upstream reviewers already covered it" is a guardian-specific failure mode — report it as CONCERNS, not silent PASS.** Honest negative coverage is the gate's job; that's the entire point of guardian.
 
+### Step 4b — Check Revisit Triggers of linked ADRs (Sprint Z2 — PRD-053)
+
+If the artifact under review depends on any active ADR (linked via `informs` / `based_on` / `refines`), each such ADR's Revisit Trigger / Compliance section must be checked for **fired triggers (Evidence Decay)**.
+
+Procedure:
+
+1. From the artifact's `Related Artifacts` table + `forgeplan_get` graph edges, identify all linked active ADRs.
+2. For each linked ADR, fetch body via `forgeplan_get(id=ADR-NNN)`.
+3. Parse the `## Revisit Trigger` or `## Compliance` section using the regex `^- \[([ x])\] \*\*Type\*\*:\s*(date|metric|event)\s*[—\-]\s*(.+)$`.
+4. Classify each trigger:
+   - `[x]` checkbox — user-marked FIRED.
+   - `[ ]` AND `type=date` AND ISO date in past — DATE-FIRED (auto-detected).
+   - `[ ]` AND `type=metric` or `event` — PENDING (cannot auto-verify, treat as unresolved).
+   - No parseable triggers (pre-Sprint-Z2 prose-only format) — LEGACY-FORMAT, record as CONCERNS line in EVID body, not BLOCKER.
+5. If **any** ADR has FIRED or DATE-FIRED trigger AND the artifact under review depends on that ADR's decision → **BLOCKER**. The decision foundation has expired; activating builds on stale ground.
+
+Shortcut: instead of inline parsing, the orchestrator may dispatch the `/decay-watch` skill from `fpl-skills` for the same logic. Guardian's responsibility is to **incorporate the decay verdict into the gate decision**, not to re-implement the parser.
+
+Record in EVID body under a new section `## Revisit Trigger check` — list each linked ADR + verdict for its triggers + impact on the gate decision (BLOCKER / CONCERNS / PASS contribution).
+
 ### Step 5 — Reason about the gate decision (mental reasoning, NOT `forgeplan_reason`)
 
 This step is **deliberate mental reasoning**, *not* a call to `mcp__forgeplan__forgeplan_reason` — Profile B does not run the ADI cycle. Walk the gate criteria in order, applying the **project-config thresholds parsed in Step 4 as a pre-check column**, and categorise (icons here are **inline body callouts** for the EVID, permitted; not as HARD RULES bullet prefixes):
@@ -129,6 +149,7 @@ This step is **deliberate mental reasoning**, *not* a call to `mcp__forgeplan__f
 - ✅ **Audit-pass requirement satisfied** — when `require_audit_pass: true`, **at least one Profile B EVIDENCE with `verdict=PASS`** must be linked to the artifact (else CONCERNS)
 - ✅ **No BLOCKER findings in linked EVIDs** — every linked EVID's verdict is PASS or CONCERNS-with-acknowledged-mitigations; **zero unresolved BLOCKERs**
 - ✅ **Activation policy satisfied** — domain-specific gate rules (e.g., "ADRs cannot activate without linked EVIDENCE", "RFCs cannot activate while parent PRD is still draft")
+- ✅ **Linked ADR Revisit Triggers clean** — Step 4b verdict — no FIRED or DATE-FIRED triggers on ADRs this artifact depends on (Sprint Z2 — PRD-053)
 - ⚠️ **Unresolved CONCERNS** — any HIGH-severity CONCERNS in linked EVIDs that the artifact body does not explicitly acknowledge with a mitigation; ramps the verdict toward CONCERNS
 - ❌ **Any BLOCKER in linked EVIDs** — any single unresolved BLOCKER in the chain forces verdict to BLOCKER, regardless of other criteria
 
@@ -144,6 +165,8 @@ This step is **deliberate mental reasoning**, *not* a call to `mcp__forgeplan__f
 | `require_evidence_chain` includes artifact's kind AND zero `informs`-linked EVIDENCE present | **BLOCKER** (missing audit trail) |
 | `require_validate_pass: true` AND `forgeplan_validate(id=<artifact>)` returns errors | **BLOCKER** |
 | `require_audit_pass: true` AND no Profile B EVIDENCE with `verdict=PASS` in chain | **CONCERNS** |
+| Step 4b: any linked ADR has FIRED Revisit Trigger AND artifact relies on that ADR | **BLOCKER** (decision foundation expired — Sprint Z2 PRD-053) |
+| Step 4b: linked ADR uses pre-Z2 prose-only Compliance section | **CONCERNS** (manual review required — `/decay-watch` cannot parse) |
 
 Verdict derivation rule (no exceptions, no judgement-soft):
 
