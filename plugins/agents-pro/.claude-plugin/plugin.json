@@ -1,7 +1,7 @@
 {
   "name": "agents-pro",
-  "version": "1.9.1",
-  "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.8.1: 5 Profile B forgeplan-aware agents (architect-reviewer, artifact-reviewer, evidence-recorder, security-expert, system-dev) bodies patched with Step 9b NEEDS_ACTIVATION sentinel emit instruction per Sprint E PRD-033. Verified organically via live smoke test EVID-060 = GREEN. v1.8: 16 non-canonical specialists canonical-lint compliant. v1.7: 3 NEW generic CRUD-R-A agents. Cumulative: 12 of 28 agents forgeplan-aware. v1.9.0: Sprint Z4 PRD-055 — new evidence-gatherer agent (20-30 source search + per-source R scoring + ask-back protocol for user benchmarks/cluster data). v1.9.1: Sprint Z-audit fix — guardian Step 5 verdict matrix row added for weak F+G+R + aged ADR (was in Step 4b prose but missing from matrix).",
+  "version": "1.9.2",
+  "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.9.2: Sprint Z6 PRD-057 — guardian Step 5 verdict matrix 2 new rows: Standard+ with zero Profile B EVID → BLOCKER; Profile B EVID with empty ## Findings → CONCERNS (BMAD adversarial review enforcement). v1.9.1: Sprint Z-audit fix — guardian Step 5 verdict matrix row added for weak F+G+R + aged ADR (was in Step 4b prose but missing from matrix). v1.9.0: Sprint Z4 PRD-055 — new evidence-gatherer agent. v1.8.1: 5 Profile B forgeplan-aware agents bodies patched with Step 9b NEEDS_ACTIVATION sentinel emit instruction per Sprint E PRD-033.",
   "author": {
     "name": "ForgePlan"
   },
