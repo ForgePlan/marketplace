@@ -397,7 +397,91 @@ Execute the project's test suite:
 - Run the full suite or the relevant subset.
 - All tests must pass before proceeding.
 
-## Step 6.5: Multi-Reviewer Audit (Standard+ depth)
+## Step 6.5: BMAD adversarial review (Standard+ depth)
+
+Per S11 BMAD quality-gate discipline (Sprint Z6 — PRD-057). MSR 2026 empirically measures **+25–41% complexity gap** in AI-generated artifacts without adversarial controls. This step enforces ≥1 concrete finding per Profile B reviewer before `forgeplan_activate` is allowed.
+
+> **Depth filter**: skip this step entirely for `tactical` depth tasks (no artifact created). For `standard`, `deep`, `critical` → MANDATORY.
+
+### Procedure
+
+```python
+# Step 6.5 — BMAD adversarial review (Standard+ only)
+depth = forgeplan_get(ARTIFACT_ID).get("depth", "tactical")
+
+if depth in ("standard", "deep", "critical"):
+    # 1. Dispatch Profile B artifact-reviewer with adversarial mandate
+    review_result = Task(
+        subagent_type="agents-pro:artifact-reviewer",
+        description="BMAD adversarial review — find ≥1 concrete issue",
+        prompt=f"""BMAD adversarial review of {ARTIFACT_ID}.
+
+Your mandate: find AT LEAST 1 concrete weakness, risk, or gap.
+Zero findings = reviewer was not adversarial enough; re-dispatch will follow.
+
+Check:
+- Acceptance criteria completeness and measurability
+- Non-goals that should be goals (scope gaps)
+- Missing NFRs (performance, security, scalability thresholds)
+- Vague requirements without numeric targets
+- Risk items missing mitigations
+- Dependency assumptions not validated
+
+Return EVIDENCE with ## Findings section containing ≥1 finding.
+Cite MSR 2026 (+25–41% complexity finding) as motivation for adversarial depth.
+"""
+    )
+
+    # 2. Parse reviewer EVID; check for ## Findings section
+    reviewer_evid_id = extract_evid_id(review_result)
+    reviewer_evid = forgeplan_get(reviewer_evid_id)
+    has_findings = "## Findings" in reviewer_evid.get("body", "")
+    findings_non_empty = bool(
+        re.search(r'## Findings\s*\n+\S', reviewer_evid.get("body", ""))
+    )
+
+    if not findings_non_empty:
+        # 3. Re-dispatch with explicit adversarial nudge
+        review_result = Task(
+            subagent_type="agents-pro:artifact-reviewer",
+            description="BMAD adversarial re-review — specifically look for issues",
+            prompt=f"""Re-review {ARTIFACT_ID}. Prior reviewer returned zero findings — this is insufficient.
+
+Specifically look for:
+X) Any acceptance criteria that are not SMART (not time-bound or not measurable)
+Y) Any FR that leaks implementation detail (mentions a technology instead of a capability)
+Z) Any risk row without a concrete mitigation owner
+
+Even one finding is required. If the artifact is genuinely exceptional, explain why in
+## Findings with ≥2 sentences. Default expectation: ≥1 actionable finding.
+"""
+        )
+        reviewer_evid_id = extract_evid_id(review_result)
+
+    # 4. Link reviewer EVID before proceeding to Step 7
+    # (auto-linked if reviewer used parent_id; otherwise link manually)
+    forgeplan_link(source=reviewer_evid_id, target=ARTIFACT_ID, relation="informs")
+
+    # 5. guardian (Step 8) will enforce: zero Profile B EVID with verdict=PASS → BLOCKER
+    # (see guardian.md Step 5 — "Step 4b: Standard+ artifact has zero linked Profile B EVID
+    #  with verdict=PASS in audit chain → BLOCKER — Sprint Z6 PRD-057")
+else:
+    # tactical depth — skip adversarial review
+    pass
+```
+
+**MSR 2026 finding** (motivation): McKinsey/Stanford Mixed-Methods Review 2026 reports AI-assisted teams exhibit +25–41% higher specification complexity gaps than human-only teams when no structured adversarial review is present. Mandatory ≥1 finding closes the "confident incompleteness" failure mode where an AI generates a plausible-sounding artifact with no reviewer challenging it.
+
+**Enforcement chain**:
+- `/forge-cycle` Step 6.5 dispatches reviewer (here)
+- `guardian` Step 5 verdict matrix enforces at gate time (BLOCKER if no Profile B EVID with verdict=PASS)
+- CLAUDE.md «BMAD adversarial review discipline» section defines the workspace-level policy
+
+Reference: PRD-057, EPIC-001 (4-layer pipeline S11).
+
+---
+
+## Step 6.6: Multi-Reviewer Audit (Standard+ depth)
 
 Per RFC-003 Layer 2 + PRD-025 FR-018, spawn **parallel reviewers** in a single message для cross-validation.
 
