@@ -377,6 +377,36 @@ Reference: PRD-060, EPIC-001. Simon Brown's C4 model: [c4model.com](https://c4mo
 
 ---
 
+## Methodology coverage self-check (Sprint Z10 — PRD-061)
+
+For any artifact at any time, run `/methodology-check <ARTIFACT-ID>` to see which of the 4-layer
+pipeline layers (S10 FPF design, S11 BMAD quality gate, S12 OpenSpec structure, S13 Forgeplan
+automation) plus C4 architecture extension are satisfied. Returns a per-layer score 0–2 + aggregate
+percentage + concrete action items per gap.
+
+**Read-only** — surfaces what's needed, never auto-fixes. Use before activating any Standard+ artifact
+for a final sanity check. Tactical artifacts are automatically scoped to S12+S13 only (S10/S11 marked N/A).
+
+Quick path:
+
+```bash
+# Check any artifact before activation:
+/methodology-check PRD-NNN
+
+# Typical pre-activation workflow:
+forgeplan_reason PRD-NNN          # S10: generate ADI hypotheses
+# → create EVID with ≥3 hypotheses
+# → dispatch artifact-reviewer for S11 BMAD EVID with ## Findings
+/methodology-check PRD-NNN        # confirm all layers green
+forgeplan_activate PRD-NNN        # safe to activate
+```
+
+Cite EPIC-001 4-Layer Pipeline (S10→S13) as foundation. Skill: `plugins/fpl-skills/skills/methodology-check/SKILL.md`.
+
+Reference: PRD-061, EPIC-001 (4-layer pipeline meta-layer, Sprint Z10).
+
+---
+
 ## Version Bumping
 
 When a plugin changes, bump version in two places:
