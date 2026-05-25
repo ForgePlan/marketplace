@@ -1,10 +1,33 @@
 # ForgePlan Marketplace — Claude Code Configuration
 
 **Repo**: [ForgePlan/marketplace](https://github.com/ForgePlan/marketplace)
-**Catalog version**: 1.70.0
-**Plugins**: 15 (9 workflow + 5 agent packs + 1 memory plugin fpl-hsmem) — brownfield-pack now ships canonical Profile A `discover` agent
-**Agents**: 18 of ~65 forgeplan-aware (PRD-026 canonical B2 paradigm — `disallowedTools` denylist + Sprint Q PRD-042 ASM-canon frontmatter + Sprint S Step 9c filesystem verification + Sprint T v0.32.1 native MCP adoption + Sprint V PRD-048 brownfield Discover Agent migrated to plugin. **`memory: project` REJECTED Sprint R** — Hindsight covers use case.)
-**Last Updated**: 2026-05-25 (post Sprint Z9 PRD-060: C4 auto-recommend for ≥3-module architectural decisions — agents-pro v1.9.4 adr-architect Step 5b.1 + fpl-skills v1.28.1 c4-diagram Dispatch mode + CLAUDE.md C4 discipline section. Catalog v1.70.0. 28 anomalies (24 resolved) + 13 ML + 10 mental models)
+**Catalog version**: 1.71.0
+**Plugins**: 16 (10 workflow + 5 agent packs + 1 memory plugin fpl-hsmem) — cc-best v1.0.0 (Sprint Y) + brownfield-pack canonical discover agent (Sprint V)
+**Agents**: 19 of ~65 forgeplan-aware (PRD-026 B2 paradigm — `disallowedTools` denylist + Sprint Q PRD-042 ASM-canon + Sprint S Step 9c + Sprint T v0.32.1 + Sprint V PRD-048 discover + Sprint Z4 PRD-055 evidence-gatherer. **`memory: project` REJECTED Sprint R** — Hindsight covers use case.)
+**Last Updated**: 2026-05-25 (post EPIC-001 closure — 4-Layer Pipeline Enforcement S10→S13. Sprints Z6-Z10: BMAD adversarial review mandatory + OpenSpec delta-spec at supersede + FPF ADI mandatory + C4 auto-recommend + /methodology-check meta. catalog v1.71.0, fpl-skills v1.29.0, agents-pro v1.9.4, forgeplan-workflow v1.12.0. 35 anomalies (29 resolved + 4 upstream filed) + 13 ML + 10 mental models.)
+
+---
+
+## 4-Layer Pipeline (S10→S13) — methodology conveyor
+
+Every Standard+ artifact passes through 4 enforced layers before activation:
+
+```
+S10  FPF       — design       — ≥3 hypotheses via ADI (forgeplan_reason); EVID linked
+                                  → enforced by /forge-cycle Step 4.5 + guardian Step 5 row
+S11  BMAD      — quality gate — Profile B audit with ≥1 finding required
+                                  → enforced by /forge-cycle Step 6.5 + guardian Step 5 rows
+S12  OpenSpec  — structure    — DAG links + delta-spec ADDED/MODIFIED/REMOVED at supersede
+                                  → enforced by adr-supersede template + /supersede skill + decay-watch Step 2e
+S13  Forgeplan — automation   — hooks + agents + skills + MCP wire it all together
+                                  → enforced by validate + score + activate gates
+```
+
+Plus C4 (orthogonal architecture extension) auto-recommended for ≥3-module decisions via adr-architect Step 5b.1.
+
+Run `/methodology-check <ARTIFACT-ID>` for cumulative per-layer coverage report on any artifact.
+
+Foundation: EPIC-001 + sprints Z6-Z10 (PRD-057/058/059/060/061). Motivation: MSR 2026 finding that AI without controls produces +25-41% code complexity.
 **Project board**: [orgs/ForgePlan/projects/5](https://github.com/orgs/ForgePlan/projects/5)
 
 ---
