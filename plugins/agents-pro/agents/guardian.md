@@ -172,6 +172,7 @@ This step is **deliberate mental reasoning**, *not* a call to `mcp__forgeplan__f
 | Step 4b: any linked ADR's chosen-hypothesis F+G+R aggregate sum < threshold (12 light / 14 full) AND ADR last revisited > 30 days ago | **CONCERNS** (weak evidence on aging decision — recommend dispatching `agents-pro:evidence-gatherer` to refresh before next activation cycle — Sprint Z4 PRD-055) |
 | Step 4b: Standard+ artifact has zero linked Profile B EVID with verdict=PASS in audit chain | **BLOCKER** (BMAD discipline violation — Sprint Z6 PRD-057) |
 | Step 4b: linked Profile B EVID has verdict=PASS but body has zero `## Findings` entries | **CONCERNS** (adversarial review thin — zero findings = unrefined; recommend re-dispatch of reviewer with explicit adversarial prompt) |
+| Step 4b/4.5: Standard+ artifact has no `adi` or `hypotheses` kind EVID linked (`informs`) — OR — the linked ADI EVID body has fewer than 3 `### Hypothesis` / `### H1 H2 H3` / `**Hypothesis N**` sections | **BLOCKER** (FPF ADI discipline violation — Sprint Z7 PRD-059; S10 design layer missing — cite EPIC-001) |
 
 Verdict derivation rule (no exceptions, no judgement-soft):
 

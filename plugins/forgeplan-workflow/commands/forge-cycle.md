@@ -232,6 +232,127 @@ forgeplan validate PRD-XXX
 If depth is Deep+, also create RFC with `forgeplan new rfc "<title>"` and fill architectural decisions.
 If depth is Critical, also create ADR with `forgeplan new adr "<title>"` for the key decision record.
 
+## Step 4.5: FPF ADI mandatory dispatch (Standard+ depth — Sprint Z7 PRD-059)
+
+Per S10 FPF design discipline (EPIC-001 4-layer pipeline). MSR 2026 measures **+25–41% complexity gap** in AI-assisted projects without structured design hypothesis cycles — this step forces ≥3 competing hypotheses before any Standard+ artifact can proceed to Build.
+
+> **Depth filter**: skip this step entirely for `tactical` depth tasks (no artifact created). For `standard`, `deep`, `critical` → MANDATORY before Step 5.
+
+### Procedure
+
+```python
+# Step 4.5 — FPF ADI mandatory dispatch (Standard+ only)
+depth = forgeplan_get(ARTIFACT_ID).get("depth", "tactical")
+
+if depth in ("standard", "deep", "critical"):
+    # 1. Dispatch forgeplan_reason (MCP primitive) — wraps FPF ADI cycle
+    #    Returns: hypotheses list + deductive predictions + inductive evidence check + recommendation
+    adi_result = mcp__forgeplan__forgeplan_reason(id=ARTIFACT_ID)
+
+    # 2. Parse output — count distinct hypothesis sections
+    #    Hypotheses are delimited by "### Hypothesis", "### H1/H2/H3", or "**Hypothesis N**" patterns
+    import re
+    hypothesis_count = len(re.findall(
+        r'(?:^###\s+Hypothesis\s*\d*|^###\s+H\d+\b|^\*\*Hypothesis\s+\d+)',
+        adi_result.get("body", ""),
+        re.MULTILINE | re.IGNORECASE
+    ))
+
+    # 3. FPF Abduction minimum threshold = 3
+    #    Rationale: 2 hypotheses always collapse to false dichotomy.
+    #    The 3rd hypothesis is structurally the most interesting
+    #    (often: «do nothing», «in-process alternative», «scope reduction»).
+    if hypothesis_count < 3:
+        # Re-dispatch with explicit ADI nudge
+        adi_result = mcp__forgeplan__forgeplan_reason(
+            id=ARTIFACT_ID,
+            prompt=(
+                "Generate at least 3 distinct hypotheses with deductive predictions. "
+                "Hypothesis 1 = primary design direction. "
+                "Hypothesis 2 = strongest alternative. "
+                "Hypothesis 3 = 'do nothing / in-process alternative' or scope reduction. "
+                "Each hypothesis MUST have: abductive premise, deductive prediction, "
+                "inductive evidence check (F+G+R)."
+            )
+        )
+        # Re-count after nudge; if still <3 — surface as CONCERNS and continue
+        hypothesis_count = len(re.findall(
+            r'(?:^###\s+Hypothesis\s*\d*|^###\s+H\d+\b|^\*\*Hypothesis\s+\d+)',
+            adi_result.get("body", ""),
+            re.MULTILINE | re.IGNORECASE
+        ))
+        if hypothesis_count < 3:
+            print(f"warn: ADI returned {hypothesis_count} hypothesis sections (< 3 required); "
+                  "record as CONCERNS in ADI EVID body and continue")
+
+    # 4. Record ADI output as EVIDENCE artifact
+    #    Body MUST document: which 3+ hypotheses were considered, which was chosen, why
+    adi_evid = mcp__forgeplan__forgeplan_new(
+        kind="evidence",
+        parent_id=ARTIFACT_ID,
+        title=f"ADI cycle for {ARTIFACT_ID} — {hypothesis_count} hypotheses, chosen H<N>"
+    )
+    mcp__forgeplan__forgeplan_update(
+        id=adi_evid["id"],
+        body=format_adi_evid_body(
+            artifact_id=ARTIFACT_ID,
+            hypotheses=adi_result,  # paste full ADI output
+            chosen_hypothesis="H<N>",
+            rationale="<why this hypothesis — F+G+R Trust Calculus score; deductive prediction matches goal>"
+        )
+    )
+    # parent_id auto-links via forgeplan#295; manual link as fallback:
+    mcp__forgeplan__forgeplan_link(
+        source=adi_evid["id"],
+        target=ARTIFACT_ID,
+        relation="informs"
+    )
+
+    ADI_EVID_ID = adi_evid["id"]
+
+    # 5. Gate: Step 5+ proceeds ONLY after ADI EVID exists
+    #    guardian (Step 7.5 / activation gate) enforces this at activation time.
+    #    See guardian.md Step 5 — «Step 4b/4.5: Standard+ artifact has no ADI EVID → BLOCKER»
+    print(f"✓ ADI EVID {ADI_EVID_ID} created — {hypothesis_count} hypotheses documented. Proceeding to Step 5.")
+
+else:
+    # tactical depth — skip ADI dispatch
+    ADI_EVID_ID = None
+    pass
+```
+
+**Shell fallback** (when MCP not available):
+```bash
+# Interactive FPF ADI path — use /fpf-reason skill:
+# 1. Invoke /fpf-reason (fpf plugin) with the PRD/RFC body as input
+# 2. Document ≥3 hypotheses in the PRD body under a «## FPF ADI» section
+# 3. forgeplan new evidence "ADI cycle for PRD-XXX" --parent PRD-XXX
+# 4. Fill EVID body with chosen hypothesis + rationale
+
+forgeplan new evidence "ADI cycle for ${ARTIFACT_ID}"
+# Fill: ## Hypotheses (≥3), ## Chosen, ## Rationale, ## Deductive Prediction
+forgeplan link EVID-NNN ${ARTIFACT_ID} --relation informs
+```
+
+**Why 3 hypotheses (not 2)**:
+- 2 hypotheses = false dichotomy (A vs B, both framed to favour A)
+- 3rd hypothesis structurally breaks the framing: «what if we do nothing?», «what if we scope down?», «what if the problem is wrong?»
+- FPF Abduction minimum: you need at least one hypothesis that challenges the premise of the other two
+
+**Why MANDATORY (not optional)**:
+- Audit 2026-05-25 (EPIC-001): S10 FPF at ~30% adoption — the weakest layer
+- Opt-in discipline = absent discipline (Z-sprint meta-lesson from Z1-Z5 chain)
+- MSR 2026: +25-41% complexity gap is highest at the design layer (before code is written)
+
+**Enforcement chain**:
+- `/forge-cycle` Step 4.5 dispatches ADI (here)
+- `guardian` Step 5 verdict matrix enforces at gate time (BLOCKER if no ADI EVID)
+- CLAUDE.md «FPF ADI discipline» section defines the workspace-level policy
+
+Reference: PRD-059, EPIC-001 (4-layer pipeline S10), `/fpf-reason` skill (fpf plugin) as interactive alternative.
+
+---
+
 ## Step 5: Build
 
 Implement the code changes according to the PRD requirements.
