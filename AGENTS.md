@@ -27,6 +27,102 @@ Read these in order для понимания pipeline:
 
 Все артефакты находятся в `.forgeplan/` (PRD/RFC/ADR/EVID/NOTE структура).
 
+## Smith — master orchestrator
+
+**Smith** is the master orchestrator of the ForgePlan ecosystem — the canonical first point of contact when an agent (or a human via an agent) does not yet know which methodology, dispatch chain, or pipeline depth applies to the work in front of them. Smith inspects repository state and user intent, applies a **12-context routing matrix** (greenfield, brownfield, feature, bug, refactor, architecture decision, security audit, performance audit, product discovery, tech-debt cleanup, live incident, hotfix), and recommends a specialist-agent dispatch sequence plus evidence requirements per the 4-layer S10–S13 pipeline. Smith is the ForgePlan ecosystem's equivalent of BMAD's «Master» persona — a Profile B-orchestrator agent that **never writes code or activates artifacts**; it routes and recommends. Smith lives in `plugins/agents-pro/agents/smith.md` (the agent) plus `plugins/fpl-skills/skills/smith/` (the 12-context brain) and is reachable from any CLI that honours AGENTS.md.
+
+### When to invoke smith
+
+- At **session start** when unsure what to do next — smith reads `forgeplan_health` + recent journal and proposes the next action.
+- For a **fresh repository** with no artifacts yet — invoke `/smith-bootstrap` to seed Brief / PRD / first ADR via the greenfield row of the routing map.
+- For a **specific task** of any depth — invoke `/smith-plan <task description>` and smith picks the matching row, names the methodology, and lists the dispatch sequence.
+- For **learning the methodology surface** — invoke `/smith-routing` to inspect the 12 contexts + 25 methodology cards without committing to a task.
+- When the existing entry points (`/forge-cycle`, `/autorun`) do not fit — e.g. cross-context work, ambiguous depth, methodology mismatch — smith disambiguates first.
+- **Trigger phrases** (EN / RU): `smith`, `кузнец`, `что дальше`, `what's next`, `scrum master`, `master orchestrator`, `which methodology`, `какую методологию`.
+
+### The 12 contexts smith routes
+
+Full table with primary methodology + dispatch sequence + evidence requirements lives in `plugins/fpl-skills/skills/smith/routing-map.md`. Compact summary:
+
+| # | Context | One-liner |
+|---|---|---|
+| 1 | Greenfield | Fresh project bootstrap — BMAD-METHOD + Spec Kit |
+| 2 | Brownfield | Legacy modernisation — Strangler Fig + DDD + ACL |
+| 3 | New feature | Add capability to existing service — SPARC + Hexagonal |
+| 4 | Production bug (non-trivial) | Disciplined RCA — RIPER-5 + 5 Whys |
+| 5 | Trivial hotfix | Tactical fast-path — typo, off-by-one, broken link |
+| 6 | Refactoring | Safe restructure — Branch-by-Abstraction + Mikado |
+| 7 | Architecture decision | Irreversible choice — FPF ADI + ADR/MADR + C4 |
+| 8 | Security audit | Threat coverage — OWASP Top 10 2025 + STRIDE/ASTRIDE |
+| 9 | Performance audit | Falsifiable baseline — DORA + SRE + perf-budget |
+| 10 | Product discovery (PDLC) | What to build — JTBD + Lean + Double Diamond |
+| 11 | Tech-debt cleanup | Pay-down sprint — A3 + Fishbone + ADR-supersede |
+| 12 | Live incident response | Outage handling — Incident Command + blameless post-mortem |
+
+Smith **picks exactly one row** per task — methodology cocktails are forbidden. If the situation sits between two rows, smith picks the row with the higher risk profile (brownfield > greenfield, audit > feature) and notes the deviation in its session log. The single-row rule prevents the common failure mode where teams blend BMAD + SPARC + Spec Kit «to cover all bases» and end up with artefacts that match no community pattern — none of the three communities recognise the output as their canonical shape.
+
+### How smith works internally
+
+1. **Intake** — read user intent (free-form text from `/smith-plan` or session start), call `forgeplan_health` + `forgeplan_session` for current state, infer context tags (greenfield vs brownfield, depth, urgency).
+2. **Route** — match intake against the 12 rows in `routing-map.md`; on ambiguity, dispatch FPF ADI (`forgeplan_reason`) to surface ≥3 candidate rows + recommend one.
+3. **Recommend** — emit a structured plan: chosen row, primary + secondary methodology, dispatch sequence (named agents, in order), evidence requirements per S10–S13 layer.
+4. **Hand off** — the orchestrator (Claude Code session, `/forge-cycle`, `/autorun`, or a human) executes the plan; smith does **not** dispatch agents itself unless explicitly asked, because Profile B-orchestrator's role is to recommend, not to mutate state.
+
+Example output shape (abbreviated):
+
+```text
+Row chosen: 3 — New feature in existing service
+Primary methodology: SPARC (Specification → Pseudocode → Architecture → Refinement → Completion)
+Secondary: Hexagonal Architecture + JTBD framing
+Dispatch sequence:
+  1. brief-intake (Profile A) → Brief NOTE
+  2. specification (Profile A) → PRD
+  3. architecture (Profile A) → RFC
+  4. goal-planner (Profile A) → task DAG
+  5. coder (Profile C-coder) → source files
+  6. code-reviewer (Profile B) → EVID with ≥1 finding
+  7. tester (Profile B) → tester EVID
+  8. guardian (Profile B-gate) → activation verdict
+Evidence required: PRD + ADI EVID (≥3 hypotheses) + BMAD EVID with ≥1 finding + tester EVID
+```
+
+### Methodologies smith knows
+
+Twenty-five methodologies are catalogued in `routing-map.md` with cards covering one-sentence definition, when it shines, when NOT to use, and a primary source link. Grouped:
+
+- **AI-coding workflows**: BMAD-METHOD, SPARC, RIPER-5, GitHub Spec Kit, FPF ADI (Abduction → Deduction → Induction).
+- **Architecture lenses**: C4 Model, Domain-Driven Design, Event Storming, Clean Architecture, Hexagonal Architecture (Ports & Adapters), ADR / MADR.
+- **Brownfield patterns**: Strangler Fig, Branch-by-Abstraction, Anti-Corruption Layer.
+- **Root-cause / bug-fix**: 5 Whys, Fishbone (Ishikawa), A3 Problem Solving, Blameless post-mortem.
+- **Security**: OWASP Top 10 2025, STRIDE, ASTRIDE (AI-specific threats).
+- **Lifecycle / ops**: DORA metrics, SRE error-budgets, Incident Command System.
+- **PDLC / product**: Jobs-To-Be-Done (JTBD), Lean Startup, Double Diamond.
+
+Every row of the routing map cites a primary methodology + 1–2 secondary methodologies; smith never invents combinations not present in the table.
+
+### Cross-CLI portability
+
+Smith's manifest is declared here in AGENTS.md so non-Claude-Code CLIs (Codex, Gemini, Goose, Cursor) can discover it via the [agents.md](https://agents.md) standard. Each CLI invokes smith through its own dispatch primitive:
+
+- **Claude Code**: `Task(subagent_type="agents-pro:smith", ...)` via the Agent tool.
+- **Gemini CLI**: equivalent dispatch via the Gemini agent SDK; the routing-map skill loads via `.agents/skills/smith/` interop directory.
+- **Codex CLI**: dispatch via Codex's agent invocation; AGENTS.md is read natively per `codex-rs/core/src/agents_md.rs`.
+- **Goose / Cursor**: dispatch via their respective agent layers; routing-map skill is portable Markdown.
+
+The 12-context routing table is **CLI-agnostic** — it names methodologies and Profile-A/B/C/D agent roles, not Claude-specific primitives. Each CLI maps the Profile names to its own dispatch model.
+
+### References
+
+- `plugins/agents-pro/agents/smith.md` — the smith agent itself (Profile B-orchestrator master agent, 368 lines).
+- `plugins/fpl-skills/skills/smith/routing-map.md` — the 12-context routing table + 25 methodology cards + agent index.
+- `plugins/fpl-skills/skills/smith/SKILL.md` — the main entry skill (loader + index).
+- `plugins/fpl-skills/skills/smith-bootstrap/SKILL.md` — greenfield bootstrap dispatch path.
+- `plugins/fpl-skills/skills/smith-plan/SKILL.md` — per-task planning skill.
+- `plugins/fpl-skills/skills/smith-routing/SKILL.md` — routing-table inspection skill.
+- `plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md` — Profile A / B / B-orchestrator / C / C-coder / D canonical definitions.
+- **BMAD-METHOD source**: https://github.com/bmad-code-org/BMAD-METHOD — the «Master persona» concept smith adapts.
+- **AGENTS.md source**: https://agents.md — the Linux Foundation cross-CLI manifest standard (Dec 2025).
+
 ## Cross-CLI compatibility
 
 Marketplace **CLI-agnostic** через MCP standard:

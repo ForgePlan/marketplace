@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code — UX, frontend, workflow, and developer tools",
-    "version": "1.71.0"
+    "version": "1.72.0"
   },
   "plugins": [
     {
@@ -35,8 +35,8 @@
     {
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
-      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 29 engineering skills + dev-advisor agent + 5 hooks. v1.29.0: Sprint Z10 PRD-061 — /methodology-check meta-skill: 4-layer coverage report (S10/S11/S12/S13 + C4) for any artifact. v1.28.1: Sprint Z9 PRD-060 — c4-diagram Dispatch mode. v1.28.0: Sprint Z8 PRD-058 — /supersede + delta-spec discipline. v1.27.0: Sprint Z5 PRD-056 — /decay-watch 4-source + NOTE-013. v1.26.0: Sprint Z2 PRD-053 — Evidence Decay. v1.25.0: Sprint Z1 PRD-052 — /decision + adr templates.",
-      "version": "1.29.0",
+      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 33 engineering skills + dev-advisor agent + 5 hooks (+ smith greeting). v1.31.0: EPIC-002 — 4 new smith skills (/smith, /smith-bootstrap, /smith-plan, /smith-routing) + 5 templates + session-start.sh smith greeting + 5 READMEs + AGENT-AUTHORING-GUIDE Profile B-orchestrator sub-profile. v1.29.0: Sprint Z10 — /methodology-check. v1.28.1: Sprint Z9 — c4-diagram Dispatch mode. v1.28.0: Sprint Z8 — /supersede + delta-spec discipline. v1.27.0: Sprint Z5 — /decay-watch 4-source + NOTE-013.",
+      "version": "1.31.0",
       "author": {
         "name": "ForgePlan"
       },
@@ -250,8 +250,8 @@
     {
       "name": "agents-pro",
       "source": "./plugins/agents-pro",
-      "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.9.4: Sprint Z9 PRD-060 — adr-architect Step 5b.1 C4 dispatch for ≥3-module full ADRs. v1.9.3: Sprint Z7 PRD-059 — guardian Step 5 verdict matrix 1 new ADI row (Standard+ no ADI EVID → BLOCKER). v1.9.2: Sprint Z6 PRD-057 — guardian Step 5 verdict matrix 2 new BMAD rows. v1.9.1: Sprint Z-audit fix. v1.9.0: Sprint Z4 PRD-055 — evidence-gatherer agent.",
-      "version": "1.9.4",
+      "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.10.0: EPIC-002 PRD-062 — new `smith` master-orchestrator agent (Profile B-orchestrator), the BMAD Master equivalent. 12-context methodology routing matrix (BMAD/SPARC/RIPER-5/DDD/C4/Strangler-Fig/OWASP/STRIDE/DORA/JTBD/etc.). v1.9.4: Sprint Z9 — adr-architect C4 dispatch. v1.9.3: Sprint Z7 — guardian ADI BLOCKER row. v1.9.2: Sprint Z6 — guardian BMAD rows. v1.9.0: Sprint Z4 — evidence-gatherer.",
+      "version": "1.10.0",
       "author": {
         "name": "ForgePlan"
       },
