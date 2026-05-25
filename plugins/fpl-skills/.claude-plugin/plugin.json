@@ -1,7 +1,7 @@
 {
   "name": "fpl-skills",
-  "version": "1.27.0",
-  "description": "Flagship workflow plugin for the ForgePlan ecosystem. 27 engineering skills + dev-advisor agent + 5 hooks. v1.24.3: Sprint O PRD-041 — scripts/detect_link_footguns.sh ships (76 LOC bash, NDJSON output, walks forgeplan graph detecting supersedes-inversion + informs-inversion; surfaced 4 real findings on first run validating Anomaly #15/#16 patterns). v1.24.2: Sprint M PRD-039 conventions (Step 9b.1 + Step 11 + 9th anomaly kind). v1.24.1: Sprint J+K closure pack. v1.24: PRD-034 Sprint F — /forge-cleanup 8 outcomes total. v1.23: Sprint D self-healing framework + <<NEEDS_ACTIVATION>> sentinel. v1.25.0: Sprint Z1 PRD-052 — added /decision skill + templates/adr-light.md + templates/adr-full.md (DDR-style decision records with mandatory Revisit Trigger). v1.26.0: Sprint Z2 PRD-053 — Evidence Decay enforcement: /decay-watch skill + decay-reminder.sh SessionStart hook + adr templates parseable Revisit Trigger syntax. v1.27.0: Sprint Z5 PRD-056 — /decay-watch extended to 4 sources (ADR triggers / NOTE-013 deferred items / upstream issue check-scripts / ADR line-count) + decay-reminder.sh now alerts across all 4. NOTE-013 «Deferred items tracker» introduced. Closes audit Finding #4.",
+  "version": "1.28.0",
+  "description": "Flagship workflow plugin for the ForgePlan ecosystem. 28 engineering skills + dev-advisor agent + 5 hooks. v1.24.3: Sprint O PRD-041 — scripts/detect_link_footguns.sh ships (76 LOC bash, NDJSON output, walks forgeplan graph detecting supersedes-inversion + informs-inversion; surfaced 4 real findings on first run validating Anomaly #15/#16 patterns). v1.24.2: Sprint M PRD-039 conventions (Step 9b.1 + Step 11 + 9th anomaly kind). v1.24.1: Sprint J+K closure pack. v1.24: PRD-034 Sprint F — /forge-cleanup 8 outcomes total. v1.23: Sprint D self-healing framework + <<NEEDS_ACTIVATION>> sentinel. v1.25.0: Sprint Z1 PRD-052 — added /decision skill + templates/adr-light.md + templates/adr-full.md (DDR-style decision records with mandatory Revisit Trigger). v1.26.0: Sprint Z2 PRD-053 — Evidence Decay enforcement: /decay-watch skill + decay-reminder.sh SessionStart hook + adr templates parseable Revisit Trigger syntax. v1.27.0: Sprint Z5 PRD-056 — /decay-watch extended to 4 sources (ADR triggers / NOTE-013 deferred items / upstream issue check-scripts / ADR line-count) + decay-reminder.sh now alerts across all 4. NOTE-013 «Deferred items tracker» introduced. Closes audit Finding #4. v1.28.0: Sprint Z8 PRD-058 — OpenSpec S12 delta-spec mandatory at supersede: /supersede skill + templates/adr-supersede.md + /decay-watch Step 2e supersede chain delta verification (HAS-DELTA / MISSING-DELTA / NO-DELTA-WHEN-REQUIRED).",
   "author": {
     "name": "ForgePlan"
   },
@@ -69,7 +69,8 @@
       "sprint",
       "team",
       "decision",
-      "decay-watch"
+      "decay-watch",
+      "supersede"
     ],
     "hooks": [
       "SessionStart",

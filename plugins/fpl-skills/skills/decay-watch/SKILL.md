@@ -94,6 +94,49 @@ if is_light_adr(adr_body) and line_count > 400:
 
 Full ADRs have no hard limit (typical 800-2000 lines) — only warn if exceeds 3000 (likely scope creep).
 
+### Step 2e — Supersede chain delta-spec verification (Sprint Z8 PRD-058)
+
+Enumerate all active artifacts that have a `supersedes` link to another artifact. For each,
+verify the body contains the mandatory OpenSpec delta-spec sections.
+
+```python
+# Fetch all active artifacts and filter those with supersedes links
+active_artifacts = forgeplan_list(status="active")
+for artifact in active_artifacts:
+    details = forgeplan_get(id=artifact.id)
+    has_supersedes_link = any(
+        link.relation == "supersedes"
+        for link in details.get("dependency_links", [])
+    )
+    if not has_supersedes_link:
+        continue
+
+    body = details.get("body", "")
+    has_delta_section = "## Delta-spec" in body or "### ADDED" in body
+
+    # Classify
+    if has_delta_section:
+        classification = "HAS-DELTA"        # delta-spec present — compliant
+    else:
+        # Determine if pre-Z8 or Z8+ by checking creation date
+        created = details.get("created_at", "")
+        if created >= "2026-05-25":         # Z8 epoch: Sprint Z8 PRD-058 shipped
+            classification = "NO-DELTA-WHEN-REQUIRED"   # Z8+ supersede missing delta → CONCERNS
+        else:
+            classification = "MISSING-DELTA"            # pre-Z8 supersede → backward-compat warning
+```
+
+Classifications:
+
+| Classification | Meaning | Action |
+|---|---|---|
+| **HAS-DELTA** | `## Delta-spec` section present in body | Compliant — no action |
+| **MISSING-DELTA** | Supersede created before Z8 (pre-2026-05-25), no delta section | Warning — backward-compatible; recommend adding delta retrospectively |
+| **NO-DELTA-WHEN-REQUIRED** | Supersede created Z8+ (on/after 2026-05-25), no delta section | CONCERNS — violates Sprint Z8 enforcement; file for remediation |
+
+**Note**: pre-Z8 supersedes are flagged as warnings, not blockers, to preserve backward
+compatibility. The discipline is **mandatory for new supersedes from Sprint Z8 onward**.
+
 ### Step 3 — Classify each trigger
 
 Three categories:
@@ -107,7 +150,7 @@ Three categories:
 
 ### Step 4 — Output structured report
 
-When invoked silently (by hook) — output ONLY if there are FIRED / DATE-FIRED / ISSUE-FIRED / LINE-LIMIT-EXCEEDED items across any of the 4 sources:
+When invoked silently (by hook) — output ONLY if there are FIRED / DATE-FIRED / ISSUE-FIRED / LINE-LIMIT-EXCEEDED / NO-DELTA-WHEN-REQUIRED items across any of the 5 sources:
 
 ```
 🔔 N item(s) need attention:
@@ -115,6 +158,7 @@ When invoked silently (by hook) — output ONLY if there are FIRED / DATE-FIRED 
   - NOTE-013 deferred item closed (issue): forgeplan#NNN
   - check-issue-NNN: state changed OPEN → CLOSED
   - ADR-YYY exceeds 400-line limit (current: NNN)
+  - ADR-ZZZ: Z8+ supersede missing delta-spec (NO-DELTA-WHEN-REQUIRED)
 Run /decay-watch for details.
 ```
 
@@ -156,6 +200,19 @@ When invoked directly by user — output full multi-source report:
 - **ADR-XXX (light)**: 432 lines — exceeds 400 limit
   - Recommend: split into 2 light ADRs, OR migrate to adr-full template
 
+### 5. Supersede chain delta-spec (Sprint Z8)
+
+#### NO-DELTA-WHEN-REQUIRED (Z8+ supersede — CONCERNS)
+- **ADR-XXX**: supersedes ADR-YYY — created YYYY-MM-DD — missing `## Delta-spec` section
+  - Action: add delta-spec using `templates/adr-supersede.md` or run `/supersede` retroactively
+
+#### MISSING-DELTA (pre-Z8 supersede — warning)
+- **ADR-AAA**: supersedes ADR-BBB — pre-Sprint-Z8 artifact — no delta-spec (backward-compatible)
+  - Recommend: add delta retrospectively when the ADR is next touched
+
+#### HAS-DELTA (compliant)
+- Count: N — all delta-specs present
+
 ### SUMMARY
 
 - Total active ADRs: N (M light / K full)
@@ -163,6 +220,7 @@ When invoked directly by user — output full multi-source report:
 - NOTE-013 deferred: N total / N fired / N pending
 - Upstream issues: N watched / N newly CLOSED
 - Line-count violations: N
+- Supersede chain delta-spec: N HAS-DELTA / N MISSING-DELTA (pre-Z8) / N NO-DELTA-WHEN-REQUIRED (Z8+)
 ```
 
 ## Hard rules
@@ -189,7 +247,10 @@ When invoked directly by user — output full multi-source report:
 
 ## References
 
-- PRD-053 (this Sprint Z2 scope)
+- PRD-053 (Sprint Z2 scope — this skill's original introduction)
+- PRD-056 (Sprint Z5) — 4-source extension (NOTE-013 / check-issue scripts / line-count)
+- PRD-058 (Sprint Z8) — Step 2e supersede chain delta-spec verification
 - PRD-052 / Sprint Z1 — ADR templates with parseable Revisit Trigger
 - guardian agent (`plugins/agents-pro/agents/guardian.md`) Step 4b
 - ADR-006 — example with full Compliance section (currently pre-Sprint-Z2 format, will be migrated when revisited)
+- EPIC-001 S12 OpenSpec layer — authority for delta-spec discipline
