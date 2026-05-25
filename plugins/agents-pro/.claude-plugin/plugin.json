@@ -1,7 +1,7 @@
 {
   "name": "agents-pro",
-  "version": "1.9.2",
-  "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.9.2: Sprint Z6 PRD-057 — guardian Step 5 verdict matrix 2 new rows: Standard+ with zero Profile B EVID → BLOCKER; Profile B EVID with empty ## Findings → CONCERNS (BMAD adversarial review enforcement). v1.9.1: Sprint Z-audit fix — guardian Step 5 verdict matrix row added for weak F+G+R + aged ADR (was in Step 4b prose but missing from matrix). v1.9.0: Sprint Z4 PRD-055 — new evidence-gatherer agent. v1.8.1: 5 Profile B forgeplan-aware agents bodies patched with Step 9b NEEDS_ACTIVATION sentinel emit instruction per Sprint E PRD-033.",
+  "version": "1.9.4",
+  "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.9.4: Sprint Z9 PRD-060 — adr-architect Step 5b.1: C4 diagram dispatch trigger for ≥3-module full ADRs (auto-dispatch /c4-diagram in dispatch mode before ADR body, output docs/c4/<ADR-NNN>.md). v1.9.3: Sprint Z7 PRD-059 — guardian Step 5 verdict matrix 1 new row: Standard+ with no ADI EVID (no ≥3 hypotheses) → BLOCKER (FPF ADI discipline). v1.9.2: Sprint Z6 PRD-057 — guardian Step 5 verdict matrix 2 new rows: Standard+ with zero Profile B EVID → BLOCKER; Profile B EVID with empty ## Findings → CONCERNS (BMAD adversarial review enforcement). v1.9.1: Sprint Z-audit fix. v1.9.0: Sprint Z4 PRD-055 — new evidence-gatherer agent. v1.8.1: 5 Profile B forgeplan-aware agents bodies patched with Step 9b NEEDS_ACTIVATION sentinel emit instruction per Sprint E PRD-033.",
   "author": {
     "name": "ForgePlan"
   },

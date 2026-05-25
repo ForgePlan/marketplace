@@ -108,6 +108,33 @@ Read /Users/explosovebit/Work/ForgePlanMarketplace/forgeplan-marketplace/plugins
 
 Both templates make **`## Revisit Trigger`** (Evidence Decay) a MUST field — not optional. Sprint Z2 (PRD-053) enforces this via `guardian` agent + `/decay-watch` skill.
 
+### Step 5b.1 — C4 diagram dispatch trigger (Sprint Z9 — PRD-060)
+
+**When criterion #1 fires (decision touches ≥3 modules) AND full template is chosen, ALSO dispatch `/c4-diagram` skill BEFORE filling the ADR body.**
+
+Rationale: multi-module decisions benefit from a system-context view (C4 L1) and container view (C4 L2) **before** writing the decision body — diagrams force explicit boundary discipline and shape the prose. If you can name the modules but can't draw their boundaries with arrows, the ADR body will be hand-wavy. C4 makes the boundaries explicit before they go into prose.
+
+Default depth: **L1 + L2** (Context + Container). Add L3 only if the parent PRD body explicitly discusses component internals of a single container.
+
+Dispatch:
+
+```
+Task(
+  subagent_type = "fpl-skills:c4-diagram",
+  prompt = "Dispatch mode (Sprint Z9 PRD-060 — adr-architect Step 5b.1). System name: <name from PRD parent>. Modules touched: <list from criterion #1>. Target depth: L1+L2 (add L3 only if component internals discussed in PRD body). Output path: docs/c4/<ADR-NNN>.md (write both Mermaid diagrams and a 2-sentence context summary to this file). Return: path to generated file + 2-sentence text summary describing the system context (the summary will be used to seed the ADR body's Context section)."
+)
+```
+
+After `Task` returns:
+1. Note the output path and 2-sentence summary.
+2. Use the summary to populate the **`## Context`** section of the ADR body (cite the C4 file via relative link).
+3. Continue with Step 6 — fill the rest of the ADR body using the template.
+
+**Skip Step 5b.1 when:**
+- Template is `adr-light.md` (criterion #1 didn't fire).
+- System is brand-new with no deployed containers yet — skip C4 and note "C4 deferred: no deployed topology to diagram yet" in the ADR Context section.
+- Orchestrator already provided a C4 file path in the task prompt — use it, don't re-dispatch.
+
 ### Step 6 — Fill the body using the chosen template
 ```
 mcp__forgeplan__forgeplan_update(

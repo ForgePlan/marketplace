@@ -13,6 +13,28 @@ This skill **draws the system with you** through structured questions. For one-s
 
 ---
 
+## Dispatch mode — invoked from adr-architect Step 5b.1 (Sprint Z9 — PRD-060)
+
+When dispatched non-interactively from `adr-architect` (full ADR, ≥3 modules), follow this procedure instead of the interactive interview:
+
+1. **Receive** the structured prompt with: system name, module list, target level depth, output path.
+2. **Skip the interactive interview** — derive all answers from the context the orchestrator provided. Do not ask the user questions; infer container names and relationships from the module list and any parent PRD body accessible in context.
+3. **Generate L1 (Context) + L2 (Container) Mermaid diagrams** as a single combined file. L3 only if explicitly requested in the dispatch prompt.
+4. **Write** to the path specified by the orchestrator (typically `docs/c4/<ADR-NNN>.md` next to the ADR being drafted).
+5. **Return** to the orchestrator: path to the generated diagrams file + a 2-sentence text summary describing the system context (this summary is used by `adr-architect` to seed the ADR body's `## Context` section).
+
+**Use Dispatch mode when:**
+- `adr-architect` detects a ≥3-module decision and wants to ground the ADR body in explicit boundaries before prose is written (Sprint Z9 PRD-060 Step 5b.1).
+- `/forge-cycle` Phase 4 (Shape) wants visual context for a Deep+ feature before the RFC is authored.
+
+**Use interactive mode when:**
+- User explicitly invokes `/c4-diagram` — they want to walk through the questions.
+- System is new or poorly understood — the interactive interview surfaces what's actually deployed that the orchestrator can't know from PRD context alone.
+
+Reference: Sprint Z9 PRD-060. Methodology: Simon Brown's C4 model (c4model.com). Pairs with EPIC-001 4-layer pipeline — C4 is orthogonal architecture documentation, not part of S10-S13 pipeline layers.
+
+---
+
 ## When to use
 
 - Onboarding a new system — need diagrams for documentation.

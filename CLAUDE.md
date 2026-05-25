@@ -1,10 +1,10 @@
 # ForgePlan Marketplace — Claude Code Configuration
 
 **Repo**: [ForgePlan/marketplace](https://github.com/ForgePlan/marketplace)
-**Catalog version**: 1.68.0
+**Catalog version**: 1.70.0
 **Plugins**: 15 (9 workflow + 5 agent packs + 1 memory plugin fpl-hsmem) — brownfield-pack now ships canonical Profile A `discover` agent
 **Agents**: 18 of ~65 forgeplan-aware (PRD-026 canonical B2 paradigm — `disallowedTools` denylist + Sprint Q PRD-042 ASM-canon frontmatter + Sprint S Step 9c filesystem verification + Sprint T v0.32.1 native MCP adoption + Sprint V PRD-048 brownfield Discover Agent migrated to plugin. **`memory: project` REJECTED Sprint R** — Hindsight covers use case.)
-**Last Updated**: 2026-05-25 (post Sprint Z6 PRD-057: BMAD adversarial review mandatory for Standard+ activation — forgeplan-workflow v1.11.0 Step 6.5 + agents-pro v1.9.2 guardian 2 new verdict rows + CLAUDE.md BMAD discipline section. Catalog v1.68.0. 28 anomalies (24 resolved) + 13 ML + 10 mental models)
+**Last Updated**: 2026-05-25 (post Sprint Z9 PRD-060: C4 auto-recommend for ≥3-module architectural decisions — agents-pro v1.9.4 adr-architect Step 5b.1 + fpl-skills v1.28.1 c4-diagram Dispatch mode + CLAUDE.md C4 discipline section. Catalog v1.70.0. 28 anomalies (24 resolved) + 13 ML + 10 mental models)
 **Project board**: [orgs/ForgePlan/projects/5](https://github.com/orgs/ForgePlan/projects/5)
 
 ---
@@ -291,6 +291,92 @@ Reference: PRD-058, EPIC-001 (4-layer pipeline S12 OpenSpec).
 
 ---
 
+## FPF ADI discipline (Sprint Z7 — PRD-059)
+
+Foundation: EPIC-001 «4-layer pipeline», S10 FPF design layer. Every Standard+ PRD/RFC/ADR MUST have FPF ADI (Abduction → Deduction → Induction) cycle completed before activation. ADI = ≥3 hypotheses with explicit deductive predictions and inductive evidence checks. The «3» is not arbitrary — 2 always becomes false dichotomy; the third hypothesis is often the most interesting (e.g., «do nothing» or «in-process alternative»).
+
+### Rules
+
+1. Every Standard+ artifact MUST have ≥1 EVID with `kind=evidence` linked `informs` whose body documents the 3+ hypotheses, chosen one, and rationale.
+
+2. `forgeplan_reason <id>` is the canonical primitive (MCP) or `/fpf-reason` skill (interactive — fpf plugin).
+
+3. `/forge-cycle` Step 4.5 enforces — Standard+ artifacts cannot pass Step 5 without ADI EVID.
+
+4. Guardian Step 4b/5 enforces at activation gate: Standard+ artifact with no ADI EVID linked OR fewer than 3 `### Hypothesis` sections in the EVID body → **BLOCKER**.
+
+5. Cite **MSR 2026 finding** (AI without controls → +25-41% complexity) — ADI is the «control process» at the design layer. The gap is highest _before_ code is written: a bad hypothesis that survives to implementation costs 5-10× more to fix than a bad PRD section.
+
+### Why 3 hypotheses minimum
+
+| Count | Failure mode |
+|---|---|
+| 1 hypothesis | Not a hypothesis — it's a predetermined answer dressed as reasoning |
+| 2 hypotheses | False dichotomy — both framed by the same author toward the same conclusion |
+| 3+ hypotheses | One can challenge the premise of the other two; structural ADI cycle becomes possible |
+
+The 3rd hypothesis should always be considered: «what if we do nothing / in-process alternative / scope reduction?» Skipping it is the most common ADI failure mode.
+
+### Quick path for ADI EVID
+
+```bash
+# MCP path (preferred):
+forgeplan_reason <ARTIFACT_ID>
+# → review output, confirm ≥3 hypotheses, pick best
+forgeplan new evidence "ADI cycle for PRD-XXX — N hypotheses, chosen HN" --parent PRD-XXX
+# Fill body: ## Hypotheses (copy from forgeplan_reason output), ## Chosen, ## Rationale
+
+# Interactive path (fpf plugin):
+/fpf-reason   # in Claude Code session — generates 3+ hypotheses interactively
+# then create EVID manually with body citing the ADI output
+```
+
+Cite EPIC-001 4-layer pipeline S10. Pair with BMAD (S11) discipline above and OpenSpec (S12) below.
+
+Reference: PRD-059, EPIC-001 (4-layer pipeline S10 FPF).
+
+---
+
+## C4 diagrams for ≥3-module architectural decisions (Sprint Z9 — PRD-060)
+
+Foundation: Simon Brown's C4 model (c4model.com) — orthogonal architecture documentation methodology that pairs naturally with full ADRs touching multiple modules. **C4 is NOT part of the 4-layer S10-S13 pipeline** — it is a complementary layer. Pair with FPF (S10) which surfaces hypotheses and BMAD (S11) which validates them — C4 makes the module boundaries from S10/S11 explicit before they go into prose.
+
+### Rules
+
+1. **Any full ADR (per Sprint Z1 criteria: ≥3 modules, OR supersede, OR irreversible) MUST be accompanied by C4 L1+L2 diagrams** (Mermaid format) before the ADR body is finalized.
+
+2. **`adr-architect` Step 5b.1 auto-recommends dispatching `/c4-diagram` skill in Dispatch mode** when criterion #1 (≥3 modules) triggers. The dispatch happens BEFORE filling the ADR body — diagrams shape the prose, not the other way around.
+
+3. **Output location**: Mermaid diagrams in a Markdown file co-located with the ADR body or in `docs/c4/<ADR-NNN>.md`.
+
+4. **ADR body MAY reference the C4 file via relative link** in the `## Context` section. If the ADR body discusses inter-module flow without a C4 file present — `guardian` agent flags as CONCERNS at the gate.
+
+5. **L3 (Component) only when needed**: default depth is L1+L2. Add L3 only if the PRD body explicitly discusses component internals of a single container.
+
+### What C4 levels mean for architectural decisions
+
+| Level | When required | When to skip |
+|---|---|---|
+| L1 — Context | Always for full ADRs | Never — it's 10 lines |
+| L2 — Container | Always for full ADRs | Single-service system (embed in L1) |
+| L3 — Component | PRD body discusses container internals | Anything higher-level |
+| L4 — Code | Never for ADRs | Class-level detail belongs in RFC/code comments |
+
+### Quick path
+
+```bash
+# adr-architect Step 5b.1 auto-dispatches:
+Task(subagent_type="fpl-skills:c4-diagram",
+     prompt="Dispatch mode. System: <name>. Modules: <list>. Depth: L1+L2. Output: docs/c4/<ADR-NNN>.md.")
+
+# Manual invocation if writing ADR without adr-architect:
+/c4-diagram   # interactive interview → produces same output
+```
+
+Reference: PRD-060, EPIC-001. Simon Brown's C4 model: [c4model.com](https://c4model.com).
+
+---
+
 ## Version Bumping
 
 When a plugin changes, bump version in two places:
@@ -367,16 +453,16 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # rulesets
 
 ---
 
-## Plugin versions (catalog v1.68.0)
+## Plugin versions (catalog v1.70.0)
 
 ### Workflow plugins
 
 | Plugin | Version |
 |--------|:-------:|
-| **fpl-skills** | **1.28.0** (Sprint Z8: /supersede skill + templates/adr-supersede.md + /decay-watch Step 2e; Sprint Z5: /decay-watch 4-source extension; Sprint Z2: /decay-watch + decay-reminder.sh; Sprint Z1: /decision + adr templates) |
+| **fpl-skills** | **1.28.1** (Sprint Z9: c4-diagram Dispatch mode section; Sprint Z8: /supersede skill + templates/adr-supersede.md + /decay-watch Step 2e; Sprint Z5: /decay-watch 4-source extension; Sprint Z2: /decay-watch + decay-reminder.sh; Sprint Z1: /decision + adr templates) |
 | **cc-best** | **1.0.0** (Sprint Y phase 1: claude-md section + 5 STUB sections) |
 | **fpl-hsmem** | 2.1.0 |
-| **forgeplan-workflow** | **1.11.0** (Sprint Z6: Step 6.5 BMAD adversarial review mandatory for Standard+) |
+| **forgeplan-workflow** | **1.12.0** (Sprint Z7: Step 4.5 FPF ADI mandatory for Standard+; Sprint Z6: Step 6.5 BMAD adversarial review mandatory for Standard+) |
 | **forgeplan-orchestra** | 1.4.1 |
 | **forgeplan-brownfield-pack** | 1.4.0 (Sprint V: Discover Agent migrated) |
 | **fpf** | 1.4.1 |
@@ -391,7 +477,7 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # rulesets
 |--------|:-------:|---|
 | **agents-core** | 1.3.2 | Sprint Q |
 | **agents-domain** | 1.1.0 | — |
-| **agents-pro** | **1.9.2** | Sprint Z6 (guardian Step 5: 2 new BMAD rows — BLOCKER + CONCERNS for adversarial review) |
+| **agents-pro** | **1.9.4** | Sprint Z9 (adr-architect Step 5b.1: C4 dispatch for ≥3-module full ADRs) |
 | **agents-github** | 1.1.0 | — |
 | **agents-sparc** | 1.2.1 | Sprint Q |
 
