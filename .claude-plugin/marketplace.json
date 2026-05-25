@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code — UX, frontend, workflow, and developer tools",
-    "version": "1.70.0"
+    "version": "1.71.0"
   },
   "plugins": [
     {
@@ -35,8 +35,8 @@
     {
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
-      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 28 engineering skills + dev-advisor agent + 5 hooks. v1.28.1: Sprint Z9 PRD-060 — c4-diagram skill Dispatch mode section (non-interactive invocation from adr-architect Step 5b.1). v1.28.0: Sprint Z8 PRD-058 — /supersede skill + adr-supersede.md template + /decay-watch Step 2e. v1.27.0: Sprint Z5 PRD-056 — deferred-items tracker (NOTE-013) + /decay-watch 4-source extension. v1.26.0: Sprint Z2 PRD-053 — Evidence Decay enforcement. v1.25.0: Sprint Z1 PRD-052 — /decision skill + adr templates.",
-      "version": "1.28.1",
+      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 29 engineering skills + dev-advisor agent + 5 hooks. v1.29.0: Sprint Z10 PRD-061 — /methodology-check meta-skill: 4-layer coverage report (S10/S11/S12/S13 + C4) for any artifact. v1.28.1: Sprint Z9 PRD-060 — c4-diagram Dispatch mode. v1.28.0: Sprint Z8 PRD-058 — /supersede + delta-spec discipline. v1.27.0: Sprint Z5 PRD-056 — /decay-watch 4-source + NOTE-013. v1.26.0: Sprint Z2 PRD-053 — Evidence Decay. v1.25.0: Sprint Z1 PRD-052 — /decision + adr templates.",
+      "version": "1.29.0",
       "author": {
         "name": "ForgePlan"
       },

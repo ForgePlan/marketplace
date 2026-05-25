@@ -1,7 +1,7 @@
 {
   "name": "fpl-skills",
-  "version": "1.28.1",
-  "description": "Flagship workflow plugin for the ForgePlan ecosystem. 28 engineering skills + dev-advisor agent + 5 hooks. v1.28.1: Sprint Z9 PRD-060 — c4-diagram skill extended with Dispatch mode section (non-interactive invocation from adr-architect Step 5b.1 for ≥3-module full ADRs). v1.28.0: Sprint Z8 PRD-058 — OpenSpec S12 delta-spec mandatory at supersede: /supersede skill + templates/adr-supersede.md + /decay-watch Step 2e supersede chain delta verification (HAS-DELTA / MISSING-DELTA / NO-DELTA-WHEN-REQUIRED). v1.27.0: Sprint Z5 PRD-056 — /decay-watch extended to 4 sources + NOTE-013 deferred-items tracker. v1.26.0: Sprint Z2 PRD-053 — Evidence Decay enforcement. v1.25.0: Sprint Z1 PRD-052 — /decision skill + adr-light.md + adr-full.md templates. v1.24.3: Sprint O PRD-041 — detect_link_footguns.sh.",
+  "version": "1.29.0",
+  "description": "Flagship workflow plugin for the ForgePlan ecosystem. 29 engineering skills + dev-advisor agent + 5 hooks. v1.29.0: Sprint Z10 PRD-061 — /methodology-check meta-skill: 4-layer coverage report (S10/S11/S12/S13 + C4) for any artifact, read-only, score 0-2 per layer + aggregate percentage + action items. v1.28.1: Sprint Z9 PRD-060 — c4-diagram skill Dispatch mode section. v1.28.0: Sprint Z8 PRD-058 — OpenSpec S12 delta-spec mandatory at supersede. v1.27.0: Sprint Z5 PRD-056 — /decay-watch extended to 4 sources + NOTE-013. v1.26.0: Sprint Z2 PRD-053 — Evidence Decay enforcement. v1.25.0: Sprint Z1 PRD-052 — /decision skill + adr templates. v1.24.3: Sprint O PRD-041 — detect_link_footguns.sh.",
   "author": {
     "name": "ForgePlan"
   },
@@ -70,7 +70,8 @@
       "team",
       "decision",
       "decay-watch",
-      "supersede"
+      "supersede",
+      "methodology-check"
     ],
     "hooks": [
       "SessionStart",
