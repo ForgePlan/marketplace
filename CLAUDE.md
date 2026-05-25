@@ -1,10 +1,10 @@
 # ForgePlan Marketplace — Claude Code Configuration
 
 **Repo**: [ForgePlan/marketplace](https://github.com/ForgePlan/marketplace)
-**Catalog version**: 1.61.0
+**Catalog version**: 1.68.0
 **Plugins**: 15 (9 workflow + 5 agent packs + 1 memory plugin fpl-hsmem) — brownfield-pack now ships canonical Profile A `discover` agent
 **Agents**: 18 of ~65 forgeplan-aware (PRD-026 canonical B2 paradigm — `disallowedTools` denylist + Sprint Q PRD-042 ASM-canon frontmatter + Sprint S Step 9c filesystem verification + Sprint T v0.32.1 native MCP adoption + Sprint V PRD-048 brownfield Discover Agent migrated to plugin. **`memory: project` REJECTED Sprint R** — Hindsight covers use case.)
-**Last Updated**: 2026-05-22 (post Sprint U/V/adopt-#288/W autonomous run: Sprint U pivot empirically refuted Resume Prompt batch-fix premise + filed forgeplan#325; Sprint V migrated brownfield Discover Agent to plugin v1.4.0; Sprint adopt-#288 ADR-006 KEEP CURRENT 4-layer sentinel; Sprint W closed Anomaly #27+#28 — LR-8 lint rule active + canonical frontmatter schema formalises skills:/maxTurns:/isolation: fields. 28 anomalies (24 resolved) + 13 ML + 10 mental models, catalog v1.61.0)
+**Last Updated**: 2026-05-25 (post Sprint Z6 PRD-057: BMAD adversarial review mandatory for Standard+ activation — forgeplan-workflow v1.11.0 Step 6.5 + agents-pro v1.9.2 guardian 2 new verdict rows + CLAUDE.md BMAD discipline section. Catalog v1.68.0. 28 anomalies (24 resolved) + 13 ML + 10 mental models)
 **Project board**: [orgs/ForgePlan/projects/5](https://github.com/orgs/ForgePlan/projects/5)
 
 ---
@@ -218,6 +218,79 @@ Quick path for a defer:
 
 ---
 
+## BMAD adversarial review discipline (Sprint Z6 — PRD-057)
+
+Foundation: EPIC-001 «4-layer pipeline», S11 BMAD quality-gate layer. MSR 2026 measures **+25–41% complexity gap** in AI-assisted projects without adversarial review controls — artifacts are plausible-sounding but under-specified.
+
+### Rules
+
+1. **Every Standard+ PRD, RFC, or ADR MUST have ≥1 Profile B EVID** linked `informs` before `forgeplan_activate` is called. Zero-evidence activation = BLOCKER at guardian gate.
+
+2. **Profile B EVID body MUST contain a `## Findings` section with ≥1 item.** Zero findings = reviewer was not adversarial enough. The reviewer's role is explicitly adversarial: assume the artifact has a gap, look for it, and name it.
+
+3. **Motivation (MSR 2026)**: AI-generated artifacts exhibit confident incompleteness — they look finished but silently omit non-obvious requirements, measurability constraints, or risk mitigations. A structured adversarial reviewer closes this gap. Without it, the pipeline amplifies AI confidence without adding human-equivalent verification.
+
+4. **What to write when genuinely nothing is wrong**: if after thorough adversarial search the reviewer finds no actionable issue, write a `## Findings` section with exactly one line stating so **plus ≥2 sentences explaining what was specifically checked and why no gap was found**. A bare "no findings" is not acceptable — it reads identically to "reviewer didn't look". Default expectation: ≥1 finding exists. Genuinely zero-gap artifacts are exceptional.
+
+5. **Enforcement**:
+   - `/forge-cycle` Step 6.5 dispatches `agents-pro:artifact-reviewer` with adversarial mandate for all Standard+ depth tasks
+   - `guardian` Step 5 verdict matrix: zero Profile B EVID with verdict=PASS → **BLOCKER**; Profile B EVID with empty `## Findings` → **CONCERNS** (re-dispatch recommended)
+
+Quick path for the reviewer:
+
+```markdown
+## Findings
+
+1. **[Severity: HIGH]** AC-3 has no measurable threshold — "system should respond quickly" is not SMART.
+   Recommendation: replace with "System shall respond within 200ms at p95 under 1000 concurrent users".
+```
+
+Reference: PRD-057, EPIC-001 (4-layer pipeline S11), MSR 2026 (+25–41% complexity without controls).
+
+---
+
+## OpenSpec delta-spec discipline (Sprint Z8 — PRD-058)
+
+Foundation: EPIC-001 «4-layer pipeline», S12 OpenSpec structure layer. Every **supersede** operation
+MUST produce an explicit delta-spec — a structured record of what was ADDED, MODIFIED, REMOVED, and
+UNCHANGED relative to the predecessor. Without delta, the supersede history silently loses context.
+
+### Rules
+
+1. **Every supersede MUST use `adr-supersede.md` template** (or include the equivalent delta sections
+   in a custom body). The four sub-sections — `### ADDED`, `### MODIFIED`, `### REMOVED`,
+   `### UNCHANGED` — are ALL required in the new artifact body.
+
+2. **Empty delta is fine if explicit.** If a category genuinely has nothing, write «no items».
+   Implicit empty (missing section entirely) is the violation — not the absence of content.
+
+3. **`/decay-watch` Step 2e enforces.** On every invocation it enumerates all active artifacts with
+   a `supersedes` link and classifies each:
+   - `HAS-DELTA` — delta-spec present, compliant.
+   - `MISSING-DELTA` — pre-Z8 supersede, no delta section, backward-compatible warning.
+   - `NO-DELTA-WHEN-REQUIRED` — Z8+ supersede (created on/after 2026-05-25) missing delta → **CONCERNS** in next health check.
+
+4. **Use `/supersede` skill for the workflow.** It walks Steps 1-8: reads old ADR, verifies active
+   status, computes delta, fills template, creates new ADR, links `supersedes`, marks predecessor
+   `superseded`. Do not manually create supersede artifacts without running this procedure.
+
+5. **REMOVED > 50% of predecessor → reconsider.** If the new decision removes more than half the
+   predecessor's substance, it may be a replacement rather than an evolution. Write a standalone ADR
+   (using `adr-light.md` or `adr-full.md`) instead. The `/supersede` skill surfaces this check in
+   Step 3.
+
+Quick path for a supersede:
+
+```bash
+# In your session:
+/supersede ADR-NNN
+# The skill reads the old ADR, prompts for delta, creates new ADR with delta-spec, links + marks superseded.
+```
+
+Reference: PRD-058, EPIC-001 (4-layer pipeline S12 OpenSpec).
+
+---
+
 ## Version Bumping
 
 When a plugin changes, bump version in two places:
@@ -294,16 +367,16 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # rulesets
 
 ---
 
-## Plugin versions (catalog v1.66.0)
+## Plugin versions (catalog v1.68.0)
 
 ### Workflow plugins
 
 | Plugin | Version |
 |--------|:-------:|
-| **fpl-skills** | **1.26.0** (Sprint Z2: /decay-watch skill + decay-reminder.sh SessionStart hook; Sprint Z1: /decision skill + adr templates) |
+| **fpl-skills** | **1.28.0** (Sprint Z8: /supersede skill + templates/adr-supersede.md + /decay-watch Step 2e; Sprint Z5: /decay-watch 4-source extension; Sprint Z2: /decay-watch + decay-reminder.sh; Sprint Z1: /decision + adr templates) |
 | **cc-best** | **1.0.0** (Sprint Y phase 1: claude-md section + 5 STUB sections) |
 | **fpl-hsmem** | 2.1.0 |
-| **forgeplan-workflow** | 1.10.3 |
+| **forgeplan-workflow** | **1.11.0** (Sprint Z6: Step 6.5 BMAD adversarial review mandatory for Standard+) |
 | **forgeplan-orchestra** | 1.4.1 |
 | **forgeplan-brownfield-pack** | 1.4.0 (Sprint V: Discover Agent migrated) |
 | **fpf** | 1.4.1 |
@@ -318,7 +391,7 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # rulesets
 |--------|:-------:|---|
 | **agents-core** | 1.3.2 | Sprint Q |
 | **agents-domain** | 1.1.0 | — |
-| **agents-pro** | **1.9.1** | Sprint Z4 (evidence-gatherer agent) + Sprint Z-audit (guardian Step 5 verdict matrix row) |
+| **agents-pro** | **1.9.2** | Sprint Z6 (guardian Step 5: 2 new BMAD rows — BLOCKER + CONCERNS for adversarial review) |
 | **agents-github** | 1.1.0 | — |
 | **agents-sparc** | 1.2.1 | Sprint Q |
 

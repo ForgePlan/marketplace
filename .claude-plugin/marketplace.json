@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code — UX, frontend, workflow, and developer tools",
-    "version": "1.67.0"
+    "version": "1.68.0"
   },
   "plugins": [
     {
@@ -36,7 +36,7 @@
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
       "description": "Flagship workflow plugin for the ForgePlan ecosystem. 27 engineering skills + dev-advisor agent + 5 hooks. v1.24.5: Sprint T PRD-046 — /forge-cleanup Step 2.5 native forgeplan_anomalies MCP primary + AGENT-AUTHORING-GUIDE Profile B EVID-creation canonical procedure (2-step parent_id auto-link via #295). v1.24.4: Sprint S Step 9c convention. v1.24.3: Sprint O detection script. v1.24.2: Sprint M conventions. v1.25.0: Sprint Z1 PRD-052 — added /decision skill + adr-light/adr-full templates with mandatory Revisit Trigger. v1.26.0: Sprint Z2 PRD-053 — Evidence Decay enforcement. v1.27.0: Sprint Z5 PRD-056 — deferred-items tracker (NOTE-013) + /decay-watch 4-source extension.",
-      "version": "1.27.0",
+      "version": "1.28.0",
       "author": {
         "name": "ForgePlan"
       },
@@ -121,8 +121,8 @@
     {
       "name": "forgeplan-workflow",
       "source": "./plugins/forgeplan-workflow",
-      "description": "Structured engineering workflow for forgeplan users. Provides /forge-cycle (full SDLC cycle) and /forge-audit. v1.10.3: Sprint T PRD-046 — forgeplan_unlink MCP adopted (replaces Sprint G CLI workaround per #286). v1.10.2: Sprint S Phase 6.5.1 document_ingest_file wire. v1.10.1: Sprint F + J+K Phase 7.3.",
-      "version": "1.10.3",
+      "description": "Structured engineering workflow for forgeplan users. Provides /forge-cycle (full SDLC cycle) and /forge-audit. v1.11.0: Sprint Z6 PRD-057 — Step 6.5 BMAD adversarial review mandatory for Standard+ activation. v1.10.3: Sprint T PRD-046 — forgeplan_unlink MCP adopted.",
+      "version": "1.11.0",
       "author": {
         "name": "ForgePlan"
       },
@@ -250,8 +250,8 @@
     {
       "name": "agents-pro",
       "source": "./plugins/agents-pro",
-      "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.8.2: Sprint Q PRD-042 — ASM-canon frontmatter added to 12 forgeplan-aware agents (skills preload, maxTurns, MCP deps comments; 5 learners get memory:project: architect-reviewer/adr-architect/goal-planner/security-expert/system-dev). v1.8.1: Sprint E body patches. v1.9.0: Sprint Z4 PRD-055 — evidence-gatherer agent. v1.9.1: Sprint Z-audit fix.",
-      "version": "1.9.1",
+      "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.9.2: Sprint Z6 PRD-057 — guardian Step 5 verdict matrix 2 new BMAD rows (Standard+ zero Profile B EVID → BLOCKER; empty ## Findings → CONCERNS). v1.9.1: Sprint Z-audit fix. v1.9.0: Sprint Z4 PRD-055 — evidence-gatherer agent.",
+      "version": "1.9.2",
       "author": {
         "name": "ForgePlan"
       },
