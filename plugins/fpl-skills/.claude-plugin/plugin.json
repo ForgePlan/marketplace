@@ -1,7 +1,7 @@
 {
   "name": "fpl-skills",
-  "version": "1.29.0",
-  "description": "Flagship workflow plugin for the ForgePlan ecosystem. 29 engineering skills + dev-advisor agent + 5 hooks. v1.29.0: Sprint Z10 PRD-061 — /methodology-check meta-skill: 4-layer coverage report (S10/S11/S12/S13 + C4) for any artifact, read-only, score 0-2 per layer + aggregate percentage + action items. v1.28.1: Sprint Z9 PRD-060 — c4-diagram skill Dispatch mode section. v1.28.0: Sprint Z8 PRD-058 — OpenSpec S12 delta-spec mandatory at supersede. v1.27.0: Sprint Z5 PRD-056 — /decay-watch extended to 4 sources + NOTE-013. v1.26.0: Sprint Z2 PRD-053 — Evidence Decay enforcement. v1.25.0: Sprint Z1 PRD-052 — /decision skill + adr templates. v1.24.3: Sprint O PRD-041 — detect_link_footguns.sh.",
+  "version": "1.31.0",
+  "description": "Flagship workflow plugin for the ForgePlan ecosystem. 33 engineering skills + dev-advisor agent + 5 hooks (+ smith greeting). v1.31.0: EPIC-002 PRD-063/064 — 4 new smith skills (/smith default master-orchestrator entrypoint, /smith-bootstrap greenfield onboarding, /smith-plan per-task plan with 12-context classification, /smith-routing educational walkthrough), 5 new templates (smith-plan, smith-bootstrap, smith-handoff, post-mortem, routing-decision), session-start.sh smith greeting (3 states, <50ms), 5 READMEs + SMITH-TEMPLATES guide, AGENT-AUTHORING-GUIDE Profile B-orchestrator sub-profile. v1.29.0: Sprint Z10 PRD-061 — /methodology-check. v1.28.1: Sprint Z9 PRD-060 — c4-diagram Dispatch mode. v1.28.0: Sprint Z8 PRD-058 — /supersede + delta-spec. v1.27.0: Sprint Z5 PRD-056 — /decay-watch 4-source + NOTE-013.",
   "author": {
     "name": "ForgePlan"
   },

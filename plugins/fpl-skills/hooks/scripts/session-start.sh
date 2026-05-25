@@ -2,50 +2,95 @@
 # fpl-skills SessionStart hook
 # Prints a brief greeting + project status when Claude Code starts in a project.
 # Output goes to stdout; Claude Code surfaces it as session context.
+#
+# EPIC-002 Wave 3-C2: extended with Smith greeting — surfaces the master
+# orchestrator's presence, project state, and recommended next action.
+# Must stay under ~3s budget (declared `timeout: 3` in hooks.json).
 
 set -uo pipefail
 
-# Probe project state (all best-effort, never fail)
+# ─── Probe project state (all best-effort, never fail, all <100ms each) ────
 HAS_FORGEPLAN_DIR=$([ -d ".forgeplan" ] && echo "yes" || echo "no")
 HAS_DOCS_AGENTS=$([ -d "docs/agents" ] && echo "yes" || echo "no")
 HAS_CLAUDE_MD=$([ -f "CLAUDE.md" ] && echo "yes" || echo "no")
-BRANCH=$(git branch --show-current 2>/dev/null || echo "—")
+BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo "—")
+
 ARTIFACT_COUNT=0
+DRAFT_COUNT=0
 if [ "$HAS_FORGEPLAN_DIR" = "yes" ]; then
-  ARTIFACT_COUNT=$(find .forgeplan -name "*.md" -not -path "*/lance/*" 2>/dev/null | wc -l | tr -d ' ')
+  # Count active markdown artifacts (skip lance vector index).
+  # `wc -l` always emits a number even on empty stdin; no fallback needed.
+  # Avoid `|| echo 0` because pipefail can yield "N\n0" when an upstream
+  # command (e.g. grep with no matches) returns non-zero and we still pipe
+  # successfully through wc — breaking later arithmetic.
+  ARTIFACT_COUNT=$( { find .forgeplan -maxdepth 2 -name "*.md" -not -path "*/lance/*" 2>/dev/null || true; } | wc -l | tr -d ' ')
+  # Cheap draft probe — grep frontmatter line across top-level artifact dirs only.
+  DRAFT_COUNT=$( { grep -l "^status: draft" .forgeplan/*/*.md 2>/dev/null || true; } | wc -l | tr -d ' ')
+fi
+# Sanitise to integers (defensive — guards arithmetic below).
+[[ "$ARTIFACT_COUNT" =~ ^[0-9]+$ ]] || ARTIFACT_COUNT=0
+[[ "$DRAFT_COUNT" =~ ^[0-9]+$ ]] || DRAFT_COUNT=0
+
+# ─── Smith state classification ────────────────────────────────────────────
+# GREENFIELD: no .forgeplan/ or no CLAUDE.md → user should bootstrap
+# ATTENTION:  drafts present (any count >0) → user should triage
+# HEALTHY:    .forgeplan/ + CLAUDE.md + no drafts → normal session
+SMITH_STATE="healthy"
+if [ "$HAS_FORGEPLAN_DIR" = "no" ] || [ "$HAS_CLAUDE_MD" = "no" ]; then
+  SMITH_STATE="greenfield"
+elif [ "${DRAFT_COUNT:-0}" -gt 0 ] 2>/dev/null; then
+  SMITH_STATE="attention"
 fi
 
-# Compose a one-line status
+# ─── Compose status fragments (preserve legacy format) ─────────────────────
 STATUS_BITS=()
 [ "$HAS_FORGEPLAN_DIR" = "yes" ] && STATUS_BITS+=(".forgeplan/ ($ARTIFACT_COUNT artifacts)")
 [ "$HAS_DOCS_AGENTS" = "yes" ] && STATUS_BITS+=("docs/agents/ configured")
 [ "$HAS_CLAUDE_MD" = "yes" ] && STATUS_BITS+=("CLAUDE.md present")
 [ "$BRANCH" != "—" ] && STATUS_BITS+=("branch: $BRANCH")
 
-# Joining with " · "
 STATUS=""
 for bit in "${STATUS_BITS[@]+"${STATUS_BITS[@]}"}"; do
   if [ -z "$STATUS" ]; then STATUS="$bit"; else STATUS="$STATUS · $bit"; fi
 done
 
-echo "🛠  fpl-skills active${STATUS:+ — $STATUS}"
+# ─── Smith greeting line (replaces the prior bare "active" line) ───────────
+case "$SMITH_STATE" in
+  greenfield)
+    echo "🛠  fpl-skills active — Smith greeting: greenfield repo detected${STATUS:+ ($STATUS)}. Run /smith-bootstrap to scaffold."
+    ;;
+  attention)
+    ACTIVE_COUNT=$((ARTIFACT_COUNT - DRAFT_COUNT))
+    [ "$ACTIVE_COUNT" -lt 0 ] && ACTIVE_COUNT=0
+    echo "🛠  fpl-skills active — Smith alert: $DRAFT_COUNT stale/draft item(s) (of $ARTIFACT_COUNT artifacts, branch: $BRANCH). Run /forge-progress or /smith for details."
+    ;;
+  healthy)
+    ACTIVE_COUNT=$((ARTIFACT_COUNT - DRAFT_COUNT))
+    [ "$ACTIVE_COUNT" -lt 0 ] && ACTIVE_COUNT=0
+    echo "🛠  fpl-skills active — Smith ready ($ARTIFACT_COUNT artifacts, $ACTIVE_COUNT active, branch: $BRANCH). Say \"smith\" or \"/smith\" for routing."
+    ;;
+esac
 
-# Suggest next action based on what's missing
-if [ "$HAS_FORGEPLAN_DIR" = "no" ] && [ "$HAS_DOCS_AGENTS" = "no" ] && [ "$HAS_CLAUDE_MD" = "no" ]; then
-  echo "   New project? Run /fpl-init to bootstrap forgeplan + CLAUDE.md + docs/agents/."
-elif [ "$HAS_FORGEPLAN_DIR" = "no" ]; then
-  echo "   Tip: \`forgeplan init\` to set up artifact storage, or run /fpl-init for full setup."
-elif [ "$HAS_DOCS_AGENTS" = "no" ]; then
-  echo "   Tip: run /setup to configure project paths and tracker for skills."
-else
-  echo "   Quick start: /restore (recover context) · /briefing (today's tasks) · /research <topic>"
-fi
+# ─── Smith-aware tip line ──────────────────────────────────────────────────
+case "$SMITH_STATE" in
+  greenfield)
+    echo "   Tip: \`/smith-bootstrap\` to scaffold the project."
+    ;;
+  attention)
+    echo "   Tip: \`/smith\` to see what needs attention."
+    ;;
+  healthy)
+    echo "   Tip: \`/smith\` for status + recommended next action."
+    ;;
+esac
 
-# ─── forgeplan health next-action surfacing ───────────────────────────────
+# ─── forgeplan health next-action surfacing (opt-in via env-var) ──
 # When forgeplan is present and the artifact graph is non-clean (orphans,
-# stubs, dups, or stale), print one concrete next-action line. Fail silently
-# on any error — the hook must never block session start.
-if [ "$HAS_FORGEPLAN_DIR" = "yes" ] && command -v forgeplan >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1; then
+# stubs, dups, or stale), print one concrete next-action line. Gated behind
+# FPL_SHOW_HEALTH=1 to keep default SessionStart fast (<100ms). The cheap
+# filesystem probes above already classify greenfield / healthy / attention.
+# Fail silently on any error — the hook must never block session start.
+if [ "${FPL_SHOW_HEALTH:-}" = "1" ] && [ "$HAS_FORGEPLAN_DIR" = "yes" ] && command -v forgeplan >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1; then
   # `timeout` is GNU coreutils — present on Linux + homebrew macOS, missing on bare macOS.
   # Fall back to running forgeplan directly when timeout is absent.
   if command -v timeout >/dev/null 2>&1; then

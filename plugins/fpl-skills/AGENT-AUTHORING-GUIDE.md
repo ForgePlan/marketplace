@@ -1156,3 +1156,113 @@ Do **not** rely on:
 - [VoltAgent/awesome-claude-code-subagents](https://github.com/VoltAgent/awesome-claude-code-subagents) — curated subagent examples (browse before authoring from scratch)
 - [VoltAgent/awesome-agent-skills](https://github.com/VoltAgent/awesome-agent-skills) — curated skill examples
 - [DenisSergeevitch/agents-best-practices](https://github.com/DenisSergeevitch/agents-best-practices) — best-practices guide for writing custom Claude Code agents
+
+---
+
+## Profile B-orchestrator (orchestrator-level agents)
+
+**Profile B-orchestrator** is a **sub-profile of Profile B**, formalised in EPIC-002 alongside the `smith` master-orchestrator agent. It exists to cover a gap that Profiles A/B/C/D do not address cleanly: agents that **read broader project state and recommend dispatch of OTHER agents**, but neither create artifacts (Profile A), nor record EVIDENCE on one artifact (standard Profile B), nor stay strictly read-only with no operational role (Profile C), nor fix existing artifacts (Profile D).
+
+### Definition
+
+A **Profile B-orchestrator** is a **strategic planner sub-profile of Profile B**. Like Profile B it produces no source code, mutates no artifacts, and never activates anything. UNLIKE standard Profile B reviewers (`code-reviewer`, `security-expert`, `tester`, `architect-reviewer`, `guardian`), a Profile B-orchestrator does NOT audit a single artifact and does NOT produce an EVIDENCE artifact — instead it reads **broad project state** (forgeplan_health + list + blocked + stale + hindsight recall + git status) and applies a **methodology routing matrix** to return a structured **Markdown plan** naming which downstream specialist agents the orchestrator should dispatch, in which order, with which methodology backing each step.
+
+The output is a plan, not a verdict. The plan becomes the orchestrator's playbook for the next several dispatches.
+
+### How it differs from standard Profile B (reviewer)
+
+| Dimension | Standard Profile B (reviewer) | Profile B-orchestrator |
+|---|---|---|
+| **What it reads** | ONE artifact + its EVIDENCE chain | The WHOLE board: `forgeplan_health` + active/blocked/stale lists + hindsight + git state |
+| **What it produces** | An EVIDENCE artifact with PASS/CONCERNS/BLOCKER verdict | A Markdown plan with methodology + dispatch sequence |
+| **Scope** | One artifact, one verdict | One project state, one routing decision |
+| **Methodology surface** | Domain-specific (security, code-quality, tests, architecture-fit) | The 12-context methodology routing matrix |
+| **Downstream effect** | Orchestrator reads verdict → activates / re-dispatches fixer / halts | Orchestrator reads plan → dispatches the named Wave 1 agents |
+| **`forgeplan_new`** | ALLOWED (to create the EVID) | DENIED (no artifact creation; orchestrator persists plan via `artifact-author` if needed) |
+| **`forgeplan_link`** | ALLOWED (to link EVID `informs` artifact) | DENIED |
+| **`memory_recall`** | Per-artifact: prior reviews of THIS artifact's domain | Project-wide: prior routing decisions in THIS codebase |
+| **Mental models consumed** | Domain-specific (`mm-gate-failures`, `mm-pipeline-methodology`, `mm-fpf-examples`) | Routing-specific (`mm-agent-selection`, `mm-pipeline-methodology`, `mm-pipeline-anomalies`) |
+
+### Allowed tools (inherited from parent session)
+
+Everything not in the denylist below. Specifically:
+
+- `Read`, `Grep`, `Glob`, `Bash` (read-only commands only — see Hard Rules)
+- `WebSearch`, `WebFetch` (sparingly, for methodology source citations)
+- `Task` (for dispatch RECOMMENDATION — orchestrator runs the actual dispatch; smith does not call `Task` to mutate state)
+- All forgeplan READ tools: `forgeplan_health`, `forgeplan_list`, `forgeplan_get`, `forgeplan_search`, `forgeplan_graph`, `forgeplan_blocked`, `forgeplan_stale`, `forgeplan_blindspots`, `forgeplan_anomalies`, `forgeplan_journal`, `forgeplan_phase`, `forgeplan_calibrate`, `forgeplan_score`, `forgeplan_drift`, `forgeplan_fpf_rules`, `forgeplan_activity`, `forgeplan_activity_stats`
+- All hindsight READ tools: `memory_recall`, `memory_status`, `memory_get_current_bank`, `memory_reflect`, `mental_model_list`, `mental_model_get`
+
+### Denied tools (`disallowedTools` denylist)
+
+```yaml
+disallowedTools:
+  - Write
+  - Edit
+  - NotebookEdit
+  - mcp__forgeplan__forgeplan_new
+  - mcp__forgeplan__forgeplan_update
+  - mcp__forgeplan__forgeplan_link
+  - mcp__forgeplan__forgeplan_validate
+  - mcp__forgeplan__forgeplan_activate
+  - mcp__forgeplan__forgeplan_reason
+  - mcp__forgeplan__forgeplan_claim
+  - mcp__forgeplan__forgeplan_release
+  - mcp__plugin_fpl-hsmem_hindsight__memory_retain
+  - mcp__plugin_fpl-hsmem_hindsight__memory_set_mission
+  - mcp__plugin_fpl-hsmem_hindsight__mental_model_create
+  - mcp__plugin_fpl-hsmem_hindsight__mental_model_update
+  - mcp__plugin_fpl-hsmem_hindsight__mental_model_delete
+```
+
+Note: `forgeplan_claim`/`release` are denied because a Profile B-orchestrator does NOT claim a specific artifact — it reads broad state. Claims belong to agents that mutate one specific artifact. The orchestrator dispatching agents named in the plan handles claim/release at the per-agent layer.
+
+`Bash` is **inherited** (not denied), but Hard Rule "Bash is read-only" constrains it to read-only inspection (`git status`, `git log`, `forgeplan health` CLI, etc.). The denylist cannot enforce read-only Bash; the rule does.
+
+`memory_retain` is denied because Profile B-orchestrator runs frequently (session-start, fork-in-the-road moments) and would bloat hindsight if every plan saved a lesson. Auto-hooks (Stop/SessionEnd) still capture conversation-layer learning. Genuine routing-pattern learnings can be saved as `mental_model_*` updates by a downstream Profile A creator if warranted — never by the orchestrator agent itself.
+
+### Example
+
+**`smith` (the only B-orchestrator agent as of this guide revision)** — see `plugins/agents-pro/agents/smith.md`.
+
+smith reads project state → classifies against a 12-context routing matrix (greenfield / brownfield / new-feature / non-trivial-bug / trivial-hotfix / refactor / architecture-decision / security-audit / perf-audit / product-discovery / tech-debt / live-incident) → picks primary + secondary methodologies (BMAD-METHOD / SPARC / RIPER-5 / GitHub Spec Kit / FPF ADI / DDD / C4 / Event Storming / Strangler Fig / Branch-by-Abstraction / ACL / MADR / OWASP / STRIDE / DORA / SRE / 5 Whys / Fishbone / A3 / blameless post-mortem / JTBD / Lean Startup / Double Diamond / Hexagonal / Clean Architecture) → returns a Markdown plan with Wave 1/2/N dispatch sequence naming real marketplace agents in execution order.
+
+### When to create another B-orchestrator vs use existing one
+
+**Answer: rare. Most "orchestration" needs are met by `smith` + the main session.**
+
+Before authoring a new Profile B-orchestrator agent, ask:
+
+1. **Is the routing decision covered by smith's 12-context matrix?** If yes → use smith.
+2. **Is the user asking for a single-agent recommendation, not a multi-wave plan?** If yes → use `/agent-advisor` skill, not a Profile B-orchestrator agent.
+3. **Is the user asking for a fully autonomous loop?** If yes → use `/autorun`, which MAY dispatch smith at cold-start.
+4. **Is the orchestration domain-specific in a way the 12-context matrix cannot cover?** (e.g., a hypothetical "ML pipeline orchestrator" that routes ML-specific methodologies — MLflow / DVC / experiment tracking / data versioning — none of which appear in smith's matrix.) Only THEN consider a new B-orchestrator agent.
+
+The intent is: **Profile B-orchestrator should be a small set, ideally one general agent (`smith`) + at most 2-3 narrow-domain orchestrators (e.g., a hypothetical `ml-pipeline-orchestrator` someday)**. More than 3-4 orchestrators across the marketplace is a smell — orchestration logic should live in skills (`/forge-cycle`, `/autorun`, playbooks) or in the routing matrix of `smith`, not in a proliferation of B-orchestrator agents.
+
+### How to write the body
+
+A Profile B-orchestrator agent body MUST contain, in order:
+
+1. **Single H1** with agent name + one-line role.
+2. **`## Identity`** — 2-3 paragraphs distinguishing this orchestrator from existing skill-level orchestrators (`/forge-cycle`, `/autorun`, etc.) and from sibling agents. State why it is Profile B-orchestrator and not standard Profile B.
+3. **`## When invoked`** — bullet list of trigger conditions; bullet list of do-not-invoke-for cases.
+4. **`## <Domain> routing matrix`** — **MANDATORY**. The core of the agent. A Markdown table with one row per context. Columns: Context | Primary methodology | Secondary methodologies | Agents to dispatch (in order) | Why. Every agent named MUST exist in the marketplace (verify by reading `plugins/<pack>/agents/<name>.md`). Every methodology MUST have a one-line "what it is" + source link.
+5. **`## Procedure`** — **6 to 10 numbered steps**. Each step is one MCP call OR one bash read-only command OR one explicitly-marked mental step. Steps MUST include (in this order): read project state (forgeplan_health + list/blocked/stale), recall hindsight, check git status, classify context against the matrix, pick methodology + dispatch sequence, compose the plan, hand off without mutations.
+6. **`## Output contract`** — describe the structured Markdown plan format. Six canonical sections recommended (Context, Methodology, Dispatch sequence, Evidence requirements, Risks, Handoff) — match smith's contract for cross-orchestrator consistency.
+7. **`## Hard rules`** — **minimum 6 rules**. MUST include: never write source files; never activate forgeplan artifacts; never invent agents that do not exist in marketplace; always cite methodology by name + source link; always specify dispatch ORDER explicitly (Wave 1 / Wave 2, parallel/serial); when unsure between methodologies, emit `<<NEED_USER_INPUT>>` sentinel instead of guessing (≥3 hypotheses).
+8. **`## What <agent> does NOT do`** — explicit non-goals (no source code, no forgeplan mutations, no hindsight mutations, no test execution, no deployment, no verdicts on artifacts).
+9. **`## Integration with existing skills`** — mapping to `/forge-cycle`, `/autorun`, `/forge-cleanup`, `/methodology-check`, `/agent-advisor`, `/decay-watch`, `/c4-diagram`, `/supersede`, `forgeplan playbook run`, etc.
+10. **`## References`** — methodology sources (one link per methodology in the matrix) + in-repo references (AGENT-AUTHORING-GUIDE, CLAUDE.md, parent EPIC artifact, sibling agents like guardian/goal-planner).
+
+**Body length budget**: 400-600 lines. Longer than standard Profile A/B (100-200) because the routing matrix dominates. If the matrix has 10+ rows and each methodology has a one-line definition, 400 lines is the floor; 600 is the ceiling. Beyond 600 lines, split the methodology citations into a co-located knowledge file referenced from the body.
+
+**Which Profile A/B/C agents may be recommended**: any agent that exists in `plugins/agents-core/`, `plugins/agents-pro/`, `plugins/agents-sparc/`, `plugins/agents-domain/`, `plugins/agents-github/`, or `plugins/forgeplan-brownfield-pack/`. Verify the agent file exists before naming it; missing-agent fabrication is the worst routing failure mode (HARD RULE 3 in `smith.md`).
+
+### Cross-reference
+
+- **EPIC-002** — Master-orchestrator agent epic (parent for smith).
+- **`plugins/agents-pro/agents/smith.md`** — reference implementation of Profile B-orchestrator.
+- **`plugins/agents-pro/agents/guardian.md`** — sibling Profile B gate-style agent; same "recommender, not actor" pattern.
+- **`plugins/agents-pro/agents/goal-planner.md`** — sibling Profile A planner; smith dispatches goal-planner as Wave-2 standard for decomposition work.
+- **`plugins/agents-sparc/agents/sparc-orchestrator.md`** — methodology-specific orchestrator (SPARC only); smith is the methodology-agnostic super-set covering 12 contexts.

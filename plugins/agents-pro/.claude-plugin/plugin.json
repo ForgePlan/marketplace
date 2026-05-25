@@ -1,7 +1,7 @@
 {
   "name": "agents-pro",
-  "version": "1.9.4",
-  "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.9.4: Sprint Z9 PRD-060 — adr-architect Step 5b.1: C4 diagram dispatch trigger for ≥3-module full ADRs (auto-dispatch /c4-diagram in dispatch mode before ADR body, output docs/c4/<ADR-NNN>.md). v1.9.3: Sprint Z7 PRD-059 — guardian Step 5 verdict matrix 1 new row: Standard+ with no ADI EVID (no ≥3 hypotheses) → BLOCKER (FPF ADI discipline). v1.9.2: Sprint Z6 PRD-057 — guardian Step 5 verdict matrix 2 new rows: Standard+ with zero Profile B EVID → BLOCKER; Profile B EVID with empty ## Findings → CONCERNS (BMAD adversarial review enforcement). v1.9.1: Sprint Z-audit fix. v1.9.0: Sprint Z4 PRD-055 — new evidence-gatherer agent. v1.8.1: 5 Profile B forgeplan-aware agents bodies patched with Step 9b NEEDS_ACTIVATION sentinel emit instruction per Sprint E PRD-033.",
+  "version": "1.10.0",
+  "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.10.0: EPIC-002 PRD-062 — new `smith` master-orchestrator agent (Profile B-orchestrator), the BMAD Master equivalent for the ForgePlan ecosystem. 12-context methodology routing matrix grounded in 35 surveyed methodologies (BMAD/SPARC/RIPER-5/DDD/C4/Strangler-Fig/OWASP/STRIDE/DORA/JTBD/etc.). v1.9.4: Sprint Z9 PRD-060 — adr-architect Step 5b.1: C4 diagram dispatch for ≥3-module full ADRs. v1.9.3: Sprint Z7 PRD-059 — guardian ADI BLOCKER row. v1.9.2: Sprint Z6 PRD-057 — guardian BMAD rows. v1.9.1: Sprint Z-audit fix. v1.9.0: Sprint Z4 PRD-055 — evidence-gatherer.",
   "author": {
     "name": "ForgePlan"
   },
