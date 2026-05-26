@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code — UX, frontend, workflow, and developer tools",
-    "version": "1.73.0"
+    "version": "1.73.1"
   },
   "plugins": [
     {
@@ -36,7 +36,7 @@
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
       "description": "Flagship workflow plugin for the ForgePlan ecosystem. 33 engineering skills + dev-advisor agent + 5 hooks (+ smith greeting + RIPER auto-route + decay Layer 3). v1.32.0: EPIC-003 / Sprint AA — methodology auto-enforcement: RIPER auto-routes for production bugs (prompt-router + smith row 4 + methodology-check Step 10), /c4-diagram Dispatch mode idempotency (Step 4b + .v2/.v3 versioning), decay-reminder.sh Layer 3 supersede-chain delta scan. Closes G1+G3+G8. v1.31.1: EPIC-002 niceties patch. v1.31.0: EPIC-002 — 4 smith skills + 5 templates + session-start.sh greeting.",
-      "version": "1.32.0",
+      "version": "1.32.1",
       "author": {
         "name": "ForgePlan"
       },
@@ -251,7 +251,7 @@
       "name": "agents-pro",
       "source": "./plugins/agents-pro",
       "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.11.0: EPIC-003 / Sprint AA — guardian Step 5 +2 rows: C4 CONCERNS (Sprint Z9 PRD-060 gate) + OpenSpec BLOCKER (Sprint Z8 PRD-058 activation gate). Closes G2+G4. v1.10.1: EPIC-002 niceties patch. v1.10.0: EPIC-002 PRD-062 — new `smith` master-orchestrator agent (Profile B-orchestrator).",
-      "version": "1.11.0",
+      "version": "1.11.1",
       "author": {
         "name": "ForgePlan"
       },

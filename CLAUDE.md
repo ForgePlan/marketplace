@@ -4,7 +4,7 @@
 **Catalog version**: 1.72.1
 **Plugins**: 16 (10 workflow + 5 agent packs + 1 memory plugin fpl-hsmem) — cc-best v1.0.0 (Sprint Y) + brownfield-pack canonical discover agent (Sprint V) + smith master-orchestrator (EPIC-002, Profile B-orchestrator)
 **Agents**: 20 of ~65 forgeplan-aware (PRD-026 B2 paradigm — `disallowedTools` denylist + Sprint Q PRD-042 ASM-canon + Sprint S Step 9c + Sprint T v0.32.1 + Sprint V PRD-048 discover + Sprint Z4 PRD-055 evidence-gatherer + EPIC-002 smith Profile B-orchestrator. **`memory: project` REJECTED Sprint R** — Hindsight covers use case.)
-**Last Updated**: 2026-05-26 (post EPIC-002 closure — smith master-orchestrator (BMAD Master equivalent). 4-skill cluster + 12-context routing matrix + Profile B-orchestrator sub-profile. PRD-062..065 + EVID-094..097/099/102. catalog v1.72.1, fpl-skills v1.31.1, agents-pro v1.10.1, forgeplan-workflow v1.12.0. EPIC-001 baseline (Sprints Z6-Z10) carried forward unchanged.)
+**Last Updated**: 2026-05-26 (post Sprint BB Wave 1A — added "Social-discipline boundaries" section documenting G5/G6/G7 as accept-by-design per EVID-105 / EPIC-003. EPIC-002 closure baseline (smith master-orchestrator, 4-skill cluster + 12-context routing + Profile B-orchestrator) and EPIC-001 baseline (Sprints Z6-Z10) carried forward unchanged. catalog v1.72.1, fpl-skills v1.31.1, agents-pro v1.10.1, forgeplan-workflow v1.12.0.)
 
 ---
 
@@ -491,6 +491,63 @@ Smith picks the methodology; `/forge-cycle` and `/autorun` execute the methodolo
 Full guide: [`docs/SMITH.md`](docs/SMITH.md) (EN) / [`docs/SMITH-RU.md`](docs/SMITH-RU.md) (RU).
 
 Reference: EPIC-002, PRD-062 (Wave 1 — agent + routing-map + 12 sections + 5 templates), PRD-063 (Wave 2 — 4 skills), PRD-064 (Wave 3 — AGENTS.md + session hook + READMEs), PRD-065 (Wave 4 — Profile B audit + closure), EVID-094..097 + EVID-099 (post-merge multi-expert audit + N1-N4 polish) + EVID-102 (6-test e2e smoke).
+
+---
+
+## Social-discipline boundaries (Sprint AA — accept-by-design)
+
+Foundation: EPIC-003 / Sprint AA production-readiness audit identified 8 methodology auto-enforcement gaps (G1-G8). We closed 5 (G1+G2+G3+G4+G8) with hooks/gates. Three (G5, G6, G7) are intentionally **NOT closed** because closing them would require brittle prose parsing — the cost (false-positive rate, maintenance overhead) exceeds the benefit (catching social-discipline violations that humans should catch in review).
+
+These three gaps remain by design. They are documented here so future Profile A authors know not to try implementing parsers for them.
+
+### G5 — SPARC claim-log gate
+
+**The gap**: there's no automated check that SPARC phases (Specification → Pseudocode → Architecture → Refinement → Completion) actually ran for row 3 (new feature) workflows. Detection lives only in `forgeplan_claims` log, which has TTL and may be expired by the time guardian audits.
+
+**Why deferred**:
+- claims log expiry means structural absence ≠ "SPARC wasn't run"
+- false-positive risk: legitimate alternative paths (e.g., user invoked agents-sparc directly without /forge-cycle claim mutex) would trigger BLOCKER
+- the value SPARC adds is iteration discipline, not artifact-count discipline; parsing claims log measures the wrong thing
+
+**Social discipline**: smith row 3 routes to agents-sparc dispatch sequence. Profile B reviewers (artifact-reviewer at Step 6.5) catch architectural gaps that SPARC phases would have caught. Trust the reviewer chain.
+
+### G6 — BMAD content-spoof in `## Findings`
+
+**The gap**: an EVID with body literally `## Findings\n1. nothing wrong` passes the guardian gate (Step 4b counts ≥1 finding). CLAUDE.md Sprint Z6 Rule 4 requires ≥2-sentence justification when zero gaps were found, but no automated parser enforces "≥2 sentences" or "real reasoning vs placeholder".
+
+**Why deferred**:
+- ≥2-sentence parse risks false-positives on legitimate short EVIDs (e.g., "AC-3 measurable threshold absent. Spec says 'fast', SMART requires numeric." — 2 sentences, real finding, short)
+- distinguishing "placeholder text" from "real short finding" requires LLM-grade semantic analysis; that's not appropriate at a hook-level gate
+- the social cost of bypass is high (reviewer's identity is logged; bad-faith bypasses are visible in audit trail)
+
+**Social discipline**: Profile B reviewers are named in EVID frontmatter. Pattern-of-empty-Findings becomes visible across reviews. Team norm + code-review culture catches it.
+
+### G7 — FPF ADI content-spoof in `### Hypothesis N` sections
+
+**The gap**: 3 placeholder hypothesis headers (`### Hypothesis 1`, `### Hypothesis 2`, `### Hypothesis 3`) with empty or trivial bodies pass guardian's structural count. CLAUDE.md Sprint Z7 "Why 3 hypotheses minimum" rule wants the 3rd to be "do nothing / scope reduction" — no automated check enforces this.
+
+**Why deferred**:
+- per-hypothesis body-length check is brittle (a 5-word "if we do nothing X breaks because Y" is a legitimate concise hypothesis)
+- enforcing "3rd hypothesis must be do-nothing" by string pattern is too restrictive; many legitimate ADI cycles have 3 non-trivial alternatives + a separate do-nothing baseline
+- LLM-grade analysis is the only reliable detector; not appropriate at hook gate
+
+**Social discipline**: ADI EVIDs are reviewed by Profile B. Reviewer is expected to check whether the third hypothesis is genuine. Pattern-of-trivial-hypotheses is visible in the EVID body during review.
+
+### The general pattern (when to NOT automate)
+
+These three deferrals share a common structure:
+1. **Spoof is detectable structurally** (`## Findings` count, `### Hypothesis N` count, `forgeplan_claims` log)
+2. **But the spoof signal is identical to the legitimate-short signal** — a 1-line findings list could be lazy OR could be a genuine zero-gap; a short hypothesis could be padding OR could be precise
+3. **Parser-based gate would either false-positive on legitimate work (eroding trust) OR be so lax it doesn't catch the spoof anyway**
+4. **Social discipline** — visible reviewer identity, peer review, pattern recognition over time — is the right enforcement layer
+
+This pattern generalizes: don't write parsers when the signal is semantic, not structural. Trust the reviewer chain. Make their identity visible.
+
+### Reference
+
+- ADI source: EVID-105 (Sprint AA hypotheses 5, 6, 7)
+- Sprint AA implementation: EPIC-003 (closed G1, G2, G3, G4, G8; deferred G5, G6, G7)
+- Related: Sprint Z6 (BMAD), Sprint Z7 (FPF ADI), Sprint Z9 (C4) — the discipline sections this complements
 
 ---
 
