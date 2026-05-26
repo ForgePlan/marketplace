@@ -54,8 +54,24 @@ elif echo "$prompt_lc" | grep -qE '\b(audit|review|check (the )?code|security re
   suggestion="**Suggestion**: this is an audit/review task. Consider \`/audit\` (multi-expert review) or dispatch a specialist: \`agents-pro:security-expert\` (OWASP), \`agents-core:code-reviewer\` (general), \`agents-pro:architect-reviewer\` (design fitness)."
 
 # Pattern: BUG FIX
-elif echo "$prompt_lc" | grep -qE '\b(fix (the )?bug|debug|broken|not working|crashes|exception|error in|почини|сломалось|не работает|падает)\b'; then
+# (Sprint AA PRD-066 G1: regex extended to include production-incident triggers — production bug,
+#  incident, race condition, regression, SEV-1/2, P0/P1, outage, postmortem; Russian: продакшн баг,
+#  инцидент, гонка, регрессия, падение в проде. These triggers compose with the triviality
+#  detector below so RIPER suggestion fires only for non-trivial bugs.)
+elif echo "$prompt_lc" | grep -qE '\b(fix (the )?bug|debug|broken|not working|crashes|exception|error in|почини|сломалось|не работает|падает|production bug|prod bug|race condition|regression|sev-?1|sev-?2|incident|p0|p1|outage|postmortem|post-mortem|продакшн баг|прод баг|продовый баг|гонк[аи]|состояние гонки|регресси|инцидент|падение в проде)\b'; then
   suggestion="**Suggestion**: this is a bug fix. Consider dispatching \`agents-core:debugger\` (root cause analysis) or running \`/forge-cycle\` if scope > one file (Tactical bugs can skip PRD per CLAUDE.md route rules)."
+
+  # PRD-066 G1 — RIPER auto-routing for non-trivial production bugs.
+  # Triviality skip: hotfix / typo / off-by-one / broken link / single-line touch.
+  # Non-trivial: production/incident/SEV-1/SEV-2/P0/P1/race condition/regression.
+  is_trivial=0
+  if echo "$prompt_lc" | grep -qE '\b(typo|off-by-one|off by one|broken link|hotfix|one-?liner|one line fix|опечатк|хотфикс|правка одной строки|битая ссылка|сломанн(ая|ой) ссылк|линк)\b'; then
+    is_trivial=1
+  fi
+  if [ "$is_trivial" -eq 0 ] && echo "$prompt_lc" | grep -qE '\b(production bug|prod bug|race condition|regression|sev-?1|sev-?2|incident|p0|p1|outage|postmortem|post-mortem|продакшн баг|прод баг|продовый баг|гонк[аи]|состояние гонки|регресси|инцидент|падение в проде)\b'; then
+    suggestion="$suggestion
+   • Non-trivial production bug? Try \`/riper\` (Research → Innovate → Plan → Execute → Review) before jumping to code."
+  fi
 
 # Pattern: NEW FEATURE / IMPLEMENT
 elif echo "$prompt_lc" | grep -qE '\b(implement|build (a |the )?feature|add (a |the )?feature|create (a |the )?feature|реализуй|добавь фичу|сделай фичу)\b'; then

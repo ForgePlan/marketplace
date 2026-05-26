@@ -80,10 +80,11 @@ Build the layer checklist based on `depth` and `kind`:
 | **S10 FPF** (design) | depth = standard / deep / critical |
 | **S11 BMAD** (quality gate) | depth = standard / deep / critical |
 | **C4** (architecture extension) | ADR or RFC kind, AND body contains ≥3 distinct module references |
+| **RIPER** (production-bug discipline) | Bug-fix artifact (EVID/PRD whose body, title, or parent links indicate production bug / incident / regression / race condition / SEV-1/SEV-2/P0/P1) AND depth is non-tactical |
 
-For tactical depth: mark S10 and S11 as `N/A` in the report (not required).
+For tactical depth: mark S10, S11, and RIPER as `N/A` in the report (not required).
 
-Record the applicable layer set. This drives Steps 5-9.
+Record the applicable layer set. This drives Steps 5-10.
 
 ### Step 4 — Fetch linked EVIDs
 
@@ -216,7 +217,30 @@ If ≥3 distinct module/service/component names are found → C4 check applies.
 | ≥3 modules detected but no C4 mention at all | 0 | ❌ MISSING |
 | <3 modules detected | N/A | — |
 
-### Step 10 — Aggregate report
+### Step 10 — RIPER check (production-bug discipline)
+
+**Apply when**: the target artifact (or its parent PRD/EVID) is a **bug-fix artifact for a non-trivial production bug**, AND depth is non-tactical. Detect via any of these signals in the artifact title, body, or parent PRD body:
+
+- Title or body mentions: `production bug`, `prod bug`, `incident`, `postmortem`, `post-mortem`, `outage`, `regression`, `race condition`, `SEV-1`, `SEV-2`, `P0`, `P1`, `продакшн баг`, `прод баг`, `гонка`, `регрессия`, `инцидент`.
+- Parent PRD links to an incident / outage / postmortem context.
+- Artifact `kind=evidence` whose linked parent matches the row 4 of smith routing-map (`Bug fix — production, non-trivial`).
+
+**Skip if**: artifact is a trivial hotfix (matches `typo`, `off-by-one`, `broken link`, `hotfix`, `опечатка`, `хотфикс`, single-line fix) — RIPER overhead exceeds value. Mark RIPER as N/A in the report.
+
+**Scoring**: per linked EVID (or the artifact body itself if `kind=evidence`), inspect for RIPER Research-mode discipline.
+
+| Condition | Score | Status |
+|---|---|---:|
+| Dedicated Research-EVID linked OR substantive `## Research` section in EVID body (≥10 lines with concrete findings: stack trace, repro steps, suspect commits, hypotheses) | 2 | ✅ SATISFIED |
+| `## Research` section present in body but stub-quality (≤5 lines, no concrete findings) OR mentioned in prose without dedicated section | 1 | ⚠️ PARTIAL |
+| Bug-fix EVID with no `## Research` section AND no linked Research-EVID — code change without documented investigation | 0 | ❌ BLOCKER |
+
+**Action item if score <2**:
+> Run `/riper` (Research mode) before any more code changes on this bug fix. RIPER discipline forbids implementation without a Research artifact — see `plugins/fpl-skills/skills/riper/SKILL.md` and smith routing-map row 4 (Production bug, non-trivial). Tag the EVID with the methodology label `RIPER (production-bug discipline)` once the Research section lands.
+
+Record which EVID (if any) carries the Research artifact, and whether the bug was classified trivial (skip) or non-trivial (apply).
+
+### Step 11 — Aggregate report
 
 Compute:
 - **Total score**: sum of all applicable layer scores
@@ -251,6 +275,7 @@ If ANY layer scores 0 (BLOCKER) → append `— BLOCKED` to the verdict regardle
 | S12 OpenSpec (structure) | ✅ | 2/2 | 3 links (refines EPIC-001, informs PRD-XXX, based_on ADR-YYY) |
 | S13 Forgeplan (automation) | ✅ | 2/2 | validate PASS + r_eff=0.95 |
 | C4 (arch extension) | N/A | — | <3 modules detected |
+| RIPER (production-bug discipline) | N/A | — | not a bug-fix artifact |
 
 ### Overall: 7/8 (87%) — STRONG
 
@@ -278,6 +303,7 @@ If ANY layer scores 0 (BLOCKER) → append `— BLOCKED` to the verdict regardle
 | S12 OpenSpec (structure) | ❌ | 0/2 | Orphan — no links to any artifact |
 | S13 Forgeplan (automation) | ❌ | 0/2 | validate FAIL — no evidence |
 | C4 (arch extension) | N/A | — | Not an architectural decision |
+| RIPER (production-bug discipline) | N/A | — | Not a bug-fix artifact |
 
 ### Overall: 0/8 (0%) — ❌ FAIL — BLOCKED
 
@@ -297,8 +323,9 @@ If ANY layer scores 0 (BLOCKER) → append `— BLOCKED` to the verdict regardle
 
 1. **Never auto-fix layer violations** — this skill reports only. The user or orchestrator decides what dispatch to make based on action items.
 2. **Read-only on the target artifact** — do NOT call `forgeplan_update`, `forgeplan_link`, `forgeplan_new`, or any mutation tool.
-3. **Tactical artifacts get reduced layer check** — depth=tactical only checks S12+S13. S10+S11 are marked `N/A` (not a gap, not scored).
+3. **Tactical artifacts get reduced layer check** — depth=tactical only checks S12+S13. S10, S11, and RIPER are marked `N/A` (not a gap, not scored).
 4. **C4 check is heuristic** — false positives (detecting "service" in a non-architectural context) are possible. If the C4 heuristic fires unexpectedly, note it in the report and let the user confirm.
+4a. **RIPER check is heuristic** — the bug-fix signal is keyword-based (production / incident / SEV-1/2 / race condition / regression). If the heuristic fires unexpectedly (e.g. the word "regression" appearing in a statistical context, not a bug context), note the suspect signal in the report and let the user override to N/A.
 5. **r_eff=0 on leaf EVID is cosmetic** — do not flag it as a hard BLOCKER for the parent PRD. Note the forgeplan#325 upstream issue.
 6. **One invocation per artifact** — do not recursively check linked artifacts (e.g. do not run methodology-check on the linked EVIDs). This is a flat one-artifact report.
 
@@ -323,7 +350,9 @@ If ANY layer scores 0 (BLOCKER) → append `— BLOCKED` to the verdict regardle
 - [`/decision`](../decision/SKILL.md) — record a new decision; run `/methodology-check` after.
 - `agents-pro:artifact-reviewer` — dispatch for S11 BMAD adversarial review.
 - `forgeplan_reason <ID>` — generate ADI hypothesis cycle (S10 FPF).
+- [`/riper`](../riper/SKILL.md) — RIPER orchestrator (Research → Innovate → Plan → Execute → Review); dispatch after a RIPER score <2 on a production-bug artifact.
 - EPIC-001 — canonical 4-layer pipeline definition.
+- PRD-066 — RIPER auto-routing for production bugs (Step 10 of this skill).
 - CLAUDE.md `## FPF ADI discipline`, `## BMAD adversarial review discipline`, `## OpenSpec delta-spec discipline`, `## C4 diagrams for ≥3-module architectural decisions` — detailed rules per layer.
 
 ---
