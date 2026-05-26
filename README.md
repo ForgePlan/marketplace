@@ -16,7 +16,9 @@ Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/
 
 | Guide | When to read |
 |---|---|
-| 🚀 [Developer Journey](docs/DEVELOPER-JOURNEY.md) | **Start here** — 30-min walkthrough from zero to your first shipped feature, with 4 persona Day 0 walkthroughs |
+| 👋 [Onboarding](docs/ONBOARDING.md) | **Read this first** — pocket guide, friendly tone, get from zero to autonomous agent dispatch in 30-60 min. Hindsight setup + command cookbook + when-you're-needed matrix |
+| 🚧 [Brownfield guide](docs/BROWNFIELD-GUIDE.md) | Companion to Onboarding — existing codebases, Discover Agent, Strangler Fig + DDD + ACL with concrete examples |
+| 🚀 [Developer Journey](docs/DEVELOPER-JOURNEY.md) | Longer 30-min walkthrough from zero to your first shipped feature, with 4 persona Day 0 walkthroughs |
 | 🧭 [Smith — master orchestrator](docs/SMITH.md) | Routing map: 12 contexts × 27 methodologies. When and how to dispatch `/smith` as the BMAD-style master that picks the right workflow for the task |
 | 📋 [Playbook](docs/PLAYBOOK.md) | Use-case matrix: which command for which scenario (empty project, brownfield, night-run, …) |
 | 📖 [Usage Guide](docs/USAGE-GUIDE.md) | Reference manual: 18 commands, hooks, agent activation rules, troubleshooting |
