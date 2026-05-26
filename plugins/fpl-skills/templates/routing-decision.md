@@ -62,9 +62,10 @@ If no F+G+R was scored (decision was obvious enough not to warrant the calculus)
 
 Re-open this routing decision when ANY of the triggers below fires. **Use parseable syntax** so `/decay-watch` skill and `decay-reminder.sh` hook can detect fired triggers:
 
-- [ ] **Type**: date — <e.g., "2027-01-01" or "+6 months from creation">
-- [ ] **Type**: metric — <e.g., "team grows past 5 engineers", "service throughput exceeds 1k RPS">
-- [ ] **Type**: event — <e.g., "external API contract changes", "upstream forgeplan#NNN closes", "we add a new context-type to routing-map.md">
+- [ ] **Kind**: date — <e.g., "2027-01-01" or "+6 months from creation"> — last_checked YYYY-MM-DD
+- [ ] **Kind**: metric — <e.g., "team grows past 5 engineers", "service throughput exceeds 1k RPS"> — last_checked YYYY-MM-DD
+- [ ] **Kind**: event — <e.g., "external API contract changes", "we add a new context-type to routing-map.md"> — last_checked YYYY-MM-DD
+- [ ] **Kind**: issue — <e.g., "forgeplan#325 closes upstream"> — <issue URL> — last_checked YYYY-MM-DD
 
 **Mark `[x]` to flag a trigger as fired.** Guardian agent will surface routing decisions with fired triggers in the next health check so the routing-map.md can be updated or this artifact superseded.
 
@@ -105,5 +106,5 @@ OR
 
 - **Minimum two methodologies considered.** One-option routing isn't a decision; do not create the artifact.
 - **Rationale cites either F+G+R or routing-map.md row.** Free-form rationale without one of these anchors is a vibe, not a decision.
-- **Revisit trigger is parseable.** Use the exact `- [ ] **Type**: date|metric|event — description` syntax — `/decay-watch` cannot parse free-form prose.
+- **Revisit trigger is parseable.** Use the exact `- [ ] **Kind**: issue|metric|date|event — description — source — last_checked YYYY-MM-DD` syntax (Sprint Z5 canonical, see CLAUDE.md «Defer discipline»). `/decay-watch` cannot parse free-form prose.
 - **If REMOVED >50% would apply to a supersede of this artifact** — it's not a routing decision, it's a methodology overhaul. Write a full ADR instead.

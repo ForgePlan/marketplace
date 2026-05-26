@@ -16,14 +16,22 @@ template), (3) which **dispatch sequence** of agents to fire in order, and
 (4) what **evidence artefacts** must exist before activation (per the
 4-layer S10–S13 pipeline in this repo's CLAUDE.md).
 
-Smith never blends rows — it picks one and commits. If the user's situation
-truly sits between two rows (e.g. a greenfield service that ships inside a
-legacy monolith), smith picks the row whose **risk profile** is higher
-(brownfield over greenfield, audit over feature) and notes the deviation in
-its session log. The single-row rule prevents methodology cocktails — when
-practitioners mix BMAD and SPARC and Spec Kit "to cover all bases", what
-emerges is none of them: the artefacts no longer fit any community pattern
-and the team has to re-invent review checklists from scratch.
+Smith never blends rows — it picks one and commits. The single-row rule
+prevents methodology cocktails — when practitioners mix BMAD and SPARC and
+Spec Kit "to cover all bases", what emerges is none of them: the artefacts
+no longer fit any community pattern and the team has to re-invent review
+checklists from scratch.
+
+If the user's situation truly sits between two rows (e.g. a greenfield
+service that ships inside a legacy monolith), smith MUST emit the
+`<<NEED_USER_INPUT>>` sentinel with ≥3 hypotheses on which row to pick
+(FPF ADI discipline per Sprint Z7/PRD-059 — Step 6 of the smith.md
+Procedure). **Never guess silently.** The only exception: if the
+orchestrator session explicitly invokes smith in autonomous mode AND the
+ambiguity blocks a live incident, smith picks the row whose **risk
+profile** is higher (brownfield over greenfield, audit over feature) and
+records the deviation in its Plan output for human review. In every other
+context, the sentinel-emit rule from smith.md HARD RULE 10 is binding.
 
 Every dispatch sequence respects the canonical 5 agent profiles documented
 in `plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md`: **Profile A** (Creator,
@@ -53,7 +61,7 @@ this file for the canonical names and source plugins.
 | 9 | Performance audit | "slow", "latency spike", "perf review", "тормозит", "оптимизация" | DORA metrics + SRE error-budget framing + Performance budget per page/endpoint | Profiling-first ADR + 5 Whys for regressions | performance-engineer (B) → research-analyst (A) → code-analyzer (C) → adr-architect (A, for arch changes) → coder (C-coder) → tester (B, regression) → guardian (B-gate) | EVID (perf baseline + post-change measurement) + ADR (only if architectural change) + tester EVID (regression bench) + BMAD EVID | Perf without baseline is theatre; DORA + perf-budget gives a falsifiable target; SRE's error-budget framing prevents "optimise everything" sprawl |
 | 10 | Product discovery (PDLC) | "what should we build", "discovery", "user research", "что строить", "исследование пользователей" | Jobs-To-Be-Done (JTBD) + Lean Startup (Build-Measure-Learn) | Double Diamond (Discover-Define-Develop-Deliver) + Event Storming for domain | brief-intake (A) → research-analyst (A) → goal-planner (A) → specification (A) → architect-reviewer (B) → guardian (B-gate) | NOTE (discovery findings) + PRD (with explicit Non-Goals + JTBD framing) + ADI EVID + BMAD EVID | JTBD reframes features as outcomes (the customer hires a milkshake for the morning commute); Lean's MVP loop matches our smallest-shippable-EVID rhythm; Double Diamond gives a vocabulary the design team already speaks |
 | 11 | Tech debt cleanup | "tech debt", "cleanup sprint", "technical debt backlog", "техдолг", "уборка кода" | A3 Problem Solving (Toyota) + Fishbone (Ishikawa) root-cause | Branch-by-Abstraction + ADR-supersede for old decisions | code-analyzer (C) → research-analyst (A) → architect-reviewer (B) → adr-architect (A) → goal-planner (A) → coder (C-coder) → tester (B) → guardian (B-gate) | NOTE (A3 sheet: problem / current / target / actions) + ADR (any superseded decisions, with delta-spec) + PRD (cleanup plan with measurable end-state) + BMAD EVID | A3 forces a single-page articulation of WHY this debt is now worth paying — most tech-debt sprints fail because the team can't justify the trade-off out loud; Fishbone catches the systemic vs local distinction |
-| 12 | Live incident response | "production down", "incident now", "outage", "лежит прод", "инцидент" | Incident Command System + 5 Whys (post-incident) + Blameless post-mortem | SRE runbook + error-budget recharge decision | error-detective (C) → debugger (C) → platform-engineer (C, infra read-only) → coder (C-coder, hotfix) → tester (B, smoke) → research-analyst (A, post-incident RCA) → adr-architect (A, only if systemic) → guardian (B-gate, for the post-incident PRD only) | NOTE (incident timeline) + tactical hotfix (no PRD during fire) + post-incident: PRD (lessons + actions) + ADR (if systemic cause) + BMAD EVID on the post-incident PRD | During the fire, methodology is "stop the bleeding"; after the fire, blameless post-mortem + 5 Whys produce the artefacts; the gate runs on the **post-incident PRD**, not the hotfix itself |
+| 12 | Live incident response | "production down", "incident now", "outage", "лежит прод", "инцидент" | Incident Command System + 5 Whys (post-incident) + Blameless post-mortem | SRE runbook + error-budget recharge decision | **Phase 1 (during fire):** error-detective (C) → debugger (C) → platform-engineer (C, infra read-only) → coder (C-coder, hotfix) → tester (B, smoke). **Phase 2 (post-fire):** research-analyst (A, RCA + 5 Whys) → adr-architect (A, only if systemic) → guardian (B-gate, on the post-incident PRD only) | Phase 1: NOTE (incident timeline) + tactical hotfix (no PRD during fire). Phase 2: PRD (lessons + actions) + ADR (if systemic cause) + BMAD EVID on the post-incident PRD + post-mortem `## Revisit Triggers` section parseable for /decay-watch | During the fire, methodology is "stop the bleeding"; after the fire, blameless post-mortem + 5 Whys produce the artefacts; the gate runs on the **post-incident PRD**, not the hotfix itself |
 
 ---
 

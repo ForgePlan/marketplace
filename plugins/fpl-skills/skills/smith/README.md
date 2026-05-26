@@ -108,7 +108,7 @@ Grouped by phase of the SDLC they cover. Every methodology has a one-page card i
                               │ (skill dispatches)
                               ▼
                 ┌───────────────────────────────┐
-                │   smith agent (Profile B)      │ ◄── plugins/agents-pro/agents/smith.md
+                │   smith agent (Profile B-orch) │ ◄── plugins/agents-pro/agents/smith.md
                 │   reads + classifies + writes  │
                 │   the Plan markdown only       │
                 └────────────┬──────────────────┘

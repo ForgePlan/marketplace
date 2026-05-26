@@ -102,6 +102,19 @@ Parseable table. Each action item has an owner, due date, and priority. P0 = blo
 
 Every P0/P1 action item MUST be tracked in the team's issue tracker (link in the Action column or a follow-up Note artifact). Action items without an owner are aspirations, not actions.
 
+## Revisit Triggers
+
+Parseable checklist scanned by `/decay-watch` and `decay-reminder.sh` SessionStart hook. Each row mirrors the Action items table above in a machine-readable form so the post-mortem ages safely.
+
+Use canonical Sprint Z5 syntax: `- [ ] **Kind**: issue|metric|date|event — description — source — last_checked`.
+
+- [ ] **Kind**: date — <e.g., "2026-09-01 — verify connection-pool alert is firing in prod"> — <source: alert dashboard URL or runbook> — last_checked YYYY-MM-DD
+- [ ] **Kind**: metric — <e.g., "error_rate < 0.1% for 7 consecutive days post-fix"> — <source: Grafana panel URL or SLO dashboard> — last_checked YYYY-MM-DD
+- [ ] **Kind**: event — <e.g., "next deployment of auth-service"> — <source: GitHub Actions workflow URL> — last_checked YYYY-MM-DD
+- [ ] **Kind**: issue — <e.g., "github:org/repo#NNN closes"> — <issue URL> — last_checked YYYY-MM-DD
+
+**Mark `[x]` when the trigger has fired.** The next `/decay-watch` invocation will pick it up and surface the post-mortem for a fresh look — has the action item actually shipped, did the metric hold, did the next deploy not regress?
+
 ## Lessons learned
 
 3-5 bullets. Blameless tone. These are the durable takeaways — what changes in our defaults because of this incident.

@@ -219,7 +219,8 @@ Install plugins in three priority tiers. Show the user the table, install MUST a
 |---|---|---|
 | MUST | `fpl-skills` | Core skills incl. `/smith`, `/forge-cycle`, `/decay-watch`, `/methodology-check`, `/decision`, `/supersede`, `/c4-diagram` |
 | MUST | `forgeplan-workflow` | `/forge-cycle` reactive enforcer + `/forge-audit` + guardian agent (gate enforcement) |
-| MUST | `agents-pro` | `smith` (master orchestrator) + `adr-architect` + `guardian` + `specification` + `brief-intake` + 25+ other Profile A/B agents |
+| MUST | `agents-pro` | `smith` (master orchestrator) + `adr-architect` + `guardian` + `brief-intake` + `architect-reviewer` + `security-expert` + 20+ other Profile A/B agents |
+| MUST | `agents-sparc` | `specification` + `architecture` + `pseudocode` + `refinement` + `sparc-orchestrator` (Profile A SPARC phase agents — smith dispatches `agents-sparc:specification` for the first PRD) |
 | MUST | `agents-core` | `coder`, `code-reviewer`, `tester` (canonical Profile C-coder / Profile B agents) |
 | SHOULD | `fpf` | First Principles Framework ADI reasoning — **mandatory at Standard+** per Sprint Z7 (CLAUDE.md FPF ADI discipline) |
 | SHOULD | `fpl-hsmem` | Hindsight v2 memory plugin — cross-session memory per-project bank (recommended for projects >1 week) |
@@ -234,6 +235,7 @@ Install plugins in three priority tiers. Show the user the table, install MUST a
 /plugin install fpl-skills@ForgePlan-marketplace
 /plugin install forgeplan-workflow@ForgePlan-marketplace
 /plugin install agents-pro@ForgePlan-marketplace
+/plugin install agents-sparc@ForgePlan-marketplace     # MUST — Step 6 dispatches agents-sparc:specification
 /plugin install agents-core@ForgePlan-marketplace
 /plugin install fpf@ForgePlan-marketplace              # SHOULD
 /plugin install fpl-hsmem@ForgePlan-marketplace        # SHOULD
