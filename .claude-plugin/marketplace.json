@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code — UX, frontend, workflow, and developer tools",
-    "version": "1.73.1"
+    "version": "1.74.0"
   },
   "plugins": [
     {
@@ -35,8 +35,8 @@
     {
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
-      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 33 engineering skills + dev-advisor agent + 5 hooks (+ smith greeting + RIPER auto-route + decay Layer 3). v1.32.0: EPIC-003 / Sprint AA — methodology auto-enforcement: RIPER auto-routes for production bugs (prompt-router + smith row 4 + methodology-check Step 10), /c4-diagram Dispatch mode idempotency (Step 4b + .v2/.v3 versioning), decay-reminder.sh Layer 3 supersede-chain delta scan. Closes G1+G3+G8. v1.31.1: EPIC-002 niceties patch. v1.31.0: EPIC-002 — 4 smith skills + 5 templates + session-start.sh greeting.",
-      "version": "1.32.1",
+      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 33 engineering skills + dev-advisor agent + 5 hooks (+ smith greeting + RIPER auto-route + decay Layer 3). v1.33.0: smith-bootstrap pre-flight gates — Step 0 Gate A (5 MUST plugins enabled) + Gate B (.mcp.json wired with forgeplan block, args ['serve']). Halt-and-instruct on miss; closes silent-fallback bug (missing agents-sparc → Step 6 routed to generic Profile A) and missing-.mcp.json dispatch degradation. v1.32.0: EPIC-003 / Sprint AA — methodology auto-enforcement: RIPER auto-routes, c4-diagram Dispatch idempotency, decay Layer 3. v1.31.1: EPIC-002 niceties patch. v1.31.0: EPIC-002 — 4 smith skills + 5 templates + session-start.sh greeting.",
+      "version": "1.33.0",
       "author": {
         "name": "ForgePlan"
       },
