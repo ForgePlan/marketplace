@@ -1,21 +1,21 @@
 # AGENTS.md — ForgePlan Marketplace
 
-> **Cross-CLI primary context file.** Этот файл — root context для AI-агентов разных CLI: Claude Code (Anthropic), Gemini CLI (Google), OpenAI Codex CLI, Goose (Block) и любых других которые следуют [agents.md](https://agents.md) standard.
+> **Cross-CLI primary context file.** This file is the root context for AI agents across CLIs: Claude Code (Anthropic), Gemini CLI (Google), OpenAI Codex CLI, Goose (Block), and any other client that follows the [agents.md](https://agents.md) standard.
 >
-> Этот файл — **источник правды** для конвенций проекта. CLAUDE.md ссылается на этот файл для back-compat с Claude Code.
+> This file is the **source of truth** for project conventions. `CLAUDE.md` points back to this file for Claude Code back-compat.
 
 ## Project overview
 
 **Repo**: [ForgePlan/marketplace](https://github.com/ForgePlan/marketplace)
-**Catalog version**: см. `.claude-plugin/marketplace.json`
+**Catalog version**: see `.claude-plugin/marketplace.json`
 **Plugins**: 12+ (workflow plugins + agent packs)
 **Project board**: [orgs/ForgePlan/projects/5](https://github.com/orgs/ForgePlan/projects/5)
 
-ForgePlan marketplace — каталог плагинов для AI coding agents с центральным `forgeplan` MCP server, обеспечивающим **artifact-driven SDLC pipeline**.
+ForgePlan marketplace is a catalog of plugins for AI coding agents with a central `forgeplan` MCP server that delivers an **artifact-driven SDLC pipeline**.
 
 ## Architecture canonical reference
 
-Read these in order для понимания pipeline:
+Read these in order to understand the pipeline:
 
 1. **PRD-024** (Full SDLC Pipeline with Quality Gates) — foundation
 2. **PRD-025** (Multi-agent multi-CLI pipeline with Hindsight v2) — extensions
@@ -25,11 +25,11 @@ Read these in order для понимания pipeline:
 6. **NOTE-004** (Gas Town / Ruflo prior research)
 7. **NOTE-005** (Multi-CLI ecosystem May 2026)
 
-Все артефакты находятся в `.forgeplan/` (PRD/RFC/ADR/EVID/NOTE структура).
+All artifacts live in `.forgeplan/` (PRD / RFC / ADR / EVID / NOTE structure).
 
 ## Smith — master orchestrator
 
-**Smith** is the master orchestrator of the ForgePlan ecosystem — the canonical first point of contact when an agent (or a human via an agent) does not yet know which methodology, dispatch chain, or pipeline depth applies to the work in front of them. Smith inspects repository state and user intent, applies a **12-context routing matrix** (greenfield, brownfield, feature, bug, refactor, architecture decision, security audit, performance audit, product discovery, tech-debt cleanup, live incident, hotfix), and recommends a specialist-agent dispatch sequence plus evidence requirements per the 4-layer S10–S13 pipeline. Smith is the ForgePlan ecosystem's equivalent of BMAD's «Master» persona — a Profile B-orchestrator agent that **never writes code or activates artifacts**; it routes and recommends. Smith lives in `plugins/agents-pro/agents/smith.md` (the agent) plus `plugins/fpl-skills/skills/smith/` (the 12-context brain) and is reachable from any CLI that honours AGENTS.md.
+**Smith** is the master orchestrator of the ForgePlan ecosystem — the canonical first point of contact when an agent (or a human via an agent) does not yet know which methodology, dispatch chain, or pipeline depth applies to the work in front of them. Smith inspects repository state and user intent, applies a **12-context routing matrix** (greenfield, brownfield, feature, bug, refactor, architecture decision, security audit, performance audit, product discovery, tech-debt cleanup, live incident, hotfix), and recommends a specialist-agent dispatch sequence plus evidence requirements per the 4-layer S10–S13 pipeline. Smith is the ForgePlan ecosystem's equivalent of BMAD's "Master" persona — a Profile B-orchestrator agent that **never writes code or activates artifacts**; it routes and recommends. Smith lives in `plugins/agents-pro/agents/smith.md` (the agent) plus `plugins/fpl-skills/skills/smith/` (the 12-context brain) and is reachable from any CLI that honours AGENTS.md.
 
 ### When to invoke smith
 
@@ -38,11 +38,11 @@ Read these in order для понимания pipeline:
 - For a **specific task** of any depth — invoke `/smith-plan <task description>` and smith picks the matching row, names the methodology, and lists the dispatch sequence.
 - For **learning the methodology surface** — invoke `/smith-routing` to inspect the 12 contexts + 25 methodology cards without committing to a task.
 - When the existing entry points (`/forge-cycle`, `/autorun`) do not fit — e.g. cross-context work, ambiguous depth, methodology mismatch — smith disambiguates first.
-- **Trigger phrases** (EN / RU): `smith`, `кузнец`, `что дальше`, `what's next`, `scrum master`, `master orchestrator`, `which methodology`, `какую методологию`.
+- **Trigger phrases** (English): `smith`, `what's next`, `scrum master`, `master orchestrator`, `which methodology`, `take charge`, `captain mode`. The agent file at `plugins/agents-pro/agents/smith.md` also registers bilingual Russian triggers per the agent-frontmatter exception in the Language policy section below — those triggers exist in the agent file, not here.
 
 ### The 12 contexts smith routes
 
-Full table with primary methodology + dispatch sequence + evidence requirements lives in `plugins/fpl-skills/skills/smith/routing-map.md`. Compact summary:
+The full table — primary methodology + dispatch sequence + evidence requirements — lives in `plugins/fpl-skills/skills/smith/routing-map.md`. Compact summary:
 
 | # | Context | One-liner |
 |---|---|---|
@@ -59,7 +59,7 @@ Full table with primary methodology + dispatch sequence + evidence requirements 
 | 11 | Tech debt cleanup | Pay-down sprint — A3 + Fishbone + ADR-supersede |
 | 12 | Live incident response | Outage handling — Incident Command + blameless post-mortem |
 
-Smith **picks exactly one row** per task — methodology cocktails are forbidden. If the situation sits between two rows, smith emits the `<<NEED_USER_INPUT>>` sentinel with ≥3 hypotheses on which row to pick (FPF ADI discipline per Sprint Z7/PRD-059). Only in autonomous-mode incidents where the ambiguity blocks a live response does smith pick the higher-risk row (brownfield > greenfield, audit > feature) and record the deviation in its Plan output. The single-row rule prevents the common failure mode where teams blend BMAD + SPARC + Spec Kit «to cover all bases» and end up with artefacts that match no community pattern — none of the three communities recognise the output as their canonical shape.
+Smith **picks exactly one row** per task — methodology cocktails are forbidden. If the situation sits between two rows, smith emits the `<<NEED_USER_INPUT>>` sentinel with ≥3 hypotheses on which row to pick (FPF ADI discipline per Sprint Z7/PRD-059). Only in autonomous-mode incidents where the ambiguity blocks a live response does smith pick the higher-risk row (brownfield > greenfield, audit > feature) and record the deviation in its Plan output. The single-row rule prevents the common failure mode where teams blend BMAD + SPARC + Spec Kit "to cover all bases" and end up with artefacts that match no community pattern — none of the three communities recognise the output as their canonical shape.
 
 ### How smith works internally
 
@@ -107,9 +107,9 @@ Smith's manifest is declared here in AGENTS.md so non-Claude-Code CLIs (Codex, G
 - **Claude Code**: `Task(subagent_type="agents-pro:smith", ...)` via the Agent tool.
 - **Gemini CLI**: equivalent dispatch via the Gemini agent SDK; the routing-map skill loads via `.agents/skills/smith/` interop directory.
 - **Codex CLI**: dispatch via Codex's agent invocation; AGENTS.md is read natively per `codex-rs/core/src/agents_md.rs`.
-- **Goose / Cursor**: dispatch via their respective agent layers; routing-map skill is portable Markdown.
+- **Goose / Cursor**: dispatch via their respective agent layers; the routing-map skill is portable Markdown.
 
-The 12-context routing table is **CLI-agnostic** — it names methodologies and Profile-A/B/C/D agent roles, not Claude-specific primitives. Each CLI maps the Profile names to its own dispatch model.
+The 12-context routing table is **CLI-agnostic** — it names methodologies and Profile-A / B / C / D agent roles, not Claude-specific primitives. Each CLI maps the Profile names to its own dispatch model.
 
 ### References
 
@@ -120,16 +120,16 @@ The 12-context routing table is **CLI-agnostic** — it names methodologies and 
 - `plugins/fpl-skills/skills/smith-plan/SKILL.md` — per-task planning skill.
 - `plugins/fpl-skills/skills/smith-routing/SKILL.md` — routing-table inspection skill.
 - `plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md` — Profile A / B / B-orchestrator / C / C-coder / D canonical definitions.
-- **BMAD-METHOD source**: https://github.com/bmad-code-org/BMAD-METHOD — the «Master persona» concept smith adapts.
+- **BMAD-METHOD source**: https://github.com/bmad-code-org/BMAD-METHOD — the "Master persona" concept smith adapts.
 - **AGENTS.md source**: https://agents.md — the Linux Foundation cross-CLI manifest standard (Dec 2025).
 
 ## Cross-CLI compatibility
 
-Marketplace **CLI-agnostic** через MCP standard:
+The marketplace is **CLI-agnostic** via the MCP standard:
 
 ### MCP server registration
 
-Любой CLI с MCP client может подключиться к forgeplan MCP server:
+Any CLI with an MCP client can connect to the forgeplan MCP server:
 
 ```jsonc
 // Claude Code: .claude/settings.json
@@ -148,28 +148,28 @@ command = "forgeplan"
 args = ["serve"]
 ```
 
-`forgeplan mcp-manifest` command (Batch F deliverable per RFC-003) генерирует все три config файла одним вызовом.
+The `forgeplan mcp-manifest` command (Batch F deliverable per RFC-003) generates all three config files in one call.
 
 ### Skills interop directory
 
-Plugins публикуют skills в двух location:
+Plugins publish skills in two locations:
 - `plugins/<name>/skills/` — Claude Code path (existing)
-- `plugins/<name>/.agents/skills/` — interop alias (agentskills.io standard) — symlinks к существующим skills
+- `plugins/<name>/.agents/skills/` — interop alias (agentskills.io standard) — symlinks to the existing skills
 
-Любой CLI с agentskills.io support загружает skills из `.agents/skills/`.
+Any CLI with agentskills.io support loads skills from `.agents/skills/`.
 
 ### Agent identity
 
-Каждый CLI выставляет environment variable для identity detection:
+Each CLI exposes an environment variable for identity detection:
 - Claude Code: `CLAUDECODE=1`
 - Codex CLI: `CODEX_SANDBOX=*`
-- Gemini CLI: `AGENT_CLIENT=gemini` (от ACP) или `GEMINI_CLI=1`
+- Gemini CLI: `AGENT_CLIENT=gemini` (per ACP) or `GEMINI_CLI=1`
 
-Identity format: `<cli_name>/<version>/<task_id>` записывается в claim/EVID/NOTE metadata.
+Identity format: `<cli_name>/<version>/<task_id>` is written into claim / EVID / NOTE metadata.
 
 ## Git workflow
 
-**CRITICAL: Только feature branches + PR. Прямой push в `main` и `dev` запрещён.**
+**CRITICAL: feature branches + PR only. Direct push to `main` and `dev` is forbidden.**
 
 ```
 feature-branch → push → PR → CI pass → merge
@@ -177,7 +177,7 @@ feature-branch → push → PR → CI pass → merge
 
 ### Branches
 
-| Branch | Назначение | Protection |
+| Branch | Purpose | Protection |
 |---|---|---|
 | `main` | Production | PR + 1 review + CI strict |
 | `dev` | Integration | PR + CI |
@@ -206,19 +206,19 @@ Pipeline tools available via MCP (`mcp__forgeplan__*`):
 - **State**: `session`, `phase`, `phase_advance`, `journal`
 - **Discovery**: `search`, `list`, `get`, `graph`
 
-54 tools total. Per pipeline phase mapping — см. RFC-003 Layer 2 (Agent Pack Dispatch Matrix).
+54 tools in total. Per-pipeline-phase mapping — see RFC-003 Layer 2 (Agent Pack Dispatch Matrix).
 
 ## Three orchestrator entrypoints
 
-1. **`/forge-cycle <task>`** — reactive methodology enforcer. Per-task invocation, full pipeline до завершения, halts на conflicts.
+1. **`/forge-cycle <task>`** — reactive methodology enforcer. Per-task invocation, full pipeline to completion, halts on conflicts.
 2. **`/autorun <task>`** — autonomous long-running. Upfront briefing → multi-hour run → FPF for conflict resolution → NOTE artifacts as audit trail.
-3. **`forgeplan playbook run <name>`** — declarative customization. YAML playbook (SPEC-003) для per-domain workflows.
+3. **`forgeplan playbook run <name>`** — declarative customization. YAML playbook (SPEC-003) for per-domain workflows.
 
-Все три — full pipeline (Phase 1 → 10); **entry phase determined by smart resume** из artifact graph state.
+All three drive the full pipeline (Phase 1 → 10); the **entry phase is determined by smart resume** from the artifact graph state.
 
 ## Validation
 
-Перед PR всегда:
+Always before opening a PR:
 
 ```bash
 ./scripts/validate-all-plugins.sh          # All plugins
@@ -270,21 +270,51 @@ forgeplan session                         # Current pipeline phase
 # Validation
 ./scripts/validate-all-plugins.sh
 
-# Cross-CLI setup (когда `forgeplan mcp-manifest` зарелижен)
-forgeplan mcp-manifest --output-dir ~/    # Generates configs for 3 CLI
+# Cross-CLI setup (once `forgeplan mcp-manifest` ships)
+forgeplan mcp-manifest --output-dir ~/    # Generates configs for 3 CLIs
 ```
 
 ## Conventions
 
-- **PascalCase** для ForgePlan ecosystem directories (e.g. `~/Work/ForgePlanMarketplace`)
-- **English** in code/config files, **Russian** в comments и user-facing docs (per project convention)
-- **Markdown** для все docs, YAML для playbooks/configs
+- **PascalCase** for ForgePlan ecosystem directories (e.g. `~/Work/ForgePlanMarketplace`)
+- **Markdown** for all docs, YAML for playbooks/configs
 - **Artifact IDs** PRD-NNN / RFC-NNN / ADR-NNN / EVID-NNN / NOTE-NNN — uppercase, zero-padded
+
+## Language policy (international project)
+
+This is an **international project**. The default language for all artifacts — code, configuration, documentation, commit messages, branch names, PR titles and bodies, issue titles and bodies, comments in source files, error messages, agent system prompts, skill bodies, hook scripts — is **English**.
+
+**Russian is permitted only in files explicitly suffixed `.ru.md` or `-RU.md`** (and their internal contents). These are intentional Russian-language siblings of English documents (e.g. `ONBOARDING-RU.md` next to `ONBOARDING.md`, `SMITH-RU.md` next to `SMITH.md`).
+
+### Hard rules
+
+- **Commit messages**: English only. No quoted Russian fragments, even when documenting a user request — translate the quote.
+- **Branch names**: English only (slug from English description).
+- **PR titles and bodies**: English only.
+- **GitHub issue titles and bodies**: English only.
+- **Source code, scripts, configs, CI workflows**: English only (identifiers, strings, comments).
+- **Markdown files NOT ending in `.ru.md` / `-RU.md`**: English only.
+
+### Narrow exceptions (do not expand)
+
+- **Bilingual agent frontmatter** in `plugins/agents-*/agents/*.md` MAY contain a Russian description paragraph and Russian trigger phrases — required for cross-language prompt matching (a Russian-speaking user typing a Russian command must still reach the right agent). The English paragraph and English triggers are mandatory; the Russian additions are additive.
+- **Hook scripts** (`plugins/*/hooks/scripts/*.sh`) MAY include Russian patterns inside regex alternations for the same reason — they classify user prompts and must cover the bilingual surface.
+- **Anti-pattern teaching examples** in `CLAUDE.md` "User-facing communication style" section MAY quote Russian text — those examples exist specifically to teach the model how *not* to write Russian. Touching that section requires preserving the quoted Russian.
+- **forge-report templates** (`plugins/*/skills/forge-report/sections/01-templates/*.md`) — pre-existing baseline; produces RU-language reports for the project owner. Not retroactively cleaned; new templates should ship English-first with optional `*-ru.md` siblings.
+
+### Going forward
+
+Any new file, commit, PR, or issue created on or after **2026-05-27** is held to the Hard rules above. The pre-2026-05-27 baseline (commit history that already contains Russian quotes, the bilingual agent files, the forge-report templates) is grandfathered — it cannot be retroactively cleaned without `git push --force`, which the Git workflow forbids. The grandfather is documented here so reviewers know not to chase historical violations during audits.
+
+If you must reference a Russian-language user request in a commit message or PR body, **translate the quote into English** and (optionally) mention "(translated from Russian)" once. Example:
+
+- WRONG: a commit message that quotes the user's Russian phrase verbatim.
+- RIGHT: `Closes user feedback: "guardian agent should check and report this" (translated from Russian)`
 
 ---
 
-> **For Claude Code users**: `CLAUDE.md` в этом же каталоге — Claude-specific overlay поверх этого файла. Содержит conventions specific к Claude Code (hooks settings.json formats, skill directory structure, etc.). При расхождениях с этим файлом — `AGENTS.md` источник правды для cross-CLI concerns, `CLAUDE.md` — для Claude Code specifics.
+> **For Claude Code users**: `CLAUDE.md` in the same directory is a Claude-specific overlay on top of this file. It contains conventions specific to Claude Code (hooks settings.json formats, skill directory structure, etc.). On disagreement with this file — `AGENTS.md` is the source of truth for cross-CLI concerns; `CLAUDE.md` is the source of truth for Claude Code specifics.
 >
-> **For Gemini CLI users**: можете создать `GEMINI.md` как symlink к этому файлу для Gemini-specific overlay.
+> **For Gemini CLI users**: you can create `GEMINI.md` as a symlink to this file for a Gemini-specific overlay.
 >
-> **For Codex CLI users**: этот файл будет прочитан native через `codex-rs/core/src/agents_md.rs`. Hierarchical scope (`child_agents_md`) поддерживается.
+> **For Codex CLI users**: this file is read natively via `codex-rs/core/src/agents_md.rs`. Hierarchical scope (`child_agents_md`) is supported.
