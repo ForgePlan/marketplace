@@ -201,7 +201,13 @@ Classify into one of five states and print the matching guidance:
 
 ### Step 0d — `.claude/hooks/` baseline check (additive, opt-in)
 
-A minimal canonical safety bundle ships with this plugin at `plugins/fpl-skills/templates/hooks/`. As of fpl-skills 1.34 it contains one file (`safety-hook.sh`) — the project-local `PreToolUse:Bash` blocker for destructive git/rm patterns. More hooks (pre-pr-evidence-check, etc.) may be added in later versions; this skill copies whatever the templates directory contains.
+A canonical safety bundle ships with this plugin at `plugins/fpl-skills/templates/hooks/`. As of fpl-skills 1.35 it contains three project-local hooks:
+
+| Hook | Trigger | Purpose |
+|---|---|---|
+| `safety-hook.sh` | `PreToolUse:Bash` | Blocks destructive git/rm patterns (`git push --force`, `rm -rf /`, `git push origin main`, etc.). The minimal safety baseline; every project should have it. |
+| `pre-pr-evidence-check.sh` | `PreToolUse:Bash` (gates `gh pr create`) | Forgeplan-aware: scans branch name + last 20 commit messages for artifact IDs (PRD/RFC/ADR/EPIC/...), then verifies each referenced artifact has linked EVID. Blocks PR creation if evidence is missing. Bypass via `FORGEPLAN_SKIP_EVIDENCE=1` env var or branch patterns (`docs/*`, `hotfix/*`, `release/v*`). |
+| `forge-safety-hook.sh` | `PreToolUse:Bash` | Forgeplan operations safety: blocks destructive forgeplan commands (`forgeplan delete`, `forgeplan reset`) without explicit `--yes`. Delegates to `dev-toolkit` safety hook when both plugins are installed. |
 
 If the project's `.claude/hooks/` is empty or absent, offer to copy the bundle:
 
@@ -210,16 +216,20 @@ TEMPLATES="${CLAUDE_PLUGIN_ROOT}/templates/hooks"
 PROJECT_HOOKS=".claude/hooks"
 
 if [ ! -d "$TEMPLATES" ]; then
-    echo "[~] Step 0d: hooks templates not shipped in this fpl-skills version (<1.34) — skipping."
+    echo "[~] Step 0d: hooks templates not shipped in this fpl-skills version — skipping."
 elif [ -d "$PROJECT_HOOKS" ] && [ -n "$(ls -A "$PROJECT_HOOKS" 2>/dev/null)" ]; then
     echo "✓ Step 0d: .claude/hooks/ already populated — leaving user's hooks untouched."
 else
-    echo "[?] Step 0d: .claude/hooks/ is empty. Install minimal safety bundle from fpl-skills templates?"
-    echo "    • safety-hook.sh — PreToolUse:Bash blocker for destructive git/rm commands"
+    echo "[?] Step 0d: .claude/hooks/ is empty. Install canonical safety bundle (3 hooks)?"
+    echo "    • safety-hook.sh            — PreToolUse:Bash blocker for destructive git/rm commands"
+    echo "    • pre-pr-evidence-check.sh  — PreToolUse:Bash gate before gh pr create, requires linked EVID"
+    echo "    • forge-safety-hook.sh      — PreToolUse:Bash gate for destructive forgeplan operations"
     echo "Install? [y/n]"
     # On `y`: mkdir -p .claude/hooks && cp -i "$TEMPLATES"/*.sh .claude/hooks/ && chmod +x .claude/hooks/*.sh
-    #         then either create .claude/settings.json with the PreToolUse:Bash matcher entry,
-    #         or merge into existing (Python merge, preserving any user hooks already configured)
+    #         then either create .claude/settings.json with three PreToolUse:Bash matcher entries
+    #         (one per hook), or merge into existing (Python merge, preserving any user hooks already
+    #         configured). All three hooks are PreToolUse:Bash; chain them by listing all three in the
+    #         hooks[] array under the Bash matcher.
     # On `n`: skip silently — bootstrap continues, hooks are defense-in-depth not load-bearing
 fi
 ```

@@ -136,10 +136,17 @@ through the rest of the plan with a broken artifact store.
 
 ### 5. Wire `.mcp.json`
 
-Goal: ensure the `forgeplan` MCP server entry exists, **without
-overwriting existing entries**.
+Goal: ensure the `forgeplan` MCP server entry exists, **without overwriting existing entries**.
 
-Target shape:
+**Use the native command** — `forgeplan mcp install`:
+
+```bash
+forgeplan mcp install --client claude --scope project
+```
+
+This is the canonical wiring path. It is owned by forgeplan itself, smart-merge (preserves existing `hindsight`, `orch`, and any other MCP server entries), idempotent (safe to re-run), and writes the correct shape (`command: forgeplan / args: ["serve"] / transport: stdio`).
+
+Target shape (what the command writes into `.mcp.json`):
 
 ```json
 {
@@ -153,36 +160,33 @@ Target shape:
 }
 ```
 
-**Why `args: ["serve"]` not `["mcp"]`** — `forgeplan mcp` is a *parent* command with subcommands (`mcp serve`, `mcp install`, `mcp help`). Launching it without a subcommand makes the server hang waiting for one, and Claude Code reports `failed to reconnect`. The canonical MCP server command is `forgeplan serve` (stdio is the default and only transport, no `--stdio` flag exists). `["mcp", "serve"]` also works as an alias path but `["serve"]` is the most direct.
+**Why `args: ["serve"]` not `["mcp"]`** — `forgeplan mcp` is a *parent* command with subcommands (`mcp serve`, `mcp install`, `mcp help`). Launching it without a subcommand makes the server hang waiting for one, and Claude Code reports `failed to reconnect`. The canonical MCP server command is `forgeplan serve` (stdio is the default and only transport). `forgeplan mcp install` writes the correct `["serve"]` shape automatically.
 
-Rules:
-- File missing → write the minimal version above.
-- File present + `mcpServers.forgeplan` missing → merge the entry in,
-  preserving every other server (e.g. `hindsight`, `orch`).
-- File present + `mcpServers.forgeplan.args == ["mcp"]` → **upgrade to `["serve"]`** (this is the buggy v1.6.0 init output that fails to reconnect; the upgrade is idempotent and safe).
-- File present + `mcpServers.forgeplan.args == ["serve"]` already → skip (correct shape).
+Behaviour of the native command:
+- `.mcp.json` missing → creates it with the forgeplan block.
+- `.mcp.json` present + `mcpServers.forgeplan` missing → merges the entry in, preserves every other server.
+- `.mcp.json` present + `mcpServers.forgeplan.args == ["mcp"]` (buggy v1.6.0 historic shape) → upgrades to `["serve"]` automatically (smart-merge replaces `command/args/transport` while preserving any user-customised `env` block).
+- `.mcp.json` present + already correct → no-op, exits success.
 
-Implementation: prefer `python3` for the merge (always available, no
-dependency on `jq`):
+Other `--scope` values:
+- `--scope project` (used here) → writes to `./.mcp.json` in the current repo. This is what greenfield bootstrap wants — the wiring travels with the repo.
+- `--scope user` → writes to `~/.claude.json` (host-personal, not committed). Use when you want forgeplan available in *every* project without per-repo config.
+
+Dry-run is supported and useful before running for the first time on a populated `.mcp.json`:
 
 ```bash
-python3 - <<'PY'
-import json, pathlib
-p = pathlib.Path(".mcp.json")
-data = json.loads(p.read_text()) if p.exists() else {}
-data.setdefault("mcpServers", {})
-fp = data["mcpServers"].get("forgeplan")
-if fp is None or fp.get("args") == ["mcp"]:  # missing OR buggy old shape
-    data["mcpServers"]["forgeplan"] = {
-        "command": "forgeplan",
-        "args": ["serve"],
-        "transport": "stdio",
-    }
-p.write_text(json.dumps(data, indent=2) + "\n")
-PY
+forgeplan mcp install --client claude --scope project --dry-run
 ```
 
-Make sure the file ends with a newline; some editors complain otherwise.
+If the command fails (rare — usually file permissions or a malformed pre-existing `.mcp.json`), the recovery is to back up and re-run:
+
+```bash
+mv .mcp.json .mcp.json.bak
+forgeplan mcp install --client claude --scope project
+# then manually merge any custom entries from .mcp.json.bak back in
+```
+
+This replaces the previous Python-merge approach used in `fpl-init` ≤ v1.33; the native command is the same primitive that `smith-bootstrap` Step 0b uses, eliminating drift between the two skills.
 
 ### 6. Wire `.claude/settings.json` (optional, ask first)
 
