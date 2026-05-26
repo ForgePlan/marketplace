@@ -1,7 +1,7 @@
 {
   "name": "agents-pro",
-  "version": "1.10.1",
-  "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.10.1: EPIC-002 niceties patch — smith.md routing matrix resynced to canonical routing-map.md (rows 1/3/4/6/11 alignment fix per EVID-099 audit). v1.10.0: EPIC-002 PRD-062 — new `smith` master-orchestrator agent (Profile B-orchestrator), the BMAD Master equivalent for the ForgePlan ecosystem. v1.9.4: Sprint Z9 PRD-060 — adr-architect Step 5b.1: C4 diagram dispatch for ≥3-module full ADRs. v1.9.3: Sprint Z7 PRD-059 — guardian ADI BLOCKER row. v1.9.2: Sprint Z6 PRD-057 — guardian BMAD rows.",
+  "version": "1.11.0",
+  "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.11.0: EPIC-003 / Sprint AA PRD-067/069 — guardian Step 5 verdict matrix +2 new rows: C4 CONCERNS (≥3-module ADR without docs/c4 file, Sprint Z9 PRD-060 implementation) + OpenSpec BLOCKER (supersede without ## Delta-spec, Sprint Z8 PRD-058 activation gate). Closes G2+G4 methodology auto-enforcement gaps. v1.10.1: EPIC-002 niceties patch. v1.10.0: EPIC-002 PRD-062 — new `smith` master-orchestrator agent (Profile B-orchestrator). v1.9.4: Sprint Z9 — adr-architect C4 dispatch. v1.9.3: Sprint Z7 — guardian ADI BLOCKER row.",
   "author": {
     "name": "ForgePlan"
   },

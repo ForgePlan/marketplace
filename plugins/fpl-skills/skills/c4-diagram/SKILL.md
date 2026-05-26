@@ -21,6 +21,51 @@ When dispatched non-interactively from `adr-architect` (full ADR, ≥3 modules),
 2. **Skip the interactive interview** — derive all answers from the context the orchestrator provided. Do not ask the user questions; infer container names and relationships from the module list and any parent PRD body accessible in context.
 3. **Generate L1 (Context) + L2 (Container) Mermaid diagrams** as a single combined file. L3 only if explicitly requested in the dispatch prompt.
 4. **Write** to the path specified by the orchestrator (typically `docs/c4/<ADR-NNN>.md` next to the ADR being drafted).
+
+   **4b. Pre-write idempotency check (Sprint AA / PRD-068 / G3):**
+
+   Before writing to `docs/c4/<ADR-ID>.md`, check whether the target file already exists. Dispatch mode MUST NOT silently overwrite a prior diagram — re-runs of `adr-architect` Step 5b.1 on the same ADR ID would otherwise destroy human review work or earlier diagram iterations.
+
+   ```bash
+   if [ -f "docs/c4/<ADR-ID>.md" ]; then
+     # Existing file detected — do NOT proceed with the canonical path.
+     # Choose one of two resolution paths below.
+   fi
+   ```
+
+   **Path A — Interactive resolution (DEFAULT)**:
+
+   Emit a `<<NEED_USER_INPUT>>` sentinel with exactly three options. Return to the orchestrator without writing; the orchestrator surfaces the prompt to the user:
+
+   ```
+   <<NEED_USER_INPUT>>
+   The file `docs/c4/<ADR-ID>.md` already exists.
+   Choose how to proceed:
+     1. overwrite — replace existing file (loses prior diagram + any human edits)
+     2. v2 — write to `docs/c4/<ADR-ID>.v2.md` (preserves prior; next re-run picks .v3, .v4, …)
+     3. abort — return without writing; orchestrator decides next step
+   <<END_NEED_USER_INPUT>>
+   ```
+
+   **Path B — Auto-versioning (orchestrator opt-in)**:
+
+   When the orchestrator invokes Dispatch mode with `auto_versioning=true` in the dispatch prompt, NEVER overwrite and NEVER prompt. Auto-append the next available numeric suffix:
+
+   ```bash
+   # Pseudocode — find next free slot
+   target="docs/c4/<ADR-ID>.md"
+   if [ -f "$target" ]; then
+     n=2
+     while [ -f "docs/c4/<ADR-ID>.v${n}.md" ]; do n=$((n+1)); done
+     target="docs/c4/<ADR-ID>.v${n}.md"
+   fi
+   # Write to $target
+   ```
+
+   **Path selection rule**: default is Path A (interactive). Path B is opt-in via the dispatch prompt — the orchestrator (`adr-architect`, `/forge-cycle`, or future automation) declares `auto_versioning=true` when human prompting is not desired (e.g., batch ADR regeneration, scripted pipelines).
+
+   If the file does not exist, proceed normally with the canonical path `docs/c4/<ADR-ID>.md` — no prompt, no suffix.
+
 5. **Return** to the orchestrator: path to the generated diagrams file + a 2-sentence text summary describing the system context (this summary is used by `adr-architect` to seed the ADR body's `## Context` section).
 
 **Use Dispatch mode when:**
@@ -31,7 +76,30 @@ When dispatched non-interactively from `adr-architect` (full ADR, ≥3 modules),
 - User explicitly invokes `/c4-diagram` — they want to walk through the questions.
 - System is new or poorly understood — the interactive interview surfaces what's actually deployed that the orchestrator can't know from PRD context alone.
 
-Reference: Sprint Z9 PRD-060. Methodology: Simon Brown's C4 model (c4model.com). Pairs with EPIC-001 4-layer pipeline — C4 is orthogonal architecture documentation, not part of S10-S13 pipeline layers.
+### Dispatch mode — Hard rules
+
+- **Idempotency contract**: Dispatch mode MUST NOT silently overwrite an existing `docs/c4/<ID>.md`. Re-runs either prompt via `<<NEED_USER_INPUT>>` or auto-version with `.v2`/`.v3` suffix.
+- **No interactive prompting in auto-versioning mode**: when the orchestrator declares `auto_versioning=true`, never emit `<<NEED_USER_INPUT>>` — auto-append the next available numeric suffix and proceed.
+- **No interview**: do not ask the user questions in Dispatch mode under any circumstance other than the idempotency sentinel in Step 4b (interactive resolution path).
+- **Return path always concrete**: Step 5 must report the actual file path written, which may be `docs/c4/<ID>.md`, `docs/c4/<ID>.v2.md`, or higher, depending on resolution path taken.
+
+### Dispatch mode — Output location convention
+
+Canonical first-write path: `docs/c4/<ADR-ID>.md` (e.g., `docs/c4/ADR-007.md`).
+
+When the canonical file already exists, Dispatch mode versions the output:
+
+| Suffix | When written |
+|---|---|
+| `<ADR-ID>.md` | First Dispatch invocation for this ADR (file did not exist) |
+| `<ADR-ID>.v2.md` | Second invocation under Path A "v2" choice OR first re-run under Path B auto-versioning |
+| `<ADR-ID>.v3.md`, `.v4.md`, ... | Subsequent re-runs, picking the next free numeric slot |
+
+Versioned files (`.v2`, `.v3`, ...) are **peers** of the canonical file, not replacements. Downstream consumers (ADR body links, brownfield ingest via `c4-to-forge.yaml`, future review tooling) should link to the canonical `<ADR-ID>.md` unless a specific historical version is needed.
+
+If a user explicitly chooses `overwrite` in Path A, only the canonical `<ADR-ID>.md` is touched; pre-existing `.v2`, `.v3` files are NOT auto-cleaned (preserve historical evolution).
+
+Reference: Sprint Z9 PRD-060 (Dispatch mode foundation), Sprint AA PRD-068 (G3 closure — idempotency protection). Methodology: Simon Brown's C4 model (c4model.com). Pairs with EPIC-001 4-layer pipeline — C4 is orthogonal architecture documentation, not part of S10-S13 pipeline layers.
 
 ---
 

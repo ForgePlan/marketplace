@@ -173,6 +173,22 @@ This step is **deliberate mental reasoning**, *not* a call to `mcp__forgeplan__f
 | Step 4b: Standard+ artifact has zero linked Profile B EVID with verdict=PASS in audit chain | **BLOCKER** (BMAD discipline violation — Sprint Z6 PRD-057) |
 | Step 4b: linked Profile B EVID has verdict=PASS but body has zero `## Findings` entries | **CONCERNS** (adversarial review thin — zero findings = unrefined; recommend re-dispatch of reviewer with explicit adversarial prompt) |
 | Step 4b/4.5: Standard+ artifact has no `adi` or `hypotheses` kind EVID linked (`informs`) — OR — the linked ADI EVID body has fewer than 3 `### Hypothesis` / `### H1 H2 H3` / `**Hypothesis N**` sections | **BLOCKER** (FPF ADI discipline violation — Sprint Z7 PRD-059; S10 design layer missing — cite EPIC-001) |
+| ADR/RFC body discusses ≥3 modules (3+ distinct service/module names mentioned) AND no `docs/c4/<ADR-NNN>.md` file exists AND body contains no ` ```mermaid` block with `C4Context` or `flowchart` | **CONCERNS** (C4 discipline — Sprint Z9 PRD-060: full ADRs touching ≥3 modules must have C4 L1+L2 diagrams; recommendation: dispatch `/c4-diagram` in Dispatch mode before re-attempting activation; cite CLAUDE.md "C4 diagrams for ≥3-module architectural decisions") |
+| Artifact has `supersedes` link AND body lacks both `## Delta-spec` section AND any of `### ADDED` / `### MODIFIED` / `### REMOVED` / `### UNCHANGED` headers AND created_at ≥ 2026-05-25 | **BLOCKER** (OpenSpec delta-spec discipline — Sprint Z8 PRD-058: supersede operations from 2026-05-25 onward MUST include delta-spec; pre-Z8 supersedes downgrade to CONCERNS — handled by `/decay-watch` Step 2e; recommendation: dispatch `/supersede` skill to refill template; cite CLAUDE.md "OpenSpec delta-spec discipline") |
+
+**Module-detection heuristic for C4 gate** (Row: ADR/RFC ≥3 modules):
+
+- Count distinct Title-Case multi-word terms that look like service/module names mentioned in the body (e.g., "Auth Service", "Payment Gateway", "User DB").
+- OR count distinct paths matching `plugins/*/` or `src/*/` patterns referenced in the body.
+- Threshold: ≥3 unique → predicate "discusses ≥3 modules" evaluates true.
+- This is a heuristic, not an exact parse — false positives are acceptable because the gate severity is **CONCERNS** (not BLOCKER). The recommendation surfaces the gap; the user/orchestrator makes the call to dispatch `/c4-diagram` or override.
+- File-existence check: look for `docs/c4/<ADR-NNN>.md` relative to the repo root (where `<ADR-NNN>` matches the artifact ID being gated). Absence of file AND absence of inline ` ```mermaid` block with `C4Context` or `flowchart` in the ADR body → trigger condition.
+
+**Delta-spec detection for OpenSpec gate** (Row: supersedes link + missing delta):
+
+- Body-content check (regex): `grep -E "^## Delta-spec|^### ADDED|^### MODIFIED|^### REMOVED|^### UNCHANGED"` against artifact body. If zero matches → predicate "lacks delta-spec" evaluates true.
+- Date threshold: parse `created` or `created_at` from artifact frontmatter (ISO 8601). If date ≥ `2026-05-25` → predicate "Z8+ supersede" evaluates true. Both predicates must hold for BLOCKER.
+- Pre-Z8 supersedes (created_at < 2026-05-25) without delta-spec downgrade to **CONCERNS** instead — handled by `/decay-watch` Step 2e classification (`MISSING-DELTA` backward-compatible warning, not `NO-DELTA-WHEN-REQUIRED`).
 
 Verdict derivation rule (no exceptions, no judgement-soft):
 

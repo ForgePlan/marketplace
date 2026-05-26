@@ -26,11 +26,14 @@ if [ ! -d ".forgeplan" ]; then
     exit 0
 fi
 
-# Pull active ADRs (JSON output piped through python for date parsing)
-ACTIVE_ADRS=$(forgeplan list --kind adr --status active --output json 2>/dev/null) || exit 0
+# Pull active ADRs (JSON output piped through python for date parsing).
+# If the CLI call fails (uninitialized workspace, stale state) we still want
+# Layer 3 to run — it is filesystem-only — so do NOT exit on failure here.
+ACTIVE_ADRS=$(forgeplan list --kind adr --status active --output json 2>/dev/null || echo "[]")
 
-# Parse + check using python (POSIX-safe, no jq dependency)
-python3 - "$ACTIVE_ADRS" <<'PYEOF' 2>/dev/null || exit 0
+# Parse + check using python (POSIX-safe, no jq dependency). Any python error
+# is swallowed; Layer 3 below still runs (filesystem-only, no Python).
+python3 - "$ACTIVE_ADRS" <<'PYEOF' 2>/dev/null || true
 import json
 import re
 import subprocess
@@ -134,5 +137,43 @@ if fired_lines:
     print("Run /decay-watch for the full report.")
 
 PYEOF
+
+# ─── Layer 3 (Sprint AA / PRD-070 / G8): supersede chain delta scan ──────────
+# For each active ADR with a `supersedes` link, verify the body declares a
+# Delta-spec block (## Delta-spec heading OR one of the four sub-section
+# headings: ### ADDED / ### MODIFIED / ### REMOVED / ### UNCHANGED).
+# Cutoff: only count ADRs created on or after the Sprint Z8 effective date
+# (2026-05-25). Pre-Z8 supersedes are warned by /decay-watch but not by this
+# hook (back-compat: don't spam every SessionStart for historical decisions).
+# Filesystem-only — no forgeplan CLI invocation. Budget: <30ms on 50 ADRs.
+LAYER3_COUNT=0
+LAYER3_CUTOFF="2026-05-25"
+if [ -d ".forgeplan/adrs" ]; then
+    for adr_file in .forgeplan/adrs/*.md; do
+        [ -f "$adr_file" ] || continue
+        # 1. Active status (frontmatter)?
+        grep -q -E "^status: active$" "$adr_file" 2>/dev/null || continue
+        # 2. Has supersedes link (YAML `relation: supersedes` OR body `## Supersedes`)?
+        grep -q -E "(^[[:space:]]+relation: supersedes|^## Supersedes)" "$adr_file" 2>/dev/null || continue
+        # 3. Created on or after Sprint Z8 cutoff? Prefer explicit `created:`,
+        #    fall back to `last_modified_at:` (date portion) when absent.
+        created_date=$(grep -E "^created:" "$adr_file" 2>/dev/null | head -1 | sed 's/^created:[[:space:]]*//' | cut -d'T' -f1 | tr -d ' "')
+        if [ -z "$created_date" ]; then
+            created_date=$(grep -E "^last_modified_at:" "$adr_file" 2>/dev/null | head -1 | sed 's/^last_modified_at:[[:space:]]*//' | cut -d'T' -f1 | tr -d ' "')
+        fi
+        [ -z "$created_date" ] && continue
+        # String comparison is safe for ISO-8601 YYYY-MM-DD.
+        [ "$created_date" \< "$LAYER3_CUTOFF" ] && continue
+        # 4. Delta-spec section present? Any of: ## Delta-spec | ### ADDED/MODIFIED/REMOVED/UNCHANGED
+        if ! grep -q -E "(^## Delta-spec|^### ADDED|^### MODIFIED|^### REMOVED|^### UNCHANGED)" "$adr_file" 2>/dev/null; then
+            LAYER3_COUNT=$((LAYER3_COUNT + 1))
+        fi
+    done
+fi
+
+if [ "$LAYER3_COUNT" -gt 0 ]; then
+    echo "🔔 $LAYER3_COUNT supersede ADR(s) missing ## Delta-spec section (Sprint Z8 / PRD-058)"
+    echo "Run /decay-watch for the full report."
+fi
 
 exit 0
