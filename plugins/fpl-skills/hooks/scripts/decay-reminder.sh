@@ -146,29 +146,76 @@ PYEOF
 # (2026-05-25). Pre-Z8 supersedes are warned by /decay-watch but not by this
 # hook (back-compat: don't spam every SessionStart for historical decisions).
 # Filesystem-only — no forgeplan CLI invocation. Budget: <30ms on 50 ADRs.
+#
+# Sprint BB Wave 1B (EVID-110/111): replaced per-file grep loop (3-4 forks×N
+# files → ~430ms at 50 ADRs) with a single awk pass (~10ms at 50 ADRs, ~45×
+# faster). Functional equivalence verified against the previous loop on 5
+# synthetic cases + real repo. State is reset per file via FNR==1; the
+# previous file's state is "flushed" (evaluated and counted) before reset.
 LAYER3_COUNT=0
 LAYER3_CUTOFF="2026-05-25"
 if [ -d ".forgeplan/adrs" ]; then
-    for adr_file in .forgeplan/adrs/*.md; do
-        [ -f "$adr_file" ] || continue
-        # 1. Active status (frontmatter)?
-        grep -q -E "^status: active$" "$adr_file" 2>/dev/null || continue
-        # 2. Has supersedes link (YAML `relation: supersedes` OR body `## Supersedes`)?
-        grep -q -E "(^[[:space:]]+relation: supersedes|^## Supersedes)" "$adr_file" 2>/dev/null || continue
-        # 3. Created on or after Sprint Z8 cutoff? Prefer explicit `created:`,
-        #    fall back to `last_modified_at:` (date portion) when absent.
-        created_date=$(grep -E "^created:" "$adr_file" 2>/dev/null | head -1 | sed 's/^created:[[:space:]]*//' | cut -d'T' -f1 | tr -d ' "')
-        if [ -z "$created_date" ]; then
-            created_date=$(grep -E "^last_modified_at:" "$adr_file" 2>/dev/null | head -1 | sed 's/^last_modified_at:[[:space:]]*//' | cut -d'T' -f1 | tr -d ' "')
-        fi
-        [ -z "$created_date" ] && continue
-        # String comparison is safe for ISO-8601 YYYY-MM-DD.
-        [ "$created_date" \< "$LAYER3_CUTOFF" ] && continue
-        # 4. Delta-spec section present? Any of: ## Delta-spec | ### ADDED/MODIFIED/REMOVED/UNCHANGED
-        if ! grep -q -E "(^## Delta-spec|^### ADDED|^### MODIFIED|^### REMOVED|^### UNCHANGED)" "$adr_file" 2>/dev/null; then
-            LAYER3_COUNT=$((LAYER3_COUNT + 1))
-        fi
-    done
+    # Use a nullglob-style guard so an empty directory doesn't pass the
+    # literal pattern through to awk.
+    shopt -s nullglob 2>/dev/null || true
+    LAYER3_ADR_FILES=(.forgeplan/adrs/*.md)
+    if [ ${#LAYER3_ADR_FILES[@]} -gt 0 ]; then
+        LAYER3_COUNT=$(awk -v cutoff="$LAYER3_CUTOFF" '
+            function flush(   d) {
+                # Evaluate the file we just finished. Same predicate order
+                # as the previous shell loop: active status → has supersede
+                # → on/after cutoff (created or last_modified_at fallback)
+                # → no delta-spec section.
+                if (FILENAME_PREV == "") return
+                if (!status_active) return
+                if (!had_supersede) return
+                d = (created_date != "" ? created_date : last_modified_date)
+                if (d == "") return
+                if (d < cutoff) return
+                if (had_delta) return
+                violations++
+            }
+            FNR == 1 {
+                flush()
+                FILENAME_PREV = FILENAME
+                status_active = 0
+                had_supersede = 0
+                had_delta = 0
+                created_date = ""
+                last_modified_date = ""
+            }
+            /^status: active$/ { status_active = 1 }
+            /^[[:space:]]+relation: supersedes[[:space:]]*$/ { had_supersede = 1 }
+            /^## Supersedes/ { had_supersede = 1 }
+            /^## Delta-spec/ { had_delta = 1 }
+            /^### ADDED/ { had_delta = 1 }
+            /^### MODIFIED/ { had_delta = 1 }
+            /^### REMOVED/ { had_delta = 1 }
+            /^### UNCHANGED/ { had_delta = 1 }
+            /^created:/ {
+                v = $0
+                sub(/^created:[[:space:]]*/, "", v)
+                gsub(/["[:space:]]/, "", v)
+                # YYYY-MM-DD prefix (split on T for ISO timestamps).
+                n = split(v, parts, "T")
+                created_date = parts[1]
+            }
+            /^last_modified_at:/ {
+                v = $0
+                sub(/^last_modified_at:[[:space:]]*/, "", v)
+                gsub(/["[:space:]]/, "", v)
+                n = split(v, parts, "T")
+                last_modified_date = parts[1]
+            }
+            END {
+                flush()
+                print violations + 0
+            }
+        ' "${LAYER3_ADR_FILES[@]}" 2>/dev/null)
+        # Defensive: if awk failed for any reason, fall back to 0 (silent,
+        # don't break SessionStart on a parsing edge case).
+        [ -z "$LAYER3_COUNT" ] && LAYER3_COUNT=0
+    fi
 fi
 
 if [ "$LAYER3_COUNT" -gt 0 ]; then

@@ -183,6 +183,11 @@ This step is **deliberate mental reasoning**, *not* a call to `mcp__forgeplan__f
 - Threshold: ≥3 unique → predicate "discusses ≥3 modules" evaluates true.
 - This is a heuristic, not an exact parse — false positives are acceptable because the gate severity is **CONCERNS** (not BLOCKER). The recommendation surfaces the gap; the user/orchestrator makes the call to dispatch `/c4-diagram` or override.
 - File-existence check: look for `docs/c4/<ADR-NNN>.md` relative to the repo root (where `<ADR-NNN>` matches the artifact ID being gated). Absence of file AND absence of inline ` ```mermaid` block with `C4Context` or `flowchart` in the ADR body → trigger condition.
+- **Inline mermaid satisfies the gate** — if the ADR body itself contains a fenced `mermaid` block whose content includes either the `C4Context` keyword (C4 Mermaid plugin syntax) OR a `flowchart` declaration (standard Mermaid flow that visualises module relationships), the gate is considered satisfied even when `docs/c4/<ADR-NNN>.md` is absent. Three concrete satisfy-paths close this gate:
+  - **Path A**: a separate file at `docs/c4/<ADR-NNN>.md` containing L1+L2 diagrams (the canonical output of `/c4-diagram` skill in Dispatch mode).
+  - **Path B**: the ADR body itself opens a fenced `mermaid` code block whose first content line is `C4Context` (C4 Mermaid plugin notation — renders Person/System/Container nodes).
+  - **Path C**: the ADR body opens a fenced `mermaid` code block whose first content line is `flowchart LR` (or `TB`/`RL`/`BT`) — standard Mermaid flow with nodes labelled by service/module name.
+  Detection regex against the ADR body: ``grep -E '^```mermaid\s*$' -A 1 <body> | grep -E '^(C4Context|flowchart\s+[LRTB]{2})'``. Any of A/B/C closes the gate.
 
 **Delta-spec detection for OpenSpec gate** (Row: supersedes link + missing delta):
 

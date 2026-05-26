@@ -325,9 +325,9 @@ If ANY layer scores 0 (BLOCKER) → append `— BLOCKED` to the verdict regardle
 2. **Read-only on the target artifact** — do NOT call `forgeplan_update`, `forgeplan_link`, `forgeplan_new`, or any mutation tool.
 3. **Tactical artifacts get reduced layer check** — depth=tactical only checks S12+S13. S10, S11, and RIPER are marked `N/A` (not a gap, not scored).
 4. **C4 check is heuristic** — false positives (detecting "service" in a non-architectural context) are possible. If the C4 heuristic fires unexpectedly, note it in the report and let the user confirm.
-4a. **RIPER check is heuristic** — the bug-fix signal is keyword-based (production / incident / SEV-1/2 / race condition / regression). If the heuristic fires unexpectedly (e.g. the word "regression" appearing in a statistical context, not a bug context), note the suspect signal in the report and let the user override to N/A.
-5. **r_eff=0 on leaf EVID is cosmetic** — do not flag it as a hard BLOCKER for the parent PRD. Note the forgeplan#325 upstream issue.
-6. **One invocation per artifact** — do not recursively check linked artifacts (e.g. do not run methodology-check on the linked EVIDs). This is a flat one-artifact report.
+5. **RIPER check is heuristic** — the bug-fix signal is keyword-based (production / incident / SEV-1/2 / race condition / regression). If the heuristic fires unexpectedly (e.g. the word "regression" appearing in a statistical context, not a bug context), note the suspect signal in the report and let the user override to N/A.
+6. **r_eff=0 on leaf EVID is cosmetic** — do not flag it as a hard BLOCKER for the parent PRD. Note the forgeplan#325 upstream issue.
+7. **One invocation per artifact** — do not recursively check linked artifacts (e.g. do not run methodology-check on the linked EVIDs). This is a flat one-artifact report.
 
 ---
 

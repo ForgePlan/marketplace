@@ -5,6 +5,389 @@ All notable changes to the ForgePlan Marketplace will be documented in this file
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+> **Backfill (Sprint BB / PRD-071)**: entries from v1.24.0 through v1.73.0 reconstructed from git log + merged PR titles. Per-plugin version history is out-of-scope; catalog `metadata.version` is the index. For per-plugin details see each plugin's description field in `marketplace.json`.
+>
+> **Timezone note**: dates reported in local timezone of the reconstruction. UTC merge time may differ by ≤1 day at midnight boundaries (e.g., v1.72.0 / v1.59.0 / v1.58.0 entries reported as local-day but PR merged just after UTC midnight). Chronological ordering is preserved either way.
+
+## [1.73.0] - 2026-05-26
+
+### Sprint AA — Methodology auto-enforcement gates closure (EPIC-003)
+
+- **Added** — guardian Step 5 verdict matrix +2 rows: PRD-067 C4 CONCERNS row + PRD-069 OpenSpec BLOCKER row.
+- **Added** — RIPER auto-routing for production bugs (PRD-066): prompt-router.sh detection + smith row 4 dispatch + methodology-check Step 10 enforcement.
+- **Added** — `decay-reminder.sh` Layer 3 supersede-chain delta scan (PRD-070) flags pre-Z8 supersedes missing delta-spec.
+- **Changed** — `/c4-diagram` Dispatch mode idempotency guard added (PRD-068).
+- **Documented** — accept-by-design social-discipline boundaries (G5 SPARC claim-log, G6 BMAD content-spoof, G7 FPF ADI content-spoof) — three intentionally-not-automated gaps where parser cost exceeds benefit.
+- **Refs**: EPIC-003, PRD-066..070, EVID-105..111, PR #112.
+
+## [1.72.1] - 2026-05-26
+
+### Onboarding guides
+
+- **Added** — `docs/ONBOARDING.md` + `docs/ONBOARDING-RU.md` — friendly pocket guide to the marketplace.
+- **Added** — `docs/BROWNFIELD-GUIDE.md` + `docs/BROWNFIELD-GUIDE-RU.md` — brownfield-discovery companion.
+- **Added** — root README rows for Onboarding + Brownfield in docs table.
+- **Refs**: EVID-104, PR #111.
+
+## [1.72.0] - 2026-05-25
+
+### EPIC-002 niceties patch — N1-N4 polish + 5-reviewer audit + 6-test e2e smoke
+
+- **Changed** — `smith` agent + 4 skills (`/smith`, `/smith-bootstrap`, `/smith-plan`, `/smith-routing`): N1-N4 polish from 5-reviewer audit + e2e smoke fixes.
+- **Refs**: EPIC-002, EVID-099, EVID-102, PR #110.
+
+## [1.71.0] - 2026-05-25
+
+### EPIC-002 — smith master-orchestrator (BMAD Master equivalent)
+
+- **Added** — `agents-pro:smith` — Profile B-orchestrator sub-profile, 12-context routing matrix, 27 methodology cards.
+- **Added** — 4 fpl-skills smith skills: `/smith` (status + next-step), `/smith-bootstrap` (greenfield seed), `/smith-plan <task>` (per-task dispatch plan), `/smith-routing` (educational walkthrough).
+- **Added** — `docs/SMITH.md` + `docs/SMITH-RU.md` full guides.
+- **Added** — AGENTS.md cross-CLI context shim, session hook integration, plugin READMEs.
+- **Refs**: EPIC-002, PRD-062..065, EVID-094..097, PR #109.
+
+## [1.70.0] - 2026-05-25
+
+### Sprint Z9 + Z10 — C4 auto-recommend + methodology-check meta-skill
+
+- **Added** — `/methodology-check <ARTIFACT-ID>` skill — cumulative per-layer (S10/S11/S12/S13 + C4) coverage report on any artifact (PRD-061).
+- **Changed** — `adr-architect` Step 5b.1 auto-dispatches `/c4-diagram` Dispatch mode for ≥3-module architectural decisions (PRD-060).
+- **Added** — `/c4-diagram` skill Dispatch mode + L1/L2 Mermaid templates.
+- **Documented** — CLAUDE.md Sprint Z9 + Z10 discipline sections; C4 positioned as orthogonal extension (not part of 4-layer S10-S13).
+- **Refs**: PRD-060, PRD-061, EPIC-001, PR #106, #107.
+
+## [1.69.0] - 2026-05-25
+
+### Sprint Z6 — BMAD adversarial review mandatory for Standard+
+
+- **Added** — `/forge-cycle` Step 6.5: dispatches `agents-pro:artifact-reviewer` with adversarial mandate for Standard+ artifacts.
+- **Added** — `guardian` Step 5 verdict matrix rows: zero Profile B EVID → BLOCKER; Profile B EVID with empty `## Findings` → CONCERNS.
+- **Documented** — CLAUDE.md Sprint Z6 discipline: every Standard+ PRD/RFC/ADR MUST have ≥1 Profile B EVID with ≥1 finding before activate. Cites MSR 2026 (+25-41% complexity without controls).
+- **Refs**: PRD-057, EPIC-001 (4-layer pipeline S11 BMAD), PR #105.
+
+## [1.68.0] - 2026-05-25
+
+### Sprint Z8 — OpenSpec delta-spec mandatory at supersede
+
+- **Added** — `adr-supersede.md` template — ADDED/MODIFIED/REMOVED/UNCHANGED four-section structure.
+- **Added** — `/supersede` skill — 8-step workflow walks delta computation + activate/deprecate FSM.
+- **Added** — `/decay-watch` Step 2e — classifies supersedes as HAS-DELTA / MISSING-DELTA / NO-DELTA-WHEN-REQUIRED.
+- **Documented** — CLAUDE.md Sprint Z8 discipline section.
+- **Refs**: PRD-058, EPIC-001 (4-layer pipeline S12 OpenSpec), PR #104.
+
+## [1.67.0] - 2026-05-24
+
+### Sprint Z5 — Deferred items tracker + 4-source /decay-watch
+
+- **Added** — NOTE-013 «Deferred items tracker» — single source for all deferred items (issues / metrics / dates / events).
+- **Changed** — `/decay-watch` skill extended to 4 sources: ADR triggers + NOTE-013 rows + `scripts/check-issue-*.sh` + ADR line-count.
+- **Added** — `decay-reminder.sh` SessionStart hook silently alerts on NOTE-013 trigger fires.
+- **Changed** — `guardian` Step 4b cross-references NOTE-013 for deferred-dependency gating.
+- **Documented** — CLAUDE.md «Defer discipline» section (PRD-056).
+- **Refs**: PRD-056, PR #103.
+
+## [1.66.0] - 2026-05-24
+
+### Sprint Z audit fixes — 2 CONCERNS + docs sync
+
+- **Fixed** — Sprint Z audit findings: regex alignment + guardian matrix row + CLAUDE.md sync.
+- **Refs**: PR #102.
+
+## [1.65.0] - 2026-05-24
+
+### Sprint Z4 — evidence-gatherer agent
+
+- **Added** — `agents-pro:evidence-gatherer` agent + 3 integration points (forge-cycle, supersede, decay-watch). Closes the Z-chain by automating EVID body assembly from artifact telemetry.
+- **Refs**: PRD-055, EVID-088..089, PR #101.
+
+## [1.64.0] - 2026-05-24
+
+### Sprint Z2 — Evidence Decay enforcement (3 layers)
+
+- **Added** — `/decay-watch` skill (layer 1: on-demand scan) — surfaces ADRs past Revisit Trigger or stale EVIDs.
+- **Added** — `decay-reminder.sh` SessionStart hook (layer 2: passive surfacing).
+- **Changed** — `guardian` agent (layer 3: gate enforcement) — blocks activate when decayed deps present.
+- **Refs**: PRD-054, EVID-086..087, PR #100.
+
+## [1.63.0] - 2026-05-24
+
+### Sprint Z1 — ADR templates light + full with mandatory Revisit Trigger
+
+- **Added** — `templates/adr-light.md` (≤30 lines, reversible decisions) + `templates/adr-full.md` (≥3 modules / supersede / irreversible).
+- **Added** — `/decision` skill walks light vs full template selection.
+- **Added** — mandatory `## Revisit Trigger` section in both templates — every ADR carries an explicit re-evaluation cue.
+- **Refs**: PRD-053, EVID-084..085, PR #99.
+
+## [1.62.0] - 2026-05-23
+
+### Sprint Y — cc-best v1.0.0 (Claude Code best practices)
+
+- **Added** — new plugin `cc-best` v1.0.0 — Claude Code best practices skill with `claude-md` section + 5 STUB sections for future expansion.
+- **Refs**: PRD-052, PR #97.
+
+## [1.61.0] - 2026-05-22
+
+### Sprint V + U + adopt-#288 closure — Discover Agent migration + Resume Prompt pivot
+
+- **Changed** — Discover Agent migrated standalone → `plugins/forgeplan-brownfield-pack/agents/discover/` (canonical Profile A pattern, B2 frontmatter, 7-phase MCP procedure). brownfield-pack v1.3.2 → v1.4.0.
+- **Pivoted** — Sprint U Resume Prompt batch-fix premise EMPIRICALLY REFUTED via ADI (3-EVID test): bold-pattern is necessary but not sufficient for r_eff > 0. Filed forgeplan#325.
+- **Documented** — ADR-006: KEEP current 4-layer NEEDS_ACTIVATION sentinel, defer native auto-activate-on-complete until #325.
+- **Refs**: PRD-047, PRD-048, PRD-049, ADR-006, EVID-074..076, PR #91.
+
+## [1.60.0] - 2026-05-21
+
+### Sprint T — forgeplan v0.32.1 full adoption
+
+- **Added** — Full v0.32.1 MCP surface adoption: all new tools exercised + canonical patterns documented.
+- **Refs**: PRD-046, R_eff=1.00 grade A, PR #90.
+
+## [1.59.0] - 2026-05-21
+
+### Sprint S — logical closure pack
+
+- **Added** — Step 9c discipline + agents-pro ASM canon completions.
+- **Refs**: PRD-045, R_eff=A, PR #89.
+
+## [1.58.0] - 2026-05-21
+
+### Sprint R — memory architecture + polyglot + ML-11 discovery
+
+- **Rejected** — `memory: project` field (Anomaly #21): force-enables Read/Write/Edit, overrides `disallowedTools` denylist → would silently break B2 paradigm. Hindsight bank covers the use case.
+- **Documented** — ML-11 captured: filesystem verification required after every frontmatter dispatch (sub-agent A-1 reported "5 learners received memory:project" but on-disk verification showed 0).
+- **Refs**: PRD-044, R_eff=A, PR #88.
+
+## [1.57.0] - 2026-05-20
+
+### Sprint Q — production-grade closure
+
+- **Changed** — agents-pro frontmatter dispatch: skills / maxTurns / isolation:worktree / MCP comments / evals / anti-patterns canon completions.
+- **Refs**: PRD-042, R_eff=1.0 grade A, PR #87.
+
+## [1.56.0] - 2026-05-20
+
+### Sprint P — fp-cookbook plugin + 4 link footguns fixed
+
+- **Added** — new plugin `fp-cookbook` v1.0.0 — forgeplan recipe library (plugin count 14→15).
+- **Fixed** — 4 link footguns: Anomalies #15/#16 (supersedes/informs direction silent backwards), #17 (custom YAML ignored), #20 (activate error UX).
+- **Filed upstream** — forgeplan#294 (activate error UX), forgeplan#295 (auto-link on `forgeplan_new(parent_id=...)`).
+- **Refs**: PRD-013, EVID-066..068, PR #84.
+
+## [1.55.0] - 2026-05-20
+
+### Sprint O — agentic-rag plugin + link footgun detection
+
+- **Added** — new plugin `agentic-rag` v1.0.0 — retrieval-augmented generation patterns (plugin count 13→14).
+- **Added** — link footgun detection in `/forge-audit` Step 1 + LR-X lint rule scaffolding.
+- **Confirmed** — Anomaly #19 (`_encode/_decode` zsh stderr noise) USER-SIDE, not filed upstream.
+- **Refs**: PRD-014, PRD-041, EVID-065, R_eff=1.0 + R_eff=0.90, PR #83.
+
+## [1.54.0] - 2026-05-20
+
+### Sprint N — doc sync + mm-evid-body-convention
+
+- **Added** — `mm-evid-body-convention` mental model — canonical bold-pattern body convention for r_eff > 0 (later refined Sprint U with "necessary but not sufficient" qualifier).
+- **Filed upstream** — forgeplan#293 (Anomaly #18: `forgeplan_drift` markdown-table affected_files false-negative).
+- **Refs**: PRD-040, R_eff=0.90 grade A, PR #82.
+
+## [1.53.0] - 2026-05-20
+
+### Sprint M — non-blocking improvements
+
+- **Added** — `forgeplan_drift` verification + workaround for markdown-table affected_files parse gap.
+- **Refs**: PRD-039, R_eff=0.90 grade A, PR #81.
+
+## [1.52.0] - 2026-05-20
+
+### Sprint L — 6 more MCP tools exercised (post Sprint J+K closure pack)
+
+- **Added** — MCP tool verdicts: `forgeplan_journal` / `_phase` / `_phase_advance` / `_calibrate` / `_dispatch` / `_supersede` exercised live.
+- **Added** — `mm-fpf-active-rules` mental model.
+- **Filed upstream** — forgeplan#290 (`release_notes` split-repo constraint) + forgeplan#291 (restore returns to draft, not prior status).
+- **Refs**: PRD-038, R_eff=0.90 grade A, PR #80.
+
+## [1.51.0] - 2026-05-20
+
+### Sprint J+K — 4 new MCP tools verified live
+
+- **Added** — MCP tool verdicts for `forgeplan_release_notes` (limited-use split-repo), `_restore` (delivers value), `_activity_stats` (delivers value), `_fpf_rules` (delivers value).
+- **Added** — Anomaly #12 (release_notes split-repo) + Anomaly #13 (restore status FSM) documented.
+- **Changed** — `forgeplan-workflow` v1.10.0 → v1.10.1 (Phase 7.3 added).
+- **Refs**: PRD-037, EVID-063, R_eff=1.0 grade A, PR #78.
+
+## [1.50.0] - 2026-05-20
+
+### Sprint G — adopt forgeplan core deliveries + R_eff cascade fix
+
+- **Discovered** — 7 new MCP tools landed during Sprint A-F (forgeplan_discover_*, _release_notes, _ingest, _restore, _playbook_run, _activity / _stats, _fpf_rules).
+- **Fixed** — Anomaly #5 (R_eff cascade footgun) PARTIAL: PRD-021 weakest_link moved EVID-033 → PRD-018 via CLI v0.31.0 `forgeplan unlink`.
+- **Refs**: PRD-035, EVID-062, R_eff=1.0 grade A, PR #77.
+
+## [1.49.0] - 2026-05-20
+
+### Sprint F — plugin-side closure refinements
+
+- **Added** — plugin-side refinements following Sprint E GA v2.3.0 release (small docs/anti-pattern fixes across multiple plugins).
+- **Refs**: PRD-034, R_eff=1.0 grade A, PR #76.
+
+## [1.48.0] - 2026-05-19
+
+### Sprint E — closure pack + GA v2.3.0 prep
+
+- **Added** — 7 Profile B agent body patches for organic `NEED_USER_INPUT` sentinel emission.
+- **Added** — docs sync + AGENTS.md (cross-CLI context shim) + live smoke verification.
+- **Released** — GA v2.3.0 multi-agent autonomy framework.
+- **Refs**: PRD-033, EVID-060, R_eff=1.0 grade A, PR #75.
+
+## [1.47.0] - 2026-05-19
+
+### Sprint D — pipeline self-healing framework
+
+- **Added** — `/forge-cleanup` skill (stale artifact cleanup) + `NEEDS_ACTIVATION` sentinel.
+- **Added** — Parser integration into `/forge-cycle` + `/autorun` for 3-tier resolution (AUTO/ADI/USER).
+- **Added** — `mm-pipeline-anomalies` mental model (9 initial anomaly kinds).
+- **Refs**: PRD-032, EVID-059, R_eff=1.0 grade A, PR #74.
+
+## [1.46.0] - 2026-05-19
+
+### Sprint C — /autorun resume protocol + session checkpoint schema
+
+- **Added** — `/autorun` resume protocol — picks up from checkpoint on session restart.
+- **Added** — `docs/SESSION-CHECKPOINT-SCHEMA.md` (643-line spec).
+- **Refs**: PRD-031, EVID-058, R_eff=1.0 grade A, PR #73.
+
+## [1.45.0] - 2026-05-19
+
+### Sprint B — autonomy closure pack (7 deliverables, 3 waves)
+
+- **Added** — Parser integration into `/forge-cycle` + `/autorun` for `NEED_USER_INPUT` sentinel.
+- **Added** — Methodology citation in 17 forgeplan-aware agents (Profile A/B body).
+- **Added** — Profile A Step 10 retain convention.
+- **Added** — `/project-agent-scaffold`, `/agent-fetcher`, `/forge-progress` skills.
+- **Refs**: PRD-030, EVID-057, R_eff=1.0 grade A, PR #72.
+
+## [1.44.0] - 2026-05-19
+
+### Sprint A — UX-layer autonomy skills
+
+- **Added** — `/agent-advisor` skill + `NEED_USER_INPUT` sentinel protocol + prompt-router hook.
+- **Refs**: PRD-029, EVID-056, R_eff=1.0 grade A, PR #71.
+
+## [1.43.0] - 2026-05-19
+
+### fpl-init operating contract v3 marker — closes PRD-022 AC-3
+
+- **Added** — `<!-- forgeplan-operating-contract:v3 -->` marker + idempotent migration from v2.
+- **Refs**: PRD-022 AC-3, PR #68.
+
+## [1.42.0] - 2026-05-19
+
+### PRD-022 Tier A + final legacy sweep — 100% canonical-lint
+
+- **Changed** — Tier A canonical-lint sweep + final legacy descriptor refresh across all 13 plugins.
+- **Refs**: PRD-022, PR #67.
+
+## [1.41.0] - 2026-05-19
+
+### Canonical-lint sweep — 3 packs + Tier B descriptors
+
+- **Changed** — agents-core / agents-domain / agents-github canonical-lint compliance.
+- **Refs**: PRD-022, PR #66.
+
+## [1.40.0] - 2026-05-19
+
+### agents-sparc 100% canonical-lint compliance
+
+- **Changed** — agents-sparc v1.2.0 — 100% canonical-lint compliance.
+- **Refs**: PR #65.
+
+## [1.39.0] - 2026-05-19
+
+### fpl-skills PRD-022 Batch 2 partial — refine + research MCP-first
+
+- **Changed** — `/refine` + `/research` skills hybrid MCP-first (PRD-022 Phase 2 Batch 2).
+- **Refs**: PRD-022, PR #64.
+
+## [1.38.0] - 2026-05-19
+
+### Post-PRD-026 README refresh + LR fix
+
+- **Changed** — README polish + LR forgeplan-aware detection (B2 disallowedTools + body heuristic).
+- **Refs**: PR #62, #63.
+
+## [1.37.0] - 2026-05-19
+
+**internal release** — LR lint fix iteration during PRD-026 closure; see commit `aeba7a1`.
+
+## [1.36.0] - 2026-05-19
+
+### PRD-026 — CRUD-R-A canonical agent matrix
+
+- **Added** — 3 generic agents (`artifact-author`, `artifact-reviewer`, `artifact-maintainer`) + Profile D maintainer.
+- **Added** — CRUD-R-A canonical agent matrix documented (B2 paradigm: `disallowedTools` denylist + MCP inheritance).
+- **Refs**: PRD-026, R_eff=1.00 grade A, EVID-050..051.
+
+## [1.35.0] - 2026-05-19
+
+**internal release** — PRD-026 iteration intermediate; see commits between `985600b` and `ccae4b5`.
+
+## [1.34.0] - 2026-05-19
+
+### PRD-026 — forgeplan-aware agent layer (Phase 1-6)
+
+- **Added** — 14 canonical forgeplan-aware agents (B2 paradigm).
+- **Added** — Lint rules + canon documentation in AGENT-AUTHORING-GUIDE.md.
+- **Refs**: PRD-026, PR #60.
+
+## [1.33.0] - 2026-05-18
+
+**internal release** — PRD-026 iteration; see PR #60 history.
+
+## [1.32.0] - 2026-05-18
+
+**internal release** — PRD-026 iteration; see PR #60 history.
+
+## [1.31.0] - 2026-05-18
+
+**internal release** — PRD-026 iteration; see PR #60 history.
+
+## [1.30.0] - 2026-05-18
+
+**internal release** — PRD-026 iteration; see PR #60 history.
+
+## [1.29.0] - 2026-05-18
+
+**internal release** — PRD-026 iteration; see PR #60 history.
+
+## [1.28.0] - 2026-05-18
+
+**internal release** — PRD-026 iteration; see PR #60 history.
+
+## [1.27.0] - 2026-05-18
+
+### fpl-hsmem v2.1.0 — Hindsight memory plugin full documentation set
+
+- **Added** — fpl-hsmem v2.1.0 — full documentation set bump.
+- **Refs**: commits `12d69aa7` + `89bc418d`.
+
+## [1.26.0] - 2026-05-18
+
+**internal release** — fpl-hsmem consolidation iteration.
+
+## [1.25.0] - 2026-05-18
+
+### v0.32 loop closure — multi-agent + cross-CLI + Hindsight memory plugin
+
+- **Added** — fpl-hsmem plugin (Hindsight memory v2 with auto UserPromptSubmit/Stop/SessionEnd hooks).
+- **Added** — Multi-agent + cross-CLI v0.32 loop closure (PRD-025/026 baseline).
+- **Refs**: PR #59.
+
+## [1.24.0] - 2026-05-16
+
+### fpl-skills v1.11.0 — PRD-022 Phase 2 Batch 1
+
+- **Changed** — 5 skills hybrid MCP-first wiring (PRD-022 Phase 2 Batch 1).
+- **Refs**: PRD-022, fpl-skills v1.11.0.
+
 ## [1.23.0] - 2026-05-08
 
 **MCP-first wiring across fpl-skills ecosystem (Phase 1)** — implements `mcp__forgeplan__*` tool preference in /sprint, /autorun, /forge-cycle, /forge-audit; bumps operating contract `:v1` → `:v2` with idempotent migration via `/fpl-init`; setup guide gains `/mcp` smoke step. Refs PRD-021 (Deep depth, conf 90%, validated PASS).
