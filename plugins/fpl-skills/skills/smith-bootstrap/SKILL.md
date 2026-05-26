@@ -1,14 +1,14 @@
 ---
 name: smith-bootstrap
 description: |
-  Greenfield-project onboarding skill. For a fresh repo (no CLAUDE.md, no forgeplan, no AGENTS.md), runs two pre-flight gates (MUST plugins enabled + `.mcp.json` wired) → pre-flight detection → forgeplan init → CLAUDE.md scaffold → AGENTS.md scaffold → plugin install recommendations → first Brief via brief-intake agent → first PRD via specification agent. Output: bootstrap checklist artifact + a confirmed greenfield project ready for the canonical /forge-cycle pipeline.
+  Greenfield-project onboarding skill. For a fresh repo (no CLAUDE.md, no forgeplan, no AGENTS.md), runs an active infrastructure setup (plugin gate → forgeplan MCP auto-wire via `forgeplan mcp install` → Hindsight detection + env-var remap guidance → `.claude/hooks/` baseline bundle → reload + verify) → pre-flight detection → forgeplan init → CLAUDE.md scaffold → AGENTS.md scaffold → plugin install recommendations → first Brief via brief-intake agent → first PRD via specification agent. Output: bootstrap checklist artifact + a confirmed greenfield project ready for the canonical /forge-cycle pipeline.
 
   Triggers: "smith bootstrap", "/smith-bootstrap", "bootstrap project", "новый проект", "fresh start", "greenfield onboarding", "init this project"
 ---
 
 # /smith-bootstrap — greenfield onboarding
 
-You bootstrap a fresh (greenfield) project into the ForgePlan canonical pipeline. The procedure is one-time: **Step 0 pre-flight gates (plugins + `.mcp.json`)** → pre-flight detection → forgeplan init → CLAUDE.md + AGENTS.md scaffold → MUST/SHOULD plugin recommendations → first Brief → first PRD. End state: project is ready for `/forge-cycle` on the first PRD.
+You bootstrap a fresh (greenfield) project into the ForgePlan canonical pipeline. The procedure is one-time: **Step 0 active infrastructure setup (5 sub-steps)** → pre-flight detection → forgeplan init → CLAUDE.md + AGENTS.md scaffold → MUST/SHOULD plugin recommendations → first Brief → first PRD. End state: project is ready for `/forge-cycle` on the first PRD with the MCP layer fully wired and verified.
 
 This skill is a **wrapper around `templates/smith-bootstrap.md`** (the output template). It procedurally drives the template top-to-bottom, marking `[x]` as each step lands. The skill is the doer; the template is the artifact.
 
@@ -34,21 +34,19 @@ Foundation: EPIC-002 «smith master orchestrator». Sibling skills: `/smith` (de
 
 ---
 
-## Step 0 — Pre-flight gates (halt-and-instruct)
+## Step 0 — Active infrastructure setup
 
-**Two hard gates before any scaffolding.** Both fail-fast with explicit instructions — `/smith-bootstrap` does **not** install plugins or wire `.mcp.json` itself. If either gate fails, print the instruction block and exit. The user runs one command, then re-invokes `/smith-bootstrap`.
+This is the most important departure from a typical declarative bootstrap: `/smith-bootstrap` **actively wires** the project's MCP / Hindsight / hooks infrastructure rather than asking the user to do it manually elsewhere. We discovered through real-project usage (a sibling project bootstrapped on 2026-05-20) that delegating MCP wiring to "run `/fpl-init` first" creates a dead zone — the user thinks bootstrap is done, but the MCP layer is not actually wired, so subsequent agent dispatches silently shell-fall-back and produce degraded artifacts (e.g., a PRD created by `agents-pro:artifact-author` because `agents-sparc:specification` was not reachable).
 
-Why fail-fast (not soft-fallback):
+Five sub-steps, executed in order. Only Step 0a halts on miss — the rest act on what they find or print specific guidance and continue.
 
-- **Plugin fallback is invisible**. If `agents-sparc` is not enabled, Step 6 silently falls back to `agents-pro:artifact-author` (generic Profile A) — the PRD lands but misses the SPARC Specification contract (SMART AC, ADI hypothesis structure). User finds out only at the next `/methodology-check` or guardian gate, after a re-run is more expensive than the install would have been.
-- **`.mcp.json` is the contract** between Claude Code and the forgeplan MCP server. Without it, every `mcp__forgeplan__*` deferred tool surface in this skill is unavailable — the brief-intake and specification agents will silently shell-fall-back, producing degraded artifacts. `/fpl-init` is the canonical wiring skill; do not reinvent it here.
+### Step 0a — Plugin enablement gate (halt-only — cannot auto-fix)
 
-### Gate A — MUST plugins enabled
-
-Required plugins for greenfield bootstrap (matches Step 4 MUST tier):
+Required plugins for greenfield bootstrap (matches Step 4 MUST tier). Plus a SHOULD probe for `fpl-hsmem` (Hindsight) — not blocking, but Step 0c needs to know whether it's enabled.
 
 ```bash
 REQUIRED=(fpl-skills agents-pro agents-sparc agents-core forgeplan-workflow)
+SHOULD=(fpl-hsmem fpf)
 
 # Probe enabled plugins from Claude Code's user config (~/.claude/settings.json holds enabledPlugins).
 # Project-local .claude/settings.local.json holds permissions, not plugin enablement.
@@ -61,18 +59,21 @@ print("\n".join((d.get("enabledPlugins") or {}).keys()))
 PY
 )
 
-MISSING=()
+MISSING_MUST=(); MISSING_SHOULD=()
 for plugin in "${REQUIRED[@]}"; do
-    echo "$ENABLED_LIST" | grep -q "^${plugin}@" || MISSING+=("$plugin")
+    echo "$ENABLED_LIST" | grep -q "^${plugin}@" || MISSING_MUST+=("$plugin")
+done
+for plugin in "${SHOULD[@]}"; do
+    echo "$ENABLED_LIST" | grep -q "^${plugin}@" || MISSING_SHOULD+=("$plugin")
 done
 ```
 
-**If `MISSING` is non-empty — HALT.** Print:
+**If `MISSING_MUST` is non-empty — HALT.** Print:
 
 ```
-✗ Bootstrap halted — required plugins are not enabled (Gate A):
+✗ Bootstrap halted — required plugins are not enabled (Step 0a):
 
-  <list of missing plugins>
+  <list of missing MUST plugins>
 
 Install (one-time), then re-run /smith-bootstrap:
 
@@ -88,71 +89,164 @@ Strongly recommended (install before re-running if you don't want to backfill la
   /plugin install fpf@ForgePlan-marketplace        # FPF ADI reasoning (Standard+ requirement, Sprint Z7)
   /plugin install fpl-hsmem@ForgePlan-marketplace  # Hindsight cross-session memory bank
 
-Why agents-sparc is MUST, not SHOULD: Step 6 dispatches agents-sparc:specification for the first PRD.
-Without it, the dispatch falls back to agents-pro:artifact-author (generic Profile A) — the PRD lands
-but misses SPARC Specification's contract (SMART AC + ≥3 hypotheses via forgeplan_reason). Halting up
-front is cheaper than a re-run after /methodology-check flags the gap.
+Why agents-sparc is MUST: Step 6 dispatches agents-sparc:specification for the first PRD.
+Without it, the dispatch falls back to agents-pro:artifact-author (generic Profile A) — the PRD
+lands but misses SPARC Specification's contract (SMART AC + ≥3 hypotheses via forgeplan_reason).
+Halting up-front is cheaper than a re-run after /methodology-check flags the gap.
 ```
 
-**If `MISSING` is empty** — print one line and continue to Gate B:
+**If `MISSING_MUST` is empty** — print one line plus a note about any missing SHOULD plugins, and continue to Step 0b:
 
 ```
-✓ Gate A: 5/5 MUST plugins enabled (fpl-skills, agents-pro, agents-sparc, agents-core, forgeplan-workflow)
+✓ Step 0a: 5/5 MUST plugins enabled (fpl-skills, agents-pro, agents-sparc, agents-core, forgeplan-workflow)
+[~] Step 0a: 1/2 SHOULD plugins enabled (fpf enabled, fpl-hsmem missing — Step 0c will print Hindsight setup guidance)
 ```
 
-### Gate B — `.mcp.json` wired with forgeplan block
+### Step 0b — forgeplan MCP auto-wire (active)
 
-Required: `.mcp.json` at repo root contains `mcpServers.forgeplan` (with `args: ["serve"]`, not `["mcp"]` — see `/fpl-init` Step 5 for the historic bug). Without this, the brief-intake and specification agents dispatched at Steps 5/6 cannot reach forgeplan MCP tools and will degrade to shell fallback or fail outright.
+Probe `.mcp.json` for `mcpServers.forgeplan` with `args: ["serve"]`. If absent / stale / missing-block — **actively wire** using forgeplan's native command (not Python merge):
 
 ```bash
-python3 - <<'PY'
-import json, pathlib, sys
+# Probe current state
+STATE=$(python3 - <<'PY' 2>/dev/null
+import json, pathlib
 p = pathlib.Path(".mcp.json")
 if not p.exists():
-    print("ABSENT")
-    sys.exit(0)
+    print("ABSENT"); raise SystemExit
 try:
     d = json.loads(p.read_text())
 except Exception as e:
-    print(f"INVALID: {e}")
-    sys.exit(0)
+    print(f"INVALID:{e}"); raise SystemExit
 fp = d.get("mcpServers", {}).get("forgeplan")
 if not fp:
     print("MISSING-FORGEPLAN-BLOCK")
 elif fp.get("args") == ["mcp"]:
-    print("STALE-ARGS")  # buggy v1.6.0 init output — fpl-init upgrades to ["serve"]
-else:
+    print("STALE-ARGS")
+elif fp.get("args") == ["serve"]:
     print("OK")
+else:
+    print(f"UNEXPECTED-ARGS:{fp.get('args')}")
 PY
+)
 ```
 
-**If output is `OK` — continue to Pre-flight detection.** Print:
+**If `STATE` is `OK`** — print `✓ Step 0b: forgeplan MCP already wired` and continue to Step 0c.
 
-```
-✓ Gate B: .mcp.json wired (forgeplan MCP server reachable)
-```
+**If `STATE` is anything else** — verify `forgeplan` CLI is on PATH, then run the native install:
 
-**Any other output — HALT.** Print:
+```bash
+# Verify forgeplan CLI reachable first
+if ! command -v forgeplan >/dev/null 2>&1; then
+    cat <<'EOF'
+✗ Step 0b HALT — forgeplan CLI is not on $PATH.
 
-```
-✗ Bootstrap halted — .mcp.json is not wired for forgeplan (Gate B): <reason from probe>
+Install forgeplan first (one-time), then re-run /smith-bootstrap:
+  • macOS / Linux Homebrew: brew install ForgePlan/tap/forgeplan
+  • From source (Rust):     cargo install --git https://github.com/ForgePlan/forgeplan forgeplan-cli
 
-Run /fpl-init first — it is the canonical wiring skill. It will:
-  • verify forgeplan CLI is on $PATH
-  • run `forgeplan init` (creates .forgeplan/)
-  • merge .mcp.json with the forgeplan MCP server block (and preserve any existing entries)
-  • inject the forgeplan operating contract into CLAUDE.md
-  • offer the docs/agents/ setup wizard
+Verify with `forgeplan --version`.
+EOF
+    exit 1
+fi
 
-After /fpl-init reports success, re-invoke /smith-bootstrap to continue with greenfield-specific
-steps (brief-intake → specification → first PRD).
-
-Why /smith-bootstrap doesn't do this itself: /fpl-init already does it, idempotently, with .mcp.json
-merge that preserves existing entries (hindsight, orch, ...). Reinventing the merge here would either
-duplicate /fpl-init logic or risk overwriting unrelated MCP servers. One skill, one job.
+# Wire via native command — smart-merge, idempotent, preserves existing hindsight/orch entries
+forgeplan mcp install --client claude --scope project
 ```
 
-Acceptance for Step 0: both gates print `✓` lines. If either prints `✗`, the skill exits without writing any files.
+Why the native command, not Python merge:
+
+- `forgeplan mcp install` is owned by forgeplan and stays correct across CLI versions.
+- It is idempotent and smart-merge (preserves existing `hindsight`, `orch`, and any other MCP server entries).
+- It writes the canonical `command: forgeplan / args: ["serve"] / transport: stdio` form (`["mcp"]` is the historic buggy shape that does not start the server).
+- Centralising on this command eliminates the Python-merge in `/fpl-init` (planned migration, separate PR) and avoids drift between the two skills.
+
+Print `✓ Step 0b: forgeplan MCP wired via `forgeplan mcp install` (smart-merge preserved N existing entries)`.
+
+### Step 0c — Hindsight detection + guidance (informational, not aggressive)
+
+Hindsight cross-session memory is SHOULD (not MUST). Detect what is already there, classify the situation, and either confirm or print specific guidance. Never write API keys into `.mcp.json` automatically — those are user secrets and may be checked into git by mistake.
+
+```bash
+# Probe four sources: plugin enablement, .mcp.json hindsight block, env vars (both naming conventions)
+HSMEM_ENABLED="no"; echo "$ENABLED_LIST" | grep -q '^fpl-hsmem@' && HSMEM_ENABLED="yes"
+
+MCPJSON_HINDSIGHT=$(python3 - <<'PY' 2>/dev/null
+import json, pathlib
+p = pathlib.Path(".mcp.json")
+d = json.loads(p.read_text()) if p.exists() else {}
+hs = d.get("mcpServers", {}).get("hindsight")
+if not hs: print("MISSING")
+elif not hs.get("env", {}).get("HINDSIGHT_API_KEY"): print("BLOCK-BUT-NO-KEY")
+else: print("WIRED")
+PY
+)
+
+# Env var probe — both canonical (plugin reads HINDSIGHT_URL/HINDSIGHT_API_KEY) and
+# alternate (some users have HINDSIGHT_API_URL/HINDSIGHT_API_TOKEN from earlier setups)
+ENV_CANON="no"; [[ -n "${HINDSIGHT_URL:-}" && -n "${HINDSIGHT_API_KEY:-}" ]] && ENV_CANON="yes"
+ENV_ALT="no";   [[ -n "${HINDSIGHT_API_URL:-}" && -n "${HINDSIGHT_API_TOKEN:-}" ]] && ENV_ALT="yes"
+```
+
+Classify into one of five states and print the matching guidance:
+
+| State | `HSMEM_ENABLED` | `.mcp.json` hindsight | Env vars | Action |
+|---|---|---|---|---|
+| **Fully wired** | yes | WIRED | — | `✓ Step 0c: Hindsight fully wired (plugin enabled, .mcp.json has key)` |
+| **Plugin enabled, key missing** | yes | BLOCK-BUT-NO-KEY | env canon | Print: "set `HINDSIGHT_API_KEY` env var or write it under `.mcp.json` `mcpServers.hindsight.env` — DO NOT commit `.mcp.json` if it contains the key". |
+| **Env var naming mismatch** | yes/no | any | env alt only | Print: "you have `HINDSIGHT_API_URL`/`HINDSIGHT_API_TOKEN` in shell env, plugin reads `HINDSIGHT_URL`/`HINDSIGHT_API_KEY`. Either rename them in your shell config, or set both pairs, or add `env` block in `.mcp.json` hindsight server. Pick one and re-run." |
+| **No plugin, no creds — Docker quick-start** | no | MISSING | neither | Print: "Hindsight is SHOULD. Quick path: `docker run -d --name hindsight -p 8888:8888 ghcr.io/vectorize-io/hindsight:latest` then `/plugin install fpl-hsmem@ForgePlan-marketplace`. Skip and continue without Hindsight if you want — Step 5 (Brief) does not depend on it." |
+| **Plugin not enabled, but creds exist** | no | any | env canon/alt | Print: "Hindsight credentials detected. Run `/plugin install fpl-hsmem@ForgePlan-marketplace` to enable the plugin, then re-invoke /smith-bootstrap (Step 0c will pick the wired state up)." |
+
+`/smith-bootstrap` itself never modifies `.mcp.json` Hindsight env values, never writes secrets, never auto-enables plugins. All Hindsight state changes are user actions guided by this step's print.
+
+### Step 0d — `.claude/hooks/` baseline check (additive, opt-in)
+
+A minimal canonical safety bundle ships with this plugin at `plugins/fpl-skills/templates/hooks/`. As of fpl-skills 1.34 it contains one file (`safety-hook.sh`) — the project-local `PreToolUse:Bash` blocker for destructive git/rm patterns. More hooks (pre-pr-evidence-check, etc.) may be added in later versions; this skill copies whatever the templates directory contains.
+
+If the project's `.claude/hooks/` is empty or absent, offer to copy the bundle:
+
+```bash
+TEMPLATES="${CLAUDE_PLUGIN_ROOT}/templates/hooks"
+PROJECT_HOOKS=".claude/hooks"
+
+if [ ! -d "$TEMPLATES" ]; then
+    echo "[~] Step 0d: hooks templates not shipped in this fpl-skills version (<1.34) — skipping."
+elif [ -d "$PROJECT_HOOKS" ] && [ -n "$(ls -A "$PROJECT_HOOKS" 2>/dev/null)" ]; then
+    echo "✓ Step 0d: .claude/hooks/ already populated — leaving user's hooks untouched."
+else
+    echo "[?] Step 0d: .claude/hooks/ is empty. Install minimal safety bundle from fpl-skills templates?"
+    echo "    • safety-hook.sh — PreToolUse:Bash blocker for destructive git/rm commands"
+    echo "Install? [y/n]"
+    # On `y`: mkdir -p .claude/hooks && cp -i "$TEMPLATES"/*.sh .claude/hooks/ && chmod +x .claude/hooks/*.sh
+    #         then either create .claude/settings.json with the PreToolUse:Bash matcher entry,
+    #         or merge into existing (Python merge, preserving any user hooks already configured)
+    # On `n`: skip silently — bootstrap continues, hooks are defense-in-depth not load-bearing
+fi
+```
+
+Acceptance for Step 0d: either user said no, or templates absent, or hooks copied + executable + `.claude/settings.json` merged.
+
+### Step 0e — Reload + verify
+
+Plugin-level changes (Step 0a guidance, Step 0c plugin install if user did it) require `/reload-plugins`. MCP server changes (Step 0b) require Claude Code to re-read `.mcp.json` (also via `/reload-plugins`).
+
+Print to the user:
+
+```
+Step 0e: please run /reload-plugins now, then continue.
+
+After reload, this skill verifies via ToolSearch:
+  • mcp__forgeplan__forgeplan_*           — Should appear (Step 0b wired forgeplan MCP)
+  • mcp__plugin_fpl-hsmem_hindsight__*    — Should appear if Hindsight is wired (Step 0c)
+```
+
+After reload, the skill verifies using ToolSearch queries — `select:mcp__forgeplan__forgeplan_health` and `select:mcp__plugin_fpl-hsmem_hindsight__memory_status`. If neither tool surface is reachable post-reload, halt with a diagnostic dump (`.mcp.json` contents + plugin enablement list). Otherwise:
+
+```
+✓ Step 0e: MCP layer verified. forgeplan tools: 47 available. Hindsight tools: 13 available (or "Hindsight skipped per Step 0c").
+```
+
+Acceptance for Step 0 overall: every sub-step printed a `✓` or `[~]` line (warning-but-continue), no `✗` halt occurred.
 
 ---
 
@@ -430,12 +524,15 @@ Verify:
 
 Bootstrap is complete when ALL the following hold:
 
-- [ ] Step 0 Gate A passed (5 MUST plugins enabled — fpl-skills, agents-pro, agents-sparc, agents-core, forgeplan-workflow)
-- [ ] Step 0 Gate B passed (`.mcp.json` has `mcpServers.forgeplan` with `args: ["serve"]`)
+- [ ] Step 0a passed (5 MUST plugins enabled — fpl-skills, agents-pro, agents-sparc, agents-core, forgeplan-workflow)
+- [ ] Step 0b succeeded (`.mcp.json` has `mcpServers.forgeplan` with `args: ["serve"]` — either pre-existed or wired by `forgeplan mcp install`)
+- [ ] Step 0c reached a defined state (fully wired / waiting on user action / Hindsight skipped — but not silently broken)
+- [ ] Step 0d either copied the hooks bundle or user declined
+- [ ] Step 0e verification via ToolSearch confirms `mcp__forgeplan__*` reachable
 - [ ] `forgeplan health` returns "healthy" (exit 0)
 - [ ] `CLAUDE.md` present at repo root, ≥40 lines, first line is `# <Project Name> — Claude Code Configuration`
 - [ ] `AGENTS.md` present at repo root, ≥30 lines, contains smith pointer + MCP servers section
-- [ ] `.mcp.json` present at repo root with at least the `forgeplan` MCP server registered (already verified at Step 0 Gate B)
+- [ ] `.mcp.json` present at repo root with at least the `forgeplan` MCP server registered (already verified at Step 0b)
 - [ ] At least one Brief NOTE artifact in forgeplan (`forgeplan list --kind=note` shows ≥1)
 - [ ] At least one PRD in draft (`forgeplan list --kind=prd --status=draft` shows ≥1)
 - [ ] PRD links to BRIEF via `informs` relation
@@ -472,9 +569,13 @@ Do NOT auto-dispatch `/smith` or `/forge-cycle` from inside this skill. Bootstra
 
 | Failure | Recovery |
 |---|---|
-| Step 0 Gate A halt (plugins missing) | Print the install block, exit cleanly without writing files. User runs the `/plugin install` commands, then re-invokes `/smith-bootstrap`. Do not silent-fallback to non-MUST agents. |
-| Step 0 Gate B halt (`.mcp.json` not wired) | Print the "run `/fpl-init` first" block, exit cleanly without writing files. After `/fpl-init` succeeds, user re-invokes `/smith-bootstrap`. Do not attempt to write `.mcp.json` from this skill — `/fpl-init` owns that merge logic. |
-| `forgeplan init` fails with "command not found" | Check `which forgeplan` and `forgeplan --version`. If absent, instruct user to install forgeplan CLI first (per forgeplan README). Do not proceed without it. |
+| Step 0a halt (MUST plugins missing) | Print the install block, exit cleanly without writing files. User runs the `/plugin install` commands, then re-invokes `/smith-bootstrap`. Do not silent-fallback to non-MUST agents. |
+| Step 0b halt (`forgeplan` CLI not on PATH) | Print the install instructions (brew / cargo), exit cleanly. After CLI install, user re-invokes `/smith-bootstrap`. Do not attempt a Python merge fallback — `forgeplan mcp install` is the canonical path. |
+| Step 0b fail (`forgeplan mcp install` non-zero exit) | Surface the stderr verbatim. Common causes: file permissions, malformed pre-existing `.mcp.json`. If `.mcp.json` is unparseable, recommend backup + re-init: `mv .mcp.json .mcp.json.bak && forgeplan mcp install --client claude --scope project`. |
+| Step 0c env-var mismatch case | Print the rename / dual-set / `.mcp.json` env-block guidance. Do not modify shell rc files automatically. Continue to Step 0d if user wants to skip Hindsight; Hindsight is SHOULD, not MUST. |
+| Step 0d hooks templates absent | Older fpl-skills (<1.34) doesn't ship hooks templates. Print one-line warning and continue. Do not block bootstrap. |
+| Step 0e ToolSearch verify fails post-reload | Halt with diagnostic dump: cat `.mcp.json`, list `enabledPlugins` from `~/.claude/settings.json`, last 10 lines of any forgeplan log. Most common cause: user forgot to actually run `/reload-plugins`. |
+| `forgeplan init` fails with "command not found" | Should be caught at Step 0b. If reached here anyway, instruct user to install forgeplan CLI first (per forgeplan README). Do not proceed without it. |
 | `forgeplan init` fails with "already initialised" | Pre-flight missed something. Re-run pre-flight detection. If `.forgeplan/` is in fact present, exit and recommend `/smith` default mode. |
 | User has partial scaffold (e.g., CLAUDE.md exists but AGENTS.md does not) | Diff the existing file vs the minimal scaffold from Step 2/3. Surface the diff. Ask the user: extend existing, replace, or skip. Never silently overwrite. |
 | User is unclear about project mission ("just want to start coding") | Run `brief-intake` (Step 5) anyway. The agent's questions WILL extract the mission. Do not skip to Step 6 without a Brief — specification agent has nothing to convert from. |
