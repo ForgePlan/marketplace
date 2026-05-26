@@ -8,14 +8,35 @@ Professional specialist agents: security experts, architecture reviewers, creati
 /plugin install agents-pro@ForgePlan-marketplace
 ```
 
-## Agents (28)
+## Smith — master orchestrator (NEW v1.10.0+)
+
+> Routes 12 contexts to the right methodology + dispatch sequence — the "BMAD Master" of the ForgePlan ecosystem.
+
+Smith is a **Profile B-orchestrator** (new sub-profile per AGENT-AUTHORING-GUIDE L1162-1268). It is the only agent in the marketplace that reads project state, classifies the task into 1 of 12 contexts, and recommends a methodology + dispatch sequence. The smith agent body lives in `agents-pro`; its 4 user-facing skills (`/smith`, `/smith-bootstrap`, `/smith-plan`, `/smith-routing`) live in `fpl-skills`.
+
+| Component | Where |
+|---|---|
+| `smith` agent | `plugins/agents-pro/agents/smith.md` (this plugin) |
+| 4 `/smith*` skills | `plugins/fpl-skills/skills/smith*/` (sibling plugin) |
+| Routing brain (12 ctx × 27 methodologies) | `plugins/fpl-skills/skills/smith/routing-map.md` |
+| 5 templates (smith-plan / smith-bootstrap / smith-handoff / post-mortem / routing-decision) | `plugins/fpl-skills/templates/` |
+
+> [!TIP]
+> Smith requires BOTH `agents-pro` AND `fpl-skills` to be installed. Smith picks **which** methodology + agents apply; downstream specialists execute.
+
+Full guide: [`docs/SMITH.md`](../../docs/SMITH.md).
+
+Trigger phrases: `smith`, `кузнец`, `что дальше`, `scrum master`, `master orchestrator`.
+
+## Agents (29)
 
 Legend: ⚙ = forgeplan-aware (B2 paradigm — `disallowedTools` denylist + canonical pipeline profile A/B/C/D).
 
-### Forgeplan canonical pipeline (12 agents, all ⚙)
+### Forgeplan canonical pipeline (13 agents, all ⚙)
 
 | Agent | Profile | Description |
 |-------|:-------:|-------------|
+| `smith` ⚙ | B-orchestrator | **Master orchestrator** — routes 12 contexts to methodology + dispatch sequence; never writes code or activates artifacts (see [Smith section](#smith--master-orchestrator-new-v1100) above) |
 | `artifact-author` ⚙ | A (generic) | Generic Profile A creator for any forgeplan artifact kind (primary `forgeplan_generate`, fallback `forgeplan_new` + manual body) |
 | `artifact-maintainer` ⚙ | D (NEW) | In-place metadata maintenance on EXISTING artifacts — congruence_level, evidence_type, broken links, status changes |
 | `artifact-reviewer` ⚙ | B (generic) | Artifact health audit — schema completeness, link graph health, freshness/decay, R_eff trust |
@@ -91,6 +112,9 @@ See [AGENT-AUTHORING-GUIDE.md](../fpl-skills/AGENT-AUTHORING-GUIDE.md) for full 
 After installation, agents are available via the `Task` tool with `subagent_type`:
 
 ```
+# Master orchestrator (picks methodology + dispatch sequence)
+Task({ subagent_type: "smith", prompt: "Plan next move for current session state" })
+
 # Canonical pipeline
 Task({ subagent_type: "artifact-author", prompt: "Create PRD for ..." })
 Task({ subagent_type: "artifact-reviewer", prompt: "Audit PRD-026 health" })
@@ -108,7 +132,8 @@ Task({ subagent_type: "prompt-engineer", prompt: "Optimize this system prompt" }
   - All 16 non-canonical specialists migrated to canonical pattern: `model: sonnet/opus`, hex colors, bilingual EN/RU/Triggers descriptions
   - Forgeplan-aware agents include methodology citation as first line of description (BMAD-Brief / MADR 3.0 / FPF-Decompose / CRUD-R-A profile labels)
   - Closed marketplace-wide lint warnings 121 → 0 (LR-1..LR-3 pass)
-- **v1.8.1** (in-flight, Sprint E) — Profile B agents patched with Step 9b sentinel emit instruction (organic `<<NEEDS_ACTIVATION>>` emission per PRD-032 + PRD-033)
+- **v1.8.1** (Sprint E) — Profile B agents patched with Step 9b sentinel emit instruction (organic `<<NEEDS_ACTIVATION>>` emission per PRD-032 + PRD-033)
+- **v1.10.0+** (current, EPIC-002, 2026-05-26) — **Smith master-orchestrator agent added** — first Profile B-orchestrator sub-profile in the marketplace; 12-context routing matrix + 27 methodology cards (4 user-facing skills live in `fpl-skills` v1.31.1). See [Smith section](#smith--master-orchestrator-new-v1100) and [`docs/SMITH.md`](../../docs/SMITH.md).
 
 For complete change history, see [`forgeplan-marketplace/CLAUDE.md`](../../CLAUDE.md) § Sprint A-E session.
 

@@ -100,6 +100,28 @@ Fix HIGH issues now? [y/n]
 | **`dev-advisor` агент** | Фоновый советник — предлагает `/audit` после изменений, напоминает про тесты для новых публичных функций, флагит security concerns. |
 | **Хуки**: SessionStart (`/fpl-init` подсказка + `forge-report` counter reset), PreToolUse:Bash (safety hook блокирует `rm -rf /`, `git push --force`, `DROP TABLE`), PostToolUse (test reminder, `forge-report` counter). |
 
+## Smith — кластер мастер-оркестратора (новое в v1.31.0+)
+
+> 4 скилла + 5 шаблонов + приветствие smith в session-start.sh — точка входа для «Не знаю какую методологию применить».
+
+Smith поставляется как координированный кластер в этом плагине (тело агента живёт в соседнем [`agents-pro`](../agents-pro/agents/smith.md)):
+
+| Компонент | Что |
+|---|---|
+| `/smith` | Дефолтный режим — статус + рекомендованный следующий шаг |
+| `/smith-bootstrap` | Онбординг greenfield-проекта (pre-flight + scaffold + первый Brief) |
+| `/smith-plan <task>` | План под конкретную задачу с маршрутизацией методологии (12 контекстов) |
+| `/smith-routing` | Учебный walkthrough (Compare / Walkthrough / Q&A) |
+| Routing map | [`skills/smith/routing-map.md`](skills/smith/routing-map.md) — 12 контекстов × 27 методологий × 26 агентов |
+| 5 шаблонов | `templates/{smith-plan,smith-bootstrap,smith-handoff,post-mortem,routing-decision}.md` |
+| Session-start hook | `hooks/scripts/session-start.sh` — приветствие smith (3 состояния: greenfield / healthy / attention) |
+
+Smith требует `agents-pro` (за телом агента smith) И `fpl-skills` (этот плагин — за скиллами + шаблонами + хуком).
+
+Полный гайд: [`docs/SMITH.md`](../../docs/SMITH.md) (EN) / [`docs/SMITH-RU.md`](../../docs/SMITH-RU.md) (RU).
+
+Триггер-фразы: `smith`, `кузнец`, `что дальше`, `scrum master`, `master orchestrator`.
+
 ## Интеграция с lifecycle
 
 Все скиллы делегируют lifecycle артефактов в `forgeplan`:

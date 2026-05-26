@@ -71,7 +71,11 @@
       "decision",
       "decay-watch",
       "supersede",
-      "methodology-check"
+      "methodology-check",
+      "smith",
+      "smith-bootstrap",
+      "smith-plan",
+      "smith-routing"
     ],
     "hooks": [
       "SessionStart",

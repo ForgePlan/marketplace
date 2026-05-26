@@ -110,6 +110,10 @@ claude
 /fpl-init
 ```
 
+**Первое действие Day 0 — попробуй smith**: `/smith` — это master-оркестратор. На свежем репо он автоматически роутит в `/smith-bootstrap` (greenfield-онбординг); на существующем — читает состояние проекта и рекомендует следующий тактический шаг. На первые пять минут просто введи `smith` (или по-русски «что дальше?») — это и есть канонический entry-point «я только что поставил всё это, что теперь?». Для соло-разраба это самый быстрый способ пропустить церемонии и сразу выйти на реальную задачу.
+
+Полный гайд: [SMITH-RU.md](SMITH-RU.md).
+
 `/fpl-init` показывает план, спрашивает один раз подтверждение, дальше:
 1. Запускает `forgeplan init` (создаёт `.forgeplan/`).
 2. Прописывает `.mcp.json` (forgeplan MCP сервер).
@@ -174,6 +178,10 @@ gh pr create --base main
 /fpl-init
 ```
 
+**Первое действие Day 0 — попробуй smith**: `/smith` — это master-оркестратор. На существующей UI-кодовой базе он осматривает что уже есть (фреймворк, следы дизайн-системы, недавние PR) и рекомендует UI-формы следующий шаг — обычно `/research` по UX-паттерну или `/ux-review` по текущему changeset. Введи `smith` или «что дальше?» прежде чем тянуться к отдельным frontend-скиллам — он сам подберёт нужный под состояние репо, и ты не сожжёшь первый час на выбор инструмента.
+
+Полный гайд: [SMITH-RU.md](SMITH-RU.md).
+
 `/fpl-init` детектит `package.json` + React/Vue/Svelte и рендерит frontend-leaning `CLAUDE.md`.
 
 ### Day 1 — «добавить login form для magic-link»
@@ -214,6 +222,10 @@ gh pr create --base main
 /reload-plugins
 /fpl-init
 ```
+
+**Первое действие Day 0 — попробуй smith**: `/smith` — это master-оркестратор, и стоит понять как он устроен прежде чем брать его в работу. Его routing-матрица мапит сигналы задачи в скиллы/агентов; для любого архитектурно-нагруженного запроса он роутит в `/research` → `/fpf decompose` → `/rfc create`, именно в таком порядке. Он работает под контрактом denylist Profile B-orchestrator — read-only на forgeplan state, поэтому случайно `activate` недо-shape'нутый PRD за тебя он не может. Воспринимай его как routing-слой; глубина каждого решения всё равно проходит через твой обычный ADR/RFC lifecycle.
+
+Полный гайд: [SMITH-RU.md](SMITH-RU.md).
 
 ### Day 1 — «выбрать стратегию auth»
 
@@ -260,6 +272,10 @@ gh pr create --base main
 /reload-plugins
 /fpl-init
 ```
+
+**Первое действие Day 0 — попробуй smith**: `/smith` — это master-оркестратор, и он портативен между CLI: его routing-логика задокументирована в `AGENTS.md`, поэтому один и тот же entry-point «что дальше?» работает в Claude Code, Gemini CLI, Codex CLI или Goose. Для org-rollout это значит что у каждого тиммейта сессия стартует одинаково независимо от выбранной CLI. Свяжи `/smith` с `/session` (Orchestra inbox-triage) на Day 0 — получишь один общий стартовый ритуал для всей команды.
+
+Полный гайд: [SMITH-RU.md](SMITH-RU.md).
 
 После `/fpl-init` сконфигурируй Orchestra MCP сервер в `.mcp.json` (точный конфиг есть в README [`forgeplan-orchestra`](../plugins/forgeplan-orchestra/README-RU.md)).
 

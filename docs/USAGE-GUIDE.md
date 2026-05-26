@@ -77,12 +77,19 @@ Mirror of root [README.md](../README.md) "Where to Start?" matrix, with cross-li
 
 ## Quick reference (all commands)
 
-15 commands across 5 plugins. `fpl-skills` provides the bulk; companion plugins add specialised commands.
+19 commands across 5 plugins. `fpl-skills` provides the bulk; companion plugins add specialised commands.
+
+> [!TIP]
+> **Not sure which command to use?** Run `/smith` — it reads project state and recommends the next dispatch (e.g. `/forge-cycle`, `/autorun`, `/forge-cleanup`, `/sprint`). For an educational walkthrough of all 12 routing contexts, run `/smith-routing`.
 
 ### From `fpl-skills` (flagship)
 
 | Command | What it does |
 |---|---|
+| `/smith` | **Master orchestrator / pre-router.** Reads state, classifies context against the 12-context routing map, recommends the next dispatch. Default sub-modes: `/smith status` (snapshot only) and `/smith handoff` (end-of-session summary). Triggers: `smith`, `кузнец`, `что дальше`, `scrum master`, `master orchestrator`. Full guide: [SMITH.md](SMITH.md). Routing brain: [`../plugins/fpl-skills/skills/smith/routing-map.md`](../plugins/fpl-skills/skills/smith/routing-map.md). |
+| `/smith-bootstrap` | Greenfield onboarding orchestrator. Fresh repo → pre-flight matrix → `forgeplan init` → CLAUDE.md scaffold → AGENTS.md scaffold → plugin install recommendations → first Brief → first PRD. Use when you've just `git init`'d. Triggers: `smith bootstrap`, `greenfield`, `новый проект`. |
+| `/smith-plan <task>` | Per-task plan generator. Classifies a specific task into 1 of 12 routing-map contexts; renders a Plan markdown with methodology citations + dispatch sequence + evidence requirements. Use when you know what you want to do but not how. Triggers: `smith plan`, `как сделать`, `построй план`. |
+| `/smith-routing` | Educational walkthrough of the 12-context routing map. 3 modes: Comparison (`X vs Y`), Walkthrough (show all 12 contexts), Q&A ("what for brownfield?"). Read-only — does not produce Plan artifacts. Triggers: `smith routing`, `какая команда для`, `routing map`. |
 | `/fpl-init` | One-shot project bootstrap — forgeplan init + MCP wiring + CLAUDE.md + docs/agents/. Idempotent. |
 | `/restore` | Session-context recall: branch, dirty state, recent commits, stash, memory snippets. |
 | `/briefing` | Tracker overview — Orchestra/GitHub Issues/Linear/Jira or local TODO files. |

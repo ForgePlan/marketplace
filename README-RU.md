@@ -8,7 +8,7 @@
 
 Официальный маркетплейс плагинов Claude Code от [ForgePlan](https://github.com/ForgePlan) — UX, воркфлоу, инженерные и dev-инструменты.
 
-**12 плагинов** | **60+ агентов** | **16 скиллов** | **5 баз знаний**
+**16 плагинов** | **65+ агентов** | **33+ скиллов** | **9+ баз знаний**
 
 > **Экосистема ForgePlan**: этот маркетплейс + [CLI `forgeplan`](https://github.com/ForgePlan/forgeplan) (lifecycle артефактов) + [`@forgeplan/web`](https://github.com/ForgePlan/forgeplan-web) (браузерный viewer с time-travel + графом). Три sibling-продукта; ставь что нужно.
 
@@ -17,6 +17,7 @@
 | Гайд | Когда читать |
 |---|---|
 | 🚀 [Developer Journey](docs/DEVELOPER-JOURNEY-RU.md) | **Стартуй здесь** — 30-минутное знакомство от нуля до первой зашипованной функциональности, с 4 ролевыми walkthrough |
+| 🧭 [Smith — мастер-оркестратор](docs/SMITH-RU.md) | Карта маршрутизации: 12 контекстов × 27 методологий. Когда и как звать `/smith` — BMAD-мастер, который сам подбирает воркфлоу под задачу |
 | 📋 [Памятка по сценариям](docs/PLAYBOOK-RU.md) | Какую команду запустить под какую задачу (пустой проект, brownfield, ночной прогон, …) |
 | 📖 [Руководство](docs/USAGE-GUIDE-RU.md) | Справочник: 18 команд, хуки, правила активации агентов, разбор частых проблем |
 | 🏛 [Архитектура](docs/ARCHITECTURE-RU.md) | Четырёхслойная ментальная модель — Orchestra (где) · Forgeplan (что) · FPF (как думать) · SPARC (как кодить) |
@@ -52,6 +53,7 @@
 
 | Ваша роль | Установить | Зачем |
 |-----------|-----------|-------|
+| **Я хочу мастер-оркестратор** | **fpl-skills + agents-pro** | Начни с `/smith` — маршрутизирует 12 контекстов на 27 методологий |
 | **Пользователь Forgeplan (рекомендуется)** | **fpl-skills** | Одна установка, 15 скиллов, полный цикл route → ship |
 | Любой разработчик (без forgeplan) | dev-toolkit + agents-core | Универсальные инструменты, без CLI зависимости |
 | Фронтенд | fpl-skills + laws-of-ux + agents-domain | UX + агенты фреймворков |
@@ -83,6 +85,31 @@
 
 ```bash
 /plugin install fpl-skills@ForgePlan-marketplace
+```
+
+---
+
+### Smith — мастер-оркестратор
+
+> [!TIP]
+> **BMAD-мастер экосистемы ForgePlan.** Маршрутизирует 12 контекстов (greenfield, brownfield, audit, sprint, refactor, supersede, …) к нужной методологии + последовательности dispatch. Зови `/smith` когда понимаешь чего хочешь, но не знаешь какую команду запускать.
+
+Smith — Profile B-orchestrator агент с четырьмя скилами. Читает задачу, выбирает методологию из routing-map на 27 записей (BMAD, OpenSpec, FPF ADI, C4, SPARC, …) и диспатчит правильную цепочку скилов. Используй как парадную дверь к любой нетривиальной задаче в этом маркетплейсе.
+
+| Компонент | Где |
+|---|---|
+| Агент `smith` | `plugins/agents-pro/agents/smith.md` |
+| Скиллы `/smith` (×4) | `plugins/fpl-skills/skills/smith*/` |
+| Routing map (12 ctx × 27 методологий) | `plugins/fpl-skills/skills/smith/routing-map.md` |
+
+Полный гайд: [`docs/SMITH-RU.md`](docs/SMITH-RU.md).
+
+```bash
+# Ставим оба плагина, затем зовём:
+/plugin install fpl-skills@ForgePlan-marketplace
+/plugin install agents-pro@ForgePlan-marketplace
+# В сессии:
+/smith   # опиши задачу; Smith выберет методологию + цепочку скиллов
 ```
 
 ---

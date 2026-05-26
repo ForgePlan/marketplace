@@ -100,6 +100,28 @@ Fix HIGH issues now? [y/n]
 | **`dev-advisor` agent** | Background advisor — suggests `/audit` after changes, reminds about tests for new public functions, flags security concerns. |
 | **Hooks**: SessionStart (`/fpl-init` hint + `forge-report` counter reset), PreToolUse:Bash (safety hook blocks `rm -rf /`, `git push --force`, `DROP TABLE`), PostToolUse (test reminder, `forge-report` counter). |
 
+## Smith — master orchestrator cluster (NEW v1.31.0+)
+
+> 4 skills + 5 templates + smith greeting in session-start.sh — the entry-point for "I don't know which methodology to apply".
+
+Smith ships as a coordinated cluster in this plugin (the agent body lives in sibling [`agents-pro`](../agents-pro/agents/smith.md)):
+
+| Component | What |
+|---|---|
+| `/smith` | Default mode — status + recommended next step |
+| `/smith-bootstrap` | Greenfield project onboarding (pre-flight + scaffold + first Brief) |
+| `/smith-plan <task>` | Per-task plan with methodology routing (12 contexts) |
+| `/smith-routing` | Educational walkthrough (Compare / Walkthrough / Q&A) |
+| Routing map | [`skills/smith/routing-map.md`](skills/smith/routing-map.md) — 12 contexts × 27 methodologies × 26 agents |
+| 5 templates | `templates/{smith-plan,smith-bootstrap,smith-handoff,post-mortem,routing-decision}.md` |
+| Session-start hook | `hooks/scripts/session-start.sh` — smith greeting (3 states: greenfield / healthy / attention) |
+
+Smith requires `agents-pro` (for the smith agent body) AND `fpl-skills` (this plugin, for the skills + templates + hook).
+
+Full guide: [`docs/SMITH.md`](../../docs/SMITH.md).
+
+Trigger phrases: `smith`, `кузнец`, `что дальше`, `scrum master`, `master orchestrator`.
+
 ## Lifecycle integration
 
 Every skill delegates artifact lifecycle to `forgeplan`:

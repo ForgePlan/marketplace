@@ -10,16 +10,39 @@ A practical map of "I have this situation → here's the setup, here's the comma
 
 | Your situation | Setup needed | Command to run |
 |---|---|---|
-| Empty project, no idea yet | `fpl-skills` | `/fpl-init` then `/research <topic>` |
-| Empty project, raw idea | `fpl-skills` + `forgeplan-workflow` | `/fpl-init` → `/shape "<idea>"` → `/forge-cycle` |
+| **I don't know which methodology to apply / where to start** | `fpl-skills` | `/smith` — meta-router that reads project state and dispatches the right command (see [SMITH.md](SMITH.md)) |
+| Empty project, no idea yet | `fpl-skills` | `/smith-bootstrap` (greenfield pre-flight + scaffold) then `/research <topic>` |
+| Empty project, raw idea | `fpl-skills` + `forgeplan-workflow` | `/smith-bootstrap` → `/shape "<idea>"` → `/forge-cycle` |
 | Existing project, want to ship a feature | `fpl-skills` + `forgeplan-workflow` | `/forge-cycle "<task>"` (one command, full lifecycle) |
 | Existing project, want overnight unattended run | + `agents-sparc` + `agents-pro` | `/autorun "<task>"` (delegates to `/forge-cycle`) |
-| Brownfield (legacy code + docs) | + `forgeplan-brownfield-pack` | Discover Agent → playbooks → `/forge-cycle` |
+| Brownfield (legacy code + docs) | + `forgeplan-brownfield-pack` | `/smith` (default mode routes to brownfield) → Discover Agent → `/forge-cycle` |
 | Plan exists but is rough | `fpl-skills` | `/refine <plan>` |
 | Need decision between alternatives | `fpf` plugin | `/fpf-evaluate "A vs B"` |
 | Hard bug | `fpl-skills` | `/diagnose "<bug>"` |
 | Code review before merge | `fpl-skills` | `/audit` |
-| Multi-session team work | + `forgeplan-orchestra` | `/session` → `/sync` |
+| Multi-session team work, "where did we leave off" | + `forgeplan-orchestra` | `/smith` (reads `forgeplan_health` + recalls memory + recommends next) or `/session` → `/sync` |
+
+---
+
+## Use-case 0 — "I don't know what to run" (smith meta-router)
+
+**Scenario**: You opened a project (fresh, brownfield, mid-sprint — doesn't matter) and you want one command that reads the current state and tells you what's next. You don't want to remember which of `/shape` / `/forge-cycle` / `/autorun` / `/session` fits today.
+
+**Setup** (one-time):
+```
+/plugin install fpl-skills@ForgePlan-marketplace
+/reload-plugins
+```
+
+**Workflow** (single command):
+```
+/smith                           # reads forgeplan_health + git status + recent memory
+                                 # → recommends the right next command + explains why
+```
+
+For a brand-new empty repo, the canonical entry is `/smith-bootstrap` — it runs greenfield pre-flight, scaffolds `CLAUDE.md` + `AGENTS.md` + `.forgeplan/`, and dispatches the first Brief.
+
+Full reference: [SMITH.md](SMITH.md).
 
 ---
 
@@ -40,15 +63,17 @@ brew install ForgePlan/tap/forgeplan        # CLI
 
 **Workflow**:
 ```
-/fpl-init                        # Step 1: bootstrap project (.forgeplan/, CLAUDE.md, docs/agents/)
+/smith-bootstrap                 # Step 1: greenfield pre-flight + scaffold (.forgeplan/, CLAUDE.md, AGENTS.md, docs/agents/)
 /shape "<your idea>"             # Step 2: interview from scratch → draft PRD
 /refine PRD-NNN                  # Step 3: polish, add ADRs for key decisions
 /forge-cycle "<refined task>"    # Step 4: full automated cycle (route → build → evidence → activate)
 ```
 
+`/smith-bootstrap` replaces the older `/fpl-init` invocation for fresh repos — it adds the greenfield pre-flight (Brief dispatch, cross-CLI `AGENTS.md` shim, project memory bank wiring) on top of the scaffold. See [SMITH.md](SMITH.md) for the full bootstrap procedure.
+
 If you want to skip the interview and go full auto:
 ```
-/fpl-init
+/smith-bootstrap
 /autorun "<idea>"                # delegates to /forge-cycle which handles shaping internally
 ```
 
@@ -147,8 +172,9 @@ Red lines (push to main, secrets writes, deploys) **stop autopilot** and ask for
 
 **Workflow**:
 ```
-/fpl-init                                     # if not already done
-# Run Discover Agent (standalone in agents/discover/) for codebase map
+/smith                                        # default mode auto-detects brownfield and routes here
+# (or /smith-bootstrap if the repo has no .forgeplan/ yet)
+# Run Discover Agent (canonical in plugins/forgeplan-brownfield-pack/agents/discover/) for codebase map
 # Then chain extraction skills:
 /extract ubiquitous-language                  # build domain glossary
 /extract use-cases                            # find user-facing scenarios
@@ -287,11 +313,15 @@ forgeplan link EVID-NNN ADR-MMM --relation informs
 
 **Daily workflow**:
 ```
+/smith                           # one-shot: reads forgeplan_health + recalls Hindsight memory + recommends next
+# or, for explicit Orchestra triage:
 /session                         # Inbox Pattern: forgeplan health + Orchestra messages + git changes + triage
 /sync                            # Bidirectional Forgeplan ↔ Orchestra (Status ↔ Phase mapping)
 # Pick a task from inbox synthesis
 /forge-cycle "<task>"            # full lifecycle as in use-case 3
 ```
+
+`/smith` complements `/session` — use `/smith` when you want a single "what should I do next" answer; use `/session` when you specifically want the Orchestra inbox triage.
 
 Status mapping:
 - Orchestra `Backlog` ↔ Forgeplan `Shape`
@@ -317,6 +347,7 @@ Status mapping:
 
 ## See also
 
+- [SMITH.md](SMITH.md) — meta-router and bootstrap reference (`/smith`, `/smith-bootstrap`)
 - [DEVELOPER-JOURNEY.md](DEVELOPER-JOURNEY.md) — narrative onboarding with 4 personas
 - [USAGE-GUIDE.md](USAGE-GUIDE.md) — reference manual: every command, hook, troubleshooting
 - [METHODOLOGIES.md](METHODOLOGIES.md) — what's built into forgeplan (BMAD, OpenSpec, ADI, F-G-R, DDR, etc.) vs what's external

@@ -10,6 +10,26 @@
 /plugin install agents-pro@ForgePlan-marketplace
 ```
 
+## Smith — мастер-оркестратор (новое в v1.10.0+)
+
+> Маршрутизирует 12 контекстов к нужной методологии и последовательности дispatch — эквивалент BMAD Master в экосистеме ForgePlan.
+
+Smith — это агент **Profile B-orchestrator** (новый подпрофиль, см. AGENT-AUTHORING-GUIDE L1162-1268). Единственный агент в маркетплейсе, который читает состояние проекта, классифицирует задачу в один из 12 контекстов и рекомендует методологию и последовательность dispatch. Тело агента живёт в `agents-pro`; четыре пользовательских скилла (`/smith`, `/smith-bootstrap`, `/smith-plan`, `/smith-routing`) живут в `fpl-skills`.
+
+| Компонент | Где |
+|---|---|
+| Агент `smith` | `plugins/agents-pro/agents/smith.md` (этот плагин) |
+| 4 скилла `/smith*` | `plugins/fpl-skills/skills/smith*/` (соседний плагин) |
+| Routing-мозг (12 контекстов × 27 методологий) | `plugins/fpl-skills/skills/smith/routing-map.md` |
+| 5 шаблонов (smith-plan / smith-bootstrap / smith-handoff / post-mortem / routing-decision) | `plugins/fpl-skills/templates/` |
+
+> [!TIP]
+> Smith требует установки И `agents-pro`, И `fpl-skills`. Smith выбирает **какая** методология и какие агенты применимы; специалисты-исполнители делают саму работу.
+
+Полное руководство: [`docs/SMITH-RU.md`](../../docs/SMITH-RU.md).
+
+Триггер-фразы: `smith`, `кузнец`, `что дальше`, `scrum master`, `master orchestrator`.
+
 ## Агенты
 
 ### Security (4)

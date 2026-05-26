@@ -10,16 +10,39 @@
 
 | Ваша ситуация | Что нужно поставить | Какую команду запустить |
 |---|---|---|
-| Пустой проект, идеи ещё нет | `fpl-skills` | `/fpl-init` потом `/research <тема>` |
-| Пустой проект, есть сырая идея | `fpl-skills` + `forgeplan-workflow` | `/fpl-init` → `/shape "<идея>"` → `/forge-cycle` |
+| **Не знаю какую методологию применить / с чего начать** | `fpl-skills` | `/smith` — мета-роутер, читает состояние проекта и подсказывает следующую команду (см. [SMITH-RU.md](SMITH-RU.md)) |
+| Пустой проект, идеи ещё нет | `fpl-skills` | `/smith-bootstrap` (предполётная подготовка greenfield + scaffold) потом `/research <тема>` |
+| Пустой проект, есть сырая идея | `fpl-skills` + `forgeplan-workflow` | `/smith-bootstrap` → `/shape "<идея>"` → `/forge-cycle` |
 | Готовый проект, нужна новая фича | `fpl-skills` + `forgeplan-workflow` | `/forge-cycle "<задача>"` (одна команда, весь цикл) |
 | Готовый проект, хочу прогон на ночь | + `agents-sparc` + `agents-pro` | `/autorun "<задача>"` (вызывает `/forge-cycle`) |
-| Унаследованный код плюс старая документация | + `forgeplan-brownfield-pack` | Discover Agent → playbooks → `/forge-cycle` |
+| Унаследованный код плюс старая документация | + `forgeplan-brownfield-pack` | `/smith` (режим по умолчанию маршрутизирует в brownfield) → Discover Agent → `/forge-cycle` |
 | План есть, но сыроват | `fpl-skills` | `/refine <план>` |
 | Нужно выбрать между вариантами | `fpf` | `/fpf-evaluate "А или Б"` |
 | Сложный баг | `fpl-skills` | `/diagnose "<симптом>"` |
 | Перед слиянием — проверить код | `fpl-skills` | `/audit` |
-| Командная работа через несколько сессий | + `forgeplan-orchestra` | `/session` → `/sync` |
+| Командная работа, «на чём остановились» | + `forgeplan-orchestra` | `/smith` (читает `forgeplan_health` + поднимает память + советует следующий шаг) или `/session` → `/sync` |
+
+---
+
+## Сценарий 0 — «Не знаю что запускать» (мета-роутер smith)
+
+**Что**: открыл проект (пустой, унаследованный, на середине спринта — неважно) и хочешь одну команду, которая прочитает текущее состояние и подскажет следующий шаг. Не хочешь держать в голове какая из `/shape` / `/forge-cycle` / `/autorun` / `/session` подходит сегодня.
+
+**Однократная настройка**:
+```
+/plugin install fpl-skills@ForgePlan-marketplace
+/reload-plugins
+```
+
+**Запуск (одна команда)**:
+```
+/smith                           # читает forgeplan_health + статус git + последнюю память
+                                 # → рекомендует подходящую команду и объясняет почему
+```
+
+Для свежего пустого репозитория канонический вход — `/smith-bootstrap`: он запускает предполётную подготовку greenfield, разворачивает `CLAUDE.md` + `AGENTS.md` + `.forgeplan/` и сразу диспатчит первый Brief.
+
+Полная справка: [SMITH-RU.md](SMITH-RU.md).
 
 ---
 
@@ -40,15 +63,17 @@ brew install ForgePlan/tap/forgeplan
 
 **Порядок действий**:
 ```
-/fpl-init                        # Шаг 1: первичная настройка проекта (.forgeplan/, CLAUDE.md, docs/agents/)
+/smith-bootstrap                 # Шаг 1: предполётная подготовка greenfield + scaffold (.forgeplan/, CLAUDE.md, AGENTS.md, docs/agents/)
 /shape "<твоя идея>"             # Шаг 2: интервью с нуля → черновик PRD
 /refine PRD-NNN                  # Шаг 3: довести до ума, добавить ADR на ключевые решения
 /forge-cycle "<уточнённая задача>"  # Шаг 4: автоматический цикл (route → build → evidence → activate)
 ```
 
+`/smith-bootstrap` заменяет старый `/fpl-init` для свежих репозиториев — поверх scaffold-а он добавляет предполётную подготовку greenfield (диспатч первого Brief, межсессионный шим `AGENTS.md`, проводку проектной памяти). Полная процедура bootstrap — в [SMITH-RU.md](SMITH-RU.md).
+
 Если хочешь без интервью и сразу на автомат:
 ```
-/fpl-init
+/smith-bootstrap
 /autorun "<идея>"                # внутри вызовет /forge-cycle, тот сам всё оформит
 ```
 
@@ -147,8 +172,9 @@ brew install ForgePlan/tap/forgeplan
 
 **Порядок**:
 ```
-/fpl-init                                     # если ещё не настроен
-# Запускаем Discover Agent (отдельный, в agents/discover/) для карты кодовой базы
+/smith                                        # режим по умолчанию сам определяет brownfield и маршрутизирует сюда
+# (или /smith-bootstrap, если в репозитории ещё нет .forgeplan/)
+# Запускаем Discover Agent (канонический, в plugins/forgeplan-brownfield-pack/agents/discover/) для карты кодовой базы
 # Дальше связка скиллов извлечения:
 /extract ubiquitous-language                  # построить словарь предметной области
 /extract use-cases                            # найти пользовательские сценарии
@@ -287,11 +313,15 @@ forgeplan link EVID-NNN ADR-MMM --relation informs
 
 **Утро каждый день**:
 ```
+/smith                           # один вызов: читает forgeplan_health + поднимает память Hindsight + советует следующий шаг
+# либо явный разбор Orchestra-входящих:
 /session                         # Inbox Pattern: forgeplan health + сообщения Orchestra + изменения в git + разбор
 /sync                            # двусторонняя синхронизация Forgeplan ↔ Orchestra (Статус ↔ Фаза)
 # Берём задачу из синтеза inbox-а
 /forge-cycle "<задача>"          # полный цикл как в сценарии 3
 ```
+
+`/smith` дополняет `/session` — используй `/smith` когда нужен один ответ «что делать дальше»; используй `/session` когда нужен именно разбор входящих Orchestra.
 
 Соответствие статусов:
 - Orchestra `Backlog` ↔ Forgeplan `Shape`
@@ -317,6 +347,7 @@ forgeplan link EVID-NNN ADR-MMM --relation informs
 
 ## См. также
 
+- [SMITH-RU.md](SMITH-RU.md) — справка по мета-роутеру и bootstrap (`/smith`, `/smith-bootstrap`)
 - [DEVELOPER-JOURNEY-RU.md](DEVELOPER-JOURNEY-RU.md) — повествовательное знакомство с 4 персонами
 - [USAGE-GUIDE-RU.md](USAGE-GUIDE-RU.md) — справочник: команды, хуки, troubleshooting
 - [METHODOLOGIES-RU.md](METHODOLOGIES-RU.md) — что встроено в forgeplan (BMAD, OpenSpec, ADI, F-G-R, DDR и т.д.) и что внешнее

@@ -33,6 +33,29 @@ mkdir -p plugins/your-plugin-name/.claude-plugin
 | Skills | `skills/skill-name/` | `SKILL.md` + optional `sections/` |
 | Hooks | `hooks/` | `hooks.json` |
 
+### Profile B-orchestrator sub-profile (EPIC-002 +)
+
+Standard agent profiles per `plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md`:
+
+- **Profile A** — Creator (denies file-write + `forgeplan_activate`)
+- **Profile B** — Reviewer (denies file-write + activate + claims + `memory_retain`)
+- **Profile C** — Read-only (denies all mutations)
+- **Profile C-coder** — Source files (denies forgeplan mutations only)
+- **Profile D** — Maintainer (denies `forgeplan_new` + file writes + activate)
+
+EPIC-002 introduced a new sub-profile:
+
+**Profile B-orchestrator** — strategic planner that reads project state, applies a methodology routing matrix, and recommends specialist-agent dispatches. Denies the same as Profile B PLUS `Bash` (the orchestrator never executes; it plans). The canonical reference implementation is `smith` (`plugins/agents-pro/agents/smith.md`).
+
+When to author a new B-orchestrator vs reuse smith:
+
+- **Reuse smith** if your task fits within the 12 contexts smith routes (greenfield / brownfield / feature / bug-fix / refactor / decision / audit / discovery / tech-debt / incident).
+- **Author a new B-orchestrator** only if you have a NEW domain that smith's routing matrix does not cover (e.g., compliance-audit routing, ML-pipeline routing). Then add it to `plugins/agents-pro/agents/` and document per the `AGENT-AUTHORING-GUIDE.md` L1162-1268 pattern.
+
+Keep this set small — ideally one general agent (`smith`) + at most 2-3 narrow-domain orchestrators. More than 3-4 across the marketplace is a smell; orchestration logic belongs in skills (`/forge-cycle`, `/autorun`, playbooks) or in smith's routing matrix.
+
+See `docs/SMITH.md` for the full smith model.
+
 ### 4. Register in marketplace.json
 
 Add your plugin to `.claude-plugin/marketplace.json`:
@@ -74,6 +97,7 @@ Add your plugin to `.claude-plugin/marketplace.json`:
 - [ ] Skills have `name` and `description` in SKILL.md frontmatter
 - [ ] `hooks.json` is valid JSON
 - [ ] No hardcoded paths (use `${CLAUDE_PLUGIN_ROOT}` for scripts)
+- [ ] If plugin adds a new methodology context smith should route to, file an issue to extend `plugins/fpl-skills/skills/smith/routing-map.md` with a new row + section
 
 ### hooks.json Schema
 
