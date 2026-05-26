@@ -129,11 +129,32 @@ The marketplace is **CLI-agnostic** via the MCP standard:
 
 ### MCP server registration
 
-Any CLI with an MCP client can connect to the forgeplan MCP server:
+Any CLI with an MCP client can connect to the forgeplan MCP server.
+
+**Canonical wiring command** — `forgeplan mcp install`. It is the supported, idempotent, smart-merge way to register the forgeplan MCP server with any major CLI. Prefer this over editing the JSON config by hand:
+
+```bash
+# Claude Code (project-scope — wiring travels with the repo)
+forgeplan mcp install --client claude --scope project
+
+# Claude Code (user-scope — every project sees forgeplan, host-personal)
+forgeplan mcp install --client claude --scope user
+
+# Cursor / Windsurf
+forgeplan mcp install --client cursor   --scope project
+forgeplan mcp install --client windsurf --scope project
+
+# Dry-run (recommended on a populated .mcp.json the first time)
+forgeplan mcp install --client claude --scope project --dry-run
+```
+
+Smart-merge preserves existing entries (`hindsight`, `orch`, any other MCP servers). Re-running is safe — already-correct configs are no-ops.
+
+**Where the command writes** — the resulting block in `.mcp.json` (Claude Code) / `settings.json` (Gemini) / `config.toml` (Codex):
 
 ```jsonc
-// Claude Code: .claude/settings.json
-{ "mcpServers": { "forgeplan": { "command": "forgeplan", "args": ["serve"] } } }
+// Claude Code: .mcp.json (project scope) or ~/.claude.json (user scope)
+{ "mcpServers": { "forgeplan": { "command": "forgeplan", "args": ["serve"], "transport": "stdio" } } }
 ```
 
 ```jsonc
@@ -148,7 +169,9 @@ command = "forgeplan"
 args = ["serve"]
 ```
 
-The `forgeplan mcp-manifest` command (Batch F deliverable per RFC-003) generates all three config files in one call.
+For multi-CLI environments, the `forgeplan mcp-manifest` command (Batch F deliverable per RFC-003) generates all three config files in one call. `mcp install` handles the per-client case; `mcp-manifest` handles the everything-at-once case.
+
+**Used by**: `/smith-bootstrap` Step 0b (active runner, calls `mcp install --scope project` automatically when `.mcp.json` lacks the forgeplan block) and `/fpl-init` Step 5 (same primitive).
 
 ### Skills interop directory
 
