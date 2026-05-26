@@ -109,13 +109,13 @@ Install the canonical baseline via `/plugin install` in a Claude Code session:
 - [ ] `/plugin install fpf@ForgePlan-marketplace` — First Principles Framework (ADI, reasoning, decomposition)
 - [ ] `/plugin install forgeplan-workflow@ForgePlan-marketplace` — `/forge-cycle`, `/forge-audit`, guardian agent
 - [ ] `/plugin install agents-core@ForgePlan-marketplace` — coder, code-reviewer, tester, planner, debugger
-- [ ] `/plugin install agents-pro@ForgePlan-marketplace` — adr-architect, specification, architecture, guardian, security-expert, brief-intake, evidence-recorder, …
+- [ ] `/plugin install agents-pro@ForgePlan-marketplace` — smith, adr-architect, architect-reviewer, guardian, security-expert, brief-intake, evidence-recorder, …
+- [ ] `/plugin install agents-sparc@ForgePlan-marketplace` — specification, architecture, pseudocode, refinement, sparc-orchestrator (SPARC Profile A phase agents; smith dispatches `agents-sparc:specification` for the first PRD)
 
 Optional (install on demand):
 
 - `fpl-hsmem` — cross-session memory via Hindsight (recommended for projects >1 week)
 - `agents-github` — PR/issue/release automation
-- `agents-sparc` — SPARC methodology pack
 - `forgeplan-brownfield-pack` — only if you later import legacy code
 
 Verify:

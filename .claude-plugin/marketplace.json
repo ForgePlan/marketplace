@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code — UX, frontend, workflow, and developer tools",
-    "version": "1.72.0"
+    "version": "1.72.1"
   },
   "plugins": [
     {
@@ -35,8 +35,8 @@
     {
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
-      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 33 engineering skills + dev-advisor agent + 5 hooks (+ smith greeting). v1.31.0: EPIC-002 — 4 new smith skills (/smith, /smith-bootstrap, /smith-plan, /smith-routing) + 5 templates + session-start.sh smith greeting + 5 READMEs + AGENT-AUTHORING-GUIDE Profile B-orchestrator sub-profile. v1.29.0: Sprint Z10 — /methodology-check. v1.28.1: Sprint Z9 — c4-diagram Dispatch mode. v1.28.0: Sprint Z8 — /supersede + delta-spec discipline. v1.27.0: Sprint Z5 — /decay-watch 4-source + NOTE-013.",
-      "version": "1.31.0",
+      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 33 engineering skills + dev-advisor agent + 5 hooks (+ smith greeting). v1.31.1: EPIC-002 niceties patch — N1-N4 polish (post-mortem Revisit Triggers parseable + Kind/Type alignment + Profile B-orch ASCII + row 12 Phase 1/2 split) + EVID-099/EVID-102 fixes (smith-bootstrap install: agents-sparc MUST + install block sync; routing-decision Kind canonical; _index row 7 label; AGENTS.md tie-breaker NEED_USER_INPUT). v1.31.0: EPIC-002 — 4 smith skills + 5 templates + session-start.sh smith greeting + AGENT-AUTHORING-GUIDE Profile B-orchestrator. v1.29.0: Sprint Z10 — /methodology-check.",
+      "version": "1.31.1",
       "author": {
         "name": "ForgePlan"
       },
@@ -250,8 +250,8 @@
     {
       "name": "agents-pro",
       "source": "./plugins/agents-pro",
-      "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.10.0: EPIC-002 PRD-062 — new `smith` master-orchestrator agent (Profile B-orchestrator), the BMAD Master equivalent. 12-context methodology routing matrix (BMAD/SPARC/RIPER-5/DDD/C4/Strangler-Fig/OWASP/STRIDE/DORA/JTBD/etc.). v1.9.4: Sprint Z9 — adr-architect C4 dispatch. v1.9.3: Sprint Z7 — guardian ADI BLOCKER row. v1.9.2: Sprint Z6 — guardian BMAD rows. v1.9.0: Sprint Z4 — evidence-gatherer.",
-      "version": "1.10.0",
+      "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.10.1: EPIC-002 niceties patch — smith.md routing matrix resynced to canonical routing-map.md (rows 1/3/4/6/11 alignment per EVID-099 audit). v1.10.0: EPIC-002 PRD-062 — new `smith` master-orchestrator agent (Profile B-orchestrator), the BMAD Master equivalent. v1.9.4: Sprint Z9 — adr-architect C4 dispatch. v1.9.3: Sprint Z7 — guardian ADI BLOCKER row.",
+      "version": "1.10.1",
       "author": {
         "name": "ForgePlan"
       },

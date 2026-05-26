@@ -35,32 +35,43 @@ The smith skills procedurally drive these templates — they fill the placeholde
 
 Two of the templates contain **machine-parseable triggers** scanned by `/decay-watch` and the `decay-reminder.sh` SessionStart hook.
 
-### `post-mortem.md` — Action items table
+**Canonical syntax (Sprint Z5, per CLAUDE.md «Defer discipline»):**
 
-The Action items section is a parseable checklist:
-
-```markdown
-## Action items
-
-- [ ] **Date**: 2026-06-15 — Add connection-pool exhaustion alert to Prometheus — owner @sre-team — INC-2026-001
-- [ ] **Metric**: error_rate < 0.1% for 7d — Verify the rolling restart playbook — owner @ops — INC-2026-001
-- [ ] **Event**: next deployment of auth-service — Roll out new pool sizing config — owner @platform — INC-2026-001
+```
+- [ ] **Kind**: issue|metric|date|event — description — source — last_checked YYYY-MM-DD
 ```
 
-Each row is `- [ ] **Kind**: date|metric|event — description — owner — incident-id`. `/decay-watch` reads NOTE-013 and scans these rows; when the date passes, the metric hits, or the event fires, the SessionStart hook surfaces the trigger silently.
+The `**Kind**:` key is the **smith-cluster + NOTE-013 family convention** — `post-mortem.md`, `routing-decision.md`, `NOTE-013` deferred-items tracker, and any future template in this family. `/decay-watch` parses this via its NOTE-013 / Sprint Z5 branch.
+
+**Note on a parallel vocabulary**: the older ADR templates (`adr-light.md`, `adr-full.md`, `adr-supersede.md`) use `**Type**: date|metric|event` for Sprint Z2 ADR Revisit Triggers. `/decay-watch` has a separate Step 2 scanner branch for that key. Both vocabularies are valid — choose by template family: smith / post-mortem / NOTE-013 → `**Kind**:`; ADR Revisit Triggers → `**Type**:`. Do not introduce new key names (`**Date**:`, `**Event**:` as bare keys, etc.) — those have no scanner branch and would silently slip past `/decay-watch`.
+
+### `post-mortem.md` — Revisit Triggers section
+
+The Action items table remains a human-readable `| Action | Owner | Due | Priority |` table — it answers "who does what by when". The parseable triggers live in a parallel `## Revisit Triggers` section directly below, so the post-mortem ages safely without losing the readable owner/due semantics:
+
+```markdown
+## Revisit Triggers
+
+- [ ] **Kind**: date — verify connection-pool alert is firing in prod — alerts.example.com/p99-auth — last_checked 2026-06-15
+- [ ] **Kind**: metric — error_rate < 0.1% for 7 consecutive days post-fix — grafana.example.com/d/auth-sli — last_checked 2026-06-15
+- [ ] **Kind**: event — next deployment of auth-service — github.com/org/repo/actions/runs/NNN — last_checked 2026-06-15
+- [ ] **Kind**: issue — github:org/repo#NNN closes — https://github.com/... — last_checked 2026-06-15
+```
+
+`/decay-watch` reads NOTE-013 and scans these rows; when the date passes, the metric hits, or the event fires, the SessionStart hook surfaces the trigger silently.
 
 ### `routing-decision.md` — Revisit trigger
 
-The decision body contains an explicit revisit trigger:
+The decision body contains an explicit revisit trigger in the same canonical syntax:
 
 ```markdown
 ## Revisit trigger
 
-- [ ] **Date**: 2026-09-01 — Re-evaluate BMAD-vs-SPARC choice once we have 3 months of velocity data
-- [ ] **Event**: if Profile B reviewer reports BMAD overhead exceeds 20% of sprint capacity
+- [ ] **Kind**: date — 2026-09-01 — re-evaluate BMAD-vs-SPARC choice once we have 3 months of velocity data — last_checked YYYY-MM-DD
+- [ ] **Kind**: event — Profile B reviewer reports BMAD overhead exceeds 20% of sprint capacity — last_checked YYYY-MM-DD
 ```
 
-Same `- [ ] **Kind**: ...` syntax. `/decay-watch` parses these to know when a methodology choice deserves a fresh ADI cycle.
+`/decay-watch` parses these to know when a methodology choice deserves a fresh ADI cycle.
 
 **Rule of thumb**: any parseable trigger goes in NOTE-013 as well (per CLAUDE.md «Defer discipline (Sprint Z5)»). The template trigger is the active source; NOTE-013 is the index that `/decay-watch` scans first.
 

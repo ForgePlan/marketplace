@@ -12,7 +12,7 @@ Each section is self-contained (≤300 lines, target ~100). Load on demand per c
 | Bug fix — production | [04-bug-fix-prod.md](04-bug-fix-prod.md) | "production bug", "race condition", "продовый баг" | RIPER-5 + 5 Whys RCA before any code touches the symptom. |
 | Bug fix — trivial | [05-bug-fix-trivial.md](05-bug-fix-trivial.md) | "typo", "hotfix", "опечатка", "хотфикс" | Tactical fast-path — no PRD, no ADR, just coder + reviewer. |
 | Refactor | [06-refactor.md](06-refactor.md) | "refactor", "clean up code", "рефакторинг" | Branch-by-Abstraction + Mikado with pre/post architect-reviewer. |
-| ADR decision | [07-adr-decision.md](07-adr-decision.md) | "we need to decide", "выбрать между" | FPF ADI + MADR + C4 L1+L2 for irreversible architecture choices. |
+| Architecture decision (ADR) | [07-adr-decision.md](07-adr-decision.md) | "we need to decide", "выбрать между" | FPF ADI + MADR + C4 L1+L2 for irreversible architecture choices. |
 | Security audit | [08-security-audit.md](08-security-audit.md) | "security review", "OWASP", "аудит безопасности" | OWASP Top 10 2025 + STRIDE/ASTRIDE threat-model walkthrough. |
 | Performance audit | [09-perf-audit.md](09-perf-audit.md) | "slow", "perf review", "тормозит" | DORA + SRE error-budget + perf-budget baseline-first audit. |
 | Product discovery | [10-pdlc-discovery.md](10-pdlc-discovery.md) | "what should we build", "discovery", "что строить" | JTBD + Lean MVP + Double Diamond for pre-product framing. |

@@ -56,10 +56,10 @@ Full table with primary methodology + dispatch sequence + evidence requirements 
 | 8 | Security audit | Threat coverage — OWASP Top 10 2025 + STRIDE/ASTRIDE |
 | 9 | Performance audit | Falsifiable baseline — DORA + SRE + perf-budget |
 | 10 | Product discovery (PDLC) | What to build — JTBD + Lean + Double Diamond |
-| 11 | Tech-debt cleanup | Pay-down sprint — A3 + Fishbone + ADR-supersede |
+| 11 | Tech debt cleanup | Pay-down sprint — A3 + Fishbone + ADR-supersede |
 | 12 | Live incident response | Outage handling — Incident Command + blameless post-mortem |
 
-Smith **picks exactly one row** per task — methodology cocktails are forbidden. If the situation sits between two rows, smith picks the row with the higher risk profile (brownfield > greenfield, audit > feature) and notes the deviation in its session log. The single-row rule prevents the common failure mode where teams blend BMAD + SPARC + Spec Kit «to cover all bases» and end up with artefacts that match no community pattern — none of the three communities recognise the output as their canonical shape.
+Smith **picks exactly one row** per task — methodology cocktails are forbidden. If the situation sits between two rows, smith emits the `<<NEED_USER_INPUT>>` sentinel with ≥3 hypotheses on which row to pick (FPF ADI discipline per Sprint Z7/PRD-059). Only in autonomous-mode incidents where the ambiguity blocks a live response does smith pick the higher-risk row (brownfield > greenfield, audit > feature) and record the deviation in its Plan output. The single-row rule prevents the common failure mode where teams blend BMAD + SPARC + Spec Kit «to cover all bases» and end up with artefacts that match no community pattern — none of the three communities recognise the output as their canonical shape.
 
 ### How smith works internally
 

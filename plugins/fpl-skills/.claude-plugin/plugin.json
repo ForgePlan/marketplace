@@ -1,7 +1,7 @@
 {
   "name": "fpl-skills",
-  "version": "1.31.0",
-  "description": "Flagship workflow plugin for the ForgePlan ecosystem. 33 engineering skills + dev-advisor agent + 5 hooks (+ smith greeting). v1.31.0: EPIC-002 PRD-063/064 — 4 new smith skills (/smith default master-orchestrator entrypoint, /smith-bootstrap greenfield onboarding, /smith-plan per-task plan with 12-context classification, /smith-routing educational walkthrough), 5 new templates (smith-plan, smith-bootstrap, smith-handoff, post-mortem, routing-decision), session-start.sh smith greeting (3 states, <50ms), 5 READMEs + SMITH-TEMPLATES guide, AGENT-AUTHORING-GUIDE Profile B-orchestrator sub-profile. v1.29.0: Sprint Z10 PRD-061 — /methodology-check. v1.28.1: Sprint Z9 PRD-060 — c4-diagram Dispatch mode. v1.28.0: Sprint Z8 PRD-058 — /supersede + delta-spec. v1.27.0: Sprint Z5 PRD-056 — /decay-watch 4-source + NOTE-013.",
+  "version": "1.31.1",
+  "description": "Flagship workflow plugin for the ForgePlan ecosystem. 33 engineering skills + dev-advisor agent + 5 hooks (+ smith greeting). v1.31.1: EPIC-002 niceties patch — N1-N4 polish (post-mortem Revisit Triggers parseable section + Kind/Type keyword alignment + Profile B-orch ASCII fix + row 12 Phase 1/2 split) + EVID-099 audit fixes (smith-bootstrap install table: agents-sparc moved to MUST tier, install code block updated; routing-decision template: **Kind**: canonical; _index.md row 7 label aligned; AGENTS.md: 'Tech debt' hyphen fix + tie-breaker reconciled to NEED_USER_INPUT). v1.31.0: EPIC-002 PRD-063/064 — 4 new smith skills + 5 templates + session-start.sh smith greeting + 5 READMEs + AGENT-AUTHORING-GUIDE Profile B-orchestrator. v1.29.0: Sprint Z10 — /methodology-check. v1.28.1: Sprint Z9 — c4-diagram Dispatch mode.",
   "author": {
     "name": "ForgePlan"
   },
@@ -71,7 +71,11 @@
       "decision",
       "decay-watch",
       "supersede",
-      "methodology-check"
+      "methodology-check",
+      "smith",
+      "smith-bootstrap",
+      "smith-plan",
+      "smith-routing"
     ],
     "hooks": [
       "SessionStart",

@@ -77,12 +77,19 @@ End-to-end развёртка: `forgeplan init`, MCP wiring, CLAUDE.md, docs/age
 
 ## Quick reference (все команды)
 
-15 команд в 5 плагинах. `fpl-skills` даёт основу; companion-плагины добавляют специализированные команды.
+19 команд в 5 плагинах. `fpl-skills` даёт основу; companion-плагины добавляют специализированные команды.
+
+> [!TIP]
+> **Не понимаешь какую команду брать?** Запусти `/smith` — он прочитает состояние проекта и порекомендует следующий dispatch (например `/forge-cycle`, `/autorun`, `/forge-cleanup`, `/sprint`). Для обучающего walkthrough по всем 12 контекстам роутинга — `/smith-routing`.
 
 ### Из `fpl-skills` (флагман)
 
 | Команда | Что делает |
 |---|---|
+| `/smith` | **Мастер-оркестратор / пре-роутер.** Читает состояние проекта, классифицирует контекст по матрице из 12 ситуаций, рекомендует следующий dispatch. Sub-modes: `/smith status` (только снимок) и `/smith handoff` (саммари в конце сессии). Триггеры: `smith`, `кузнец`, `что дальше`, `scrum master`, `master orchestrator`. Полный гайд: [SMITH-RU.md](SMITH-RU.md). Мозг роутинга: [`../plugins/fpl-skills/skills/smith/routing-map.md`](../plugins/fpl-skills/skills/smith/routing-map.md). |
+| `/smith-bootstrap` | Оркестратор онбординга greenfield. Свежий репо → pre-flight матрица → `forgeplan init` → каркас CLAUDE.md → каркас AGENTS.md → рекомендации какие плагины поставить → первый Brief → первый PRD. Используй сразу после `git init`. Триггеры: `smith bootstrap`, `greenfield`, `новый проект`. |
+| `/smith-plan <задача>` | Генератор плана под конкретную задачу. Классифицирует задачу в 1 из 12 контекстов routing-map; рендерит Plan-markdown с цитатами методологий + последовательностью dispatch + требованиями к evidence. Используй когда понимаешь *что* хочешь, но не *как*. Триггеры: `smith plan`, `как сделать`, `построй план`. |
+| `/smith-routing` | Обучающий walkthrough матрицы из 12 контекстов. 3 режима: Comparison (`X vs Y`), Walkthrough (показать все 12), Q&A («что для brownfield?»). Read-only — Plan-артефакты не создаёт. Триггеры: `smith routing`, `какая команда для`, `routing map`. |
 | `/fpl-init` | One-shot развёртка проекта — forgeplan init + MCP wiring + CLAUDE.md + docs/agents/. Idempotent. |
 | `/restore` | Восстановление контекста сессии: ветка, dirty state, recent commits, stash, снипеты памяти. |
 | `/briefing` | Обзор трекера — Orchestra/GitHub Issues/Linear/Jira или локальные TODO. |

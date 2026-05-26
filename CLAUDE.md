@@ -1,10 +1,10 @@
 # ForgePlan Marketplace — Claude Code Configuration
 
 **Repo**: [ForgePlan/marketplace](https://github.com/ForgePlan/marketplace)
-**Catalog version**: 1.71.0
-**Plugins**: 16 (10 workflow + 5 agent packs + 1 memory plugin fpl-hsmem) — cc-best v1.0.0 (Sprint Y) + brownfield-pack canonical discover agent (Sprint V)
-**Agents**: 19 of ~65 forgeplan-aware (PRD-026 B2 paradigm — `disallowedTools` denylist + Sprint Q PRD-042 ASM-canon + Sprint S Step 9c + Sprint T v0.32.1 + Sprint V PRD-048 discover + Sprint Z4 PRD-055 evidence-gatherer. **`memory: project` REJECTED Sprint R** — Hindsight covers use case.)
-**Last Updated**: 2026-05-25 (post EPIC-001 closure — 4-Layer Pipeline Enforcement S10→S13. Sprints Z6-Z10: BMAD adversarial review mandatory + OpenSpec delta-spec at supersede + FPF ADI mandatory + C4 auto-recommend + /methodology-check meta. catalog v1.71.0, fpl-skills v1.29.0, agents-pro v1.9.4, forgeplan-workflow v1.12.0. 35 anomalies (29 resolved + 4 upstream filed) + 13 ML + 10 mental models.)
+**Catalog version**: 1.72.1
+**Plugins**: 16 (10 workflow + 5 agent packs + 1 memory plugin fpl-hsmem) — cc-best v1.0.0 (Sprint Y) + brownfield-pack canonical discover agent (Sprint V) + smith master-orchestrator (EPIC-002, Profile B-orchestrator)
+**Agents**: 20 of ~65 forgeplan-aware (PRD-026 B2 paradigm — `disallowedTools` denylist + Sprint Q PRD-042 ASM-canon + Sprint S Step 9c + Sprint T v0.32.1 + Sprint V PRD-048 discover + Sprint Z4 PRD-055 evidence-gatherer + EPIC-002 smith Profile B-orchestrator. **`memory: project` REJECTED Sprint R** — Hindsight covers use case.)
+**Last Updated**: 2026-05-26 (post EPIC-002 closure — smith master-orchestrator (BMAD Master equivalent). 4-skill cluster + 12-context routing matrix + Profile B-orchestrator sub-profile. PRD-062..065 + EVID-094..097/099/102. catalog v1.72.1, fpl-skills v1.31.1, agents-pro v1.10.1, forgeplan-workflow v1.12.0. EPIC-001 baseline (Sprints Z6-Z10) carried forward unchanged.)
 
 ---
 
@@ -430,6 +430,70 @@ Reference: PRD-061, EPIC-001 (4-layer pipeline meta-layer, Sprint Z10).
 
 ---
 
+## Smith — methodology router (EPIC-002)
+
+Foundation: EPIC-002 «smith master-orchestrator» — the ForgePlan equivalent of BMAD-METHOD's BMAD Master persona. A **Profile B-orchestrator** sub-profile agent that reads broad project state (forgeplan_health + list + blocked + stale + hindsight recall + git status), classifies the situation against a **12-context routing matrix**, and returns a structured Markdown plan naming which specialist agents to dispatch, in which order, with which methodology backing each step. Smith **never writes code or activates artifacts** — it routes and recommends; downstream specialists execute.
+
+### When to invoke smith
+
+- At **session start** when unsure what to do next — smith reads health + recent journal and proposes the next action.
+- On a **fresh repo** with no artifacts — `/smith-bootstrap` seeds Brief / PRD / first ADR via the greenfield row.
+- For a **specific task** of any depth — `/smith-plan <task>` picks the matching row, names the methodology, lists the dispatch sequence.
+- For **learning the methodology surface** — `/smith-routing` walks the 12 contexts + 27 methodology cards without committing to a task.
+- When existing entry points (`/forge-cycle`, `/autorun`) don't fit — cross-context work, ambiguous depth, methodology mismatch.
+
+If you already know which agent to dispatch, call it directly. Smith picks **which**; it doesn't replace any specialist.
+
+### The 4 skills
+
+| Skill | Mode |
+|---|---|
+| `/smith` | Default — status + recommended next step from current state |
+| `/smith-bootstrap` | Greenfield repo onboarding — seeds Brief / PRD / first ADR |
+| `/smith-plan <task>` | Per-task plan — routing-map row + methodology + dispatch sequence + evidence |
+| `/smith-routing` | Educational walkthrough of 12 contexts + 27 methodology cards |
+
+### 12-context routing matrix (compact reference)
+
+| # | Context | Primary methodology |
+|---|---|---|
+| 1 | Greenfield | BMAD-METHOD (trimmed) + GitHub Spec Kit |
+| 2 | Brownfield modernisation | Strangler Fig + DDD + Anti-Corruption Layer |
+| 3 | New feature in existing service | SPARC + Hexagonal Architecture |
+| 4 | Production bug (non-trivial) | RIPER-5 + 5 Whys root-cause |
+| 5 | Trivial hotfix | Tactical fast-path (no formal methodology) |
+| 6 | Refactoring | Branch-by-Abstraction + Mikado Method |
+| 7 | Architecture decision | FPF ADI + ADR/MADR |
+| 8 | Security audit | OWASP Top 10 2025 + STRIDE / ASTRIDE |
+| 9 | Performance audit | DORA + SRE error-budget + perf budget |
+| 10 | Product discovery (PDLC) | Jobs-To-Be-Done + Lean Startup + Double Diamond |
+| 11 | Tech debt cleanup | A3 Problem Solving + Fishbone + ADR-supersede |
+| 12 | Live incident response | Incident Command System + Blameless post-mortem |
+
+Smith picks **exactly one row** per task — methodology cocktails are forbidden. If two rows genuinely tie, smith emits `<<NEED_USER_INPUT>>` with ≥3 hypotheses per FPF ADI (PRD-059). Full table with dispatch sequences + evidence requirements + agent index in [`plugins/fpl-skills/skills/smith/routing-map.md`](plugins/fpl-skills/skills/smith/routing-map.md).
+
+### Profile B-orchestrator sub-profile
+
+A **strategic planner sub-profile of Profile B**, formalised in EPIC-002. Like standard Profile B it produces no source code, mutates no artifacts, and never activates anything. UNLIKE standard reviewers (`code-reviewer`, `security-expert`, `tester`, `architect-reviewer`, `guardian`), Profile B-orchestrator does NOT audit a single artifact and does NOT produce an EVIDENCE artifact — instead it reads broad state and returns a routing plan. Denies Write/Edit/NotebookEdit/Bash + all forgeplan mutations (`new`, `update`, `link`, `activate`, `deprecate`, `supersede`, `claim`, `release`, `reason`) + `memory_retain` (orchestrator runs frequently; auto-hooks still capture conversation-layer learning).
+
+Authoring contract documented in `plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md` L1162-1268. Intent: keep the set small — ideally one general agent (`smith`) + at most 2-3 narrow-domain orchestrators. More than 3-4 across the marketplace is a smell; orchestration logic belongs in skills (`/forge-cycle`, `/autorun`, playbooks) or in smith's routing matrix, not in a proliferation of B-orchestrator agents.
+
+### Relationship to existing entrypoints
+
+| Entrypoint | Role |
+|---|---|
+| **`smith`** (this) | **Methodology router** — picks which methodology + which agents apply per task context |
+| `/forge-cycle` | Reactive enforcer — runs the 4-layer pipeline ON a Standard+ artifact through to activation |
+| `/autorun` | Autonomous loop — picks artifacts from `forgeplan_blocked` + drives them through `/forge-cycle` |
+
+Smith picks the methodology; `/forge-cycle` and `/autorun` execute the methodology smith picks. The three are orthogonal and compose.
+
+Full guide: [`docs/SMITH.md`](docs/SMITH.md) (EN) / [`docs/SMITH-RU.md`](docs/SMITH-RU.md) (RU).
+
+Reference: EPIC-002, PRD-062 (Wave 1 — agent + routing-map + 12 sections + 5 templates), PRD-063 (Wave 2 — 4 skills), PRD-064 (Wave 3 — AGENTS.md + session hook + READMEs), PRD-065 (Wave 4 — Profile B audit + closure), EVID-094..097 + EVID-099 (post-merge multi-expert audit + N1-N4 polish) + EVID-102 (6-test e2e smoke).
+
+---
+
 ## Version Bumping
 
 When a plugin changes, bump version in two places:
@@ -506,13 +570,13 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # rulesets
 
 ---
 
-## Plugin versions (catalog v1.70.0)
+## Plugin versions (catalog v1.72.1)
 
 ### Workflow plugins
 
 | Plugin | Version |
 |--------|:-------:|
-| **fpl-skills** | **1.28.1** (Sprint Z9: c4-diagram Dispatch mode section; Sprint Z8: /supersede skill + templates/adr-supersede.md + /decay-watch Step 2e; Sprint Z5: /decay-watch 4-source extension; Sprint Z2: /decay-watch + decay-reminder.sh; Sprint Z1: /decision + adr templates) |
+| **fpl-skills** | **1.31.1** (EPIC-002 PRD-063/064 niceties patch: 4 smith skills + sections + templates + READMEs + AGENT-AUTHORING-GUIDE Profile B-orchestrator L1162-1268; Sprint Z9: c4-diagram Dispatch mode section; Sprint Z8: /supersede skill + templates/adr-supersede.md + /decay-watch Step 2e; Sprint Z5: /decay-watch 4-source extension; Sprint Z2: /decay-watch + decay-reminder.sh; Sprint Z1: /decision + adr templates) |
 | **cc-best** | **1.0.0** (Sprint Y phase 1: claude-md section + 5 STUB sections) |
 | **fpl-hsmem** | 2.1.0 |
 | **forgeplan-workflow** | **1.12.0** (Sprint Z7: Step 4.5 FPF ADI mandatory for Standard+; Sprint Z6: Step 6.5 BMAD adversarial review mandatory for Standard+) |
@@ -530,7 +594,7 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # rulesets
 |--------|:-------:|---|
 | **agents-core** | 1.3.2 | Sprint Q |
 | **agents-domain** | 1.1.0 | — |
-| **agents-pro** | **1.9.4** | Sprint Z9 (adr-architect Step 5b.1: C4 dispatch for ≥3-module full ADRs) |
+| **agents-pro** | **1.10.1** | EPIC-002 PRD-062 + niceties patch (smith Profile B-orchestrator agent + 12-context routing matrix) |
 | **agents-github** | 1.1.0 | — |
 | **agents-sparc** | 1.2.1 | Sprint Q |
 

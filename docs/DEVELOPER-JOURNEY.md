@@ -110,6 +110,10 @@ Inside Claude Code:
 /fpl-init
 ```
 
+**Day 0 first action — try smith**: `/smith` is the master-orchestrator. On a fresh repo it auto-routes you to `/smith-bootstrap` (greenfield onboarding); on an existing repo it reads your state and recommends the next tactical move. For your first five minutes, just type `smith` (or in plain English: "what do I do now?") — that is the canonical "I just installed this, what now?" entry-point, and for a solo dev it's the fastest way to skip ceremony and get to a real task.
+
+Full guide: [SMITH.md](SMITH.md).
+
 `/fpl-init` shows a plan, asks once for confirmation, then:
 1. Runs `forgeplan init` (creates `.forgeplan/`).
 2. Wires `.mcp.json` (forgeplan MCP server).
@@ -174,6 +178,10 @@ Same as Solo, then add UI plugins:
 /fpl-init
 ```
 
+**Day 0 first action — try smith**: `/smith` is the master-orchestrator. On an existing UI codebase it inspects what's already there (framework, design system traces, recent PRs) and recommends a UI-shaped next step — typically `/research` on a UX pattern or `/ux-review` on the current changeset. Type `smith` or "what do I do now?" before you reach for individual frontend skills — it picks the right one given your repo state, so you don't burn the first hour on tool selection.
+
+Full guide: [SMITH.md](SMITH.md).
+
 `/fpl-init` detects `package.json` + React/Vue/Svelte and renders a frontend-leaning `CLAUDE.md`.
 
 ### Day 1 — "Add login form for magic-link auth"
@@ -214,6 +222,10 @@ Same as Solo, then add UI plugins:
 /reload-plugins
 /fpl-init
 ```
+
+**Day 0 first action — try smith**: `/smith` is the master-orchestrator, and worth understanding before you adopt it. Its routing matrix maps task signals to skills/agents; for any architecturally-loaded ask it routes to `/research` → `/fpf decompose` → `/rfc create`, in that order. It runs under the Profile B-orchestrator denylist contract — read-only on forgeplan state, so it cannot accidentally `activate` an under-shaped PRD on your behalf. Treat it as your routing layer; the depth of every decision still goes through your usual ADR/RFC lifecycle.
+
+Full guide: [SMITH.md](SMITH.md).
 
 ### Day 1 — "Choose auth strategy"
 
@@ -260,6 +272,10 @@ For Deep tasks, `/sprint` automatically goes through SPARC phases. Quality gates
 /reload-plugins
 /fpl-init
 ```
+
+**Day 0 first action — try smith**: `/smith` is the master-orchestrator, and it's portable across CLIs — its routing logic is documented in `AGENTS.md` so the same "what do I do now?" entry-point works in Claude Code, Gemini CLI, Codex CLI, or Goose. For an org rollout, that means every teammate's session starts the same way regardless of which CLI they prefer. Pair `/smith` with `/session` (Orchestra inbox triage) on Day 0 to give the team one shared starting ritual.
+
+Full guide: [SMITH.md](SMITH.md).
 
 After `/fpl-init`, configure the Orchestra MCP server in `.mcp.json` (the [`forgeplan-orchestra`](../plugins/forgeplan-orchestra/README.md) README has the exact config).
 
