@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code — UX, frontend, workflow, and developer tools",
-    "version": "1.78.1"
+    "version": "1.79.0"
   },
   "plugins": [
     {
@@ -35,8 +35,8 @@
     {
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
-      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 33 engineering skills + dev-advisor agent + 5 hooks (+ smith greeting + RIPER auto-route + decay Layer 3). v1.37.1: CRITICAL — MCP body parameter safety convention in AGENT-AUTHORING-GUIDE + AGENTS.md. Closes forgeplan#350 silent data-loss exposure. v1.37.0: --help audit + Step 1b migrate-secrets. v1.36.0: deep-e2e fix pack.",
-      "version": "1.37.1",
+      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 34 engineering skills + dev-advisor agent + 5 hooks (+ smith greeting + RIPER auto-route + decay Layer 3). v1.38.0: NEW /forgeplan-cookbook skill — agentic-RAG router for 66 MCP tools + 82 CLI subcommands across 14 use-case sections + flat alphabetical _index. Quick router maps intent → section. Section 14 documents 3 filed upstream bugs (#348/#350/#351) + safe patterns. v1.37.1: MCP body safety convention. v1.37.0: --help audit + migrate-secrets.",
+      "version": "1.38.0",
       "author": {
         "name": "ForgePlan"
       },
