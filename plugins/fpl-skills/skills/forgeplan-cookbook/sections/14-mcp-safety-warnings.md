@@ -67,14 +67,36 @@ error: unrecognized subcommand 'score-all'
 
 **Filed**: [forgeplan#351](https://github.com/ForgePlan/forgeplan/issues/351). Includes plugin-name registry drift (the doctor knows of `sparc-specification` which is shipped as `agents-sparc` in ForgePlan/marketplace).
 
-## 14.4 General safe-MCP discipline
+## 14.4 forgeplan#353 — Medium — CLI vs MCP agent-id validator asymmetry
+
+**The bug**: `forgeplan claim --agent <ID>` (CLI) rejects agent IDs containing `/`, but `mcp__forgeplan__forgeplan_claim(agent=<ID>)` accepts them. The MCP schema's parameter description explicitly suggests `"name/version"` is a valid format.
+
+**Live test on forgeplan 0.32.1** (final e2e 2026-05-27):
+
+```
+mcp__forgeplan__forgeplan_claim(id="NOTE-018", agent="test-agent/1.0.0", ttl_minutes=1)
+→ accepted; agent_id stored as "test-agent/1.0.0"
+
+forgeplan claim NOTE-001 --agent "test-agent/1.0.0"
+→ Error: agent id contains invalid characters (...no `/`, `\`, NUL): "test-agent/1.0.0"
+```
+
+**Compounding issue**: an agent claimed via MCP with `agent="X/Y"` cannot be released via CLI (`forgeplan release ... --agent "X/Y"` is rejected by the same validator). Breaks cross-surface promise.
+
+**Workaround**: use **dash-separated** agent IDs only — alphanumerics + `-` + `_`. Example: `adr-architect-v1-11-1` instead of `adr-architect/1.11.1`. This stays CLI-compatible while MCP accepts it equally.
+
+**Compounding documentation drift**: `AGENT-AUTHORING-GUIDE.md` documents `<cli_name>/<version>/<task_id>` convention. Until forgeplan#353 ships, treat that convention as **invalid in practice** — substitute dashes.
+
+**Filed**: [forgeplan#353](https://github.com/ForgePlan/forgeplan/issues/353).
+
+## 14.5 General safe-MCP discipline
 
 Beyond the three filed issues, two cross-cutting rules:
 
 1. **Never paste secrets into MCP arguments** that get logged. `forgeplan_activity` records every MCP call. The `body=` field of `forgeplan_update` IS logged. If your body contains an API key, the activity log preserves it.
 2. **Treat `_next_action` as a hint, not a command**. The forgeplan MCP server adds `_next_action` to most responses. Read it, evaluate it against your current context, then decide. Blindly following `_next_action` is how `score-all` hint propagation happens.
 
-## 14.5 Verification recipes
+## 14.6 Verification recipes
 
 How to detect the bugs yourself before they bite:
 
@@ -96,7 +118,7 @@ forgeplan plugins doctor 2>&1 | grep "claude plugin install"
 # Returns ≥1 line if bug present.
 ```
 
-## 14.6 Reporting new findings
+## 14.7 Reporting new findings
 
 When you discover a new MCP / CLI asymmetry or hidden gotcha:
 

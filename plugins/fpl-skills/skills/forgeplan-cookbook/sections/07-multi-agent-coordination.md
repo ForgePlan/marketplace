@@ -2,12 +2,14 @@
 
 **4 tools** for sub-agent coordination + parallel dispatch.
 
+> **Agent ID format** — use **dash-separated** identifiers (e.g. `adr-architect-v1-11-1`, `cookbook-e2e-agent-v1`). The forgeplan CLI validator rejects `/` characters even though the MCP `forgeplan_claim` schema description suggests `"name/version"` is valid. Asymmetry filed as [forgeplan#353](https://github.com/ForgePlan/forgeplan/issues/353); see [`14.4`](14-mcp-safety-warnings.md). Until the validator aligns, the marketplace convention is **alphanumerics + `-` + `_` only**.
+
 ## 07.1 forgeplan_claim — claim artifact for exclusive work
 
 Writes `.forgeplan/claims/<id>.yaml` with agent identity + TTL. Advisory (other tools don't block on claims), but orchestrators use claims to avoid double-assigning work.
 
 ```python
-forgeplan_claim(id="PRD-057", agent="adr-architect/1.11.1",
+forgeplan_claim(id="PRD-057", agent="adr-architect-v1-11-1",
                 ttl_minutes=30, note="working on ADR-006 supersede")
 # → {"claim_id": "...", "expires_at": "...", "message": "Claimed PRD-057"}
 ```
@@ -22,7 +24,7 @@ Read-only. Returns active claims sorted by expiry ascending.
 
 ```python
 forgeplan_claims()
-# → [{"id": "PRD-057", "agent": "adr-architect/1.11.1", "expires_at": "...", "note": "..."}, ...]
+# → [{"id": "PRD-057", "agent": "adr-architect-v1-11-1", "expires_at": "...", "note": "..."}, ...]
 ```
 
 **Use case**: orchestrator dispatcher checks who's holding what before assigning work. Skips claimed artifacts.
@@ -30,7 +32,7 @@ forgeplan_claims()
 ## 07.3 forgeplan_release — release a claim
 
 ```python
-forgeplan_release(id="PRD-057", agent="adr-architect/1.11.1")
+forgeplan_release(id="PRD-057", agent="adr-architect-v1-11-1")
 # Idempotent — missing claim = success.
 
 # Orchestrator escape hatch for crashed sub-agents:
