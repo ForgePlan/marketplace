@@ -166,8 +166,10 @@ Print `✓ Step 0b: forgeplan MCP wired via `forgeplan mcp install` (smart-merge
 
 Hindsight cross-session memory is SHOULD (not MUST). Detect what is already there, classify the situation, and either confirm or print specific guidance. Never write API keys into `.mcp.json` automatically — those are user secrets and may be checked into git by mistake.
 
+**Key insight**: when `fpl-hsmem` plugin is enabled (Step 0a SHOULD-probe `HSMEM_ENABLED=yes`), Claude Code reads the plugin's own MCP manifest and exposes the hindsight server at session level — **no project-local `.mcp.json` hindsight block is required**. The project-local block is only needed for advanced cases (e.g., different bank per project, or hindsight without the plugin). This was a smoke-test finding from PR #118 (fpl-skills 1.35.1).
+
 ```bash
-# Probe four sources: plugin enablement, .mcp.json hindsight block, env vars (both naming conventions)
+# Probe four signals: plugin enablement, .mcp.json hindsight block, env vars (both naming conventions)
 HSMEM_ENABLED="no"; echo "$ENABLED_LIST" | grep -q '^fpl-hsmem@' && HSMEM_ENABLED="yes"
 
 MCPJSON_HINDSIGHT=$(python3 - <<'PY' 2>/dev/null
@@ -187,15 +189,36 @@ ENV_CANON="no"; [[ -n "${HINDSIGHT_URL:-}" && -n "${HINDSIGHT_API_KEY:-}" ]] && 
 ENV_ALT="no";   [[ -n "${HINDSIGHT_API_URL:-}" && -n "${HINDSIGHT_API_TOKEN:-}" ]] && ENV_ALT="yes"
 ```
 
-Classify into one of five states and print the matching guidance:
+Classify into one of **six** states (order matters — earlier rows take precedence):
 
-| State | `HSMEM_ENABLED` | `.mcp.json` hindsight | Env vars | Action |
-|---|---|---|---|---|
-| **Fully wired** | yes | WIRED | — | `✓ Step 0c: Hindsight fully wired (plugin enabled, .mcp.json has key)` |
-| **Plugin enabled, key missing** | yes | BLOCK-BUT-NO-KEY | env canon | Print: "set `HINDSIGHT_API_KEY` env var or write it under `.mcp.json` `mcpServers.hindsight.env` — DO NOT commit `.mcp.json` if it contains the key". |
-| **Env var naming mismatch** | yes/no | any | env alt only | Print: "you have `HINDSIGHT_API_URL`/`HINDSIGHT_API_TOKEN` in shell env, plugin reads `HINDSIGHT_URL`/`HINDSIGHT_API_KEY`. Either rename them in your shell config, or set both pairs, or add `env` block in `.mcp.json` hindsight server. Pick one and re-run." |
-| **No plugin, no creds — Docker quick-start** | no | MISSING | neither | Print: "Hindsight is SHOULD. Quick path: `docker run -d --name hindsight -p 8888:8888 ghcr.io/vectorize-io/hindsight:latest` then `/plugin install fpl-hsmem@ForgePlan-marketplace`. Skip and continue without Hindsight if you want — Step 5 (Brief) does not depend on it." |
-| **Plugin not enabled, but creds exist** | no | any | env canon/alt | Print: "Hindsight credentials detected. Run `/plugin install fpl-hsmem@ForgePlan-marketplace` to enable the plugin, then re-invoke /smith-bootstrap (Step 0c will pick the wired state up)." |
+| # | State | `HSMEM_ENABLED` | `.mcp.json` hindsight | Env vars | Action |
+|---|---|---|---|---|---|
+| 1 | **Fully wired (project-local)** | yes | WIRED | any | `✓ Step 0c: Hindsight fully wired via project-local .mcp.json block (plugin enabled too — block overrides)` |
+| 2 | **Plugin handles it** (NEW — smoke finding) | yes | MISSING | any | `✓ Step 0c: Hindsight available via fpl-hsmem plugin-level registration (no project-local block needed). Plugin reads HINDSIGHT_URL/HINDSIGHT_API_KEY from env.` Healthy state; continue. |
+| 3 | **Plugin enabled, project-local block has no key** | yes | BLOCK-BUT-NO-KEY | env canon | Print: "project has `.mcp.json` hindsight block without `HINDSIGHT_API_KEY`. Either remove the project-local block (plugin-level registration will pick up the env-var key automatically — preferred), or add the key under the `env` block. **Do not commit `.mcp.json` if it contains the key inline.**" |
+| 4 | **Env-var naming mismatch** | yes/no | any | env alt only (no canon) | Print: "your shell env has `HINDSIGHT_API_URL`/`HINDSIGHT_API_TOKEN`, but `fpl-hsmem` plugin reads `HINDSIGHT_URL`/`HINDSIGHT_API_KEY`. Pick one of: (a) rename them in `~/.zshrc` / `~/.bashrc`, (b) set both pairs, (c) write the explicit env block under `.mcp.json` `mcpServers.hindsight.env` with proper names." |
+| 5 | **Plugin not enabled, creds exist** | no | any | env canon or alt | Print: "Hindsight credentials detected in env. Run `/plugin install fpl-hsmem@ForgePlan-marketplace` to enable the plugin, then re-invoke `/smith-bootstrap` (Step 0c will pick the wired state up)." |
+| 6 | **No plugin, no creds — Docker quick-start** | no | MISSING | neither | Print: "Hindsight is SHOULD, not MUST. Quick path: `docker run -d --name hindsight -p 8888:8888 ghcr.io/vectorize-io/hindsight:latest` then `/plugin install fpl-hsmem@ForgePlan-marketplace`. Skip and continue without Hindsight if you want — Step 5 (Brief) does not depend on it." |
+
+Reference implementation:
+
+```bash
+if [ "$HSMEM_ENABLED" = "yes" ] && [ "$MCPJSON_HINDSIGHT" = "WIRED" ]; then
+    STATE="fully-wired"
+elif [ "$HSMEM_ENABLED" = "yes" ] && [ "$MCPJSON_HINDSIGHT" = "MISSING" ]; then
+    STATE="plugin-handles-it"   # NEW — covers the normal case
+elif [ "$HSMEM_ENABLED" = "yes" ] && [ "$MCPJSON_HINDSIGHT" = "BLOCK-BUT-NO-KEY" ]; then
+    STATE="block-no-key"
+elif [ "$ENV_ALT" = "yes" ] && [ "$ENV_CANON" = "no" ]; then
+    STATE="env-var-mismatch"
+elif [ "$HSMEM_ENABLED" = "no" ] && { [ "$ENV_CANON" = "yes" ] || [ "$ENV_ALT" = "yes" ]; }; then
+    STATE="plugin-not-enabled"
+elif [ "$HSMEM_ENABLED" = "no" ] && [ "$MCPJSON_HINDSIGHT" = "MISSING" ] && [ "$ENV_CANON" = "no" ] && [ "$ENV_ALT" = "no" ]; then
+    STATE="docker-quickstart"
+else
+    STATE="unclassified"  # should never happen with 6-state matrix; report probe values to user
+fi
+```
 
 `/smith-bootstrap` itself never modifies `.mcp.json` Hindsight env values, never writes secrets, never auto-enables plugins. All Hindsight state changes are user actions guided by this step's print.
 

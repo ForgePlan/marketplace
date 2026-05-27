@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code — UX, frontend, workflow, and developer tools",
-    "version": "1.76.0"
+    "version": "1.76.1"
   },
   "plugins": [
     {
@@ -35,8 +35,8 @@
     {
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
-      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 33 engineering skills + dev-advisor agent + 5 hooks (+ smith greeting + RIPER auto-route + decay Layer 3). v1.35.0: MCP-wiring drift closure — /fpl-init Step 5 migrated to native `forgeplan mcp install` (same primitive as smith-bootstrap), hooks bundle expanded to 3 files (safety + pre-pr-evidence + forge-safety), AGENTS.md MCP section documents `forgeplan mcp install` as canonical wiring across Claude Code / Cursor / Windsurf / Gemini / Codex. v1.34.0: smith-bootstrap Step 0 active runner. v1.33.0: pre-flight gates baseline. v1.32.0: EPIC-003 methodology auto-enforcement. v1.31.x: EPIC-002 smith skills.",
-      "version": "1.35.0",
+      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 33 engineering skills + dev-advisor agent + 5 hooks (+ smith greeting + RIPER auto-route + decay Layer 3). v1.35.1: smoke-test fix — Step 0c 6th state `plugin-handles-it` (plugin-enabled + no project-local hindsight block = healthy). v1.35.0: MCP-wiring drift closure trio. v1.34.0: smith-bootstrap Step 0 active runner. v1.33.0: pre-flight gates baseline.",
+      "version": "1.35.1",
       "author": {
         "name": "ForgePlan"
       },
