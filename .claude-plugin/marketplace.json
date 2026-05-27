@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code — UX, frontend, workflow, and developer tools",
-    "version": "1.76.2"
+    "version": "1.77.0"
   },
   "plugins": [
     {
@@ -35,8 +35,8 @@
     {
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
-      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 33 engineering skills + dev-advisor agent + 5 hooks (+ smith greeting + RIPER auto-route + decay Layer 3). v1.35.2: e2e-test fix — Step 5/6 use --type (not --kind), Step 6 documents PRD section names forgeplan validate MUST-requires + adds validate PASS to acceptance. v1.35.1: Step 0c 6th state. v1.35.0: MCP-wiring drift closure trio. v1.34.0: Step 0 active runner. v1.33.0: pre-flight gates.",
-      "version": "1.35.2",
+      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 33 engineering skills + dev-advisor agent + 5 hooks (+ smith greeting + RIPER auto-route + decay Layer 3). v1.36.0: deep-e2e fix pack — templates/smith-bootstrap.md migrated to --type (4 places drifted from v1.35.2 SKILL.md fix), new Step 1b LLM provider probe with 3-provider config block (Anthropic/Gemini/OpenAI), Failure modes covers downstream LLM-not-configured halt. v1.35.x: e2e + drift fixes baseline.",
+      "version": "1.36.0",
       "author": {
         "name": "ForgePlan"
       },
