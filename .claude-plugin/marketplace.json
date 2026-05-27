@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code — UX, frontend, workflow, and developer tools",
-    "version": "1.78.0"
+    "version": "1.78.1"
   },
   "plugins": [
     {
@@ -35,8 +35,8 @@
     {
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
-      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 33 engineering skills + dev-advisor agent + 5 hooks (+ smith greeting + RIPER auto-route + decay Layer 3). v1.37.0: --help audit (3 drifts found — mcp-manifest as planned-future, reset/validate-config intentional safety blocks), Step 1b rewritten to use `forgeplan migrate-secrets --apply` (PRD-077 native flow) + 4-row provider table + AGENTS.md mcp-manifest wording softened to clearly-future. v1.36.0: deep-e2e fix pack.",
-      "version": "1.37.0",
+      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 33 engineering skills + dev-advisor agent + 5 hooks (+ smith greeting + RIPER auto-route + decay Layer 3). v1.37.1: CRITICAL — MCP body parameter safety convention in AGENT-AUTHORING-GUIDE + AGENTS.md. Closes forgeplan#350 silent data-loss exposure. v1.37.0: --help audit + Step 1b migrate-secrets. v1.36.0: deep-e2e fix pack.",
+      "version": "1.37.1",
       "author": {
         "name": "ForgePlan"
       },

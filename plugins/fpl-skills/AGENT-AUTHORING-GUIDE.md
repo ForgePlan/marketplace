@@ -308,6 +308,38 @@ Do **not** invoke for:
 
 Numbered steps, one MCP call per step.
 
+### Critical safety convention — MCP `body` parameter is a literal string
+
+**Load-bearing for any agent that writes artifact bodies via MCP.** The `body` parameter of `mcp__forgeplan__forgeplan_update` (and other body-accepting MCP tools) is a **literal string only**. It does NOT parse the `@/path/to/file.md` syntax that the CLI variant supports.
+
+Confirmed silent-data-loss bug on forgeplan 0.32.1 — filed as [forgeplan#350](https://github.com/ForgePlan/forgeplan/issues/350). Calling `forgeplan_update(id="PRD-001", body="@/tmp/body.md")` writes the literal 16-character string `@/tmp/body.md` to the artifact body, overwriting all prior content. The MCP call returns `"message": "Updated successfully"`, the agent gets no error, the user only discovers the loss on the next `forgeplan_get`.
+
+**Canonical safe pattern** (do this whenever you're writing a multi-section artifact body):
+
+1. Write the body content to a tmp file using your host CLI's `Write` primitive (Claude Code: `Write`, Cursor / Codex: `write_file`, Gemini: equivalent).
+2. Read that tmp file back using your host CLI's `Read` primitive into a string variable.
+3. Pass the string variable as `body=...` in the MCP call.
+
+Or — if the body is short enough to fit in a single tool call — skip the tmp file and inline the string directly.
+
+```python
+# CORRECT — read file via host, pass content as string
+body_text = Read(file_path="/tmp/PRD-001-body.md")
+forgeplan_update(id="PRD-001", body=body_text)
+
+# WRONG — silent data loss
+forgeplan_update(id="PRD-001", body="@/tmp/PRD-001-body.md")  # writes the literal path
+```
+
+CLI shell calls (`forgeplan update <ID> --body @file.md`) **do** parse `@filepath` correctly. The asymmetry is the bug. Until forgeplan#350 ships, treat the two surfaces as having different semantics for `body`:
+
+| Surface | `--body @file.md` / `body="@file.md"` | Safe alternative |
+|---|---|---|
+| CLI shell (`forgeplan update`) | Reads file, writes content ✓ | Use as-is |
+| MCP (`forgeplan_update`) | Writes literal string ✗ DATA LOSS | Read file via host, pass content as string |
+
+Profile A creators and Profile D maintainers are most exposed — they are the canonical writers of PRD / RFC / ADR / EVID body sections. Profile B reviewers (who write EVID with `## Findings`) also write body content via MCP and must follow the safe pattern.
+
 ### Step 1 — Claim
 …
 

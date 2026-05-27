@@ -190,6 +190,26 @@ Each CLI exposes an environment variable for identity detection:
 
 Identity format: `<cli_name>/<version>/<task_id>` is written into claim / EVID / NOTE metadata.
 
+### MCP vs CLI parameter semantics (load-bearing safety convention)
+
+**Critical safety rule for any agent calling `mcp__forgeplan__*` tools** — the `body` parameter of `forgeplan_update` (and other body-accepting MCP tools) is a **literal string only**. It does NOT parse the `@/path/to/file.md` syntax that the CLI variant supports.
+
+Confirmed silent-data-loss bug on forgeplan 0.32.1 (filed as [forgeplan#350](https://github.com/ForgePlan/forgeplan/issues/350)): calling `mcp__forgeplan__forgeplan_update(id=X, body="@/path/file.md")` writes the literal 30-character string `@/path/file.md` to the artifact body, overwriting whatever content was there. The MCP call returns `Updated successfully`, the agent gets no error, the user notices on the next `forgeplan_get`.
+
+**Safe pattern for agents** — when MCP tools accept `body` / `content` / similar large-text fields:
+
+1. Use your host CLI's file-read primitive (`Read` in Claude Code, `read_file` in Cursor / Codex, equivalent in Gemini) to load the file content into memory.
+2. Pass the loaded content as a literal string in the MCP call.
+
+CLI shell calls (`forgeplan update <ID> --body @file.md`) **do** parse `@filepath` and work correctly. The asymmetry is the bug. Until forgeplan#350 is fixed, treat the two surfaces as having different semantics for `--body` / `body=`:
+
+| Surface | `--body @file.md` / `body="@file.md"` | Safe alternative |
+|---|---|---|
+| CLI shell (`forgeplan update`) | Reads file, writes content ✓ | Use as-is |
+| MCP (`forgeplan_update`) | Writes literal string ✗ DATA LOSS | Read file via host, pass content as string |
+
+Profile A and Profile D agents that mutate artifact bodies via MCP are most exposed — those agents are the canonical writers of PRD / RFC / ADR / EVID body sections.
+
 ## Git workflow
 
 **CRITICAL: feature branches + PR only. Direct push to `main` and `dev` is forbidden.**
