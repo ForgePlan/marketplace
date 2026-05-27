@@ -346,6 +346,55 @@ If `forgeplan init` fails — see Failure modes below.
 
 Acceptance for Step 1: `forgeplan health` exit code 0; `forgeplan list` shows 0 artifacts.
 
+### Step 1b — LLM provider for `forgeplan reason` (informational, not blocking)
+
+`forgeplan reason` is required by S10 FPF ADI (PRD-059) for every Standard+ artifact before activation. The command requires an external LLM provider configured in `.forgeplan/config.yaml` — the file that Step 1 just created. Without an `llm:` block there, `/forge-cycle` Step 4.5 will halt with `LLM not configured` when it tries to generate ADI hypotheses for the first PRD.
+
+This is invisible at bootstrap time (Steps 2-6 do not need `forgeplan reason`), but blocks the very next pipeline step, so surface it now while the user is still in setup mindset.
+
+```bash
+LLM_CONFIGURED=$(test -f .forgeplan/config.yaml && grep -qE '^llm:' .forgeplan/config.yaml && echo "yes" || echo "no")
+echo "  Step 1b: LLM provider in .forgeplan/config.yaml = $LLM_CONFIGURED"
+```
+
+**If `LLM_CONFIGURED=yes`** — print `✓ Step 1b: LLM provider configured` and continue.
+
+**If `LLM_CONFIGURED=no`** — print informational guidance (do not halt):
+
+```
+[~] Step 1b: forgeplan reason needs an LLM provider — not configured yet.
+
+  The first /forge-cycle invocation will halt at Step 4.5 (FPF ADI) until you
+  configure a provider. Pick one (forgeplan reason --help lists the canonical
+  set for your CLI version):
+
+    Anthropic (recommended if you already have an Anthropic key):
+      In .forgeplan/config.yaml add:
+        llm:
+          provider: anthropic
+          model: claude-opus-4-7
+          api_key_env: ANTHROPIC_API_KEY
+      Then ensure $ANTHROPIC_API_KEY is set in .forgeplan/secrets.env (gitignored).
+
+    Gemini:
+        llm:
+          provider: gemini
+          model: models/gemini-2.5-flash
+          api_key_env: GEMINI_API_KEY
+
+    OpenAI:
+        llm:
+          provider: openai
+          model: gpt-4o
+          api_key_env: OPENAI_API_KEY
+
+  This does NOT block /smith-bootstrap. Steps 2-6 produce a Brief + PRD draft
+  that does not need an LLM. You can configure the provider any time before
+  the first /forge-cycle.
+```
+
+Acceptance for Step 1b: either ✓ printed or informational [~] printed; bootstrap proceeds either way.
+
 ---
 
 ## Step 2 — AGENTS.md scaffold
@@ -576,6 +625,7 @@ Bootstrap is complete when ALL the following hold:
 - [ ] Step 0d either copied the hooks bundle or user declined
 - [ ] Step 0e verification via ToolSearch confirms `mcp__forgeplan__*` reachable
 - [ ] `forgeplan health` returns "healthy" (exit 0)
+- [ ] Step 1b LLM provider check printed ✓ or informational [~] (not a hard gate, but visible to the user)
 - [ ] `CLAUDE.md` present at repo root, ≥40 lines, first line is `# <Project Name> — Claude Code Configuration`
 - [ ] `AGENTS.md` present at repo root, ≥30 lines, contains smith pointer + MCP servers section
 - [ ] `.mcp.json` present at repo root with at least the `forgeplan` MCP server registered (already verified at Step 0b)
@@ -621,6 +671,8 @@ Do NOT auto-dispatch `/smith` or `/forge-cycle` from inside this skill. Bootstra
 | Step 0c env-var mismatch case | Print the rename / dual-set / `.mcp.json` env-block guidance. Do not modify shell rc files automatically. Continue to Step 0d if user wants to skip Hindsight; Hindsight is SHOULD, not MUST. |
 | Step 0d hooks templates absent | Older fpl-skills (<1.34) doesn't ship hooks templates. Print one-line warning and continue. Do not block bootstrap. |
 | Step 0e ToolSearch verify fails post-reload | Halt with diagnostic dump: cat `.mcp.json`, list `enabledPlugins` from `~/.claude/settings.json`, last 10 lines of any forgeplan log. Most common cause: user forgot to actually run `/reload-plugins`. |
+| Step 1b `LLM_CONFIGURED=no` | Print the 3-provider config block from Step 1b (Anthropic / Gemini / OpenAI). Do NOT halt bootstrap — Steps 2-6 don't need the LLM. User can configure before the first `/forge-cycle` invocation. If user explicitly says "skip LLM, I'll configure later" — proceed silently. |
+| `/forge-cycle` Step 4.5 halts with "LLM not configured" later | This is the downstream consequence of Step 1b being skipped. Tell the user: edit `.forgeplan/config.yaml` per Step 1b guidance, then re-run `/forge-cycle`. Do not work around by skipping FPF ADI — that violates Sprint Z7 / PRD-059 discipline. |
 | `forgeplan init` fails with "command not found" | Should be caught at Step 0b. If reached here anyway, instruct user to install forgeplan CLI first (per forgeplan README). Do not proceed without it. |
 | `forgeplan init` fails with "already initialised" | Pre-flight missed something. Re-run pre-flight detection. If `.forgeplan/` is in fact present, exit and recommend `/smith` default mode. |
 | User has partial scaffold (e.g., CLAUDE.md exists but AGENTS.md does not) | Diff the existing file vs the minimal scaffold from Step 2/3. Surface the diff. Ask the user: extend existing, replace, or skip. Never silently overwrite. |

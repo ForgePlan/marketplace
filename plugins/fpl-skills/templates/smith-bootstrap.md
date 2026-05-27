@@ -133,7 +133,7 @@ Task(subagent_type="agents-pro:brief-intake",
 
 Verify:
 
-- [ ] Brief artifact created in forgeplan (`forgeplan list --kind=note`)
+- [ ] Brief artifact created in forgeplan (`forgeplan list --type note`)
 - [ ] Brief has problem statement, target users, success criteria, non-goals
 
 ## Step 6: First PRD
@@ -147,9 +147,10 @@ Task(subagent_type="agents-sparc:specification",
 
 Verify:
 
-- [ ] PRD artifact created in draft status (`forgeplan list --kind=prd`)
+- [ ] PRD artifact created in draft status (`forgeplan list --type prd`)
 - [ ] PRD links to BRIEF-001 via `informs` relation
-- [ ] PRD body has FR, NFR, AC, Out-of-scope sections
+- [ ] PRD body has the 6 canonical sections required by `forgeplan validate`: `## Problem statement`, `## Target audience`, `## Goals` (or `## Success Criteria`), `## Functional Requirements` (literal capitalisation), `## Out of scope`, `## Related Artifacts`. See `smith-bootstrap/SKILL.md` Step 6 for the rule names each section satisfies.
+- [ ] `forgeplan validate PRD-NNN` returns `Result: PASS` (warnings tolerable; zero MUST errors).
 
 ## Acceptance criteria
 
@@ -158,8 +159,8 @@ Bootstrap is complete when ALL of the following are true:
 - [ ] `CLAUDE.md` present at repo root with project header
 - [ ] `AGENTS.md` present at repo root with MCP servers section
 - [ ] `forgeplan init` done (`.forgeplan/` exists, `forgeplan health` healthy)
-- [ ] At least one Brief artifact captured (`forgeplan list --kind=note` shows ≥1)
-- [ ] At least one PRD in draft (`forgeplan list --kind=prd --status=draft` shows ≥1)
+- [ ] At least one Brief artifact captured (`forgeplan list --type note` shows ≥1)
+- [ ] At least one PRD in draft (`forgeplan list --type prd --status draft` shows ≥1); `forgeplan validate PRD-NNN` → PASS
 - [ ] At least 5 baseline plugins installed (fpl-skills, fpf, forgeplan-workflow, agents-core, agents-pro)
 
 When all `[x]` — bootstrap done. Next dispatch: `/forge-cycle PRD-NNN` to start the FPF → BMAD → OpenSpec → Forgeplan pipeline on the first PRD.
