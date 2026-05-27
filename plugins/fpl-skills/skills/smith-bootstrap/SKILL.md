@@ -514,7 +514,7 @@ Task(subagent_type="agents-pro:brief-intake",
 The agent asks clarifying questions, synthesizes the responses, and creates a Brief NOTE via `forgeplan_new(kind="note")`. If the user is unclear about the mission — that is expected; the agent's job is to extract it. Do not skip this step even if the user "just wants to start coding".
 
 Verify:
-- `forgeplan list --kind=note` shows ≥1 new artifact.
+- `forgeplan list --type note` shows ≥1 new artifact (note: the CLI flag is `--type` / `-t`, not `--kind` — that name only exists in the MCP `forgeplan_new(kind=...)` form).
 - Brief body has ≥4 sections: problem statement, target users, success criteria, non-goals.
 - Brief is in `draft` status (activates after first PRD links to it).
 
@@ -545,11 +545,24 @@ The specification agent will draft the PRD but **will not activate it**. Activat
 
 Bootstrap completes once the PRD draft exists. Activation is the next session's `/forge-cycle` job.
 
+**Required section names** — the dispatched `agents-sparc:specification` must use these literal Markdown section headers, because `forgeplan validate` MUST-checks them by name (caught during E2E smoke against forgeplan 0.32.1):
+
+| Section | Why required |
+|---|---|
+| `## Problem statement` | The "what" the PRD addresses (≥50 words body to avoid `prd-problem-density` SHOULD warning). |
+| `## Target audience` (or `## Target users`) | Who the PRD serves. Absence triggers `prd-target-audience` MUST violation for Standard+ depth. |
+| `## Goals` (or `## Success Criteria`) | Outcomes the PRD aims at. Absence triggers `prd-goals-exist` MUST violation. SMART goals here also reduce `prd-orphan-goals` warnings when each goal traces to an FR. |
+| `## Functional Requirements` | Literal capitalisation matters. Lower-case `## Functional requirements` or expanded `## Functional requirements (FR)` will fail `prd-fr-exist`. |
+| `## Out of scope` | Non-goals; what the PRD explicitly does NOT address. |
+| `## Related Artifacts` | Cross-links section. Absence triggers `prd-related` MUST violation. Use this rather than inline mentions for the `informs ← BRIEF` reference. |
+
+NFR and Acceptance Criteria sections are useful but not validator-required; SHOULD-level rules cover orphan FRs/Goals (good practice: ensure each FR is referenced by at least one AC, and each Goal is supported by ≥1 FR).
+
 Verify:
-- `forgeplan list --kind=prd` shows ≥1 new artifact.
-- PRD body has FR, NFR, AC, Out-of-scope sections.
+- `forgeplan list --type prd` shows ≥1 new artifact (the CLI flag is `--type` / `-t`, not `--kind`).
+- `forgeplan validate PRD-NNN` → `Result: PASS` (warnings tolerable, but zero MUST errors).
 - PRD links to BRIEF via `informs` relation (`forgeplan_get PRD-NNN` shows the link).
-- PRD is in `draft` status (NOT activated yet).
+- PRD is in `draft` status (NOT activated yet — `/forge-cycle` activates after ADI + BMAD EVID land).
 
 ---
 
@@ -566,8 +579,8 @@ Bootstrap is complete when ALL the following hold:
 - [ ] `CLAUDE.md` present at repo root, ≥40 lines, first line is `# <Project Name> — Claude Code Configuration`
 - [ ] `AGENTS.md` present at repo root, ≥30 lines, contains smith pointer + MCP servers section
 - [ ] `.mcp.json` present at repo root with at least the `forgeplan` MCP server registered (already verified at Step 0b)
-- [ ] At least one Brief NOTE artifact in forgeplan (`forgeplan list --kind=note` shows ≥1)
-- [ ] At least one PRD in draft (`forgeplan list --kind=prd --status=draft` shows ≥1)
+- [ ] At least one Brief NOTE artifact in forgeplan (`forgeplan list --type note` shows ≥1)
+- [ ] At least one PRD in draft (`forgeplan list --type prd --status draft` shows ≥1); `forgeplan validate PRD-NNN` returns `Result: PASS`
 - [ ] PRD links to BRIEF via `informs` relation
 
 Save a copy of the filled `smith-bootstrap.md` template to `.forgeplan/notes/bootstrap-<YYYY-MM-DD>.md` for traceability.
