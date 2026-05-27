@@ -346,54 +346,52 @@ If `forgeplan init` fails — see Failure modes below.
 
 Acceptance for Step 1: `forgeplan health` exit code 0; `forgeplan list` shows 0 artifacts.
 
-### Step 1b — LLM provider for `forgeplan reason` (informational, not blocking)
+### Step 1b — LLM provider for `forgeplan reason` (uses native `migrate-secrets`)
 
-`forgeplan reason` is required by S10 FPF ADI (PRD-059) for every Standard+ artifact before activation. The command requires an external LLM provider configured in `.forgeplan/config.yaml` — the file that Step 1 just created. Without an `llm:` block there, `/forge-cycle` Step 4.5 will halt with `LLM not configured` when it tries to generate ADI hypotheses for the first PRD.
+`forgeplan reason` is required by S10 FPF ADI (PRD-059) for every Standard+ artifact before activation. It is the **only** forgeplan command that needs an external LLM — every other command (`list`, `validate`, `score`, `dispatch`, …) is pure-Rust per `forgeplan reason --help`. The `llm:` block lives in `.forgeplan/config.yaml`; the API key lives in `.forgeplan/secrets.env` (gitignored).
 
-This is invisible at bootstrap time (Steps 2-6 do not need `forgeplan reason`), but blocks the very next pipeline step, so surface it now while the user is still in setup mindset.
+`forgeplan init` writes a `.forgeplan/config.yaml` with the `llm:` block commented out, and Anthropic / Gemini / OpenAI keys are not yet migrated from the user's shell env. Without the block and key, `/forge-cycle` Step 4.5 halts with `LLM not configured`.
+
+**Use the native migration command — `forgeplan migrate-secrets`** (PRD-077 FR-023 Part B). It probes the process env for `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `OPENAI_API_KEY`, and copies whichever are present into `.forgeplan/secrets.env`. Default is dry-run; `--apply` writes the file.
 
 ```bash
-LLM_CONFIGURED=$(test -f .forgeplan/config.yaml && grep -qE '^llm:' .forgeplan/config.yaml && echo "yes" || echo "no")
-echo "  Step 1b: LLM provider in .forgeplan/config.yaml = $LLM_CONFIGURED"
+# Step 1b — dry-run first to see what would be migrated
+cd "$REPO" && forgeplan migrate-secrets
+
+# If the dry-run shows ≥1 "would add" line, apply:
+cd "$REPO" && forgeplan migrate-secrets --apply
 ```
 
-**If `LLM_CONFIGURED=yes`** — print `✓ Step 1b: LLM provider configured` and continue.
+After `--apply`, do one of:
 
-**If `LLM_CONFIGURED=no`** — print informational guidance (do not halt):
+| Situation | Action |
+|---|---|
+| The migrated key is `GEMINI_API_KEY` | Default config template already targets gemini. Uncomment the `llm:` block in `.forgeplan/config.yaml` and you are done — the template's `provider: gemini / api_key_env: GEMINI_API_KEY` matches what `migrate-secrets` wrote. |
+| The migrated key is `ANTHROPIC_API_KEY` | Uncomment the `llm:` block, change `provider:` to `anthropic`, `model:` to `claude-opus-4-7`, `api_key_env:` to `ANTHROPIC_API_KEY`. |
+| The migrated key is `OPENAI_API_KEY` | Uncomment the `llm:` block, change `provider:` to `openai`, `model:` to `gpt-4o`, `api_key_env:` to `OPENAI_API_KEY`. |
+| `migrate-secrets` dry-run found nothing | User has no LLM key in env. Print the docker-claude-code or manual-key guidance; user obtains a key, exports it in their shell, re-runs Step 1b. |
 
-```
-[~] Step 1b: forgeplan reason needs an LLM provider — not configured yet.
+Probe expression for the skill to drive this automatically:
 
-  The first /forge-cycle invocation will halt at Step 4.5 (FPF ADI) until you
-  configure a provider. Pick one (forgeplan reason --help lists the canonical
-  set for your CLI version):
+```bash
+DRY_RUN=$(cd "$REPO" && forgeplan migrate-secrets 2>&1)
+KEYS_FOUND=$(echo "$DRY_RUN" | grep -c "would add" || true)
 
-    Anthropic (recommended if you already have an Anthropic key):
-      In .forgeplan/config.yaml add:
-        llm:
-          provider: anthropic
-          model: claude-opus-4-7
-          api_key_env: ANTHROPIC_API_KEY
-      Then ensure $ANTHROPIC_API_KEY is set in .forgeplan/secrets.env (gitignored).
-
-    Gemini:
-        llm:
-          provider: gemini
-          model: models/gemini-2.5-flash
-          api_key_env: GEMINI_API_KEY
-
-    OpenAI:
-        llm:
-          provider: openai
-          model: gpt-4o
-          api_key_env: OPENAI_API_KEY
-
-  This does NOT block /smith-bootstrap. Steps 2-6 produce a Brief + PRD draft
-  that does not need an LLM. You can configure the provider any time before
-  the first /forge-cycle.
+if [ "$KEYS_FOUND" -gt 0 ]; then
+    echo "  → Step 1b: migrate-secrets found $KEYS_FOUND API key(s). Running --apply…"
+    cd "$REPO" && forgeplan migrate-secrets --apply | tail -3
+    echo "  → Next: uncomment 'llm:' block in .forgeplan/config.yaml (default template targets gemini; adjust provider/model/api_key_env if your migrated key is anthropic or openai)."
+else
+    echo "  [~] Step 1b: no LLM API key found in env (ANTHROPIC_API_KEY / GEMINI_API_KEY / OPENAI_API_KEY)."
+    echo "      forgeplan reason will fail until you set one of these in your shell"
+    echo "      and re-run 'forgeplan migrate-secrets --apply' from within this project."
+    echo "      Steps 2-6 of bootstrap don't need an LLM — you can configure later."
+fi
 ```
 
-Acceptance for Step 1b: either ✓ printed or informational [~] printed; bootstrap proceeds either way.
+This is **informational, not blocking**. Steps 2-6 of bootstrap don't need `forgeplan reason`. The user can wire the LLM provider any time before invoking `/forge-cycle` for the first time. `forgeplan setup-skill` is forgeplan's own canonical onboarding entry — run it for an interactive walk-through if the user prefers a guided flow.
+
+Acceptance for Step 1b: either ✓ printed (keys migrated) or informational [~] printed (no keys); bootstrap proceeds either way.
 
 ---
 

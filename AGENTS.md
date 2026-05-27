@@ -169,7 +169,7 @@ command = "forgeplan"
 args = ["serve"]
 ```
 
-For multi-CLI environments, the `forgeplan mcp-manifest` command (Batch F deliverable per RFC-003) generates all three config files in one call. `mcp install` handles the per-client case; `mcp-manifest` handles the everything-at-once case.
+For multi-CLI environments, `forgeplan mcp-manifest` is planned (Batch F deliverable per RFC-003) to generate all three config files in one call. Until that command ships, run `forgeplan mcp install` once per client target. Verify the command's current availability with `forgeplan mcp --help` — as of forgeplan 0.32.1 the available sub-commands are `serve` and `install` only.
 
 **Used by**: `/smith-bootstrap` Step 0b (active runner, calls `mcp install --scope project` automatically when `.mcp.json` lacks the forgeplan block) and `/fpl-init` Step 5 (same primitive).
 
@@ -293,8 +293,8 @@ forgeplan session                         # Current pipeline phase
 # Validation
 ./scripts/validate-all-plugins.sh
 
-# Cross-CLI setup (once `forgeplan mcp-manifest` ships)
-forgeplan mcp-manifest --output-dir ~/    # Generates configs for 3 CLIs
+# Cross-CLI setup (per-client; `forgeplan mcp-manifest --output-dir` is planned but not yet shipped)
+forgeplan mcp install --client claude --scope project    # one client at a time
 ```
 
 ## Conventions

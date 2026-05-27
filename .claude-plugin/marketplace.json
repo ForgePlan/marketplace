@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code — UX, frontend, workflow, and developer tools",
-    "version": "1.77.0"
+    "version": "1.78.0"
   },
   "plugins": [
     {
@@ -35,8 +35,8 @@
     {
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
-      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 33 engineering skills + dev-advisor agent + 5 hooks (+ smith greeting + RIPER auto-route + decay Layer 3). v1.36.0: deep-e2e fix pack — templates/smith-bootstrap.md migrated to --type (4 places drifted from v1.35.2 SKILL.md fix), new Step 1b LLM provider probe with 3-provider config block (Anthropic/Gemini/OpenAI), Failure modes covers downstream LLM-not-configured halt. v1.35.x: e2e + drift fixes baseline.",
-      "version": "1.36.0",
+      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 33 engineering skills + dev-advisor agent + 5 hooks (+ smith greeting + RIPER auto-route + decay Layer 3). v1.37.0: --help audit (3 drifts found — mcp-manifest as planned-future, reset/validate-config intentional safety blocks), Step 1b rewritten to use `forgeplan migrate-secrets --apply` (PRD-077 native flow) + 4-row provider table + AGENTS.md mcp-manifest wording softened to clearly-future. v1.36.0: deep-e2e fix pack.",
+      "version": "1.37.0",
       "author": {
         "name": "ForgePlan"
       },
