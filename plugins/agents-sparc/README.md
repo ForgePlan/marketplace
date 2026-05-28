@@ -2,6 +2,8 @@
 
 SPARC development methodology agents: orchestrator with quality gates, plus 4 phase specialists (specification, pseudocode, architecture, refinement/TDD). **Specification and architecture phases are forgeplan-aware** (PRD-026 canonical profiles).
 
+For context on how SPARC phases (Specification, Architecture, Refinement, Completion) integrate into the full pipeline, see the [Process Reference (EN)](../../docs/process-from-idea-to-delivery-EN.md) / [(RU)](../../docs/process-from-idea-to-delivery-RU.md).
+
 ## Installation
 
 ```bash

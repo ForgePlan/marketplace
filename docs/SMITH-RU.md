@@ -6,6 +6,9 @@
 
 Smith живёт в `plugins/agents-pro/agents/smith.md` (сам агент) плюс `plugins/fpl-skills/skills/smith/` (мозг с 12 контекстами) и доступен из любого CLI, поддерживающего стандарт AGENTS.md.
 
+
+> **Полный контекст**: для эталона процесса от идеи до реализации (5 ролей агентов, 10 типов артефактов, 4-слойный пайплайн, как smith вписывается в цикл) - см. [Process Reference (RU)](process-from-idea-to-delivery-RU.md) / [(EN)](process-from-idea-to-delivery-EN.md).
+
 ---
 
 ## Быстрый старт

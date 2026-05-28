@@ -8,7 +8,7 @@
 
 Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/ForgePlan) — UX, workflow, engineering, and developer tools.
 
-**16 plugins** | **65+ agents** | **33+ skills** | **9+ knowledge bases**
+**16 plugins** | **20 marketplace-aware agents (plus project-scoped agents per repo)** | **33+ skills** | **9+ knowledge bases**
 
 > **ForgePlan ecosystem**: this marketplace + [`forgeplan` CLI](https://github.com/ForgePlan/forgeplan) (artifact lifecycle) + [`@forgeplan/web`](https://github.com/ForgePlan/forgeplan-web) (browser viewer with time-travel + graph). Three siblings; install what you need.
 
@@ -31,6 +31,7 @@ Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/
 | 🚚 [Migration: dev-toolkit → fpl-skills](docs/MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS.md) | Switching plugins safely (side-by-side or clean-cut, with rollback plan) |
 | 🗂 [Tracker Integration](docs/TRACKER-INTEGRATION.md) | Recipes for Orchestra · GitHub Issues · Linear · Jira · local TODO |
 | 🌐 [Forgeplan Web](docs/FORGEPLAN-WEB.md) | Browser viewer — time-travel slider + artifact graph + health dashboard |
+| 🔄 [Process Reference (EN)](docs/process-from-idea-to-delivery-EN.md) / [RU](docs/process-from-idea-to-delivery-RU.md) | Full process from idea to commit — 5 agent profiles, 10 artifact kinds, 4-layer pipeline, methodologies (BMAD/FPF/SPARC/RIPER-5) |
 | 📜 [Changelog](CHANGELOG.md) | Release history |
 | 🤝 [Contributing](CONTRIBUTING.md) | Add a new plugin to the marketplace |
 

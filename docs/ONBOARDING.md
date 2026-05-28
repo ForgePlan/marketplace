@@ -4,6 +4,8 @@
 
 > The pocket guide. Get from zero to autonomous agent dispatch in 30-60 minutes.
 
+> **Process reference**: Once you're past the basic setup, see [Process Reference (EN)](process-from-idea-to-delivery-EN.md) / [(RU)](process-from-idea-to-delivery-RU.md) - the canonical end-to-end guide covering all agent profiles, artifact kinds, and methodology routing.
+
 ## What this is
 
 You're about to wire up three things to your Claude Code: a **marketplace** (a catalog of plugins, like a package registry for Claude), **smith** (a master-orchestrator that reads your project and tells you what to do next), and **Hindsight** (a memory layer so agents don't forget after each session ends). Together they turn Claude Code from a clever assistant into something that can run a real engineering loop.

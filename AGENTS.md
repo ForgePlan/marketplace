@@ -31,6 +31,8 @@ All artifacts live in `.forgeplan/` (PRD / RFC / ADR / EVID / NOTE structure).
 
 **Smith** is the master orchestrator of the ForgePlan ecosystem — the canonical first point of contact when an agent (or a human via an agent) does not yet know which methodology, dispatch chain, or pipeline depth applies to the work in front of them. Smith inspects repository state and user intent, applies a **12-context routing matrix** (greenfield, brownfield, feature, bug, refactor, architecture decision, security audit, performance audit, product discovery, tech-debt cleanup, live incident, hotfix), and recommends a specialist-agent dispatch sequence plus evidence requirements per the 4-layer S10–S13 pipeline. Smith is the ForgePlan ecosystem's equivalent of BMAD's "Master" persona — a Profile B-orchestrator agent that **never writes code or activates artifacts**; it routes and recommends. Smith lives in `plugins/agents-pro/agents/smith.md` (the agent) plus `plugins/fpl-skills/skills/smith/` (the 12-context brain) and is reachable from any CLI that honours AGENTS.md.
 
+> **Complete workflow reference**: For end-to-end context on how smith fits into the idea-to-delivery cycle, see [Process Reference (EN)](docs/process-from-idea-to-delivery-EN.md) / [Process Reference (RU)](docs/process-from-idea-to-delivery-RU.md). Covers all 5 agent profiles (CRUD-R-A), the 10 artifact kinds, the 4-layer pipeline (S10-S13), and how smith routing integrates with the build/audit cycle.
+
 ### When to invoke smith
 
 - At **session start** when unsure what to do next — smith reads `forgeplan_health` + recent journal and proposes the next action.

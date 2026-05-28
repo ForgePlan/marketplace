@@ -65,6 +65,8 @@ this file for the canonical names and source plugins.
 
 ---
 
+> **Wider context**: For complete process reference on how these 12 contexts map to the artifact lifecycle and 5-role agent dispatch, see [Process Reference (EN)](../../../../docs/process-from-idea-to-delivery-EN.md) / [(RU)](../../../../docs/process-from-idea-to-delivery-RU.md).
+
 ## Methodology cards
 
 Each methodology referenced in the table above. Five lines per card: one-sentence definition, when it shines, when NOT to use, and source link.
