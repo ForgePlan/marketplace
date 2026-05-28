@@ -143,6 +143,8 @@ Now, each role in detail.
 3. A single-line "no issues" is not adversarial enough. You need an explanation of what exactly was checked and why no gap was found (at least 2 sentences)
 4. Works in an **isolated context** - does not see the main conversation or the author's discussions
 
+> Note: `evidence-gatherer` is a Profile B variant (research + EVID) with a different denylist: blocks Write/Edit/NotebookEdit + forgeplan_activate/supersede/deprecate/delete, but (unlike the others) allows forgeplan_reason and memory_retain - these are needed for collecting Trust Calculus evidence.
+
 ### 2.3 Profile B-orchestrator (smith) - strategic planner
 
 A special sub-profile. Does not review a specific artifact, does not create an EVID. Reads **broad project state** and returns a plan - which methodology to apply and who to dispatch next.
@@ -163,7 +165,7 @@ Also a sub-profile of Profile B, but with a special role. Does not look for new 
 
 **What characterizes it**:
 - Reads the artifact itself + the ENTIRE EVID chain (from all prior reviewers)
-- Denylist forbids `forgeplan_activate` - guardian does not activate, only writes an instruction
+- Unlike other Profile B agents, guardian's denylist does NOT contain `forgeplan_activate`. Non-activation is enforced not by the denylist but by the whitelist and strict agent body rules (the tool is simply not granted). Guardian writes the verdict instruction into an EVID; the orchestrator activates (PASS = orchestrator MAY activate).
 - Verdict: PASS (orchestrator may activate) / CONCERNS (dispatch a fixer and re-review) / BLOCKER (pipeline halt)
 
 ### 2.5 Profile C - Read-only
@@ -187,7 +189,7 @@ Also a sub-profile of Profile B, but with a special role. Does not look for new 
 - Denylist forbids ALL forgeplan mutations (`new`, `update`, `link`, `activate`, ...)
 - Receives an already-activated RFC via MCP as input
 - Works in `isolation: worktree` - a separate git worktree, so parallel coders do not step on each other
-- Limit: `maxTurns: 60`
+- Limit: `maxTurns: 50`
 - When finished, writes "ALL CHECKS PASS" and **hands control back to the orchestrator**, which then dispatches a Profile B reviewer
 
 **Why exactly one**: the split between "who writes the artifact" and "who writes the code" guarantees that code does not outpace documentation. The PRD author physically cannot silently write code that is not described in the PRD. The coder physically cannot silently create an ADR.
@@ -212,6 +214,8 @@ The agent's role says **what it is allowed to do**. The methodology says **how e
 ### 3.1 BMAD - four phases from idea to PRD
 
 **When applied**: creating a new PRD. This is the Specification phase methodology - turning a raw idea into a formal requirements document.
+
+> Note: BMAD is expanded here into four teaching phases (Brainstorm -> Modeling -> Architecting -> Delivery) for clarity. The canonical BMAD-METHOD definition is a multi-role framework: Analyst -> PM -> Architect -> Dev -> QA. See github.com/bmad-code-org/BMAD-METHOD.
 
 **Four phases**:
 
@@ -343,7 +347,7 @@ Four lines, but these are exactly what saves you from scope creep.
 +------------------------------------------------------------------------+
 ```
 
-The first three phases (S+P+A) are done by the Profile A `architecture` agent - outputting an RFC. The last two (R+C) are done by the Profile C-coder agent - outputting code.
+Phase S (requirements refinement) - the `specification` agent (Profile A, also produces PRDs). Phase P (pseudocode + Big-O) - a separate sub-agent `pseudocode` (not forgeplan-aware). Phase A (modules, contracts) - the `architecture` agent (Profile A), outputting an RFC. The last two (R+C) are done by `coder` (Profile C-coder; optionally sub-agent `refinement`) - outputting code.
 
 **Between phases** - mandatory quality gates. After each phase, a Profile B reviewer checks the result.
 
@@ -357,7 +361,10 @@ The first three phases (S+P+A) are done by the Profile A `architecture` agent - 
 +----------------------------------------------------------------------+
 |  R - Research        Gather facts. Logs, stack traces, recent        |
 |                      commits, reproducibility.                       |
-|                      Agent `error-detective`.                        |
+|                      Agents `debugger` and `error-detective`         |
+|                      (Profile C, read-only) gather facts ->          |
+|                      `research-analyst` (Profile A) formalizes the   |
+|                      RIPER Research mode via 5 Whys.                 |
 |        |                                                             |
 |        v                                                             |
 |  I - Innovate        At least 3 root-cause hypotheses via 5 Whys.    |
@@ -464,6 +471,8 @@ Forgeplan supports **ten artifact kinds**, each with its own directory in `.forg
 +------------+--------------+---------------------+----------------------+--------------------------+
 ```
 
+> Note: PROBLEM/SOLUTION/SPEC/REFRESH are supported kinds but are currently almost unused in this project (PROB-001 deprecated; solution/spec/refresh are empty). Their flows are normative, not battle-tested in practice.
+
 #### Auxiliary directories (not artifacts in the strict sense)
 
 In `.forgeplan/`, besides artifacts, there are auxiliary directories:
@@ -484,26 +493,30 @@ The directory structure **mirrors** the kinds API: one `.md` file per artifact, 
 
 #### Links between artifact kinds
 
-Artifacts are linked through `forgeplan_link` relations:
+Artifacts are linked through `forgeplan_link`. Exactly 5 relation types are valid: `informs`, `based_on`, `supersedes`, `contradicts`, `refines`. Solid arrows `--rel-->` are real graph links; double arrows `==>` are conceptual transitions, NOT graph links.
 
 ```
-EPIC ---refines---> PRD ---refines---> RFC ---guides---> Code (worktree)
-   |                 |                  |
-informs           informs            informs
-   |                 |                  |
- EVID              EVID               EVID
+RFC ---based_on---> PRD ---based_on---> EPIC
+ |                   |                   |
+ | implemented      informs           informs
+ v via (==>)         |                   |
+Code (worktree,      EVID                EVID
+NOT a graph node)
 
-PROBLEM ---solves---> SOLUTION ---based_on---> ADR (or PRD)
-   |                      |
- EVID                   EVID
+SOLUTION ---based_on---> PROBLEM
+   |                        ^
+ informs                   (SOLUTION may also --based_on--> PRD/ADR)
+   v
+ EVID
 
 ADR (active) ---supersedes---> ADR (new active)
-                                + delta description ADDED/MODIFIED/REMOVED
+                                + delta ADDED/MODIFIED/REMOVED/UNCHANGED
 
 NOTE (Brief) ---based_on---> PRD
 NOTE (research) ---informs---> PRD / RFC / ADR
 NOTE (post-mortem) ---informs---> the parent fix
-NOTE (deferred items) ---tracks---> open tasks
+NOTE (deferred items): items live as rows in the NOTE-013 body, not as graph links
+REFRESH ---informs---> the outdated parent
 ```
 
 Per-kind flow in detail follows in the next sections.
@@ -720,6 +733,8 @@ Per-kind flow in detail follows in the next sections.
 
 **Hard rule**: only `coder` has the right to write code. If the orchestrator itself edits source via `Write`, this is a **CRUD-R-A discipline violation** (see section 9).
 
+> In the canonical /forge-cycle path the R+C cycle is led by coder; in SPARC-orchestrated runs phase R may be taken by the sub-agent `agents-sparc:refinement`.
+
 ### 4.5 Architectural decision -> ADR (FPF ADI + MADR 3.0)
 
 **When an ADR is needed**: one of three conditions (Sprint Z1 criteria):
@@ -800,17 +815,20 @@ Per-kind flow in detail follows in the next sections.
                           v
 +------------------------------------------------------+
 | R - Research                                         |
-| Dispatch `error-detective` (Profile B): gathers      |
-| logs, stack traces, recent commits, checks           |
-| reproducibility                                      |
-| Creates an EVID with facts                           |
+| Dispatch `debugger` (Profile C, first - confirms     |
+| reproducibility) -> `error-detective` (Profile C -   |
+| log/metric/deploy correlation) -> `research-analyst` |
+| (Profile A - 5 Whys from symptom to root cause; this |
+| is the formalized RIPER-5 Research mode).            |
+| Each creates a NOTE.                                 |
 +------------------------------------------------------+
                           |
                           v
 +------------------------------------------------------+
 | I - Innovate                                         |
-| Dispatch `debugger` (Profile B): at least 3          |
-| root-cause hypotheses via 5 Whys                     |
+| Orchestrator + (if architectural root cause)         |
+| `adr-architect` (Profile A) formulates and picks     |
+| the fix hypothesis.                                  |
 | Creates an EVID with hypotheses                      |
 +------------------------------------------------------+
                           |
@@ -899,7 +917,7 @@ PROBLEM is **not** PRD. PROBLEM describes what is wrong. PRD describes what we w
 | Orchestrator -> artifact-author with kind="solution" |
 |   - One of the approaches to solve PROBLEM-NNN       |
 |   - Trade-offs, cost, risks                          |
-|   - Linked to PROBLEM with `solves` relation         |
+|   - Linked to PROBLEM with the `based_on` relation   |
 +------------------------------------------------------+
                           |
                           v
@@ -951,7 +969,7 @@ PROBLEM is **not** PRD. PROBLEM describes what is wrong. PRD describes what we w
 |  4. Creates EPIC via forgeplan_new(kind="epic")      |
 |                                                      |
 |  5. Creates N draft PRDs (one per DAG step)          |
-|     Links each to EPIC with `refines` relation       |
+|     Links each to EPIC with `based_on` relation      |
 |                                                      |
 |  6. Marks dependencies (PRD-2 blocked_by PRD-1)      |
 +------------------------------------------------------+
@@ -1084,8 +1102,8 @@ REFRESH is a compromise between "everything is fine" and "a new ADR with delta i
                           v
 +------------------------------------------------------+
 | Creates REFRESH-NNN or edits existing                |
-| Links to the parent artifact with                    |
-| `refreshes` relation. Describes: what was updated,   |
+| Links to the parent artifact with the `informs`      |
+| relation. Describes: what was updated,               |
 | source of the edit, when discovered                  |
 +------------------------------------------------------+
                           |
@@ -1272,7 +1290,7 @@ Guardian is the **arbiter role**, the last step before activating any artifact. 
 
 ### Important nuances
 
-**Guardian does not activate**. `forgeplan_activate` is in its denylist. Guardian writes an instruction (this is its EVID), the orchestrator reads it and decides the next step.
+**Guardian does not activate** - `forgeplan_activate` is not granted to it (whitelist), not listed in its denylist. Guardian writes the verdict instruction into an EVID, the orchestrator activates.
 
 **Guardian works in an isolated context** - has not seen discussions, has not seen how the author explained their decisions. Only the artifact and the EVID chain.
 
@@ -1292,15 +1310,13 @@ Besides human and agent reviews, there are three **automatic** mechanisms from t
 
 **What it is**: a number from 0 to 1 measuring the "effective reliability" of an artifact.
 
-**Formula**: F + G + R
-
-- **Foundation** - how solid the sources are (parent artifacts, evidence)
-- **Granularity** - level of detail (number of sections, body length, explicit data)
-- **Reliability** - reliability of each piece of evidence per an explicit table
+**How it is computed**: weakest-link principle - `R_eff = min(linked evidence scores)`. Each piece of evidence has factors: **Formality** (how structured and conditional the claim is), **Granularity** (level of detail), **Reliability** (source reliability), plus a decay penalty for staleness. This is NOT an additive sum - it is the minimum across the chain: the chain is only as strong as its weakest link.
 
 **Property**: computed **without invoking an AI**, purely by artifact graph structure. Cheap, reproducible, objective.
 
 **Command**: `forgeplan_score <ARTIFACT-ID>`
+
+Do not confuse with the additive F+G+R of the Trust Calculus (hypothesis-rating rubric used by `evidence-gatherer` / `adr-architect` / `/decision`) - there F is also **Formality**, and that is a separate mechanism, not `forgeplan_score`.
 
 **Where to use**: periodically check R_eff of top-level PRDs. If a top PRD has low R_eff, this is a signal that either there is little evidence or what exists is weak.
 
@@ -1389,7 +1405,10 @@ This is the **mandatory filter** that every Standard+ artifact must pass before 
 |  S12  OpenSpec  Structure - DAG links + delta on supersede             |
 |  ---  --------  Enforced by: adr-supersede template + /supersede +     |
 |                 /decay-watch Step 2e                                   |
-|                 Without delta or correct links = CONCERNS              |
+|                 Supersede after 2026-05-25 without delta = BLOCKER at  |
+|                 guardian; pre-Z8 supersede without delta = CONCERNS    |
+|                 (via /decay-watch). Missing parent/child links         |
+|                 (orphan) is a separate S12 failure.                   |
 |                                                                        |
 |         |                                                              |
 |         v                                                              |
@@ -1453,7 +1472,7 @@ Most findings are LOW/MEDIUM. For them it is **cheaper** to rerun Profile A with
 
 ## 10. What does not work automatically
 
-Despite the completeness of the scheme - there are **three places** where adversarial review is currently not enforced automatically. These are **deliberate gaps** (see CLAUDE.md section Sprint AA "Social-discipline boundaries"). They **cannot be closed by a parser** because the spoof signal is identical to the legitimate-short-work signal.
+Despite the completeness of the scheme - there are **four places** where adversarial review is currently not enforced automatically. These are **deliberate gaps** (see CLAUDE.md section Sprint AA "Social-discipline boundaries"). They **cannot be closed by a parser** because the spoof signal is identical to the legitimate-short-work signal.
 
 ### Gap 1 - Brief NOTE (before PRD)
 
@@ -1469,7 +1488,7 @@ Despite the completeness of the scheme - there are **three places** where advers
 
 ### Gap 3 - stub in `## Findings` (Gap G6 from Sprint AA)
 
-Similarly - an EVID with the body `## Findings\n1. nothing wrong` will pass the guardian gate (Step 4b counts at least 1 item). Sprint Z6 requires at least 2 sentences of justification when claiming zero gaps, but no automatic parser for "at least 2 sentences" exists.
+Similarly - an EVID with the body `## Findings\n1. nothing wrong` will pass the guardian gate (guardian Step 5 verdict matrix checks for a non-empty ## Findings). Sprint Z6 requires at least 2 sentences of justification when claiming zero gaps, but no automatic parser for "at least 2 sentences" exists.
 
 **Why not parsed**: a short legitimate finding like "AC-3 is not measurable, needs a numeric threshold" is 2 sentences and a genuinely useful finding. Distinguishing it from a stub by a parser is not possible.
 
@@ -1523,7 +1542,7 @@ When it is unclear which methodology to start with - `/smith`. This is the maste
 
 1. **Exactly one row is picked**. Mixing methodologies is forbidden - this produces artifacts that fit none and force the team to invent checklists from scratch.
 
-2. **If the situation is on the boundary of two rows** - the row with **the higher risk** is picked (legacy > empty, audit > feature). The deviation is recorded in the "Notes" section of the plan.
+2. **If the situation is on the boundary of two rows** - the primary rule on a genuine tie: emit `<<NEED_USER_INPUT>>` with >=3 hypotheses (FPF ADI) for the user to decide. Auto-picking the higher-risk row (legacy > empty, audit > feature) is an exception for autonomous mode (e.g. a blocking incident); the deviation is recorded in Notes.
 
 3. **smith does not write code, does not activate artifacts**. Only returns a plan - the orchestrator decides what to do.
 
@@ -1549,13 +1568,13 @@ Markdown plan with **8 mandatory sections**:
 
 ```
 1. Context type - one of the 12 rows
-2. Primary methodology + secondary
+2. Methodology decision - primary + rationale
 3. Dispatch sequence - numbered list of agents
 4. Evidence requirements - checklist for the guardian gate
-5. Risks + reversibility - what will force a route change
-6. Notes - if the choice is on the boundary of two rows
-7. Handoff - for the next session if work spans several days
-8. (plus contextual notes from smith)
+5. Risks - what could go wrong
+6. Reversibility - how reversible the decision is
+7. Notes - if the choice is on the boundary of two rows
+8. Handoff - for the next session if work spans several days
 ```
 
 ---
@@ -1576,7 +1595,7 @@ Markdown plan with **8 mandatory sections**:
 
 ### Methodologies
 
-- **BMAD** (Brainstorming -> Modeling -> Architecting -> Delivery) - four-phase PRD-creation methodology.
+- **BMAD** (Brainstorming -> Modeling -> Architecting -> Delivery) - four-phase PRD-creation methodology (expanded in this document into 4 teaching phases; the canon is the multi-role Analyst->PM->Architect->Dev->QA framework).
 - **FPF** (First Principles Framework) - frame of structured reasoning. Includes ADI as its primary cycle.
 - **ADI** (Abduction -> Deduction -> Induction) - Charles Peirce's reasoning cycle. At least 3 hypotheses.
 - **SPARC** (Specification -> Pseudocode -> Architecture -> Refinement -> Completion) - five-phase feature-implementation methodology.
@@ -1612,7 +1631,7 @@ Markdown plan with **8 mandatory sections**:
 - **Frontmatter** - YAML block at the start of an agent/skill file, defining metadata (name, description, denylist, ...).
 - **Denylist** - list of forbidden tools in the frontmatter. Physical protection against role violation.
 - **Sentinel** - service string like `<<NEED_USER_INPUT>>` or `<<NEEDS_ACTIVATION>>`, parsed by the orchestrator.
-- **R_eff** - effective reliability, score 0..1, computed by the F+G+R formula.
+- **R_eff** - effective reliability, score 0..1, computed by the weakest-link principle (minimum across linked evidence scores); factors Formality/Granularity/Reliability + decay. Do not confuse with the additive F+G+R Trust Calculus.
 - **Worktree** - isolated git branch for parallel work of Profile C-coder agents.
 
 ---
@@ -1721,7 +1740,7 @@ Before every `forgeplan_activate` for a Standard+ artifact, walk through:
 - S12 OpenSpec: if replacement - delta is filled (ADDED/MODIFIED/REMOVED/UNCHANGED)
 - S12 OpenSpec: if 3+ modules - C4 L1+L2 diagrams created
 - guardian (B-gate) gave PASS
-- Artifact R_eff is acceptable (typically from 0.6 for Standard, from 0.8 for Critical)
+- Artifact R_eff is acceptable (guideline: `artifact-reviewer` considers >=0.7 generally safe for activation; no hard threshold by depth - guardian relies on `quality_gates` from `.forgeplan/project-config.yaml`)
 - No CONCERNS open on parent artifacts
 ```
 
