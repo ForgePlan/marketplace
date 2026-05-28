@@ -2,6 +2,8 @@
 
 Core development agents: debugger, code reviewer, error detective, performance engineer, production validator, plus a complete dev team (coder, planner, researcher, reviewer, tester, TDD London School).
 
+For context on how agents-core (coder, code-reviewer, tester) integrates into the full pipeline, see the [Process Reference (EN)](../../docs/process-from-idea-to-delivery-EN.md) / [(RU)](../../docs/process-from-idea-to-delivery-RU.md).
+
 ## Install
 
 ```

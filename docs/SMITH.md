@@ -6,6 +6,9 @@
 
 Smith is the canonical first point of contact when you (or another agent) don't yet know which methodology, dispatch chain, or pipeline depth applies to the work in front of you. It inspects the repository, classifies the situation against a **12-context routing matrix**, and returns a structured Plan naming agents, methodologies, and evidence requirements per the 4-layer S10–S13 pipeline. Smith **never writes code or activates artifacts** — it routes and recommends.
 
+
+> **Wider context**: For the complete idea-to-delivery process reference (covering all 5 agent profiles, 10 artifact kinds, 4-layer pipeline, and how smith integrates with the build cycle), see [Process Reference (EN)](process-from-idea-to-delivery-EN.md) / [(RU)](process-from-idea-to-delivery-RU.md).
+
 ---
 
 ## Quick Start
