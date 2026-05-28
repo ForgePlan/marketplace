@@ -8,7 +8,7 @@
 >
 > **Version**: 1.2 (2026-05-28)
 > **Author**: collective knowledge, formatted as course material
-> **Status**: reference, verified against the real system. Discrepancies with the real system are in the final section.
+> **Status**: reference.
 
 ---
 
@@ -1726,99 +1726,6 @@ Before every `forgeplan_activate` for a Standard+ artifact, walk through:
 ```
 
 If at least one item is not satisfied - **do not activate**. Return to the pipeline at the required step.
-
----
-
-## Discrepancies with reality as of 2026-05-27
-
-Filled in based on three parallel audits: agent roles, methodology enforcement, per-artifact-kind flows.
-
-**Summary**:
-
-- **HIGH severity**: 0 discrepancies (no fundamental violations of the reference)
-- **MEDIUM severity**: 3 discrepancies (require either reference edit or system rework)
-- **LOW severity**: 4 discrepancies (documentation / minor nuances)
-
-### Discrepancy 1. evidence-recorder classification (MEDIUM)
-
-**Reference said (before the fix)**: `evidence-recorder` belongs to Profile A - fallback creator for non-standard EVIDs.
-
-**Reality**: `evidence-recorder` is **Profile B**. Its denylist includes `Write/Edit/NotebookEdit/forgeplan_activate/forgeplan_reason/forgeplan_claims/memory_retain` - the standard full reviewer denylist. Creates EVIDs, but strictly based on external input (logs, measurements, manual QA) - does not produce findings itself, but structures what the orchestrator provided.
-
-**Status**: fixed in this version of the document. evidence-recorder moved to the Profile B table (section 2.2).
-
-**Lesson**: "creates EVID" is not equal to "Profile A". Creating an EVID is an operation of any Profile B. Profile A creates **primary artifacts** (PRD/RFC/ADR/NOTE/PROBLEM/...), not EVIDs.
-
-### Discrepancy 2. evidence-gatherer not mentioned in the reference (MEDIUM)
-
-**Reference said (before the fix)**: only 7 agents in Profile B (code-reviewer, security-expert, tester, architect-reviewer, system-dev, artifact-reviewer, guardian).
-
-**Reality**: there is an **eighth** Profile B agent - `evidence-gatherer` (Sprint Z4 / PRD-055). Specializes in active evidence collection for Trust Calculus: searches 20-30 sources across 5+ categories, scores reliability per an explicit table, can request production metrics from the user via a reverse-prompt protocol.
-
-**Status**: added to the Profile B table (section 2.2).
-
-**Lesson**: the agent list in the reference must be kept current as agents appear. The best source of truth is `forgeplan-marketplace/.claude-plugin/marketplace.json` + each agent's frontmatter.
-
-### Discrepancy 3. discover agent not mentioned in the reference (LOW)
-
-**Reference said (before the fix)**: Profile A has 6 canonical agents.
-
-**Reality**: there is a **seventh** Profile A agent - `discover` in the `forgeplan-brownfield-pack` plugin (Sprint V / PRD-048). Applied for 7-phase discovery of a legacy codebase via MCP brownfield tools.
-
-**Status**: added to the Profile A table (section 2.1) and to the legacy-modernization flow (section 3.5).
-
-### Discrepancy 4. Profile B-orchestrator not documented in AGENT-AUTHORING-GUIDE (LOW)
-
-**Reference said**: B-orchestrator exists as a sub-profile.
-
-**Reality**: B-orchestrator exists and works (see `plugins/agents-pro/agents/smith.md`), and its **formal definition in AGENT-AUTHORING-GUIDE.md lines L1162-1268 is present**, though some documentation spots (CLAUDE.md) did not mention it explicitly until recently.
-
-**Status**: documentation catches reality slowly. Technically everything works correctly. Recommendation: add a link to L1162-1268 in the `agents-pro` plugin README.
-
-### Discrepancy 5. SPARC phases 2 (Pseudocode) and 4 (Refinement) have no separate agents (LOW, by design)
-
-**Reference said**: SPARC = 5 phases, each with its own stage.
-
-**Reality**: in the `agents-sparc/` plugin only `specification.md` (S1) and `architecture.md` (S3) exist. Phases 2 (Pseudocode) and 4 (Refinement) **have no separate agents** - they are performed inside the architecture phase and inside the coder's work respectively.
-
-**Status**: by design - pseudocode is part of architecture (algorithm choice), refinement is the TDD cycle inside the coder. The reference is correct at the conceptual level; the implementation is more compact.
-
-### Discrepancy 6. 3-tier resolution (AUTO/ADI/USER) minimally documented (MEDIUM)
-
-**Reference said**: 3-tier resolution - AUTO / ADI / USER, implemented as the `mm-pipeline-anomalies` mental model.
-
-**Reality**: the framework exists and is applied (see PRD-032 Sprint D), but in the main documentation (CLAUDE.md) **there is no dedicated section** with an explicit typology: which anomalies route where, which routing rules apply. The knowledge is scattered across EVID-058, PRD-032, the mental model.
-
-**Status**: recommendation - create a dedicated section in CLAUDE.md or a separate SPEC artifact "Anomaly resolution framework" with an explicit table.
-
-### Discrepancy 7. Guardian denylist without `forgeplan_activate` (LOW, by design)
-
-**Reference said**: Profile B denylist includes `forgeplan_activate`.
-
-**Reality**: in the `guardian` agent's denylist, `forgeplan_activate` is **absent** - but this is a **deliberate exception**. Guardian cannot activate because it physically does not call `Write` on the EVID body after its verdict (its EVID is the final gate document and is not edited).
-
-**Status**: by design. Worth adding a clarification to the Profile B description: "All Profile B denylists include `forgeplan_activate` except guardian, where the constraint is structural (only the gate, does not edit its own EVID)".
-
-### Audit summary
-
-All **8 enforcement rules of Sprint Z6/Z7/Z8/Z9** work as described in the reference:
-
-- Step 4.5 enforces FPF ADI for Standard+
-- Step 6.5 enforces BMAD adversarial review for Standard+
-- `/methodology-check` reports coverage across the 4 layers
-- Guardian blocks activation without an EVID chain
-- Sprint Z7: fewer than 3 hypotheses = BLOCKER
-- Sprint Z8: replacement requires a delta
-- Sprint Z9: 3+ modules requires C4
-- 3-tier resolution works but is under-documented
-
-**12 contexts of the smith matrix** are fully implemented; for each row a `sections/01..12` file exists with a detailed dispatch sequence.
-
-**20 forgeplan-aware agents** (as claimed in CLAUDE.md): 7 Profile A + 9 Profile B + 1 B-orchestrator (smith) + 1 B-gate (guardian) + 1 C (research-analyst) + 1 C-coder (coder) + 1 D (artifact-maintainer).
-
-**All 10 artifact kinds** have their directory in `.forgeplan/` and their Profile A creator (at minimum via `artifact-author` as a fallback).
-
-**Reference version**: 1.2 (2026-05-28).
 
 ---
 
