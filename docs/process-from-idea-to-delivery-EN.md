@@ -6,7 +6,7 @@
 > 2. **Audit reference** - the real implementation is checked against this document; discrepancies are counted as technical debt
 > 3. **Template for creation** - when new artifact types or new methodologies are added, they fit into this scheme
 >
-> **Version**: 1.2 (2026-05-28, reviewed against Russian wording, no em-dashes)
+> **Version**: 1.2 (2026-05-28)
 > **Author**: collective knowledge, formatted as course material
 > **Status**: reference, verified against the real system. Discrepancies with the real system are in the final section.
 
@@ -1818,7 +1818,7 @@ All **8 enforcement rules of Sprint Z6/Z7/Z8/Z9** work as described in the refer
 
 **All 10 artifact kinds** have their directory in `.forgeplan/` and their Profile A creator (at minimum via `artifact-author` as a fallback).
 
-**Reference version after edits**: 1.2 (2026-05-28).
+**Reference version**: 1.2 (2026-05-28).
 
 ---
 
