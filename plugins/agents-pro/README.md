@@ -26,6 +26,8 @@ Smith is a **Profile B-orchestrator** (new sub-profile per AGENT-AUTHORING-GUIDE
 
 Full guide: [`docs/SMITH.md`](../../docs/SMITH.md).
 
+For context on how smith and the canonical pipeline agents (Profile A creators, Profile B reviewers, guardian gate) integrate into the complete workflow, see the [Process Reference (EN)](../../docs/process-from-idea-to-delivery-EN.md) / [(RU)](../../docs/process-from-idea-to-delivery-RU.md).
+
 Trigger phrases: `smith`, `кузнец`, `что дальше`, `scrum master`, `master orchestrator`.
 
 ## Agents (29)

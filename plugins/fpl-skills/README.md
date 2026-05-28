@@ -19,6 +19,8 @@ Install `fpl-skills` + the `forgeplan` CLI and you have everything you need for 
 
 For a fresh repo from zero see [`GETTING-STARTED.md`](./GETTING-STARTED.md).
 
+For comprehensive context on how fpl-skills fits into the full workflow cycle (idea → planning → build → audit → activation), see the [Process Reference (EN)](../../docs/process-from-idea-to-delivery-EN.md) / [(RU)](../../docs/process-from-idea-to-delivery-RU.md).
+
 ## Usage Examples
 
 ### `/fpl-init` — one-command project bootstrap

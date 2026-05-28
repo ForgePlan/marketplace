@@ -55,6 +55,8 @@ Step 8: Commit
   Refs: PRD-025, FR-001..003
 ```
 
+**See also**: [Process Reference (EN)](../../docs/process-from-idea-to-delivery-EN.md) / [(RU)](../../docs/process-from-idea-to-delivery-RU.md) — how `/forge-cycle` integrates into the complete idea-to-delivery workflow with methodology routing and adversarial review.
+
 ## What's Included
 
 | Type | Name | Description |
