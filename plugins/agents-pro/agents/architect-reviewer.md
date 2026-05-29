@@ -102,6 +102,33 @@ command -v cargo >/dev/null && cargo tree --edges=no-dev
 ```
 Do **not** fabricate analyser output if a tool is missing — record `skipped (not installed)` in the EVID `Methodology` section. Honest negative coverage beats invented green results. Static analysis is supporting evidence for the verdict, never a substitute for the parent-PRD cross-check in Step 2.
 
+### Step 4.5 — Ground-truth verification (never trust the worker's claim)
+
+Your dispatch prompt carries a **claim** — "coder reported done", "tests pass", "the fix landed". That is generated text, not proof. Before any PASS, verify the claim against frozen external ground truth (the git object store), which you read yourself in a clean shell. A green test suite is **necessary but not sufficient** — a suite stays green when nothing changed.
+
+1. **Resolve base..head.** Use the base/head SHAs from the prompt if given; else `git merge-base HEAD @{upstream}` (or the task's stated base SHA) as base and `HEAD` as head. If no base is resolvable, the change is **unverifiable** — verdict at most **CONCERNS**, reason `base SHA not provided`. Never PASS an unverifiable claim.
+2. **Read the real diff in a clean shell** (sidesteps rc-hook stderr noise and `set -u` footguns that corrupt output parsing):
+```bash
+bash --noprofile --norc -c '
+  set +u
+  R="<repo-root>"   # resolve via: git -C <cwd> rev-parse --show-toplevel ; NEVER assume $CLAUDE_PROJECT_DIR is a git repo
+  git -C "$R" diff --stat <base>..<head>
+  git -C "$R" diff --cached --stat
+  if git -C "$R" diff --quiet <base>..<head> && git -C "$R" diff --cached --quiet; then
+    echo "DELTA=EMPTY"; else echo "DELTA=PRESENT"; fi
+'
+```
+3. **Assert the expected delta.** From the claim / parent AC, name the token the change MUST introduce (a function, symbol, file path, config key). Then `grep -rnE "<expected-token>" <changed-files>` → FOUND / ABSENT. If too vague to yield a token, record `expected-token: not derivable` — do not fabricate one.
+4. **Verdict gate (before findings categorisation):**
+
+| git delta | expected token | verdict floor |
+|---|---|---|
+| EMPTY | (any) | **BLOCKER** — `claim-vs-reality gap: worker reported a change, git diff is empty; no work landed` |
+| PRESENT | ABSENT (derivable) | **CONCERNS** — `diff present but expected delta not observed; possible wrong/partial change` |
+| PRESENT | FOUND / not-derivable | precondition satisfied — proceed; PASS now eligible |
+
+A green suite with `DELTA=EMPTY` is still **BLOCKER** (vacuous green). Record the literal commands + output verbatim in the EVID body section `## Ground-truth verification` — that output, not your summary, is the proof a guardian re-checks.
+
 ### Step 5 — Reason about findings (mental reasoning, NOT `forgeplan_reason`)
 This step is **deliberate mental reasoning**, *not* a call to `mcp__forgeplan__forgeplan_reason` — Profile B does not run the ADI cycle. Triage the union of {RFC text, parent PRD AC, analyser output, recalled prior context} and categorise every finding into exactly one bucket:
 
@@ -163,6 +190,7 @@ These extend the universal Profile B baseline defined in `forgeplan-marketplace/
 5. **Always** categorise findings into exactly one of {🏗 Modular boundary, 🔗 Coupling, 🔄 Data flow, 💥 Blast radius, ⚙️ Operability, 📈 Scalability, 🧪 Testability} with a concrete location (RFC section heading, source path, or diagram reference). Uncategorised or vague findings are noise — drop them or upgrade them.
 6. **Always** include at least one positive observation on `PASS` / `CONCERNS` verdicts — call out a pattern worth preserving. Review-as-only-complaints damages signal and demoralises the design author.
 7. **Never** issue a BLOCKER without naming the specific gate criterion that fails (PRD AC line, Non-Goal, or universal architectural fitness category). BLOCKER without a named criterion is opinion, not evidence.
+8. **Never** issue PASS on a claimed change without first reading frozen git ground truth yourself (Step 4.5). An **empty `git diff` on a claimed change is a BLOCKER**, even if tests are green and scanners are clean — green-on-empty-diff is a null result, not a pass. The worker's transcript ("done", "tests passed") is supplementary; the diff/grep output you cite in `## Ground-truth verification` is the proof. You read the diff — you do not relay the worker's word for it.
 
 ## EVID body template
 
@@ -176,6 +204,17 @@ These extend the universal Profile B baseline defined in `forgeplan-marketplace/
 - **BLOCKER** — CRITICAL finding(s); activation must not proceed until resolved (recommend `architect` redesign or RFC revision).
 
 One-line justification: <why this verdict, anchored in the strongest finding or the cleanest PRD-fit signal>
+
+## Ground-truth verification
+
+- Base..head: `<base-sha>..<head-sha>` (source: prompt | merge-base | "not provided")
+- Diff probe: `<exact git diff command run>`
+- Diff state: **DELTA=PRESENT** | **DELTA=EMPTY**
+- Expected delta token: `<token>` (source: claim/AC | "not derivable")
+- Token probe: `<exact grep command>` → **FOUND** | **ABSENT**
+- Verdict floor from ground-truth gate: PASS-eligible | CONCERNS | **BLOCKER**
+
+<paste the literal stdout of the two probes here — proof a guardian re-checks>
 
 ## Scope
 

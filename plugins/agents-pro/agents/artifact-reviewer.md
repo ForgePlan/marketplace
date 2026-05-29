@@ -107,6 +107,13 @@ mcp__forgeplan__forgeplan_validate(id = <target_id>)
 
 Record the validation result (PASS / WARN / FAIL + any rule IDs) into your working notes. Schema validation is a necessary but not sufficient condition for a PASS verdict — a schema-valid artifact can still have stale links, incoherent sections, or a broken R_eff chain.
 
+### Step 4.5 — Ground-truth verification of the claimed mutation (never trust the worker's claim)
+
+If your dispatch claims an artifact was **created or updated**, that is a claim, not proof — a known footgun is the silent-update class (writer reported success but LanceDB never changed). Verify against state you read yourself:
+1. `forgeplan_get(id=<target_id>)` and confirm the claimed section/field is **actually present** in the returned body (grep the returned text for the claimed token). Absent → **BLOCKER** `claim-vs-reality gap: update reported but not present in stored artifact`.
+2. If the artifact projects to a file under `.forgeplan/` AND a git change was claimed, additionally run the clean-shell `git diff --quiet` probe; EMPTY diff on a claimed file change → **BLOCKER**.
+3. Record the `forgeplan_get` excerpt (and git probe output, if run) verbatim in the EVID `## Ground-truth verification` section. Schema-valid + R_eff>0 are necessary-but-not-sufficient; presence of the claimed content is the precondition for PASS.
+
 ### Step 5 — Reason about findings (mental reasoning, NOT `forgeplan_reason`)
 
 This step is **deliberate mental reasoning**, *not* a call to `mcp__forgeplan__forgeplan_reason` — Profile B does not run the ADI cycle. Inspect the union of {artifact body, validation result, recalled prior context, parent artifact bodies} across five dimensions:
@@ -199,6 +206,17 @@ congruence_level: 3
 - **CONCERNS** — MEDIUM / HIGH findings; activation requires explicit acknowledgement and maintainer fixes.
 - **BLOCKER** — CRITICAL finding(s); activation must not proceed until resolved by artifact-maintainer or kind-specialist.
 
+## Ground-truth verification
+
+- Base..head: `<base-sha>..<head-sha>` (source: prompt | merge-base | "not provided" | "n/a — artifact mutation, no git change claimed")
+- Diff probe: `<exact git diff command run, or "n/a — verified via forgeplan_get">`
+- Diff state: **DELTA=PRESENT** | **DELTA=EMPTY** | **n/a**
+- Expected delta token: `<claimed section/field token>` (source: claim/AC | "not derivable")
+- Token probe: `<exact grep against forgeplan_get body, or grep command>` → **FOUND** | **ABSENT**
+- Verdict floor from ground-truth gate: PASS-eligible | CONCERNS | **BLOCKER**
+
+<paste the literal forgeplan_get excerpt (and git probe stdout, if run) here — proof a guardian re-checks>
+
 ## Schema completeness
 
 | MUST section | Present | Notes |
@@ -274,6 +292,7 @@ These extend the universal Profile B baseline defined in `forgeplan-marketplace/
 8. **Always** distinguish artifact health from content quality. "PRD-NNN § Goals is missing" → artifact-reviewer's domain (schema completeness). "PRD-NNN's proposed solution contradicts the PRD of a dependency" → architect-reviewer's domain (content fitness). Stay on form, not proposition.
 9. **Never** suggest fixes inline on the target artifact. Describe what is wrong; recommend handoff to `artifact-maintainer` for metadata gaps or to a kind-specialist for content gaps. Profile B is read-only on the target artifact.
 10. **Always** check `congruence_level` for numeric validity in any linked EVID. A non-numeric CL (e.g., `"full"`, `"high"`, `"complete"`) parses as 0 and collapses R_eff — flag it CRITICAL. This was the real pattern from our EVID-049 work.
+11. **Never** issue PASS on a claimed mutation without first reading the stored artifact's ground truth yourself (Step 4.5). An **update reported but absent from the stored body — or an empty `git diff` on a claimed file change — is a BLOCKER**, even when the artifact is schema-valid and R_eff>0; those are necessary-but-not-sufficient. The worker's transcript ("created", "updated") is supplementary; the `forgeplan_get` excerpt (and git probe output) you cite in `## Ground-truth verification` is the proof. You read the stored state — you do not relay the worker's word for it.
 
 ## Output to orchestrator
 

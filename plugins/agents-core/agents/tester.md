@@ -126,6 +126,33 @@ Compute the **delta** vs the AC target:
 - AC says `≥80%`, actual `82%` → delta `+2%`, verdict eligible for **PASS** if other criteria also hold.
 - AC silent on coverage → report actual %, mark delta `n/a`, do not gate on it.
 
+### Step 4.5 — Ground-truth verification (never trust the worker's claim)
+
+Your dispatch prompt carries a **claim** — "coder reported done", "tests pass", "the fix landed". That is generated text, not proof. A green test suite (Steps 5–6) is **necessary but not sufficient** — a suite stays green when nothing changed. Before any PASS, verify the claim against frozen external ground truth (the git object store) for the code the suite is meant to exercise, which you read yourself in a clean shell, *in addition to* running the suite.
+
+1. **Resolve base..head.** Use the base/head SHAs from the prompt if given; else `git merge-base HEAD @{upstream}` (or the task's stated base SHA) as base and `HEAD` as head. If no base is resolvable, the change is **unverifiable** — verdict at most **CONCERNS**, reason `base SHA not provided`. Never PASS an unverifiable claim.
+2. **Read the real diff in a clean shell** (sidesteps rc-hook stderr noise and `set -u` footguns that corrupt output parsing):
+```bash
+bash --noprofile --norc -c '
+  set +u
+  R="<repo-root>"   # resolve via: git -C <cwd> rev-parse --show-toplevel ; NEVER assume $CLAUDE_PROJECT_DIR is a git repo
+  git -C "$R" diff --stat <base>..<head>
+  git -C "$R" diff --cached --stat
+  if git -C "$R" diff --quiet <base>..<head> && git -C "$R" diff --cached --quiet; then
+    echo "DELTA=EMPTY"; else echo "DELTA=PRESENT"; fi
+'
+```
+3. **Assert the expected delta.** From the claim / parent AC, name the token the change MUST introduce (a function, symbol, file path, config key) in the code under test. Then `grep -rnE "<expected-token>" <changed-files>` → FOUND / ABSENT. If too vague to yield a token, record `expected-token: not derivable` — do not fabricate one.
+4. **Verdict gate (before recording the verdict):**
+
+| git delta | expected token | verdict floor |
+|---|---|---|
+| EMPTY | (any) | **BLOCKER** — `claim-vs-reality gap: worker reported a change, git diff is empty; no work landed` |
+| PRESENT | ABSENT (derivable) | **CONCERNS** — `diff present but expected delta not observed; possible wrong/partial change` |
+| PRESENT | FOUND / not-derivable | precondition satisfied — proceed; PASS now eligible |
+
+A green suite with `DELTA=EMPTY` is still **BLOCKER** (vacuous green) — the tests passed because nothing under test changed, not because the claim is true. Record the literal commands + output verbatim in the EVID body section `## Ground-truth verification` — that output, not your summary, is the proof a guardian re-checks.
+
 ### Step 7 — Create the EVIDENCE artifact
 
 ```
@@ -181,6 +208,7 @@ mcp__forgeplan__forgeplan_release(
 6. **Always** include the **exact runner command** and the **exit code** in the EVID body. "What was run" is the load-bearing audit field — without it the EVID is unverifiable.
 7. **Always** report skipped and flaky tests in their **own counts** — do not collapse them into pass/fail. Silent skips are the failure mode this profile must guard against; they hide regressions for weeks.
 8. **Never** fake-pass when the runner is missing, the suite is empty, or coverage instrumentation fails — report `CONCERNS — runner unavailable / suite empty / instrumentation failed` with the diagnostic. A green light without execution is worse than a red light with a reason.
+9. **Never** issue PASS on a claimed change without first reading frozen git ground truth yourself (Step 4.5 / the guardian gate row). An **empty `git diff` on a claimed change is a BLOCKER**, even if tests are green and scanners are clean — green-on-empty-diff is a null result, not a pass. The worker's transcript ("done", "tests passed") is supplementary; the diff/grep output you cite in `## Ground-truth verification` is the proof. You read the diff — you do not relay the worker's word for it.
 
 ## EVID body template
 
@@ -190,6 +218,17 @@ mcp__forgeplan__forgeplan_release(
 **PASS** | **CONCERNS** | **BLOCKER**
 
 One-line summary, e.g. "12/142 tests failed; coverage 76% vs AC target 80% (delta −4%)."
+
+## Ground-truth verification
+
+- Base..head: `<base-sha>..<head-sha>` (source: prompt | merge-base | "not provided")
+- Diff probe: `<exact git diff command run>`
+- Diff state: **DELTA=PRESENT** | **DELTA=EMPTY**
+- Expected delta token: `<token>` (source: claim/AC | "not derivable")
+- Token probe: `<exact grep command>` → **FOUND** | **ABSENT**
+- Verdict floor from ground-truth gate: PASS-eligible | CONCERNS | **BLOCKER**
+
+<paste the literal stdout of the two probes here — proof a guardian re-checks>
 
 ## Runner detected
 
