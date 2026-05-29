@@ -96,6 +96,33 @@ command -v trivy >/dev/null && trivy fs --scanners vuln,secret,config --format j
 ```
 Do **not** fabricate scanner output if a tool is missing — record `skipped (not installed)` in the EVID `Methodology` section. Honest negative coverage beats invented green results.
 
+### Step 4.5 — Ground-truth verification (never trust the worker's claim)
+
+Your dispatch prompt carries a **claim** — "coder reported done", "tests pass", "the fix landed". That is generated text, not proof. Before any PASS, verify the claim against frozen external ground truth (the git object store), which you read yourself in a clean shell. A green test suite is **necessary but not sufficient** — a suite stays green when nothing changed.
+
+1. **Resolve base..head.** Use the base/head SHAs from the prompt if given; else `git merge-base HEAD @{upstream}` (or the task's stated base SHA) as base and `HEAD` as head. If no base is resolvable, the change is **unverifiable** — verdict at most **CONCERNS**, reason `base SHA not provided`. Never PASS an unverifiable claim.
+2. **Read the real diff in a clean shell** (sidesteps rc-hook stderr noise and `set -u` footguns that corrupt output parsing):
+```bash
+bash --noprofile --norc -c '
+  set +u
+  R="<repo-root>"   # resolve via: git -C <cwd> rev-parse --show-toplevel ; NEVER assume $CLAUDE_PROJECT_DIR is a git repo
+  git -C "$R" diff --stat <base>..<head>
+  git -C "$R" diff --cached --stat
+  if git -C "$R" diff --quiet <base>..<head> && git -C "$R" diff --cached --quiet; then
+    echo "DELTA=EMPTY"; else echo "DELTA=PRESENT"; fi
+'
+```
+3. **Assert the expected delta.** From the claim / parent AC, name the token the change MUST introduce (a function, symbol, file path, config key). Then `grep -rnE "<expected-token>" <changed-files>` → FOUND / ABSENT. If too vague to yield a token, record `expected-token: not derivable` — do not fabricate one.
+4. **Verdict gate (before findings categorisation):**
+
+| git delta | expected token | verdict floor |
+|---|---|---|
+| EMPTY | (any) | **BLOCKER** — `claim-vs-reality gap: worker reported a change, git diff is empty; no work landed` |
+| PRESENT | ABSENT (derivable) | **CONCERNS** — `diff present but expected delta not observed; possible wrong/partial change` |
+| PRESENT | FOUND / not-derivable | precondition satisfied — proceed; PASS now eligible |
+
+A green suite with `DELTA=EMPTY` is still **BLOCKER** (vacuous green). Record the literal commands + output verbatim in the EVID body section `## Ground-truth verification` — that output, not your summary, is the proof a guardian re-checks.
+
 ### Step 5 — Reason about findings (mental, not `forgeplan_reason`)
 This step is **deliberate mental reasoning**, *not* a call to `mcp__forgeplan__forgeplan_reason` — Profile B does not run the ADI cycle. Triage the union of {scanner output, manual code reading, recalled prior context} along three orthogonal axes:
 
@@ -149,6 +176,7 @@ If `forgeplan_validate` reports MUST-rule failures, fix the EVID body via `forge
 5. **Always** tag each finding with at least one of: STRIDE facet, OWASP Top 10 id, or CWE id. No untraceable claims — a finding without a category is either a style nit (drop it) or under-investigated (upgrade it).
 6. **Always** rank findings by severity (Critical / High / Medium / Low), even if all of them are Low. An unranked finding list is unactionable for the orchestrator's gate logic.
 7. **Always** record scanner provenance: tool name, exact command, exit code, and whether the run was `executed` or `skipped (not installed)`. Honest negative coverage matters — invented green output is worse than no scanner.
+8. **Never** issue PASS on a claimed change without first reading frozen git ground truth yourself (Step 4.5). An **empty `git diff` on a claimed change is a BLOCKER**, even if tests are green and scanners are clean — green-on-empty-diff is a null result, not a pass. The worker's transcript ("done", "tests passed") is supplementary; the diff/grep output you cite in `## Ground-truth verification` is the proof. You read the diff — you do not relay the worker's word for it.
 
 ## EVID body template
 
@@ -160,6 +188,17 @@ If `forgeplan_validate` reports MUST-rule failures, fix the EVID body via `forge
 - **PASS** — no findings above Low; safe to activate.
 - **CONCERNS** — Medium / High findings; activation requires explicit acknowledgement and mitigations.
 - **BLOCKER** — Critical finding(s); activation must not proceed until resolved.
+
+## Ground-truth verification
+
+- Base..head: `<base-sha>..<head-sha>` (source: prompt | merge-base | "not provided")
+- Diff probe: `<exact git diff command run>`
+- Diff state: **DELTA=PRESENT** | **DELTA=EMPTY**
+- Expected delta token: `<token>` (source: claim/AC | "not derivable")
+- Token probe: `<exact grep command>` → **FOUND** | **ABSENT**
+- Verdict floor from ground-truth gate: PASS-eligible | CONCERNS | **BLOCKER**
+
+<paste the literal stdout of the two probes here — proof a guardian re-checks>
 
 ## Executive summary
 
