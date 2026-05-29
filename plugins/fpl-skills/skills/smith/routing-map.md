@@ -99,6 +99,13 @@ Each methodology referenced in the table above. Five lines per card: one-sentenc
 - When NOT to use: Tactical fixes; legacy codebases (Spec Kit assumes you author the spec before any code exists).
 - Source: https://github.com/github/spec-kit
 
+### Spec-Driven Development (light path)
+
+- One sentence: author a forgeplan SPEC where `#### Scenario` (GIVEN/WHEN/THEN) is the PRIMARY, frozen, reviewed oracle; the per-language coder turns each scenario into a test (TDD) and may not edit it. The conformance corpus + cross-language equivalence is an OPTIONAL `## Conformance Vectors` enrichment (pure algorithmic cores / multi-language only), not the spine.
+- When it shines: feature & greenfield work (Rows 1, 3) — pin intent + make it testable before code, on the project's chosen language. Skill: `/spec-author` (authoring loop); template: NOTE-020; worked example: SPEC-001. NOT Row 2 as primary — brownfield primary is Strangler Fig; `/spec-author` applies there only for a net-new bounded context within the modernisation.
+- When NOT to use: tactical fixes (Row 5); do NOT impose the heavy conformance corpus by default (ADR-008 demoted it to optional).
+- Source: OpenSpec + GitHub Spec Kit shape adapted to the forgeplan SPEC kind. Decision: ADR-008 (supersedes ADR-007). Optional heavy add-on tracked as ForgePlan/marketplace#129.
+
 ### FPF ADI (Abduction → Deduction → Induction)
 
 - One sentence: Three-step reasoning cycle that requires **≥3 hypotheses** (including a "do nothing" alternative) before committing to an architectural choice.
