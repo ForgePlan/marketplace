@@ -267,6 +267,14 @@ Each methodology referenced in the table above. Five lines per card: one-sentenc
 - When NOT to use: Single-engineer hotfixes (the structure is overhead for one person).
 - Source: FEMA ICS adapted by PagerDuty, https://response.pagerduty.com
 
+### Ground-truth verification (generator ≠ verifier)
+
+- One sentence: Cross-cutting reviewer discipline — **the entity that generated an outcome never verifies it**; the reviewer checks the worker's "done" claim against frozen external ground truth (the git object store, or the stored forgeplan artifact body) read in a clean shell, never against the worker's transcript.
+- When it shines: **Every Build row and every Audit row in the table above** — any time a Profile B reviewer (`code-reviewer`, `tester`, `security-expert`, `architect-reviewer`, `artifact-reviewer`, `system-dev`, `evidence-recorder`) is dispatched to gate work a coder/writer self-reported as complete. An empty `git diff` on a claimed change is a **BLOCKER** even when the test suite is green (vacuous green: a suite stays green when nothing changed).
+- When NOT to use: Read-only research dispatches that make no completion claim (Profile C scouts); nothing was asserted, so there is no claim to verify against ground truth.
+- Cross-reference: this is the canonical **Step 4.5** clause — see `plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md` § "Profile B Step 4.5 — Ground-truth verification clause" (variants A / A' / A'' + the `## Ground-truth verification` EVID template). It is the enforceable form of ML-13.
+- Source: PROB-002 (incident) + RFC-011 (architecture, FR-3) + ADR-009 (decision: generator ≠ verifier) — this repo's `.forgeplan/`. Miniature proof: `sandbox-verify/r3-reviewer-groundtruth-smoke.sh`.
+
 ---
 
 ## Agent index
@@ -283,7 +291,7 @@ Quick alphabetical lookup of every agent named in the 12 rows above. Each entry:
 | **brief-intake** | `agents-pro` | A | Interviews user, produces structured Brief NOTE; canonical first step for greenfield + features. |
 | **code-analyzer** | `agents-pro` | C | Read-only static analysis (complexity, coupling, dead code); precedes refactor decisions. |
 | **code-reviewer** | `agents-core` | B | Line-level adversarial code review; mandatory Profile B EVID for any code-touching artifact. |
-| **coder** | `agents-core` | C-coder | The only agent allowed to write source files; `isolation: worktree` for parallel safety. |
+| **coder** | `agents-core` | C-coder | The only agent allowed to write source files; declares `isolation: worktree` for parallel safety. (Worktree isolation is not coder-only — standalone subagents, Workflow, and AgentTeams teammates all get isolated worktrees; verify with `git worktree list ≠ main` rather than assume.) |
 | **c4-diagram skill** | `fpl-skills` | N/A (skill, not agent) | Produces C4 L1+L2 Mermaid diagrams; auto-dispatched by `adr-architect` for ≥3-module ADRs. |
 | **ddd-domain-expert** | `agents-pro` | A | Surfaces bounded contexts + ubiquitous language; primary for brownfield + complex-domain greenfield. |
 | **debugger** | `agents-core` | C | Read-only debugger; pairs with `error-detective` on production bugs. |
@@ -305,7 +313,7 @@ Quick alphabetical lookup of every agent named in the 12 rows above. Each entry:
 Notes:
 
 - All Profile A/B/D agents enforce LR-8 lint (Sprint W): they must deny `Write`, `Edit`, `NotebookEdit` plus `forgeplan_activate` (and Profile B additionally denies `forgeplan_reason`, `forgeplan_claims`, `memory_retain`).
-- `coder` is the only `C-coder` profile — `isolation: worktree` lets multiple coders run in parallel without stepping on each other.
+- `coder` is the only `C-coder` profile — `isolation: worktree` lets multiple coders run in parallel without stepping on each other. Worktree isolation is a general multi-agent guarantee, not coder-only: standalone subagents, Workflow runs, and AgentTeams teammates all receive isolated worktrees (verified: 14 isolated agent worktrees in a real project). The real multi-agent risks are worktree **leak** (stale worktrees accumulate) and **assuming isolation without verifying** — always confirm `git worktree list` differs from main rather than assume it took effect.
 - Skills (e.g. `c4-diagram`, `methodology-check`, `decision`, `supersede`) are invoked by agents but are not themselves agents — they don't appear in the canonical 19-agent forgeplan-aware list.
 
 ---

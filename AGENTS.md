@@ -212,6 +212,19 @@ CLI shell calls (`forgeplan update <ID> --body @file.md`) **do** parse `@filepat
 
 Profile A and Profile D agents that mutate artifact bodies via MCP are most exposed — those agents are the canonical writers of PRD / RFC / ADR / EVID body sections.
 
+### Ground-truth verification discipline (PROB-002 / RFC-011 / ADR-009)
+
+**Critical safety rule for any reviewer agent on any CLI** — the principle is **generator ≠ verifier**: the entity that produced an outcome never verifies its own work, and a reviewer never trusts the worker's "done" claim. It checks the claim against frozen external ground truth it reads itself.
+
+1. **Verify the side-effect against ground truth, never a self-report.** Code → the git object store (`git diff base..head`). Forgeplan mutation → the stored artifact body (`forgeplan_get`, confirm the claimed section is actually present). The transcript ("done", "tests passed") is supplementary, not proof.
+2. **Empty diff on a claimed change = fail (BLOCKER).** A green suite with an empty `git diff` is **vacuous green** — a suite stays green when nothing changed; that is a null result, not a pass. Holds even when scanners are clean.
+3. **Run git probes under `bash --noprofile --norc`** to sidestep rc-hook stderr noise and `set -u` footguns. Resolve the repo root with `git -C <cwd> rev-parse --show-toplevel` — never assume `$CLAUDE_PROJECT_DIR` (or any CLI's project-dir env var) is itself a git repo; in this workspace the marketplace repo is a child directory and the workspace root is not a git repo.
+4. **The reviewer pastes the proof; the gate re-checks it.** Profile B reviewers record the literal probe commands + output in a `## Ground-truth verification` EVID section; `guardian` BLOCKS any code-claiming EVID lacking that section or showing `DELTA=EMPTY`. This is the enforceable form of ML-13. Full procedure (variants A / A' / A'' + EVID template): `plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md` § "Profile B Step 4.5 — Ground-truth verification clause". Miniature proof: `sandbox-verify/r3-reviewer-groundtruth-smoke.sh`.
+
+**Worktree isolation — verified truth**: git worktree isolation works and is **not coder-only** — standalone subagents, Workflow runs, and AgentTeams teammates all receive isolated worktrees (verified: 14 isolated agent worktrees in a real project). Only the `isolation: worktree` frontmatter declaration is coder-specific; the runtime guarantee is general. The real multi-agent risks are worktree **leak** (stale worktrees accumulate — prune them) and **assuming isolation without verifying** (always confirm `git worktree list` differs from main — assume-without-verify is the same failure class as trust-the-self-report).
+
+Reference: PROB-002, RFC-011 (FR-3), ADR-009. Related: Claude Code issue [#44035](https://github.com/anthropics/claude-code/issues/44035).
+
 ## Git workflow
 
 **CRITICAL: feature branches + PR only. Direct push to `main` and `dev` is forbidden.**

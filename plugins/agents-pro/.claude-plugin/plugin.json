@@ -1,7 +1,7 @@
 {
   "name": "agents-pro",
-  "version": "1.11.1",
-  "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.11.0: EPIC-003 / Sprint AA PRD-067/069 — guardian Step 5 verdict matrix +2 new rows: C4 CONCERNS (≥3-module ADR without docs/c4 file, Sprint Z9 PRD-060 implementation) + OpenSpec BLOCKER (supersede without ## Delta-spec, Sprint Z8 PRD-058 activation gate). Closes G2+G4 methodology auto-enforcement gaps. v1.10.1: EPIC-002 niceties patch. v1.10.0: EPIC-002 PRD-062 — new `smith` master-orchestrator agent (Profile B-orchestrator). v1.9.4: Sprint Z9 — adr-architect C4 dispatch. v1.9.3: Sprint Z7 — guardian ADI BLOCKER row.",
+  "version": "1.12.0",
+  "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.12.0: RFC-011 FR-3 — ground-truth verification clause (Step 4.5 + HARD RULE + ## Ground-truth verification EVID section) added to 5 Profile B reviewers (security-expert, architect-reviewer, system-dev, evidence-recorder, artifact-reviewer) + guardian gate row; empty git diff on a claimed change is a BLOCKER even when tests are green (PROB-002 / ADR-009 / ML-13). v1.11.0: EPIC-003 / Sprint AA PRD-067/069 — guardian Step 5 verdict matrix +2 new rows: C4 CONCERNS (≥3-module ADR without docs/c4 file, Sprint Z9 PRD-060 implementation) + OpenSpec BLOCKER (supersede without ## Delta-spec, Sprint Z8 PRD-058 activation gate). Closes G2+G4 methodology auto-enforcement gaps. v1.10.1: EPIC-002 niceties patch. v1.10.0: EPIC-002 PRD-062 — new `smith` master-orchestrator agent (Profile B-orchestrator). v1.9.4: Sprint Z9 — adr-architect C4 dispatch. v1.9.3: Sprint Z7 — guardian ADI BLOCKER row.",
   "author": {
     "name": "ForgePlan"
   },

@@ -104,6 +104,33 @@ Bash(command = "jq -e '.metrics // .summary // .' <file> >/dev/null && echo OK |
 ```
 Skip this step entirely when the input is inline text from the orchestrator (nothing to fingerprint on disk).
 
+### Step 4.5 — Ground-truth verification (never trust the worker's claim)
+
+Your dispatch prompt carries a **claim** — "coder reported done", "tests pass", "the fix landed". That is generated text, not proof. Before any PASS, verify the claim against frozen external ground truth (the git object store), which you read yourself in a clean shell. A green test suite is **necessary but not sufficient** — a suite stays green when nothing changed.
+
+1. **Resolve base..head.** Use the base/head SHAs from the prompt if given; else `git merge-base HEAD @{upstream}` (or the task's stated base SHA) as base and `HEAD` as head. If no base is resolvable, the change is **unverifiable** — verdict at most **CONCERNS**, reason `base SHA not provided`. Never PASS an unverifiable claim.
+2. **Read the real diff in a clean shell** (sidesteps rc-hook stderr noise and `set -u` footguns that corrupt output parsing):
+```bash
+bash --noprofile --norc -c '
+  set +u
+  R="<repo-root>"   # resolve via: git -C <cwd> rev-parse --show-toplevel ; NEVER assume $CLAUDE_PROJECT_DIR is a git repo
+  git -C "$R" diff --stat <base>..<head>
+  git -C "$R" diff --cached --stat
+  if git -C "$R" diff --quiet <base>..<head> && git -C "$R" diff --cached --quiet; then
+    echo "DELTA=EMPTY"; else echo "DELTA=PRESENT"; fi
+'
+```
+3. **Assert the expected delta.** From the claim / parent AC, name the token the change MUST introduce (a function, symbol, file path, config key). Then `grep -rnE "<expected-token>" <changed-files>` → FOUND / ABSENT. If too vague to yield a token, record `expected-token: not derivable` — do not fabricate one.
+4. **Verdict gate (before findings categorisation):**
+
+| git delta | expected token | verdict floor |
+|---|---|---|
+| EMPTY | (any) | **BLOCKER** — `claim-vs-reality gap: worker reported a change, git diff is empty; no work landed` |
+| PRESENT | ABSENT (derivable) | **CONCERNS** — `diff present but expected delta not observed; possible wrong/partial change` |
+| PRESENT | FOUND / not-derivable | precondition satisfied — proceed; PASS now eligible |
+
+A green suite with `DELTA=EMPTY` is still **BLOCKER** (vacuous green). Record the literal commands + output verbatim in the EVID body section `## Ground-truth verification` — that output, not your summary, is the proof a guardian re-checks.
+
 ### Step 5 — Mental reasoning, NOT `forgeplan_reason`
 
 Your whitelist intentionally excludes `forgeplan_reason` — Profile B agents record evidence; ADI cycles belong to Profile A. Walk through the input mentally and **categorise** by evidence type:
@@ -168,6 +195,7 @@ These extend the **universal Profile B baseline** in `forgeplan-marketplace/plug
 5. **Never** add domain-specific scoring (e.g. STRIDE for security data, lint scores for code data, coverage % for test data). If the input warrants domain scoring, hand the work back to the specialist agent (`security-expert` / `code-reviewer` / `tester`) via the orchestrator. evidence-recorder is the fallback, not a generic replacement.
 6. **Always** preserve raw input as a code fence in the EVID body, truncated to ≤2000 chars with a trailing `... [truncated, full content at <path> sha256:<hash>]` marker when longer. Provenance > prose; future auditors must be able to read what you read.
 7. **Never** delete or modify raw input. Intake is read-only — you faithfully record what was handed in. If the input is malformed (e.g. corrupted JSON benchmark), record that observation in Structured findings; don't "clean it up".
+8. **Never** issue PASS on a claimed change without first reading frozen git ground truth yourself (Step 4.5). An **empty `git diff` on a claimed change is a BLOCKER**, even if tests are green and scanners are clean — green-on-empty-diff is a null result, not a pass. The worker's transcript ("done", "tests passed") is supplementary; the diff/grep output you cite in `## Ground-truth verification` is the proof. You read the diff — you do not relay the worker's word for it.
 
 ## EVID body template
 
@@ -177,6 +205,17 @@ These extend the **universal Profile B baseline** in `forgeplan-marketplace/plug
 **PASS** | **CONCERNS** | **BLOCKER**
 
 One-line summary, e.g. "Manual QA on checkout flow: 8/8 scenarios passed, no blockers" or "Deployment smoke test: 1 health-check failed (auth-service /healthz timeout)".
+
+## Ground-truth verification
+
+- Base..head: `<base-sha>..<head-sha>` (source: prompt | merge-base | "not provided")
+- Diff probe: `<exact git diff command run>`
+- Diff state: **DELTA=PRESENT** | **DELTA=EMPTY**
+- Expected delta token: `<token>` (source: claim/AC | "not derivable")
+- Token probe: `<exact grep command>` → **FOUND** | **ABSENT**
+- Verdict floor from ground-truth gate: PASS-eligible | CONCERNS | **BLOCKER**
+
+<paste the literal stdout of the two probes here — proof a guardian re-checks>
 
 ## Evidence type
 

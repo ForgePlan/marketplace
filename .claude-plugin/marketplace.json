@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code — UX, frontend, workflow, and developer tools",
-    "version": "1.80.0"
+    "version": "1.82.0"
   },
   "plugins": [
     {
@@ -35,8 +35,8 @@
     {
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
-      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 37 engineering skills + dev-advisor agent + 5 hooks (+ smith greeting + RIPER auto-route + decay Layer 3). v1.39.0: NEW /spec-author skill — light-path spec-driven authoring loop (ADR-008; scenarios are the oracle, conformance corpus optional) + smith routing-map card. v1.38.1: cookbook §07 + §14.4 fix — final-e2e found forgeplan#353 (CLI rejects `/` in agent ID, MCP accepts). Workaround: dash-form agent IDs. v1.38.0: /forgeplan-cookbook skill (66 MCP + 82 CLI across 14 sections). v1.37.x: MCP safety + --help audit.",
-      "version": "1.39.0",
+      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 34 engineering skills + dev-advisor agent + 5 hooks (+ smith greeting + RIPER auto-route + decay Layer 3). v1.40.0: RFC-011 FR-3 ground-truth verification clause (generator≠verifier) — AGENT-AUTHORING-GUIDE 'Profile B Step 4.5' canonical section + universal HARD RULE 8 (empty git diff on a claimed change = BLOCKER even with green tests; makes ML-13 enforceable), smith routing-map methodology card (applies to every Build/Audit row), worktree under-claim corrected (isolation works for standalone subagents + Workflow + AgentTeams teammates). Refs PROB-002/RFC-011/ADR-009. v1.38.1: cookbook §07 + §14.4 fix — final-e2e found forgeplan#353 (CLI rejects `/` in agent ID, MCP accepts). Workaround: dash-form agent IDs. v1.38.0: /forgeplan-cookbook skill (66 MCP + 82 CLI across 14 sections). v1.37.x: MCP safety + --help audit.",
+      "version": "1.41.0",
       "author": {
         "name": "ForgePlan"
       },
@@ -229,7 +229,7 @@
       "name": "agents-core",
       "source": "./plugins/agents-core",
       "description": "Core development agents: debugger, code reviewer, error detective, performance engineer, production validator, plus complete dev team (coder, planner, researcher, reviewer, tester, TDD). v1.3.2: Sprint Q PRD-042 — ASM-canon frontmatter added to 3 forgeplan-aware agents (skills preload, maxTurns; coder gets isolation:worktree as only writer; code-reviewer + tester get memory:project as learners). v1.3.1: Sprint E body patches.",
-      "version": "1.3.2",
+      "version": "1.4.0",
       "author": {
         "name": "ForgePlan"
       },
@@ -251,7 +251,7 @@
       "name": "agents-pro",
       "source": "./plugins/agents-pro",
       "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.11.0: EPIC-003 / Sprint AA — guardian Step 5 +2 rows: C4 CONCERNS (Sprint Z9 PRD-060 gate) + OpenSpec BLOCKER (Sprint Z8 PRD-058 activation gate). Closes G2+G4. v1.10.1: EPIC-002 niceties patch. v1.10.0: EPIC-002 PRD-062 — new `smith` master-orchestrator agent (Profile B-orchestrator).",
-      "version": "1.11.1",
+      "version": "1.12.0",
       "author": {
         "name": "ForgePlan"
       },

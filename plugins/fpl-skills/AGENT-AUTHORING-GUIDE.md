@@ -182,8 +182,11 @@ disallowedTools: Write, Edit, NotebookEdit, mcp__forgeplan__forgeplan_activate, 
 5. **Always** label Step 5 of the procedure as "mental reasoning, NOT `forgeplan_reason`". Profile B never calls ADI — that's Profile A's contract.
 6. **Never** fake-pass when a scanner / runner / linter is missing. Report it as CONCERNS with "tool unavailable", not PASS.
 7. **Always** include `file:line` (or test name) reference for every finding. No vague "somewhere in the auth module".
+8. **Never** PASS a claimed change without reading frozen git ground truth (new "Step 4.5"). Empty git diff on a claimed change = BLOCKER even when tests are green. The transcript is supplementary; the cited diff/grep output is the proof. (Makes ML-13 enforceable — see "Ground-truth verification clause" section.)
 
 Per-agent HARD RULES extend these with role-specific invariants (e.g., security-expert adds "every finding has STRIDE/OWASP/CWE attribution"; tester adds "always report skipped/flaky tests separately").
+
+> **All Profile B reviewers MUST implement Step 4.5 — see the "Profile B Step 4.5 — Ground-truth verification clause" section.** This is the enforceable form of ML-13: no agent (and no reviewer) ever verifies a claimed change by trusting the worker's word — it reads frozen git ground truth itself.
 
 **Profile B mental-model canonical pick** (recommended baseline per role):
 
@@ -943,6 +946,106 @@ After EVID creation + update, call `forgeplan_score(id=EVID)`. If `congruence_le
 
 - Original surfacing: EVID-064 (Anomaly #17), 2026-05-20 — PRD-038 R_eff was 0.10 with YAML frontmatter; 0.90 grade A after switching to bold-pattern body.
 - Mental model `mm-evid-body-convention` (proposed — captures this rule for future-session retrieval).
+
+---
+
+## Profile B Step 4.5 — Ground-truth verification clause (no agent verifies its own work)
+
+> **The enforceable form of ML-13.** Reference: PROB-002, RFC-011, ADR-009. Every Profile B reviewer (and the guardian gate) MUST implement the variant below that matches what it reviews. This is mandatory — the universal HARD RULES list carries the one-line invariant; this section is the full procedure it points to.
+
+### Rationale — generator ≠ verifier
+
+A reviewer's dispatch prompt carries a **claim** — "coder reported done", "tests pass", "the fix landed". That is generated text produced by the same kind of process that did the work; it is **not proof**. The whole point of a separate reviewer is that the entity which *generated* an outcome must never be the entity which *verifies* it — otherwise the verification inherits the generator's blind spots. The reviewer's job is to check the claim against **frozen external ground truth**: the git object store (for code) or the stored artifact body (for forgeplan mutations), read by the reviewer itself in a clean shell.
+
+The dominant failure this closes is **vacuous green**: a test suite stays green when *nothing changed*, so "tests pass" on an empty diff is a null result, not a pass. The miniature proof of this is `sandbox-verify/gap-test.sh` (and its R3 sibling `sandbox-verify/r3-reviewer-groundtruth-smoke.sh`): a no-op "done" task with a green suite MUST yield BLOCKER, because the git diff is empty. This is the same class as Claude Code issue [#44035](https://github.com/anthropics/claude-code/issues/44035) and our own PROB-002 incident — a worker self-reports success, downstream trusts the report, and the gap surfaces only later.
+
+A green suite is **necessary but not sufficient**. Schema-valid + R_eff>0 are **necessary but not sufficient**. Presence of the claimed delta — observed by the reviewer in ground truth — is the precondition for PASS.
+
+### Variant A — diff/code reviewers
+
+For: `code-reviewer`, `tester`, `security-expert`, `architect-reviewer`, `system-dev`, `evidence-recorder`. Insert this procedural step immediately **before** the agent's "reason about findings" step.
+
+> **Step 4.5 — Ground-truth verification (never trust the worker's claim)**
+>
+> Your dispatch prompt carries a **claim** — "coder reported done", "tests pass", "the fix landed". That is generated text, not proof. Before any PASS, verify the claim against frozen external ground truth (the git object store), which you read yourself in a clean shell. A green test suite is **necessary but not sufficient** — a suite stays green when nothing changed.
+>
+> 1. **Resolve base..head.** Use the base/head SHAs from the prompt if given; else `git merge-base HEAD @{upstream}` (or the task's stated base SHA) as base and `HEAD` as head. If no base is resolvable, the change is **unverifiable** — verdict at most **CONCERNS**, reason `base SHA not provided`. Never PASS an unverifiable claim.
+> 2. **Read the real diff in a clean shell** (sidesteps rc-hook stderr noise and `set -u` footguns that corrupt output parsing):
+> ```bash
+> bash --noprofile --norc -c '
+>   set +u
+>   R="<repo-root>"   # resolve via: git -C <cwd> rev-parse --show-toplevel ; NEVER assume $CLAUDE_PROJECT_DIR is a git repo
+>   git -C "$R" diff --stat <base>..<head>
+>   git -C "$R" diff --cached --stat
+>   if git -C "$R" diff --quiet <base>..<head> && git -C "$R" diff --cached --quiet; then
+>     echo "DELTA=EMPTY"; else echo "DELTA=PRESENT"; fi
+> '
+> ```
+> 3. **Assert the expected delta.** From the claim / parent AC, name the token the change MUST introduce (a function, symbol, file path, config key). Then `grep -rnE "<expected-token>" <changed-files>` → FOUND / ABSENT. If too vague to yield a token, record `expected-token: not derivable` — do not fabricate one.
+> 4. **Verdict gate (before findings categorisation):**
+>
+> | git delta | expected token | verdict floor |
+> |---|---|---|
+> | EMPTY | (any) | **BLOCKER** — `claim-vs-reality gap: worker reported a change, git diff is empty; no work landed` |
+> | PRESENT | ABSENT (derivable) | **CONCERNS** — `diff present but expected delta not observed; possible wrong/partial change` |
+> | PRESENT | FOUND / not-derivable | precondition satisfied — proceed; PASS now eligible |
+>
+> A green suite with `DELTA=EMPTY` is still **BLOCKER** (vacuous green). Record the literal commands + output verbatim in the EVID body section `## Ground-truth verification` — that output, not your summary, is the proof a guardian re-checks.
+
+### Variant A' — artifact-reviewer (audits a forgeplan artifact, not code)
+
+For: `artifact-reviewer`. Insert before its reasoning step.
+
+> **Step 4.5 — Ground-truth verification of the claimed mutation (never trust the worker's claim)**
+>
+> If your dispatch claims an artifact was **created or updated**, that is a claim, not proof — a known footgun is the silent-update class (writer reported success but LanceDB never changed). Verify against state you read yourself:
+> 1. `forgeplan_get(id=<target_id>)` and confirm the claimed section/field is **actually present** in the returned body (grep the returned text for the claimed token). Absent → **BLOCKER** `claim-vs-reality gap: update reported but not present in stored artifact`.
+> 2. If the artifact projects to a file under `.forgeplan/` AND a git change was claimed, additionally run the clean-shell `git diff --quiet` probe; EMPTY diff on a claimed file change → **BLOCKER**.
+> 3. Record the `forgeplan_get` excerpt (and git probe output, if run) verbatim in the EVID `## Ground-truth verification` section. Schema-valid + R_eff>0 are necessary-but-not-sufficient; presence of the claimed content is the precondition for PASS.
+
+### Variant A'' — guardian (gates the downstream EVID chain)
+
+For: `guardian`. NO full Step 4.5 procedure; instead add this row to guardian's Step 5 verdict-modifier table:
+
+> | Any linked Profile B EVID claims a code change (parent has a diff / `affected_files`) BUT its body has no `## Ground-truth verification` section, or that section shows `DELTA=EMPTY` | **BLOCKER** (reviewer trusted the worker's claim instead of git ground truth — ML-13 violation; re-dispatch the reviewer with explicit base..head) |
+
+### EVID body template — `## Ground-truth verification`
+
+Add to each Profile B agent's "## EVID body template", after `## Verdict`, before `## Findings`:
+
+```markdown
+## Ground-truth verification
+
+- Base..head: `<base-sha>..<head-sha>` (source: prompt | merge-base | "not provided")
+- Diff probe: `<exact git diff command run>`
+- Diff state: **DELTA=PRESENT** | **DELTA=EMPTY**
+- Expected delta token: `<token>` (source: claim/AC | "not derivable")
+- Token probe: `<exact grep command>` → **FOUND** | **ABSENT**
+- Verdict floor from ground-truth gate: PASS-eligible | CONCERNS | **BLOCKER**
+
+<paste the literal stdout of the two probes here — proof a guardian re-checks>
+```
+
+### Per-agent anchor notes (where exactly to insert Step 4.5 — anchors differ)
+
+- `code-reviewer`, `security-expert`, `architect-reviewer`, `system-dev`: before `### Step 5 — Reason about findings`.
+- `tester`: its Step 5 is `### Step 5 — Run tests with structured output` — insert Step 4.5 before tester's reasoning/verdict step (the step where it decides PASS/CONCERNS/BLOCKER), NOT blindly before "### Step 5".
+- `evidence-recorder`: its Step 5 is `### Step 5 — Mental reasoning, NOT forgeplan_reason` — insert Step 4.5 before THAT.
+- `artifact-reviewer`: variant A', before its reasoning step.
+- `guardian`: variant A'' only (table row + HARD RULE), NO Step 4.5 procedure.
+
+### Why this is ML-13 made enforceable
+
+ML-13 was originally a meta-lesson ("Profile B reviewer is mandatory even when Profile C-coder self-reports ALL CHECKS PASS"). It lived as prose discipline — a reviewer *should* be skeptical. Step 4.5 turns that into a mechanical, checkable gate: the reviewer's own EVID body must carry the `## Ground-truth verification` section with the literal probe output, and the guardian's verdict table BLOCKS any code-claiming EVID that lacks it or shows `DELTA=EMPTY`. The discipline is no longer "trust the reviewer to be skeptical" — it is "the reviewer must paste the proof, and the gate re-checks it".
+
+### Cross-reference
+
+- PROB-002 — incident: worker self-reported success, downstream trusted the report (the motivating problem).
+- RFC-011 — ground-truth verification architecture (FR-3 is this clause).
+- ADR-009 — decision: generator ≠ verifier; reviewers read frozen git ground truth.
+- `sandbox-verify/gap-test.sh` + `sandbox-verify/r3-reviewer-groundtruth-smoke.sh` — miniature proofs (green tests + empty diff → BLOCKER).
+- Claude Code issue [#44035](https://github.com/anthropics/claude-code/issues/44035) — upstream instance of the same self-report-trust failure class.
+- ML-13 — the meta-lesson this section operationalises (see Sprint U/V retrospective in marketplace CLAUDE.md).
 
 ---
 

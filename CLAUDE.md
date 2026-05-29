@@ -551,6 +551,31 @@ This pattern generalizes: don't write parsers when the signal is semantic, not s
 
 ---
 
+## Ground-truth verification discipline (PROB-002 / RFC-011 / ADR-009)
+
+Foundation: PROB-002 (a worker self-reported success, downstream trusted the report, the gap surfaced later) → RFC-011 (architecture, FR-3) → ADR-009 (decision). The principle is **generator ≠ verifier**: the entity that produced an outcome never verifies its own work, and a reviewer never trusts the worker's "done" claim — it checks the claim against frozen external ground truth it reads itself.
+
+### Rules
+
+1. **Verify the side-effect against ground truth, never against a self-report.** For code, that ground truth is the git object store (`git diff base..head` in a clean shell). For a forgeplan mutation, it is the stored artifact body (`forgeplan_get` — confirm the claimed section is actually present). The worker's transcript ("done", "tests passed") is supplementary, not proof.
+
+2. **Empty diff on a claimed change = fail (BLOCKER).** A green test suite with an empty `git diff` is **vacuous green** — a suite stays green when nothing changed, so it is a null result, not a pass. This holds even when scanners are clean.
+
+3. **Run git probes under `bash --noprofile --norc`.** This sidesteps rc-hook stderr noise and `set -u` footguns that corrupt output parsing. Resolve the repo root with `git -C <cwd> rev-parse --show-toplevel` — never assume `$CLAUDE_PROJECT_DIR` is itself a git repo (in this workspace the marketplace repo is a child directory; the workspace root is not a git repo).
+
+4. **The reviewer pastes the proof; the gate re-checks it.** Profile B reviewers record the literal probe commands + output in a `## Ground-truth verification` EVID section. Guardian Step 5 BLOCKS any code-claiming EVID whose body lacks that section or shows `DELTA=EMPTY`. This is the enforceable form of ML-13. Full procedure (variants A / A' / A'') in `plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md` § "Profile B Step 4.5 — Ground-truth verification clause". Miniature proof: `sandbox-verify/r3-reviewer-groundtruth-smoke.sh` (green tests + empty diff → BLOCKER).
+
+### Worktree isolation — the verified truth (corrects an earlier under-claim)
+
+git worktree isolation **works**, and it is **not coder-only**: standalone subagents, Workflow runs, **and AgentTeams teammates** all receive isolated worktrees — verified in a real project with 14 isolated agent worktrees. (Only the `isolation: worktree` *frontmatter declaration* is coder-specific; the runtime guarantee is general.) The real multi-agent risks are not "isolation doesn't apply to teammates" but:
+
+- **Worktree leak** — stale worktrees accumulate across runs; prune them (`git worktree prune` / `git worktree list` audit).
+- **Assuming isolation without verifying** — always confirm `git worktree list` differs from `main` rather than assume the isolation took effect. Assume-without-verify is the same failure class as trust-the-self-report above.
+
+Reference: PROB-002, RFC-011 (FR-3), ADR-009. Related: Claude Code issue [#44035](https://github.com/anthropics/claude-code/issues/44035) (upstream instance of the self-report-trust failure class).
+
+---
+
 ## Version Bumping
 
 When a plugin changes, bump version in two places:
@@ -910,7 +935,7 @@ Three previously-undocumented but widely-used fields now formalised in AGENT-AUT
 |---|---|---|
 | `skills` | 18+ agents (adr-architect, specification, architecture, discover, ...) | Documents which skills agent orchestrates |
 | `maxTurns` | coder (60), discover (60), Profile A/B agents (30-50) | Caps autonomous turn budget |
-| `isolation: worktree` | agents-core:coder exclusively | Profile C-coder pattern — isolated git worktree for parallel safety |
+| `isolation: worktree` | agents-core:coder is the only marketplace agent that *declares* the field | Profile C-coder pattern — isolated git worktree for parallel safety. NOTE: declaring the field is coder-only, but worktree isolation as a runtime guarantee is NOT — standalone subagents, Workflow runs, and AgentTeams teammates all receive isolated worktrees (see "Ground-truth verification discipline" below). |
 
 ### Sprint W metrics
 

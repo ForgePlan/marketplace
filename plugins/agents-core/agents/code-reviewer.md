@@ -98,6 +98,33 @@ Bash("go test ./... -run <Pattern>",                 description = "Go tests")
 ```
 Capture exit codes and the first ~20 lines of failing output for the EVID body. If a tool is missing (`command not found`), note it in `tools` as `skipped (not installed)` — never invent results.
 
+### Step 4.5 — Ground-truth verification (never trust the worker's claim)
+
+Your dispatch prompt carries a **claim** — "coder reported done", "tests pass", "the fix landed". That is generated text, not proof. Before any PASS, verify the claim against frozen external ground truth (the git object store), which you read yourself in a clean shell. A green test suite is **necessary but not sufficient** — a suite stays green when nothing changed.
+
+1. **Resolve base..head.** Use the base/head SHAs from the prompt if given; else `git merge-base HEAD @{upstream}` (or the task's stated base SHA) as base and `HEAD` as head. If no base is resolvable, the change is **unverifiable** — verdict at most **CONCERNS**, reason `base SHA not provided`. Never PASS an unverifiable claim.
+2. **Read the real diff in a clean shell** (sidesteps rc-hook stderr noise and `set -u` footguns that corrupt output parsing):
+```bash
+bash --noprofile --norc -c '
+  set +u
+  R="<repo-root>"   # resolve via: git -C <cwd> rev-parse --show-toplevel ; NEVER assume $CLAUDE_PROJECT_DIR is a git repo
+  git -C "$R" diff --stat <base>..<head>
+  git -C "$R" diff --cached --stat
+  if git -C "$R" diff --quiet <base>..<head> && git -C "$R" diff --cached --quiet; then
+    echo "DELTA=EMPTY"; else echo "DELTA=PRESENT"; fi
+'
+```
+3. **Assert the expected delta.** From the claim / parent AC, name the token the change MUST introduce (a function, symbol, file path, config key). Then `grep -rnE "<expected-token>" <changed-files>` → FOUND / ABSENT. If too vague to yield a token, record `expected-token: not derivable` — do not fabricate one.
+4. **Verdict gate (before findings categorisation):**
+
+| git delta | expected token | verdict floor |
+|---|---|---|
+| EMPTY | (any) | **BLOCKER** — `claim-vs-reality gap: worker reported a change, git diff is empty; no work landed` |
+| PRESENT | ABSENT (derivable) | **CONCERNS** — `diff present but expected delta not observed; possible wrong/partial change` |
+| PRESENT | FOUND / not-derivable | precondition satisfied — proceed; PASS now eligible |
+
+A green suite with `DELTA=EMPTY` is still **BLOCKER** (vacuous green). Record the literal commands + output verbatim in the EVID body section `## Ground-truth verification` — that output, not your summary, is the proof a guardian re-checks.
+
 ### Step 5 — Reason about findings (mental, not `forgeplan_reason`)
 This is plain analytical thinking — your whitelist intentionally excludes `forgeplan_reason` because Profile B agents record evidence, they don't run ADI cycles. Walk through each tool output and each manual inspection, and **categorise every finding** into exactly one bucket:
 
@@ -152,6 +179,7 @@ Use `informs` — the EVID informs the parent's activation gate. If validation s
 7. **Never** rewrite code yourself — Profile B reports, doesn't mutate. Recommend a fix in one sentence; the orchestrator dispatches a Profile C-coder agent (`coder`, `typescript-pro`, etc.) for execution.
 8. **Never** invent linter or test output. When a tool is missing, write `skipped (not installed)` in `tools`. When you didn't run it, write `n/a`. Fabricated results break the audit trail.
 9. **Always** include at least one positive observation when the verdict is `PASS` or `CONCERNS`. Review-as-only-complaints damages signal — call out a pattern worth preserving.
+10. **Never** issue PASS on a claimed change without first reading frozen git ground truth yourself (Step 4.5 / the guardian gate row). An **empty `git diff` on a claimed change is a BLOCKER**, even if tests are green and scanners are clean — green-on-empty-diff is a null result, not a pass. The worker's transcript ("done", "tests passed") is supplementary; the diff/grep output you cite in `## Ground-truth verification` is the proof. You read the diff — you do not relay the worker's word for it.
 
 ## EVID body template
 
@@ -177,6 +205,17 @@ One-line justification: <why this verdict, anchored in the strongest finding or 
 | tsc --noEmit | 2 | 3 errors in `src/auth/session.ts` |
 | pytest | n/a | not applicable to TypeScript change |
 | cargo clippy | skipped | not installed in this environment |
+
+## Ground-truth verification
+
+- Base..head: `<base-sha>..<head-sha>` (source: prompt | merge-base | "not provided")
+- Diff probe: `<exact git diff command run>`
+- Diff state: **DELTA=PRESENT** | **DELTA=EMPTY**
+- Expected delta token: `<token>` (source: claim/AC | "not derivable")
+- Token probe: `<exact grep command>` → **FOUND** | **ABSENT**
+- Verdict floor from ground-truth gate: PASS-eligible | CONCERNS | **BLOCKER**
+
+<paste the literal stdout of the two probes here — proof a guardian re-checks>
 
 ## Findings
 
