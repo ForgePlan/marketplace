@@ -106,7 +106,11 @@ if [ "$TOOL_NAME" = "Bash" ]; then
   if [ -n "$COMMAND" ] && _has_write_pattern "$COMMAND"; then
     TARGET_FILE="$(get_target_file "$COMMAND" | head -1)"
   fi
-  # Bash with no write pattern → allow
+  # Bash with no write pattern → allow. KNOWN-OPEN GAP (conservative, mirrors
+  # the TDD gate): a write-pattern command whose target get_target_file cannot
+  # extract (no recognized extension) yields an empty TARGET_FILE and is
+  # allowed — blocking an unextractable target would false-positive on benign
+  # commands. The agent-path discipline + the readiness gate cover this case.
   if [ -z "$TARGET_FILE" ]; then
     exit 0
   fi

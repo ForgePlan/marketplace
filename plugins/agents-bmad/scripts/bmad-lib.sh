@@ -262,7 +262,6 @@ canonicalize_path() {
   local input="$1"
 
   if [ -z "$input" ]; then
-    _CANONICAL_RESULT="."
     printf '%s\n' "."
     return 0
   fi
@@ -270,7 +269,7 @@ canonicalize_path() {
   # Whitespace-only input → "." (preserves the non-empty-output contract)
   case "$input" in
     *[!$' \t\n']*) ;;
-    *) _CANONICAL_RESULT="."; printf '%s\n' "."; return 0 ;;
+    *) printf '%s\n' "."; return 0 ;;
   esac
 
   local absolute=0
@@ -322,7 +321,6 @@ canonicalize_path() {
   done
 
   if [ "$top_idx" -lt 0 ]; then
-    [ "$absolute" = 1 ] && _CANONICAL_RESULT="/" || _CANONICAL_RESULT="."
     [ "$absolute" = 1 ] && printf '%s\n' "/" || printf '%s\n' "."
     return 0
   fi
@@ -337,7 +335,6 @@ canonicalize_path() {
   # Single-line contract: newlines in input bytes become "_".
   out="${out//$'\n'/_}"
 
-  _CANONICAL_RESULT="$out"
   printf '%s\n' "$out"
 }
 
