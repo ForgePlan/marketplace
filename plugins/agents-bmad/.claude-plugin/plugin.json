@@ -1,0 +1,40 @@
+{
+  "name": "agents-bmad",
+  "version": "0.1.0",
+  "description": "BMAD greenfield methodology: bmad-orchestrator master walks the persona arc (Analyst → PM → Architect → Scrum-Master → Dev → QA) with a blocking quality-gate at every handoff and a fail-closed no-code-before-plan PreToolUse gate (second instance of the AD/AID-PDLC sub-cycle contract). Implements RFC-013 / ADR-010: reuses existing forgeplan-aware personas (brief-intake/specification/adr-architect/architecture/goal-planner/coder/tester/code-reviewer/guardian/evidence-recorder) + a new bmad-orchestrator + /bmad + /bmad-init + bmad-gate (permissionDecision:deny, exit2 fail-closed) reading a per-branch phase state file.",
+  "author": {
+    "name": "ForgePlan"
+  },
+  "homepage": "https://github.com/ForgePlan/marketplace",
+  "repository": "https://github.com/ForgePlan/marketplace",
+  "license": "MIT",
+  "keywords": [
+    "agents",
+    "bmad",
+    "methodology",
+    "greenfield",
+    "quality-gates",
+    "adr-010",
+    "rfc-013"
+  ],
+  "category": "workflow",
+  "requires": {
+    "cli": [],
+    "mcp": [],
+    "plugins": []
+  },
+  "supersedes": {},
+  "components": {
+    "commands": [],
+    "agents": [
+      "bmad-orchestrator"
+    ],
+    "skills": [
+      "skills/bmad",
+      "skills/bmad-init"
+    ],
+    "hooks": [
+      "hooks/hooks.json"
+    ]
+  }
+}
