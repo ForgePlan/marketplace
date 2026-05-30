@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.82.2"
+    "version": "1.82.3"
   },
   "plugins": [
     {
@@ -36,7 +36,7 @@
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
       "description": "Flagship workflow plugin for the ForgePlan ecosystem. 34 engineering skills + dev-advisor agent + 5 hooks (+ smith greeting + RIPER auto-route + decay Layer 3). v1.41.1: smith routing-map adds a 'TDD-first feature' context row routing to the agents-tdd dispatch sequence (RFC-012/ADR-010). v1.40.0: RFC-011 FR-3 ground-truth verification clause (generator\u2260verifier) \u2014 AGENT-AUTHORING-GUIDE 'Profile B Step 4.5' canonical section + universal HARD RULE 8 (empty git diff on a claimed change = BLOCKER even with green tests; makes ML-13 enforceable), smith routing-map methodology card (applies to every Build/Audit row), worktree under-claim corrected (isolation works for standalone subagents + Workflow + AgentTeams teammates). Refs PROB-002/RFC-011/ADR-009. v1.38.1: cookbook \u00a707 + \u00a714.4 fix \u2014 final-e2e found forgeplan#353 (CLI rejects `/` in agent ID, MCP accepts). Workaround: dash-form agent IDs. v1.38.0: /forgeplan-cookbook skill (66 MCP + 82 CLI across 14 sections). v1.37.x: MCP safety + --help audit.",
-      "version": "1.41.1",
+      "version": "1.41.2",
       "author": {
         "name": "ForgePlan"
       },
