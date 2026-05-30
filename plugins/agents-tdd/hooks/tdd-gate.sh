@@ -196,6 +196,13 @@ case "$PHASE" in
       if [ -n "$FROZEN_HASH" ]; then
         SPEC_PATH="$(jq -r '.spec_path // ""' "$STATE_FILE" 2>/dev/null)" || exit 2
 
+        # Fail-closed: a frozen hash with no spec_path is a contradictory state —
+        # the oracle-drift check cannot run, so we must NOT silently allow the
+        # write (that would be a fail-open bypass of FR-6). Deny until restored.
+        if [ -z "$SPEC_PATH" ]; then
+          _deny "TDD tdd-green: spec_hash is frozen but spec_path is empty in state — the oracle drift check (FR-6) cannot run. Refusing source writes until spec_path is restored in .forgeplan/tdd/state. (RFC-012 FR-6 / ADR-010 C5)"
+        fi
+
         if [ -n "$SPEC_PATH" ]; then
           # Resolve spec path relative to repo root if not absolute
           case "$SPEC_PATH" in

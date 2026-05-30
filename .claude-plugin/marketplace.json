@@ -298,7 +298,7 @@
           "coder-tdd",
           "tdd-test-validator"
         ],
-        "skills": [],
+        "skills": ["skills/tdd"],
         "hooks": [
           "hooks/hooks.json"
         ]

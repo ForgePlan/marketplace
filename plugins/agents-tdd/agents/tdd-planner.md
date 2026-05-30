@@ -7,7 +7,11 @@ description: |
   Triggers: "plan the tests", "test plan from spec", "what to assert", "scenarios to test cases", "RED-first plan", "TDD plan", "tdd-planner", "what tests do we need", "распланируй тесты", "план тестов из спеки", "что ассертить", "сценарии в тест-кейсы", "что тестировать"
 model: opus
 color: "#673AB7"
-disallowedTools: Write, Edit, NotebookEdit, mcp__forgeplan__forgeplan_activate
+disallowedTools:
+  - Write
+  - Edit
+  - NotebookEdit
+  - mcp__forgeplan__forgeplan_activate
 skills:
   - fp-cookbook
   - forgeplan-methodology
