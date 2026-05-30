@@ -1,7 +1,7 @@
 {
   "name": "agents-sparc",
-  "version": "1.2.2",
-  "description": "SPARC development methodology agents: orchestrator with quality gates, plus 4 phase specialists (specification, pseudocode, architecture, refinement/TDD). v1.2.2: refinement notes enforced-TDD delegation (RFC-012) — RED test-writing delegates to agents-tdd:coder-tdd and GREEN to agents-core:coder; refinement retains refactor-after-green. v1.2: ALL 5 agents canonical-lint compliant — sparc-orchestrator + pseudocode + refinement migrated to model=opus|sonnet, hex colors, bilingual EN/RU/Triggers descriptions (legacy lint warnings eliminated). 100% of agents-sparc pack passes LR-1..LR-3. specification + architecture remain forgeplan-aware Profile A (PRD-026 Phase 3 batch 1).",
+  "version": "1.3.0",
+  "description": "SPARC development methodology agents: orchestrator with quality gates, plus 4 phase specialists (specification, pseudocode, architecture, refinement/TDD). v1.3.0: THIRD instance of the AD/AID-PDLC sub-cycle contract (ADR-010 / RFC-016) — sparc-orchestrator finished to a contract-conformant Profile B-orchestrator (disallowedTools denylist + Task-dispatch + C1-C6 framing; closes the LR-8 tools allowlist / EVID-153 F2) + NEW /sparc skill (5-phase master-coordinated walk: Specification→Pseudocode→Architecture→Refinement→Completion, mandatory per-gate independent C4, Pseudocode-absorption, Refinement→TDD delegation). острый=No — no hook, no lib, no init. v1.2.2: refinement notes enforced-TDD delegation (RFC-012) — RED test-writing delegates to agents-tdd:coder-tdd and GREEN to agents-core:coder; refinement retains refactor-after-green. v1.2: ALL 5 agents canonical-lint compliant — sparc-orchestrator + pseudocode + refinement migrated to model=opus|sonnet, hex colors, bilingual EN/RU/Triggers descriptions (legacy lint warnings eliminated). 100% of agents-sparc pack passes LR-1..LR-3. specification + architecture remain forgeplan-aware Profile A (PRD-026 Phase 3 batch 1).",
   "author": {"name": "ForgePlan"},
   "homepage": "https://github.com/ForgePlan/marketplace",
   "repository": "https://github.com/ForgePlan/marketplace",
@@ -19,7 +19,9 @@
       "architecture",
       "refinement"
     ],
-    "skills": [],
+    "skills": [
+      "skills/sparc"
+    ],
     "hooks": []
   }
 }
