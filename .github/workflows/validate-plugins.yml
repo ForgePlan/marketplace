@@ -150,3 +150,23 @@ jobs:
               exit 1
             fi
           done
+
+      - name: Run plugin test suites (if any)
+        run: |
+          # Additive: run any plugins/*/tests/test-*.sh. Plugins without a tests/
+          # dir are unaffected. A failing suite fails CI for the touching PR.
+          errors=0
+          found=0
+          for t in plugins/*/tests/test-*.sh; do
+            [ -f "$t" ] || continue
+            found=$((found + 1))
+            echo "--- Running: $t ---"
+            if bash "$t"; then
+              echo "OK: $t"
+            else
+              echo "FAIL: $t (exit $?)"
+              errors=$((errors + 1))
+            fi
+          done
+          [ "$found" -eq 0 ] && echo "No plugin test suites found (skipped)"
+          [ "$errors" -eq 0 ] || exit 1
