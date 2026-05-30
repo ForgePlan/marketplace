@@ -124,3 +124,13 @@ function processUser(user: User): void {
 6. **Documentation**: Keep docs in sync with code
 
 Refinement is iterative. Each cycle should improve quality, performance, and maintainability while keeping all tests green.
+
+## Note: enforced-TDD delegation
+
+The red-green-refactor loop above is the SPARC default for a feature surface. When the work runs under the **enforced-TDD sub-cycle** (RFC-012 / ADR-010 — "tests frozen before code, implementer cannot edit them"), the RED and GREEN halves are delegated to dedicated agents in separate contexts, and this agent keeps only the refactor half:
+
+- **RED (write the failing tests)** → delegated to `agents-tdd:coder-tdd`, with `agents-tdd:tdd-test-validator` independently certifying the tests before they are frozen. Do NOT write the failing tests yourself in this mode — a single context that writes both the tests and the code is the self-grading defect enforced-TDD exists to remove (generator≠verifier, ADR-009/ADR-010).
+- **GREEN (make the frozen tests pass)** → delegated to `agents-core:coder`, which writes source only and may not edit the frozen test files.
+- **Refactor-after-green** → stays with this refinement agent: once the tests are green, improve structure/clarity/performance while keeping the (still frozen) tests passing, then hand off to `tester` (Profile B) for the coverage-delta EVIDENCE.
+
+Outside enforced-TDD, the standard red-green-refactor loop documented above continues to apply unchanged.
