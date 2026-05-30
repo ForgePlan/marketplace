@@ -225,7 +225,7 @@ case "$PHASE" in
             fi
 
             if [ "$LIVE_HASH" != "$FROZEN_HASH" ]; then
-              _deny "TDD phase tdd-green: SPEC oracle drift DETECTED. The SPEC '${SPEC_PATH}' has changed since the oracle was frozen at tdd-test-validator PASS. Frozen hash: ${FROZEN_HASH:0:12}… Live hash: ${LIVE_HASH:0:12}… Re-run tdd-test-validator to re-certify before continuing GREEN. (RFC-012 FR-6 / ADR-010 C5)"
+              _deny "TDD phase tdd-green: SPEC oracle drift DETECTED. The SPEC '${SPEC_PATH}' changed after the oracle was frozen at tdd-test-validator PASS (frozen ${FROZEN_HASH:0:12}… vs live ${LIVE_HASH:0:12}…). Do NOT edit the SPEC in place — that erases requirement history. The SPEC is immutable once frozen; if it genuinely must change, SUPERSEDE it with a delta-spec (ADDED/MODIFIED/REMOVED) via /supersede (S12 OpenSpec discipline), then restart the TDD cycle so a fresh oracle is frozen. If the change was accidental, restore the SPEC to its frozen content. (RFC-012 FR-6 / ADR-010 C5)"
             fi
           fi
           # spec_path set but file absent → allow (may be a forgeplan artifact

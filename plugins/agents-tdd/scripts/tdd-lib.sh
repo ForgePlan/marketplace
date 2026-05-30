@@ -520,3 +520,58 @@ normalized_spec_hash() {
   fi
   return 1
 }
+
+# ---------------------------------------------------------------------------
+# detect_stack — infer the test stack from repo markers (best-effort)
+# ---------------------------------------------------------------------------
+# Emits tab-separated fields on one line:
+#   language <TAB> test_command <TAB> test_file_glob <TAB> source_file_glob <TAB> red_confirm <TAB> lint_command
+# Detection is by on-disk marker files relative to the repo root. Returns 0 on
+# a confident match, 1 if nothing matched (caller should ask the user). Advisory:
+# /tdd-init shows the result for human review before writing it.
+detect_stack() {
+  local root="${1:-$(repo_root 2>/dev/null || pwd)}"
+  local lang tc tfg sfg rc lc
+  if [ -f "$root/pyproject.toml" ] || [ -f "$root/setup.py" ] || [ -f "$root/pytest.ini" ] || [ -f "$root/tox.ini" ]; then
+    lang=python; tc="pytest -q"; tfg="test_*.py|*_test.py|tests/*.py"; sfg="*.py"; rc="FAILED"; lc="ruff check ."
+  elif [ -f "$root/Cargo.toml" ]; then
+    lang=rust; tc="cargo test"; tfg="tests/*.rs|src/**/*test*.rs"; sfg="*.rs"; rc="test result: FAILED"; lc="cargo clippy"
+  elif [ -f "$root/go.mod" ]; then
+    lang=go; tc="go test ./..."; tfg="*_test.go"; sfg="*.go"; rc="--- FAIL:"; lc="go vet ./..."
+  elif [ -f "$root/package.json" ]; then
+    if grep -q '"vitest"' "$root/package.json" 2>/dev/null; then
+      lang=typescript; tc="vitest run"; rc="FAIL"
+    elif grep -q '"jest"' "$root/package.json" 2>/dev/null; then
+      lang=typescript; tc="jest --ci"; rc="✕"
+    else
+      lang=javascript; tc="npm test"; rc="FAIL"
+    fi
+    tfg="*.test.ts|*.test.js|*.spec.ts|*.spec.js|*.test.tsx"; sfg="*.ts|*.tsx|*.js|*.jsx"; lc="eslint ."
+  elif [ -f "$root/composer.json" ]; then
+    lang=php; tc="vendor/bin/phpunit"; tfg="*Test.php|tests/*.php"; sfg="*.php"; rc="FAILURES!"; lc="vendor/bin/phpcs"
+  elif [ -f "$root/Gemfile" ]; then
+    lang=ruby; tc="bundle exec rspec"; tfg="*_spec.rb|spec/*.rb"; sfg="*.rb"; rc="failures"; lc="rubocop"
+  elif [ -f "$root/pom.xml" ]; then
+    lang=java; tc="mvn -q test"; tfg="*Test.java|*Tests.java"; sfg="*.java"; rc="Failures:"; lc=""
+  else
+    return 1
+  fi
+  printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$lang" "$tc" "$tfg" "$sfg" "$rc" "$lc"
+  return 0
+}
+
+# write_stack_json — render stack.json from six fields into $FORGEPLAN_TDD_DIR.
+# Usage: write_stack_json LANG TEST_CMD TEST_GLOB SOURCE_GLOB RED_CONFIRM LINT_CMD
+# Writes <repo_root>/$FORGEPLAN_TDD_DIR/stack.json (creates the dir). Requires jq.
+write_stack_json() {
+  local lang="$1" tc="$2" tfg="$3" sfg="$4" rc="$5" lc="$6"
+  local dir; dir="$(tdd_dir 2>/dev/null)" || return 1
+  mkdir -p "$dir" || return 1
+  jq -n \
+    --arg language "$lang" --arg test_command "$tc" \
+    --arg test_file_glob "$tfg" --arg source_file_glob "$sfg" \
+    --arg red_confirm "$rc" --arg lint_command "$lc" \
+    '{language:$language, test_command:$test_command, test_file_glob:$test_file_glob, source_file_glob:$source_file_glob, red_confirm:$red_confirm, lint_command:$lint_command}' \
+    > "$dir/stack.json" || return 1
+  echo "$dir/stack.json"
+}

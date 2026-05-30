@@ -153,6 +153,30 @@ sufficient). Activation follows ADR-006: the orchestrator emits the activation s
 
 ---
 
+## The SPEC is immutable once frozen (supersede, never edit in place)
+
+The frozen oracle is not just "don't touch the tests" — the **SPEC itself is append-only**. Once
+`tdd-test-validator` PASSes and the orchestrator stamps `spec_hash`, the SPEC must not be edited in
+place. Editing it mid-cycle erases requirement history and silently moves the target the tests were
+certified against — the gate detects this as oracle drift and BLOCKS.
+
+If a requirement genuinely must change:
+
+1. **Do NOT overwrite the SPEC.** Write a **delta-spec** — an explicit diff with `## ADDED Requirements`,
+   `## MODIFIED Requirements` (BEFORE/AFTER), `## REMOVED Requirements`. This is `git diff` for
+   requirements: six months later `git log` over the deltas explains *why* a requirement changed,
+   with its date and context.
+2. **Supersede** the SPEC via `/supersede` (S12 OpenSpec discipline — `adr-supersede` template).
+   The predecessor is marked `superseded`; the new SPEC carries the delta.
+3. **Restart the TDD cycle** on the new SPEC so a fresh oracle is frozen against the new requirements.
+
+The frozen `spec_hash` is the same idea as evidence decay: it pins "these tests were certified against
+*this* requirement state". When requirements move, the old oracle is stale — you reaffirm-or-supersede,
+you do not patch. Dependent SPECs (the DAG recorded in `## Related` / Triggers) should be reviewed when
+a SPEC supersedes — a change here may force a delta in a search/migration/API SPEC downstream.
+
+---
+
 ## Phase model (micro-states inside Build)
 
 State lives per-branch in `.forgeplan/tdd/state-<branch-slug>.json` (resolved via the git repo root;
