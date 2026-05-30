@@ -1,0 +1,24 @@
+{
+  "name": "agents-tdd",
+  "version": "0.1.0",
+  "description": "Enforced-TDD methodology: tdd-orchestrator master + RED/GREEN phase agents + fail-closed PreToolUse gate (first instance of the AD/AID-PDLC sub-cycle contract). Implements RFC-012 / ADR-010: tdd-planner (scenarios→plan) + coder-tdd (plan→failing tests, RED) + tdd-test-validator (independent C4 verifier) + PreToolUse tdd-gate (permissionDecision:deny, exit2 fail-closed) + normalized full-file SPEC hash freeze (FR-6).",
+  "author": {"name": "ForgePlan"},
+  "homepage": "https://github.com/ForgePlan/marketplace",
+  "repository": "https://github.com/ForgePlan/marketplace",
+  "license": "MIT",
+  "keywords": ["agents", "tdd", "methodology", "enforced-tdd", "quality-gates", "adr-010", "rfc-012"],
+  "category": "workflow",
+  "requires": {"cli": [], "mcp": [], "plugins": []},
+  "supersedes": {},
+  "components": {
+    "commands": [],
+    "agents": [
+      "tdd-orchestrator",
+      "tdd-planner",
+      "coder-tdd",
+      "tdd-test-validator"
+    ],
+    "skills": [],
+    "hooks": ["hooks/hooks.json"]
+  }
+}
