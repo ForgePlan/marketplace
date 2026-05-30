@@ -70,6 +70,8 @@ itself (its denylist blocks Write/Edit + forgeplan mutations). All four contexts
 | D | `tdd-green` | `coder` (ctx D, reuse `agents-core:coder`) | frozen RED tests + SPEC → **GREEN** (cannot edit tests) | tests pass; lint clean |
 | exit | `done` | orchestrator | EVIDENCE-out (carries C4 PASS verdict) → forgeplan **Audit** | per C6 below |
 
+> **Note on phase `tdd-red`:** it spans **both** Step B (coder-tdd writes tests) and Step C (tdd-test-validator certifies them). The state does NOT advance to `tdd-green` until the validator PASSes and the oracle is frozen — two agents legitimately share the `tdd-red` phase label; this is not a state duplication.
+
 ```
 [C1: PRD + SPEC active, SPEC has #### Scenarios]
   ▼ tdd-planner ........ (ctx A) scenarios → test PLAN ("what to assert")

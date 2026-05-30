@@ -204,6 +204,12 @@ locked_update_state() {
   _acquire_state_lock "$state_file" || return 1
   # EXIT trap ensures the lock is released even if the process is killed
   # (e.g. the hook runner times out) between acquire and release.
+  # NOTE (trap-clobber caveat): this installs a fresh EXIT trap and clears it
+  # with `trap - EXIT` below. If this lib is sourced into a context that has
+  # its OWN EXIT handler, that handler is clobbered for the duration of this
+  # call. Safe in the orchestrator/hook (no competing EXIT trap); if a future
+  # consumer sources tdd-lib.sh alongside another EXIT handler, switch to a
+  # save-and-restore trap-stack pattern here.
   # shellcheck disable=SC2064
   trap "$(printf '_release_state_lock %q; rm -f %q' "$state_file" "${state_file}.$$.tmp")" EXIT
 
