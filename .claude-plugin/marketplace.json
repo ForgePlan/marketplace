@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code — UX, frontend, workflow, and developer tools",
-    "version": "1.82.0"
+    "version": "1.82.1"
   },
   "plugins": [
     {
@@ -35,8 +35,8 @@
     {
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
-      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 34 engineering skills + dev-advisor agent + 5 hooks (+ smith greeting + RIPER auto-route + decay Layer 3). v1.40.0: RFC-011 FR-3 ground-truth verification clause (generator≠verifier) — AGENT-AUTHORING-GUIDE 'Profile B Step 4.5' canonical section + universal HARD RULE 8 (empty git diff on a claimed change = BLOCKER even with green tests; makes ML-13 enforceable), smith routing-map methodology card (applies to every Build/Audit row), worktree under-claim corrected (isolation works for standalone subagents + Workflow + AgentTeams teammates). Refs PROB-002/RFC-011/ADR-009. v1.38.1: cookbook §07 + §14.4 fix — final-e2e found forgeplan#353 (CLI rejects `/` in agent ID, MCP accepts). Workaround: dash-form agent IDs. v1.38.0: /forgeplan-cookbook skill (66 MCP + 82 CLI across 14 sections). v1.37.x: MCP safety + --help audit.",
-      "version": "1.41.0",
+      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 34 engineering skills + dev-advisor agent + 5 hooks (+ smith greeting + RIPER auto-route + decay Layer 3). v1.41.1: smith routing-map adds a 'TDD-first feature' context row routing to the agents-tdd dispatch sequence (RFC-012/ADR-010). v1.40.0: RFC-011 FR-3 ground-truth verification clause (generator≠verifier) — AGENT-AUTHORING-GUIDE 'Profile B Step 4.5' canonical section + universal HARD RULE 8 (empty git diff on a claimed change = BLOCKER even with green tests; makes ML-13 enforceable), smith routing-map methodology card (applies to every Build/Audit row), worktree under-claim corrected (isolation works for standalone subagents + Workflow + AgentTeams teammates). Refs PROB-002/RFC-011/ADR-009. v1.38.1: cookbook §07 + §14.4 fix — final-e2e found forgeplan#353 (CLI rejects `/` in agent ID, MCP accepts). Workaround: dash-form agent IDs. v1.38.0: /forgeplan-cookbook skill (66 MCP + 82 CLI across 14 sections). v1.37.x: MCP safety + --help audit.",
+      "version": "1.41.1",
       "author": {
         "name": "ForgePlan"
       },
@@ -228,8 +228,8 @@
     {
       "name": "agents-core",
       "source": "./plugins/agents-core",
-      "description": "Core development agents: debugger, code reviewer, error detective, performance engineer, production validator, plus complete dev team (coder, planner, researcher, reviewer, tester, TDD). v1.3.2: Sprint Q PRD-042 — ASM-canon frontmatter added to 3 forgeplan-aware agents (skills preload, maxTurns; coder gets isolation:worktree as only writer; code-reviewer + tester get memory:project as learners). v1.3.1: Sprint E body patches.",
-      "version": "1.4.0",
+      "description": "Core development agents: debugger, code reviewer, error detective, performance engineer, production validator, plus complete dev team (coder, planner, researcher, reviewer, tester, TDD). v1.4.1: coder body gains a 'TDD GREEN-phase discipline' section (RFC-012 FR-4) — when dispatched in a TDD GREEN phase, never Write/Edit test files; on a wrong test STOP and emit TEST_BUG; lint after each change. v1.3.2: Sprint Q PRD-042 — ASM-canon frontmatter added to 3 forgeplan-aware agents (skills preload, maxTurns; coder gets isolation:worktree as only writer; code-reviewer + tester get memory:project as learners). v1.3.1: Sprint E body patches.",
+      "version": "1.4.1",
       "author": {
         "name": "ForgePlan"
       },
@@ -272,13 +272,37 @@
     {
       "name": "agents-sparc",
       "source": "./plugins/agents-sparc",
-      "description": "SPARC development methodology: orchestrator with quality gates plus 4 phase specialists (specification, pseudocode, architecture, refinement). v1.2.1: Sprint Q PRD-042 — ASM-canon frontmatter added to 2 forgeplan-aware agents (specification + architecture get skills preload + maxTurns; architecture gets memory:project as learner). v1.2: ALL 5 agents canonical-lint compliant.",
-      "version": "1.2.1",
+      "description": "SPARC development methodology: orchestrator with quality gates plus 4 phase specialists (specification, pseudocode, architecture, refinement). v1.2.2: refinement notes enforced-TDD delegation (RFC-012) — RED test-writing delegates to agents-tdd:coder-tdd and GREEN to agents-core:coder; refinement retains refactor-after-green. v1.2.1: Sprint Q PRD-042 — ASM-canon frontmatter added to 2 forgeplan-aware agents (specification + architecture get skills preload + maxTurns; architecture gets memory:project as learner). v1.2: ALL 5 agents canonical-lint compliant.",
+      "version": "1.2.2",
       "author": {
         "name": "ForgePlan"
       },
       "homepage": "https://github.com/ForgePlan/marketplace",
       "license": "MIT"
+    },
+    {
+      "name": "agents-tdd",
+      "source": "./plugins/agents-tdd",
+      "description": "Enforced-TDD methodology: tdd-orchestrator master + RED/GREEN phase agents + fail-closed PreToolUse gate (first instance of the AD/AID-PDLC sub-cycle contract, ADR-010). Implements RFC-012: tdd-planner (scenarios→plan) + coder-tdd (plan→failing tests, RED) + tdd-test-validator (independent C4 verifier) + PreToolUse tdd-gate (permissionDecision:deny, exit2 fail-closed) + normalized full-file SPEC hash freeze (FR-6). GREEN reuses agents-core:coder.",
+      "version": "0.1.0",
+      "author": {
+        "name": "ForgePlan"
+      },
+      "homepage": "https://github.com/ForgePlan/marketplace",
+      "license": "MIT",
+      "components": {
+        "commands": [],
+        "agents": [
+          "tdd-orchestrator",
+          "tdd-planner",
+          "coder-tdd",
+          "tdd-test-validator"
+        ],
+        "skills": ["skills/tdd"],
+        "hooks": [
+          "hooks/hooks.json"
+        ]
+      }
     },
     {
       "name": "cc-best",

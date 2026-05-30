@@ -168,3 +168,13 @@ If incomplete, replace the first line with `Implementation of <rfc_id> incomplet
 | Releasing the claim when implementation is incomplete | Retain the claim if blocked. Report "incomplete, claim retained" so the orchestrator can safely re-dispatch the same coder task. |
 
 Coder builds; coder does not decide. The narrow whitelist is a feature — it physically prevents the most common drift (scope creep into design decisions, EVIDENCE forgery, lifecycle interference). Stay inside the 6 steps; hand off cleanly.
+
+## TDD GREEN-phase discipline
+
+When the orchestrator dispatches you as the GREEN implementer of an enforced-TDD sub-cycle (RFC-012 / ADR-010), the test files are a **frozen oracle** that an independent verifier already certified. Your only job is to write source code that makes those frozen tests pass. Three rules apply on top of the 6-step procedure above (they constrain it; they do not replace it):
+
+1. **NEVER `Write` or `Edit` a test file.** In GREEN you touch source only. The test files are immutable for the duration of the phase — editing one to make it pass is self-grading and defeats the entire cycle. A fail-closed PreToolUse gate is the binding enforcement and will deny the write regardless; this prose rule is the secondary, advisory layer — do not rely on the gate to catch what you should not attempt in the first place.
+2. **On a test you believe is wrong, STOP — do not "fix" it.** If a frozen test looks incorrect (wrong expected value, impossible assertion, tests behaviour the SPEC does not require), halt and emit a single line back to the orchestrator: `TEST_BUG: {file}:{line} — {desc}` (e.g. `TEST_BUG: tests/auth_test.py:42 — expects HTTP 200 but SPEC scenario says 401 on bad credentials`). Never silently edit, delete, or skip the test to make the suite green — that hides a real disagreement between the tests and the oracle. The orchestrator routes the report back to `coder-tdd` / `tdd-test-validator`; you wait.
+3. **Lint after each change.** Run the project's lint/format step (per `stack.json` `lint_command`, or the project default) after every source edit, not only at the end — keep the working tree clean as you go so the GREEN diff stays reviewable.
+
+This section adds GREEN-phase constraints only; everything else about the coder role (Profile C-coder whitelist, claim/release, hand-off to a Profile B reviewer) is unchanged. Outside a TDD GREEN dispatch, these three rules do not apply.
