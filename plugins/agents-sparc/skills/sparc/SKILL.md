@@ -72,20 +72,20 @@ When `/sparc` is invoked, the main session runs this:
 2. Confirm the task is a **single feature in an existing active system**. If it's a brand-new product → `/bmad`; if brownfield → `/smith` Row 2 (Strangler); if Build-stage test-first only → `/tdd`. Do not start SPARC otherwise.
 3. Pick the **scale tier**: MICRO (bug-fix-sized — skip Pseudocode + collapse to a light spec) / STANDARD (a normal feature — all five phases) / SYSTEM (a large feature — all phases + `system-dev` at the Architecture gate).
 
-### Step 2 — dispatch the master
+### Step 2 — orchestrate the five-phase walk (the main session IS the orchestrator)
+
+острый=No (ADR-012) means **the main session is the SPARC orchestrator** — it dispatches each phase agent and each C4 gate directly (via Task/Agent), following the `sparc-orchestrator` contract, and activates the EVID + gated artifact between phases. The walk:
 
 ```
-Task(subagent_type="agents-sparc:sparc-orchestrator",
-     prompt="""
-       Feature (verbatim): <the user's feature>. Parent: <active PRD / system context>.
-       Run the SPARC five-phase walk per RFC-016 / ADR-010 C1-C6. Verify Precondition C1 (feature in an active system).
-       Walk: specification → [C4 Validate-spec] → pseudocode → architecture(+adr-architect) →
-             [C4 RFC fitness + Pseudocode-absorption] → refinement+coder (delegate to /tdd if test-critical) →
-             [C4 tester+code-reviewer] → evidence-recorder (C6).
-       Every phase gets the full accumulated prior-phase output. Emit NEEDS_ACTIVATION sentinels; never activate.
-       tier: <MICRO|STANDARD|SYSTEM>. task-id: <id>
-     """)
+specification → [C4 Validate-spec: architect-reviewer] → pseudocode → architecture(+adr-architect)
+  → [C4 RFC fitness + Pseudocode-absorption: architect-reviewer (+system-dev)]
+  → refinement+coder (delegate to /tdd if test-critical) → [C4 tester + code-reviewer]
+  → evidence-recorder (C6)
 ```
+
+Every phase receives the FULL accumulated prior-phase output; Profile A/B agents emit `NEEDS_ACTIVATION` and the main session activates before the next phase's C1.
+
+> **Do NOT dispatch `sparc-orchestrator` as a subagent expecting it to run the walk.** The platform blocks `Task` inside subagents, so a dispatched orchestrator cannot spawn the phase agents — it can only verify Precondition C1, return the walk plan, and (correctly) refuse to author/self-certify the work. The `sparc-orchestrator` agent is the **codified walk contract + a discipline guardrail**; the **executor is the main session** (острый=No instances have no dedicated dispatched executor — proven in the RFC-016 dogfood, EVID-165).
 
 ### Step 3 — walk the gates with the user
 
