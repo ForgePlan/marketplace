@@ -14,6 +14,7 @@ disallowedTools:
   - mcp__forgeplan__forgeplan_new
   - mcp__forgeplan__forgeplan_update
   - mcp__forgeplan__forgeplan_link
+  - mcp__forgeplan__forgeplan_validate
   - mcp__forgeplan__forgeplan_activate
   - mcp__forgeplan__forgeplan_reason
   - mcp__forgeplan__forgeplan_claim
