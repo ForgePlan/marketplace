@@ -1,22 +1,22 @@
-# antipatterns — STUB
+# antipatterns — router
 
-> **Status**: not yet authored. Coming in **RFC-009**.
+The cross-topic synthesis. Four content files group the recurring mistakes by where they bite. Each file is self-contained — load one based on the user's intent, do not pre-load the rest. Every entry is a real ForgePlan finding, named → why it bites → the fix.
 
-This section will be the gold mine — synthesis of 47+ audit findings + 30+ anomalies from Sprint A-W across the marketplace.
+## Intent to file
 
-Planned anti-patterns to document:
+| User asks about | Load |
+|---|---|
+| "CLAUDE.md mistakes", "memory: project", "force-enable past denylist", "rules without rationale" | `claude-md.md` |
+| "agent design traps", "denylist holes", "grading own homework", "generator==verifier", "unverified gate" | `agents-and-tools.md` |
+| "prose-only enforcement", "the @filepath body trap", "exit 127 hook", "fail-open gate" | `hooks-and-mcp.md` |
+| "git add -A", "--no-verify", "force-push", "methodology cocktail", "over-reporting", "vacuous green", "catalog not bumped" | `process.md` |
 
-- Mixing CommonJS and ESM module shapes without intent.
-- Hooks of type `prompt-type` (BANNED — security regression).
-- `memory: project` agent field (force-enables `Write/Edit` overriding `disallowedTools`).
-- Anglicism mixing in user-facing replies (Sprint W communication rule).
-- "Necessary but not sufficient" — bold-pattern in EVID body required but does not alone give `r_eff > 0`.
-- And ~25 more.
+## Cross-references
 
-Until shipped, see:
+- This is the synthesis section — most entries point back to the per-topic section that owns the deep treatment (`../hooks/fail-closed.md`, `../mcp/gotchas.md`, `../plugins/versioning.md`).
+- `claude-md/antipatterns.md` is the CLAUDE.md-*file* anti-pattern list (wall of text, stale TODOs). This section's `claude-md.md` covers the *behavioural* traps that span topics. Load both for a full CLAUDE.md audit.
+- `agents-and-tools.md` and `hooks-and-mcp.md` share one spine — fail-closed enforcement. The agent side is "who verifies"; the hook side is "the gate that re-checks".
 
-- `plugins/fpl-skills/SPRINT-A-E-RETROSPECTIVE.md` for the original meta-lessons.
-- `.forgeplan/notes/` for individual anomaly captures.
-- The `mm-pipeline-anomalies` mental model in Hindsight bank for the live catalog.
+## When in doubt
 
-This section will also document the **standalone packaging** path (RFC-009 includes a sub-RFC for repo `ForgePlan/cc-best` distributable via `npx skills add`).
+Default to `process.md` — it holds the highest-frequency footguns (`git add -A`, vacuous green, the catalog bump). Default to `agents-and-tools.md` for "I'm designing an agent and want to know what NOT to do".

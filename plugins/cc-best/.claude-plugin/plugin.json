@@ -1,7 +1,7 @@
 {
   "name": "cc-best",
-  "version": "1.0.0",
-  "description": "Claude Code ecosystem reference — opinionated guide for CLAUDE.md, plugins, agents, hooks, MCP, and anti-patterns. Synthesises 47+ audit findings from ForgePlan marketplace work into a navigable skill. Initial release ships the claude-md section (file structure, hierarchy, patterns, anti-patterns); 5 more sections queued via RFC-005..RFC-009.",
+  "version": "1.1.0",
+  "description": "Claude Code ecosystem reference — opinionated agentic-RAG guide for CLAUDE.md, plugins, agents, hooks, MCP, and anti-patterns. Synthesises 47+ audit findings from ForgePlan marketplace work. v1.1.0: all 6 sections authored — claude-md + plugins + agents + hooks + mcp + anti-patterns (RFC-005..009 closed / DEFER-005..009).",
   "author": {
     "name": "ForgePlan"
   },
