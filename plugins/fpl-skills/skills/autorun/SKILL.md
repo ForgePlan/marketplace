@@ -176,6 +176,8 @@ autonomy:
 
 Note: `--no-verify` lives in `project-config.yaml.forbidden:` (never permitted, not even with confirmation) — see "Red lines" section below.
 
+Note: the **RIPER Plan→Execute transition** is also `human_required` for Row-4 (non-trivial production bug) tasks, but it is a *workflow transition*, not a tool name — so it is enforced by the dedicated «RIPER methodology gate» section below, not by this tool-name matcher (RFC-018 / DEFER-016).
+
 Log a single one-line warning at start: `autonomy: no project-config.yaml — using built-in defaults (level 3)`. No fatal error — the legacy run path stays operational.
 
 ### Integration with execution loop
@@ -234,6 +236,8 @@ Decisions:
 
 ### 2. Classify the task
 Same categories as [`do`](../do/SKILL.md): research / docs / feature / review / bug / refactor / status. Pick template silently — do NOT show plan to user, do NOT ask for approval.
+
+**RIPER arming:** if the task classifies as a **non-trivial production bug** it routes to RIPER (smith Row 4). Arm the **RIPER methodology gate** (see the dedicated section below): the Plan→Execute transition becomes `human_required` and MUST NOT be auto-traversed — this is the one place autopilot holds for a human even at level 5.
 
 ### 3. Run the pipeline
 Delegate to the right skill(s). Pass the **autopilot directive** (see below) in every spawn prompt so the called skill skips its own approval steps.
@@ -346,6 +350,26 @@ and skip all subsequent activation attempts for that artifact_id.
 Cross-reference: `AGENT-AUTHORING-GUIDE.md` Profile B Step 9b (sentinel convention),
 `/forge-cycle` Step 7.5 (interactive variant — confirms with user before activating),
 PRD-032 Sprint D.
+
+---
+
+## RIPER methodology gate — autonomous Plan→Execute requires a human (RFC-018 / DEFER-016)
+
+RIPER (smith Row 4 — a non-trivial production bug / scoped change / investigation in an existing system) is the ADR-010 instance whose enforcement is **hook-gate=No**: it ships no fail-closed hook, and its "no code before the Plan is approved" guarantee rests on **a human at the Plan→Execute mode transition** (the human saying "proceed to Execute" IS the Plan-approval). `/autorun` is purpose-built to run without that human — so a Row-4 bug driven autonomously would silently traverse Plan→Execute and remove the gate RIPER depends on (the G8 accept-by-design gap surfaced by EVID-167 F1). This section is the `/autorun`-side guard that closes it — NOT a RIPER hook (canonical RIPER has none, and a file-hook would false-positive on Research reads).
+
+**The rule (MUST):** when the task classifies as a non-trivial production bug (Step 2 → `bug`, non-trivial → smith Row 4 → RIPER methodology), `/autorun` MUST treat the **Plan→Execute transition as `human_required`** — not auto-approvable at ANY `default_level`, exactly like the built-in `human_required` entries. "Plan→Execute" = the moment an approved Plan (the RIPER Plan RFC has reached `active`) would hand off to Execute (the first `coder` / source-or-test-mutating dispatch).
+
+**Behavior when the gate fires:**
+
+1. Run Research → [C4 Validate-research] → Innovate → Plan and let the Plan RFC reach `active` — these are read / design / review ops and proceed normally under the autonomy gate.
+2. **STOP before the first Execute dispatch.** Do NOT dispatch `coder` (or any source/test write) for a RIPER task without explicit human approval in the current turn.
+3. Treat it as an autonomy-gate `ask`: print the `[AUTONOMY GATE]` prompt with `reason: RIPER Plan→Execute (hook-gate=No depends on a human; RFC-018 / DEFER-016)`. **Unattended default = HOLD, not proceed** — this transition is a one-way door into code, so the fail-safe on the 60s ask-back timeout is to WAIT, the opposite of the usual "apply default and continue".
+4. Write a checkpoint (`status: paused`, `blocker_state: riper_plan_execute_gate`), surface the resume hint (`/autorun --resume <session_id>`), and emit an EVIDENCE (`verdict: CONCERNS`, body: "RIPER Plan→Execute held — autonomous run reached an approved Plan for a Row-4 bug, but hook-gate=No requires a human at Plan→Execute; held pending approval.") linked `informs` to the Plan RFC.
+5. Non-blocked non-RIPER waves (if any) may continue; the RIPER Execute stays held until a human approves.
+
+The mandatory downstream C4 chain (`tester` + `code-reviewer` + `guardian`) remains the backstop if a Plan is somehow approved out-of-band; this gate is the front-stop on the transition itself. With this guard shipped, RFC-018's autonomous-RIPER gap is structurally **held**, not merely documented.
+
+Cross-reference: RFC-018 FR-4, marketplace CLAUDE.md «Social-discipline boundaries» G8, NOTE-013 DEFER-016, `/riper` SKILL.md "hook-gate=No boundary".
 
 ---
 
@@ -522,6 +546,7 @@ User can `TaskList` at any time to see live progress.
 - ❌ Don't run if `docs/agents/` is empty AND no project files exist. Refuse and route to `/setup`.
 - ❌ Don't generate a wave plan with file conflicts. If `sprint` produces one, regenerate before executing.
 - ❌ Don't merge or push without explicit user instruction in the original task. "implement X" doesn't mean "ship X".
+- ❌ Don't autonomously traverse RIPER Plan→Execute. A Row-4 (non-trivial production bug) task's hook-gate=No guarantee depends on a human at that transition (RFC-018 / DEFER-016) — HOLD before the first Execute dispatch, never auto-proceed; unattended default is WAIT, not continue.
 
 ---
 
