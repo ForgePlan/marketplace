@@ -1,10 +1,10 @@
 # ForgePlan Marketplace — Claude Code Configuration
 
 **Repo**: [ForgePlan/marketplace](https://github.com/ForgePlan/marketplace)
-**Catalog version**: 1.72.1
-**Plugins**: 16 (10 workflow + 5 agent packs + 1 memory plugin fpl-hsmem) — cc-best v1.0.0 (Sprint Y) + brownfield-pack canonical discover agent (Sprint V) + smith master-orchestrator (EPIC-002, Profile B-orchestrator)
-**Agents**: 20 of ~65 forgeplan-aware (PRD-026 B2 paradigm — `disallowedTools` denylist + Sprint Q PRD-042 ASM-canon + Sprint S Step 9c + Sprint T v0.32.1 + Sprint V PRD-048 discover + Sprint Z4 PRD-055 evidence-gatherer + EPIC-002 smith Profile B-orchestrator. **`memory: project` REJECTED Sprint R** — Hindsight covers use case.)
-**Last Updated**: 2026-05-26 (post Sprint BB Wave 1A — added "Social-discipline boundaries" section documenting G5/G6/G7 as accept-by-design per EVID-105 / EPIC-003. EPIC-002 closure baseline (smith master-orchestrator, 4-skill cluster + 12-context routing + Profile B-orchestrator) and EPIC-001 baseline (Sprints Z6-Z10) carried forward unchanged. catalog v1.72.1, fpl-skills v1.31.1, agents-pro v1.10.1, forgeplan-workflow v1.12.0.)
+**Catalog version**: 1.85.1
+**Plugins**: 18 (10 workflow + 7 agent packs + 1 memory plugin fpl-hsmem) — adds the AD/AID-PDLC sub-cycle instance packs agents-tdd (#1) + agents-bmad (#2) alongside agents-sparc (#3, finished to B-orchestrator) + smith master-orchestrator (EPIC-002, Profile B-orchestrator)
+**Agents**: 25 of 75 forgeplan-aware (PRD-026 B2 paradigm — `disallowedTools` denylist; + the AD/AID-PDLC sub-cycle masters tdd-orchestrator / bmad-orchestrator, sparc-orchestrator finished to B-orchestrator, and the C4 verifier tdd-test-validator. **`memory: project` REJECTED Sprint R** — Hindsight covers use case.)
+**Last Updated**: 2026-06-01 (post AD/AID-PDLC sub-cycle program — TDD (RFC-012) / BMAD (RFC-013) / SPARC (RFC-016) / RIPER (RFC-018) shipped as the four instances of the ADR-010 contract; program CLOSED at 4 — contract proven across all hook-gate=Yes/No × freezable/conditional-freeze dimensions. The ADR-012 gate is rendered `hook-gate` in shipped artifacts; the Cyrillic codename is retained only in immutable graph decision records. catalog v1.85.1, fpl-skills v1.44.1, agents-sparc v1.3.2, agents-tdd v0.2.1, agents-bmad v0.1.2.)
 
 ---
 
@@ -664,13 +664,13 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # rulesets
 
 ---
 
-## Plugin versions (catalog v1.72.1)
+## Plugin versions (catalog v1.85.1)
 
 ### Workflow plugins
 
 | Plugin | Version |
 |--------|:-------:|
-| **fpl-skills** | **1.31.1** (EPIC-002 PRD-063/064 niceties patch: 4 smith skills + sections + templates + READMEs + AGENT-AUTHORING-GUIDE Profile B-orchestrator L1162-1268; Sprint Z9: c4-diagram Dispatch mode section; Sprint Z8: /supersede skill + templates/adr-supersede.md + /decay-watch Step 2e; Sprint Z5: /decay-watch 4-source extension; Sprint Z2: /decay-watch + decay-reminder.sh; Sprint Z1: /decision + adr templates) |
+| **fpl-skills** | **1.44.1** (AD/AID-PDLC instances #1-#4 smith routing: Row 13 TDD + Row 1 BMAD + Row 3 SPARC + Row 4 RIPER reframes + /riper formalized (DEFER-018 pin-hash basis fix) + /methodology-check Step 10; RFC-011 FR-3 ground-truth clause; EPIC-002 smith 4-skill cluster) |
 | **cc-best** | **1.0.0** (Sprint Y phase 1: claude-md section + 5 STUB sections) |
 | **fpl-hsmem** | 2.1.0 |
 | **forgeplan-workflow** | **1.12.0** (Sprint Z7: Step 4.5 FPF ADI mandatory for Standard+; Sprint Z6: Step 6.5 BMAD adversarial review mandatory for Standard+) |
@@ -686,11 +686,13 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # rulesets
 
 | Plugin | Version | Last sprint |
 |--------|:-------:|---|
-| **agents-core** | 1.3.2 | Sprint Q |
+| **agents-core** | 1.4.1 | RFC-012 — coder GREEN-phase discipline (FR-4) |
 | **agents-domain** | 1.1.0 | — |
-| **agents-pro** | **1.10.1** | EPIC-002 PRD-062 + niceties patch (smith Profile B-orchestrator agent + 12-context routing matrix) |
+| **agents-pro** | 1.12.0 | EPIC-003 guardian Step 5 rows + EPIC-002 smith B-orchestrator |
 | **agents-github** | 1.1.0 | — |
-| **agents-sparc** | 1.2.1 | Sprint Q |
+| **agents-sparc** | 1.3.2 | SPARC instance #3 (RFC-016) — sparc-orchestrator → B-orchestrator + /sparc skill |
+| **agents-tdd** | 0.2.1 | TDD instance #1 (RFC-012) — tdd-orchestrator + RED/GREEN agents + tdd-test-validator + fail-closed gate |
+| **agents-bmad** | 0.1.2 | BMAD instance #2 (RFC-013) — bmad-orchestrator persona-walk + no-code-before-plan gate |
 
 > Source of truth: `.claude-plugin/marketplace.json` and `plugins/*/.claude-plugin/plugin.json`. Always verify before PR.
 

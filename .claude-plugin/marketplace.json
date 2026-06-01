@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.85.0"
+    "version": "1.85.1"
   },
   "plugins": [
     {
@@ -35,8 +35,8 @@
     {
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
-      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 34 engineering skills + dev-advisor agent + 5 hooks (+ smith greeting + RIPER auto-route + decay Layer 3). v1.43.0: smith routing-map Row 3 (new feature in existing service) reframed as the explicit SPARC instance — master-coordinated sparc-orchestrator dispatch + mandatory per-gate independent C4 + Pseudocode-absorption + Refinement→TDD delegation + SPARC/BMAD/TDD/Strangler disambiguator (RFC-016/ADR-010 instance #3). v1.42.0: smith routing-map Row 1 (greenfield) reframed as the explicit BMAD instance — master-coordinated agents-bmad dispatch + 3 mandatory C4 gates + BMAD/SPARC/TDD/Strangler disambiguator (RFC-013/ADR-010 instance #2). v1.41.1: smith routing-map adds a 'TDD-first feature' context row routing to the agents-tdd dispatch sequence (RFC-012/ADR-010). v1.40.0: RFC-011 FR-3 ground-truth verification clause (generator\u2260verifier) \u2014 AGENT-AUTHORING-GUIDE 'Profile B Step 4.5' canonical section + universal HARD RULE 8 (empty git diff on a claimed change = BLOCKER even with green tests; makes ML-13 enforceable), smith routing-map methodology card (applies to every Build/Audit row), worktree under-claim corrected (isolation works for standalone subagents + Workflow + AgentTeams teammates). Refs PROB-002/RFC-011/ADR-009. v1.38.1: cookbook \u00a707 + \u00a714.4 fix \u2014 final-e2e found forgeplan#353 (CLI rejects `/` in agent ID, MCP accepts). Workaround: dash-form agent IDs. v1.38.0: /forgeplan-cookbook skill (66 MCP + 82 CLI across 14 sections). v1.37.x: MCP safety + --help audit.",
-      "version": "1.44.0",
+      "description": "Flagship workflow plugin for the ForgePlan ecosystem. 34 engineering skills + dev-advisor agent + 5 hooks (+ smith greeting + RIPER auto-route + decay Layer 3). v1.44.1: /riper FR-5 pin-hash basis clarified to the Research NOTE body content (excluding mutable frontmatter), NOT the projection file (false-stales on unrelated activation/link/score) — DEFER-018 / EVID-172 F1+F2. v1.44.0: RIPER instance #4 (RFC-018 / ADR-010 #4) shipped. v1.43.0: smith routing-map Row 3 (new feature in existing service) reframed as the explicit SPARC instance — master-coordinated sparc-orchestrator dispatch + mandatory per-gate independent C4 + Pseudocode-absorption + Refinement→TDD delegation + SPARC/BMAD/TDD/Strangler disambiguator (RFC-016/ADR-010 instance #3). v1.42.0: smith routing-map Row 1 (greenfield) reframed as the explicit BMAD instance — master-coordinated agents-bmad dispatch + 3 mandatory C4 gates + BMAD/SPARC/TDD/Strangler disambiguator (RFC-013/ADR-010 instance #2). v1.41.1: smith routing-map adds a 'TDD-first feature' context row routing to the agents-tdd dispatch sequence (RFC-012/ADR-010). v1.40.0: RFC-011 FR-3 ground-truth verification clause (generator\u2260verifier) \u2014 AGENT-AUTHORING-GUIDE 'Profile B Step 4.5' canonical section + universal HARD RULE 8 (empty git diff on a claimed change = BLOCKER even with green tests; makes ML-13 enforceable), smith routing-map methodology card (applies to every Build/Audit row), worktree under-claim corrected (isolation works for standalone subagents + Workflow + AgentTeams teammates). Refs PROB-002/RFC-011/ADR-009. v1.38.1: cookbook \u00a707 + \u00a714.4 fix \u2014 final-e2e found forgeplan#353 (CLI rejects `/` in agent ID, MCP accepts). Workaround: dash-form agent IDs. v1.38.0: /forgeplan-cookbook skill (66 MCP + 82 CLI across 14 sections). v1.37.x: MCP safety + --help audit.",
+      "version": "1.44.1",
       "author": {
         "name": "ForgePlan"
       },
