@@ -1,0 +1,4 @@
+# Build byproducts from running the reference harness — regenerable, not source.
+cli/run_rs_bin
+**/__pycache__/
+*.pyc
