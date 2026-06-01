@@ -227,16 +227,18 @@ If ≥3 distinct module/service/component names are found → C4 check applies.
 
 **Skip if**: artifact is a trivial hotfix (matches `typo`, `off-by-one`, `broken link`, `hotfix`, `опечатка`, `хотфикс`, single-line fix) — RIPER overhead exceeds value. Mark RIPER as N/A in the report.
 
-**Scoring**: per linked EVID (or the artifact body itself if `kind=evidence`), inspect for RIPER Research-mode discipline.
+**Scoring**: per linked EVID (or the artifact body itself if `kind=evidence`), inspect for RIPER Research-mode discipline. Two accepted forms — the **contract-conformant** form (RFC-018, ADR-010 instance #4) and the **legacy** form (pre-RFC-018 bug-fix EVIDs):
 
 | Condition | Score | Status |
 |---|---|---:|
-| Dedicated Research-EVID linked OR substantive `## Research` section in EVID body (≥10 lines with concrete findings: stack trace, repro steps, suspect commits, hypotheses) | 2 | ✅ SATISFIED |
-| `## Research` section present in body but stub-quality (≤5 lines, no concrete findings) OR mentioned in prose without dedicated section | 1 | ⚠️ PARTIAL |
-| Bug-fix EVID with no `## Research` section AND no linked Research-EVID — code change without documented investigation | 0 | ❌ BLOCKER |
+| **Contract form (RFC-018):** a standalone Research NOTE + a C4 EVID (from a context distinct from the researcher, e.g. `artifact-reviewer`) carrying a `## Pinned revision` section with verdict SUFFICIENT — the non-freezable Research C4+C6. **OR legacy form:** a dedicated Research-EVID linked OR a substantive `## Research` section in the EVID body (≥10 lines with concrete findings: stack trace, repro steps, suspect commits, hypotheses) | 2 | ✅ SATISFIED |
+| A `## Pinned revision` EVID OR `## Research` section is present but stub-quality (≤5 lines, no concrete findings), OR the Research C4 verdict is INSUFFICIENT/BIASED, OR mentioned in prose without a dedicated section | 1 | ⚠️ PARTIAL |
+| Bug-fix EVID with NO Research NOTE + `## Pinned revision` C6 AND no `## Research` section AND no linked Research-EVID — code change without documented investigation | 0 | ❌ BLOCKER |
+
+> **Note (RFC-018):** the gold form is now the contract pattern — a Research NOTE pinned by a `## Pinned revision` C6 EVID (the non-freezable Research conditional-freeze). The legacy `## Research` section remains accepted (backward-compatible) for bug-fix EVIDs created before RFC-018. A Plan/code artifact whose Research pin is **stale** (the NOTE was edited after the C4 — hash mismatch) scores PARTIAL: re-pin via a fresh C4 before treating it as SATISFIED.
 
 **Action item if score <2**:
-> Run `/riper` (Research mode) before any more code changes on this bug fix. RIPER discipline forbids implementation without a Research artifact — see `plugins/fpl-skills/skills/riper/SKILL.md` and smith routing-map row 4 (Production bug, non-trivial). Tag the EVID with the methodology label `RIPER (production-bug discipline)` once the Research section lands.
+> Run `/riper` (Research mode) before any more code changes on this bug fix. RIPER discipline forbids implementation without a Research artifact — see `plugins/fpl-skills/skills/riper/SKILL.md` and smith routing-map row 4 (Production bug, non-trivial). Produce a Research NOTE and have a different context (`artifact-reviewer`) certify it with a `## Pinned revision` C6 EVID (or, for a legacy fix, add a substantive `## Research` section). Tag the EVID with the methodology label `RIPER (production-bug discipline)` once it lands.
 
 Record which EVID (if any) carries the Research artifact, and whether the bug was classified trivial (skip) or non-trivial (apply).
 

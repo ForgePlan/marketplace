@@ -1,7 +1,7 @@
 {
   "name": "agents-bmad",
-  "version": "0.1.1",
-  "description": "v0.1.1: bmad-orchestrator denylist adds forgeplan_validate - B-orchestrator parity (DEFER-015 / EVID-157 F1); now matches smith/sparc + the AGENT-AUTHORING-GUIDE canon. BMAD greenfield methodology: bmad-orchestrator master walks the persona arc (Analyst → PM → Architect → Scrum-Master → Dev → QA) with a blocking quality-gate at every handoff and a fail-closed no-code-before-plan PreToolUse gate (second instance of the AD/AID-PDLC sub-cycle contract). Implements RFC-013 / ADR-010: reuses existing forgeplan-aware personas (brief-intake/specification/adr-architect/architecture/goal-planner/coder/tester/code-reviewer/guardian/evidence-recorder) + a new bmad-orchestrator + /bmad + /bmad-init + bmad-gate (permissionDecision:deny, exit2 fail-closed) reading a per-branch phase state file.",
+  "version": "0.1.2",
+  "description": "v0.1.2: ADR-012 internal codename rendered hook-gate in shipped artifacts — bmad-orchestrator + bmad-gate.sh comment; terminology only, no behavior change. v0.1.1: bmad-orchestrator denylist adds forgeplan_validate - B-orchestrator parity (DEFER-015 / EVID-157 F1); now matches smith/sparc + the AGENT-AUTHORING-GUIDE canon. BMAD greenfield methodology: bmad-orchestrator master walks the persona arc (Analyst → PM → Architect → Scrum-Master → Dev → QA) with a blocking quality-gate at every handoff and a fail-closed no-code-before-plan PreToolUse gate (second instance of the AD/AID-PDLC sub-cycle contract). Implements RFC-013 / ADR-010: reuses existing forgeplan-aware personas (brief-intake/specification/adr-architect/architecture/goal-planner/coder/tester/code-reviewer/guardian/evidence-recorder) + a new bmad-orchestrator + /bmad + /bmad-init + bmad-gate (permissionDecision:deny, exit2 fail-closed) reading a per-branch phase state file.",
   "author": {
     "name": "ForgePlan"
   },

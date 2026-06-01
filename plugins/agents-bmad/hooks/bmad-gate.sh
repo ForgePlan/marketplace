@@ -2,7 +2,7 @@
 # ============================================================================
 # bmad-gate.sh — PreToolUse gate for the BMAD pipeline (RFC-013 FR-4, ADR-010 C5)
 # ============================================================================
-# The острый rule: NO application source/test code may be written until the
+# The hook-gate rule: NO application source/test code may be written until the
 # planning artifacts are done and the readiness gate has unlocked dev. This is
 # BMAD's #1 anti-pattern (jumping to code before the PRD/architecture/stories
 # exist). A PreToolUse deny is the only thing that binds human edits too — the

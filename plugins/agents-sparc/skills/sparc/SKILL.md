@@ -6,8 +6,8 @@ description: |
   (Specification → Pseudocode → Architecture → Refinement → Completion), the THIRD instance of the
   AD/AID-PDLC sub-cycle contract (ADR-010 / RFC-016). Dispatches the `sparc-orchestrator` master, which walks
   the five phases as separate isolated-context agents with a blocking INDEPENDENT quality-gate between each.
-  острый=No: there is NO fail-closed hook — C5 is harness phase-ordering + delegating Refinement to the
-  existing TDD острый-gate (RFC-012) when test-immutability matters.
+  hook-gate=No: there is NO fail-closed hook — C5 is harness phase-ordering + delegating Refinement to the
+  existing TDD hook-gate (RFC-012) when test-immutability matters.
   EN: Run SPARC on a single feature in an existing active system — spec → pseudocode → architecture (RFC) →
   code+tests → completion, with a MANDATORY independent reviewer at every phase gate. Use for one well-scoped
   feature in an active codebase, NOT a brand-new product from scratch (that is BMAD) or brownfield
@@ -44,12 +44,12 @@ If it's pure test-first on an already-active SPEC → `/tdd`. SPARC's **Refineme
 `sparc-orchestrator` refuses to start when the signal is not a single-feature-in-an-active-system
 (Precondition C1).
 
-## No setup needed (острый=No — the contrast with `/bmad`)
+## No setup needed (hook-gate=No — the contrast with `/bmad`)
 
 SPARC has **no fail-closed hook**, so there is **nothing to initialise** — no `/sparc-init`, no `stack.json`,
 no per-branch state file. Its enforcement (C5) is the forgeplan harness (phase-ordering: no source/test is
-dispatched until the Architecture RFC is `active`) plus delegating Refinement to the existing TDD острый-gate
-when test-immutability matters. This is the visible payoff of острый=No: a lighter instance than BMAD/TDD.
+dispatched until the Architecture RFC is `active`) plus delegating Refinement to the existing TDD hook-gate
+when test-immutability matters. This is the visible payoff of hook-gate=No: a lighter instance than BMAD/TDD.
 
 ## The contract this runs (ADR-010 C1-C6)
 
@@ -59,7 +59,7 @@ when test-immutability matters. This is the visible payoff of острый=No: a
 | **C2 Master** | `sparc-orchestrator` (opus, Profile B-orchestrator) — walks the five phases, writes nothing, activates nothing. |
 | **C3 Phases** | `specification` (Spec) → `pseudocode` (Pseudo) → `adr-architect`+`architecture` (Arch) → `refinement`+`coder` (Refine) → `evidence-recorder` (Completion). |
 | **C4 Verifiers** | mandatory, independent, at EVERY gate: `artifact-reviewer`/`architect-reviewer` (Validate-spec); `architect-reviewer` (+`system-dev`) (RFC fitness + Pseudocode-absorption); `tester`+`code-reviewer` (Refine). |
-| **C5 Enforcement** | **острый=No — no hook.** Harness phase-ordering + Refinement delegates to the TDD острый-gate (RFC-012). |
+| **C5 Enforcement** | **hook-gate=No — no hook.** Harness phase-ordering + Refinement delegates to the TDD hook-gate (RFC-012). |
 | **C6 Exit** | each gate emits EVIDENCE carrying its C4 verdict + identity; the Completion EVIDENCE is the terminal exit; the orchestrator activates. |
 
 ## Procedure
@@ -74,7 +74,7 @@ When `/sparc` is invoked, the main session runs this:
 
 ### Step 2 — orchestrate the five-phase walk (the main session IS the orchestrator)
 
-острый=No (ADR-012) means **the main session is the SPARC orchestrator** — it dispatches each phase agent and each C4 gate directly (via Task/Agent), following the `sparc-orchestrator` contract, and activates the EVID + gated artifact between phases. The walk:
+hook-gate=No (ADR-012) means **the main session is the SPARC orchestrator** — it dispatches each phase agent and each C4 gate directly (via Task/Agent), following the `sparc-orchestrator` contract, and activates the EVID + gated artifact between phases. The walk:
 
 ```
 specification → [C4 Validate-spec: architect-reviewer] → pseudocode → architecture(+adr-architect)
@@ -85,7 +85,7 @@ specification → [C4 Validate-spec: architect-reviewer] → pseudocode → arch
 
 Every phase receives the FULL accumulated prior-phase output; Profile A/B agents emit `NEEDS_ACTIVATION` and the main session activates before the next phase's C1.
 
-> **Do NOT dispatch `sparc-orchestrator` as a subagent expecting it to run the walk.** The platform blocks `Task` inside subagents, so a dispatched orchestrator cannot spawn the phase agents — it can only verify Precondition C1, return the walk plan, and (correctly) refuse to author/self-certify the work. The `sparc-orchestrator` agent is the **codified walk contract + a discipline guardrail**; the **executor is the main session** (острый=No instances have no dedicated dispatched executor — proven in the RFC-016 dogfood, EVID-165).
+> **Do NOT dispatch `sparc-orchestrator` as a subagent expecting it to run the walk.** The platform blocks `Task` inside subagents, so a dispatched orchestrator cannot spawn the phase agents — it can only verify Precondition C1, return the walk plan, and (correctly) refuse to author/self-certify the work. The `sparc-orchestrator` agent is the **codified walk contract + a discipline guardrail**; the **executor is the main session** (hook-gate=No instances have no dedicated dispatched executor — proven in the RFC-016 dogfood, EVID-165).
 
 ### Step 3 — walk the gates with the user
 
@@ -108,7 +108,7 @@ blocker to the user.
 - **Full context accumulation.** Every phase receives the FULL output of all prior phases (the master's
   cardinal rule) — the single biggest determinant of output consistency.
 - **Refinement→TDD delegation.** When the feature is test-critical, Refinement hands off to the `/tdd`
-  острый-gate so the tests are independently frozen before GREEN — острый test-immutability without a new hook.
+  hook-gate so the tests are independently frozen before GREEN — fail-closed test-immutability without a new hook.
 - **Pseudocode's conditional-freeze handled honestly.** Pseudocode is a non-freezable intermediate; its
   C4+C6 are co-located at the Architecture gate (the architect-reviewer certifies the algorithm was carried
   into the RFC; the Arch-gate EVID pins it under `## Pseudocode-absorption`).
@@ -116,15 +116,15 @@ blocker to the user.
 ## Escape hatches (bounded)
 
 - **Scale-tiering is the only "skip".** MICRO scope legitimately skips Pseudocode + collapses heavy gates; it
-  does NOT skip the Refine C4 (code is always independently reviewed). There is no острый hook to override
-  (острый=No), so there is no gate-bypass to misuse.
+  does NOT skip the Refine C4 (code is always independently reviewed). There is no fail-closed hook to override
+  (hook-gate=No), so there is no gate-bypass to misuse.
 
 ## HARD RULES
 
 1. **Single feature in an active system only.** Greenfield → `/bmad`; brownfield → Strangler; Build-only → `/tdd`. The master refuses otherwise (Precondition C1).
 2. **The master coordinates; the phase agents produce; the orchestrator activates.** Three roles, never collapsed.
 3. **Every phase gate is an independent context** (generator≠verifier). The C4 reviews at Spec, Arch, and Refine are mandatory, not optional — this is the upgrade over unenforced SPARC.
-4. **No source/test until the Architecture RFC is active.** That is SPARC's "no code before design", enforced by phase-ordering (острый=No — no hook).
+4. **No source/test until the Architecture RFC is active.** That is SPARC's "no code before design", enforced by phase-ordering (hook-gate=No — no hook).
 5. **Pseudocode is non-freezable** — its review is co-located at the Architecture gate (`## Pseudocode-absorption`); never run it as production logic without that certification.
 
 ## Related
@@ -132,4 +132,4 @@ blocker to the user.
 - `sparc-orchestrator` agent — the master this skill dispatches (`agents/sparc-orchestrator.md`).
 - `/tdd` (RFC-012) — the Build-stage sibling instance; SPARC's Refinement delegates to it for test-immutability.
 - `/bmad` (RFC-013) — the greenfield sibling; `/smith` — the master-of-masters router (SPARC is Row 3).
-- RFC-016 (the SPARC instance), ADR-010 (the contract), ADR-012 (the острый-gate → острый=No, no new hook/state).
+- RFC-016 (the SPARC instance), ADR-010 (the contract), ADR-012 (the hook-gate → hook-gate=No, no new hook/state).
