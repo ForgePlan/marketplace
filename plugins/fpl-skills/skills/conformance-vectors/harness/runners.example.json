@@ -1,0 +1,7 @@
+{
+  "_comment": "Per-language runner manifest. One entry per target language. `cmd` + `args` are how the harness invokes that language's ~15-line CLI runner; path-args (those containing '/') resolve relative to THIS file's directory. Each runner reads vector `input` lines from stdin and prints one result line per input to stdout — and MUST honor the CONFORMANCE_BREAK=1 env var by loading a deliberately-broken impl (so the negative control can go RED). Copy this to <corpus-dir>/runners.json and edit.",
+  "py": { "cmd": "python3", "args": ["cli/run_py.py"] },
+  "ts": { "cmd": "node", "args": ["--experimental-strip-types", "cli/run_ts.ts"] },
+  "go": { "cmd": "go", "args": ["run", "cli/run_go.go"] },
+  "rs": { "cmd": "cli/run_rs_bin", "args": [] }
+}

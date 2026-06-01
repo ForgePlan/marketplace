@@ -1,0 +1,34 @@
+{
+  "spec": "SPEC-001",
+  "function": "semver_compare",
+  "signature": "semver_compare(a: string, b: string) -> int  // returns -1, 0, or 1",
+  "semantics": "Semantic Versioning 2.0.0 precedence. Compare major.minor.patch numerically (NOT lexically). A version WITH a pre-release has LOWER precedence than the same version WITHOUT. Pre-release identifiers are compared dot-wise: numeric identifiers compared numerically; non-numeric compared by ASCII order; a numeric identifier has LOWER precedence than a non-numeric one; when all preceding identifiers are equal, a larger set of pre-release fields outranks a smaller set. Build metadata (after '+') is IGNORED for precedence.",
+  "invariants": [
+    {"id": "INV-1", "rule": "identity: semver_compare(x, x) == 0"},
+    {"id": "INV-2", "rule": "antisymmetry: semver_compare(a, b) == -semver_compare(b, a)"},
+    {"id": "INV-3", "rule": "sign-transitivity: if cmp(a,b)<=0 and cmp(b,c)<=0 then cmp(a,c)<=0 (total order)"},
+    {"id": "INV-4", "rule": "build-metadata-ignored: semver_compare(v, v + '+' + anything) == 0"}
+  ],
+  "vectors": [
+    {"id": "v01", "a": "1.0.0", "b": "1.0.0", "expected": 0, "note": "equal"},
+    {"id": "v02", "a": "1.0.0", "b": "1.0.1", "expected": -1, "note": "patch"},
+    {"id": "v03", "a": "1.1.0", "b": "1.0.9", "expected": 1, "note": "minor beats patch"},
+    {"id": "v04", "a": "2.0.0", "b": "1.9.9", "expected": 1, "note": "major beats minor"},
+    {"id": "v05", "a": "1.0.0", "b": "1.0.10", "expected": -1, "note": "numeric not lexical (0<10)"},
+    {"id": "v06", "a": "9.0.0", "b": "10.0.0", "expected": -1, "note": "numeric not lexical (major)"},
+    {"id": "v07", "a": "1.0.0-rc.1", "b": "1.0.0", "expected": -1, "note": "prerelease < release"},
+    {"id": "v08", "a": "1.0.0", "b": "1.0.0-rc.1", "expected": 1, "note": "release > prerelease"},
+    {"id": "v09", "a": "1.0.0-alpha", "b": "1.0.0-alpha.1", "expected": -1, "note": "fewer prerelease fields"},
+    {"id": "v10", "a": "1.0.0-alpha.1", "b": "1.0.0-alpha.beta", "expected": -1, "note": "numeric < non-numeric"},
+    {"id": "v11", "a": "1.0.0-alpha.beta", "b": "1.0.0-beta", "expected": -1, "note": "alpha < beta (ascii)"},
+    {"id": "v12", "a": "1.0.0-beta", "b": "1.0.0-beta.2", "expected": -1, "note": "fewer fields"},
+    {"id": "v13", "a": "1.0.0-beta.2", "b": "1.0.0-beta.11", "expected": -1, "note": "numeric 2 < 11"},
+    {"id": "v14", "a": "1.0.0-beta.11", "b": "1.0.0-rc.1", "expected": -1, "note": "beta < rc (ascii)"},
+    {"id": "v15", "a": "1.0.0-rc.1", "b": "1.0.0-rc.1", "expected": 0, "note": "equal prerelease"},
+    {"id": "v16", "a": "1.0.0+build.1", "b": "1.0.0+build.2", "expected": 0, "note": "build ignored"},
+    {"id": "v17", "a": "1.0.0", "b": "1.0.0+xyz", "expected": 0, "note": "build ignored vs plain"},
+    {"id": "v18", "a": "1.0.0-alpha.1+a", "b": "1.0.0-alpha.1+b", "expected": 0, "note": "build ignored, prerelease equal"},
+    {"id": "v19", "a": "2.0.0-alpha", "b": "1.0.0-beta", "expected": 1, "note": "F1: both prerelease AND cores differ -> core wins"},
+    {"id": "v20", "a": "1.0.0-beta", "b": "2.0.0-alpha", "expected": -1, "note": "F1: antisymmetric pair of v19"}
+  ]
+}

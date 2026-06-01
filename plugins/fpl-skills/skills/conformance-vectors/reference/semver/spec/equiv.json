@@ -1,0 +1,50 @@
+{
+  "langs": [
+    "ts",
+    "py",
+    "go",
+    "rs"
+  ],
+  "breakLang": null,
+  "conformance": {
+    "ts": true,
+    "py": true,
+    "go": true,
+    "rs": true
+  },
+  "invariants": {
+    "ts": {
+      "INV-1": true,
+      "INV-4": true,
+      "INV-2": true,
+      "INV-3": true,
+      "all": true
+    },
+    "py": {
+      "INV-1": true,
+      "INV-4": true,
+      "INV-2": true,
+      "INV-3": true,
+      "all": true
+    },
+    "go": {
+      "INV-1": true,
+      "INV-4": true,
+      "INV-2": true,
+      "INV-3": true,
+      "all": true
+    },
+    "rs": {
+      "INV-1": true,
+      "INV-4": true,
+      "INV-2": true,
+      "INV-3": true,
+      "all": true
+    }
+  },
+  "equivalence": {
+    "mismatches": {},
+    "all": true
+  },
+  "pass": true
+}
