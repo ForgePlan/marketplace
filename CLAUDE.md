@@ -533,6 +533,18 @@ These three gaps remain by design. They are documented here so future Profile A 
 
 **Social discipline**: ADI EVIDs are reviewed by Profile B. Reviewer is expected to check whether the third hypothesis is genuine. Pattern-of-trivial-hypotheses is visible in the EVID body during review.
 
+### G8 — autonomous RIPER skips the human Plan→Execute gate (RFC-018)
+
+**The gap**: the RIPER methodology instance (RFC-018, ADR-010 #4) is `hook-gate=No` — it deliberately ships **no fail-closed hook**. Its "no code before the Plan is approved" guarantee rests on a **human at the Plan→Execute mode transition** (the human issuing "proceed to Execute" IS the Plan-approval). But `/autorun` is purpose-built to run without approval checkpoints — its `autonomy.human_required` lists `{push main, secrets, deploys}` and does NOT list the RIPER Plan→Execute transition, and it picks a `bug` template silently. So a Row-4 production bug driven through `/autorun` could traverse Plan→Execute with no human, silently removing the gate RIPER's discipline depends on. (Surfaced by the independent review EVID-167 F1.)
+
+**Why deferred (accept-by-design, not hook-closed)**:
+- RIPER canonically has no hook (the ADR-012 hook-gate verdict is No); minting a per-RIPER PreToolUse hook would false-positive on Research reads and duplicate the human "enter Execute" signal — the wrong layer.
+- The right place for a structural guard is the **`/autorun` side** (refuse-or-escalate when the routed methodology is RIPER and no human is present at Plan→Execute), not RIPER — tracked as NOTE-013 **DEFER-016**.
+- The skip signal ("was a human present at Plan→Execute?") is semantic/contextual, not a structurally parseable artifact pattern — the same brittleness class as G5/G6/G7.
+- Blast radius is bounded: even if Research/Plan run unattended, the RIPER Execute phase still passes the mandatory C4 chain (`tester` + `code-reviewer` + downstream `guardian`), so a bad fix is caught at Audit — not silently shipped.
+
+**Social discipline**: do not run RIPER work fully autonomously; the human Plan-approval gate is the guarantee. `/riper` states this in its `hook-gate=No boundary` section; smith Row 4 repeats it; the stronger `/autorun`-side guard is tracked (DEFER-016). RFC-018 ships the gap **named**, not as an unenforced "PROHIBITED" invariant.
+
 ### The general pattern (when to NOT automate)
 
 These three deferrals share a common structure:
