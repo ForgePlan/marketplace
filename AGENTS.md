@@ -8,7 +8,7 @@
 
 **Repo**: [ForgePlan/marketplace](https://github.com/ForgePlan/marketplace)
 **Catalog version**: see `.claude-plugin/marketplace.json`
-**Plugins**: 12+ (workflow plugins + agent packs)
+**Plugins**: 18 (workflow plugins + agent packs)
 **Project board**: [orgs/ForgePlan/projects/5](https://github.com/orgs/ForgePlan/projects/5)
 
 ForgePlan marketplace is a catalog of plugins for AI coding agents with a central `forgeplan` MCP server that delivers an **artifact-driven SDLC pipeline**.
@@ -38,7 +38,7 @@ All artifacts live in `.forgeplan/` (PRD / RFC / ADR / EVID / NOTE structure).
 - At **session start** when unsure what to do next — smith reads `forgeplan_health` + recent journal and proposes the next action.
 - For a **fresh repository** with no artifacts yet — invoke `/smith-bootstrap` to seed Brief / PRD / first ADR via the greenfield row of the routing map.
 - For a **specific task** of any depth — invoke `/smith-plan <task description>` and smith picks the matching row, names the methodology, and lists the dispatch sequence.
-- For **learning the methodology surface** — invoke `/smith-routing` to inspect the 12 contexts + 25 methodology cards without committing to a task.
+- For **learning the methodology surface** — invoke `/smith-routing` to inspect the 12 contexts + 29 methodology cards without committing to a task.
 - When the existing entry points (`/forge-cycle`, `/autorun`) do not fit — e.g. cross-context work, ambiguous depth, methodology mismatch — smith disambiguates first.
 - **Trigger phrases** (English): `smith`, `what's next`, `scrum master`, `master orchestrator`, `which methodology`, `take charge`, `captain mode`. The agent file at `plugins/agents-pro/agents/smith.md` also registers bilingual Russian triggers per the agent-frontmatter exception in the Language policy section below — those triggers exist in the agent file, not here.
 
@@ -90,7 +90,7 @@ Evidence required: PRD + ADI EVID (≥3 hypotheses) + BMAD EVID with ≥1 findin
 
 ### Methodologies smith knows
 
-Twenty-five methodologies are catalogued in `routing-map.md` with cards covering one-sentence definition, when it shines, when NOT to use, and a primary source link. Grouped:
+Twenty-nine methodologies are catalogued in `routing-map.md` with cards covering one-sentence definition, when it shines, when NOT to use, and a primary source link. Grouped:
 
 - **AI-coding workflows**: BMAD-METHOD, SPARC, RIPER-5, GitHub Spec Kit, FPF ADI (Abduction → Deduction → Induction).
 - **Architecture lenses**: C4 Model, Domain-Driven Design, Event Storming, Clean Architecture, Hexagonal Architecture (Ports & Adapters), ADR / MADR.
@@ -116,7 +116,7 @@ The 12-context routing table is **CLI-agnostic** — it names methodologies and 
 ### References
 
 - `plugins/agents-pro/agents/smith.md` — the smith agent itself (Profile B-orchestrator master agent, 368 lines).
-- `plugins/fpl-skills/skills/smith/routing-map.md` — the 12-context routing table + 25 methodology cards + agent index.
+- `plugins/fpl-skills/skills/smith/routing-map.md` — the 12-context routing table + 29 methodology cards + agent index.
 - `plugins/fpl-skills/skills/smith/SKILL.md` — the main entry skill (loader + index).
 - `plugins/fpl-skills/skills/smith-bootstrap/SKILL.md` — greenfield bootstrap dispatch path.
 - `plugins/fpl-skills/skills/smith-plan/SKILL.md` — per-task planning skill.
@@ -264,7 +264,7 @@ Pipeline tools available via MCP (`mcp__forgeplan__*`):
 - **State**: `session`, `phase`, `phase_advance`, `journal`
 - **Discovery**: `search`, `list`, `get`, `graph`
 
-54 tools in total. Per-pipeline-phase mapping — see RFC-003 Layer 2 (Agent Pack Dispatch Matrix).
+66 tools in total. Per-pipeline-phase mapping — see RFC-003 Layer 2 (Agent Pack Dispatch Matrix).
 
 ## Three orchestrator entrypoints
 

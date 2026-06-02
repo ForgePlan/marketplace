@@ -8,7 +8,7 @@
 
 Официальный маркетплейс плагинов Claude Code от [ForgePlan](https://github.com/ForgePlan) — UX, воркфлоу, инженерные и dev-инструменты.
 
-**16 плагинов** | **20 marketplace-aware агентов** (плюс project-scoped агенты в каждом репо) | **33+ скиллов** | **9+ баз знаний**
+**18 плагинов** | **25 marketplace-aware агентов (75 всего)** | **38+ скиллов** | **9+ баз знаний**
 
 > **Экосистема ForgePlan**: этот маркетплейс + [CLI `forgeplan`](https://github.com/ForgePlan/forgeplan) (lifecycle артефактов) + [`@forgeplan/web`](https://github.com/ForgePlan/forgeplan-web) (браузерный viewer с time-travel + графом). Три sibling-продукта; ставь что нужно.
 
@@ -56,20 +56,20 @@
 | Ваша роль | Установить | Зачем |
 |-----------|-----------|-------|
 | **Я хочу мастер-оркестратор** | **fpl-skills + agents-pro** | Начни с `/smith` — маршрутизирует 12 контекстов на 27 методологий |
-| **Пользователь Forgeplan (рекомендуется)** | **fpl-skills** | Одна установка, 15 скиллов, полный цикл route → ship |
+| **Пользователь Forgeplan (рекомендуется)** | **fpl-skills** | Одна установка, 38 скиллов, полный цикл route → ship |
 | Любой разработчик (без forgeplan) | dev-toolkit + agents-core | Универсальные инструменты, без CLI зависимости |
 | Фронтенд | fpl-skills + laws-of-ux + agents-domain | UX + агенты фреймворков |
 | Архитектор | fpl-skills + fpf + agents-pro + agents-sparc | Мышление + SPARC |
 | Многосессионная работа / команда | fpl-skills + forgeplan-orchestra | Координация + Inbox Pattern |
 | Brownfield миграция | fpl-skills + forgeplan-brownfield-pack | Ингест legacy-доков + C4/DDD/research analyses |
-| Всё сразу | Все 12 плагинов | Полная экосистема |
+| Всё сразу | Все 18 плагинов | Полная экосистема |
 
 ## Доступные плагины
 
 ### [fpl-skills](plugins/fpl-skills/)
 
 > [!TIP]
-> **Флагман — рекомендуется пользователям forgeplan.** Бандл из 15 инженерных скиллов поверх forgeplan lifecycle. Заменяет `dev-toolkit` (мягко-deprecated).
+> **Флагман — рекомендуется пользователям forgeplan.** Бандл из 38 инженерных скиллов поверх forgeplan lifecycle. Заменяет `dev-toolkit` (мягко-deprecated).
 
 Полный цикл **route → shape → build → audit → activate** в одной установке. `/fpl-init` разворачивает проект одной командой.
 
@@ -233,9 +233,41 @@ Smith — Profile B-orchestrator агент с четырьмя скилами. 
 
 ---
 
+### [cc-best](plugins/cc-best/)
+
+> Справочник по экосистеме Claude Code — agentic-RAG гайд по CLAUDE.md, плагинам, агентам, хукам, MCP и анти-паттернам. Синтезирует 47+ находок из аудитов маркетплейса ForgePlan.
+
+Все 6 секций написаны: `claude-md`, `plugins`, `agents`, `hooks`, `mcp`, `anti-patterns`.
+
+```bash
+/plugin install cc-best@ForgePlan-marketplace
+```
+
+---
+
+### [fp-cookbook](plugins/fp-cookbook/)
+
+> Практический сборник рецептов forgeplan CLI — 26 рецептов: init, разбор PRD, потоки EVID, направления связей, фиксы R_eff cascade, полиглот-паттерны.
+
+```bash
+/plugin install fp-cookbook@ForgePlan-marketplace
+```
+
+---
+
+### [agentic-rag](plugins/agentic-rag/)
+
+> Методологический скилл для написания скиллов в формате agentic RAG — SKILL.md как роутер + `sections/_index.md` + файлы контента (~30-50 строк каждый). 6 секций: when-to-use, structure, description-craft, content-quality, templates, distribution.
+
+```bash
+/plugin install agentic-rag@ForgePlan-marketplace
+```
+
+---
+
 ## Пакеты агентов
 
-Пять специализированных пакетов с 55 готовыми агентами для Claude Code.
+Семь специализированных пакетов с 69 готовыми агентами для Claude Code.
 
 Установка любого пакета: `/plugin install <имя-пакета>@ForgePlan-marketplace`
 
@@ -243,9 +275,11 @@ Smith — Profile B-orchestrator агент с четырьмя скилами. 
 |-------|:-------:|--------------|---------|
 | [agents-core](plugins/agents-core/) | 11 | debugger, code-reviewer, planner, tester, TDD, production-validator | `agents-core` |
 | [agents-domain](plugins/agents-domain/) | 11 | TypeScript, Go, React, Next.js, Electron, mobile, WebSocket | `agents-domain` |
-| [agents-pro](plugins/agents-pro/) | 21 | security, architecture, creative, research, infrastructure | `agents-pro` |
+| [agents-pro](plugins/agents-pro/) | 30 | security, architecture, creative, research, infrastructure | `agents-pro` |
 | [agents-github](plugins/agents-github/) | 7 | PR, issues, releases, multi-repo, workflows | `agents-github` |
 | [agents-sparc](plugins/agents-sparc/) | 5 | SPARC: spec → pseudo → architecture → refinement | `agents-sparc` |
+| [agents-tdd](plugins/agents-tdd/) | 4 | TDD instance #1 (RFC-012): tdd-orchestrator + RED/GREEN агенты + test-validator | `agents-tdd` |
+| [agents-bmad](plugins/agents-bmad/) | 1 | BMAD instance #2 (RFC-013): bmad-orchestrator persona-walk + no-code-before-plan gate | `agents-bmad` |
 
 ---
 

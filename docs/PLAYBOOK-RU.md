@@ -175,13 +175,13 @@ brew install ForgePlan/tap/forgeplan
 /smith                                        # режим по умолчанию сам определяет brownfield и маршрутизирует сюда
 # (или /smith-bootstrap, если в репозитории ещё нет .forgeplan/)
 # Запускаем Discover Agent (канонический, в plugins/forgeplan-brownfield-pack/agents/discover/) для карты кодовой базы
-# Дальше связка скиллов извлечения:
-/extract ubiquitous-language                  # построить словарь предметной области
-/extract use-cases                            # найти пользовательские сценарии
-/extract intent --confidence-tagged           # вывести бизнес-намерения с разметкой уверенности
-/extract invariants                           # выявить правила которые должны выполняться всегда
-/triangulate hypotheses                       # цикл ADI на спорных утверждениях
-/interview <владелец предметной области>      # сверить намерения с реальностью
+# Дальше связка brownfield-скиллов извлечения:
+/ubiquitous-language                          # построить словарь предметной области (C1)
+/use-case-miner                               # найти пользовательские сценарии (C2)
+/intent-inferrer                              # вывести бизнес-намерения с разметкой уверенности (C3)
+/invariant-detector                           # выявить правила которые должны выполняться всегда (C4)
+/hypothesis-triangulator                      # цикл ADI на спорных утверждениях (C6)
+/interview-packager                           # упаковать открытые вопросы в пакеты для интервью с владельцем домена (C7)
 /forge-cycle "<воспроизвести ключевой поток>" # каноническое воспроизведение
 ```
 

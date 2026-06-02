@@ -14,7 +14,7 @@
 
 ## TL;DR
 
-- `fpl-skills` — это надмножество `dev-toolkit`: те же `/audit` и `/sprint`, плюс ещё 13 скиллов, плюс `/fpl-init`.
+- `fpl-skills` — это надмножество `dev-toolkit`: те же `/audit` и `/sprint`, 38 скиллов всего, плюс `/fpl-init`.
 - Миграция **side-by-side совместима**: ставишь `fpl-skills`, проверяешь, потом удаляешь `dev-toolkit` (или держишь оба в переходный период).
 - Имена slash-команд пересекаются (`/audit`, `/sprint`). Claude Code разрешает конфликт через namespacing: `/dev-toolkit:audit` vs `/fpl-skills:audit`. Если в твоём проектном `CLAUDE.md` есть namespaced ссылки — их надо обновить.
 - Папка `.forgeplan/` и любой forgeplan-артефакт **не трогаются**.
@@ -41,7 +41,7 @@
 
 | | dev-toolkit | fpl-skills |
 |---|---|---|
-| Всего команд | 4 | **15** |
+| Всего скиллов | 4 | **38** |
 | `/fpl-init` (развёртка проекта) | — | ✅ NEW |
 | `/research` (5-агентное исследование) | — | ✅ NEW |
 | `/refine` (interview-driven уточнение плана) | — | ✅ NEW |
@@ -253,7 +253,7 @@ CI не запускает slash-команды. Slash-команды работ
 
 ## Зачем мигрировать вообще?
 
-Если `dev-toolkit` тебя устраивает и не нужны 11 дополнительных команд `fpl-skills` или forgeplan-интеграция — **не мигрируй**. Soft-deprecation значит плагин продолжает работать.
+Если `dev-toolkit` тебя устраивает и не нужны дополнительные скиллы `fpl-skills` или forgeplan-интеграция — **не мигрируй**. Soft-deprecation значит плагин продолжает работать.
 
 Мигрируй когда хотя бы одно из:
 
@@ -267,7 +267,7 @@ CI не запускает slash-команды. Slash-команды работ
 ## См. также
 
 - [DEVELOPER-JOURNEY-RU.md](DEVELOPER-JOURNEY-RU.md) — narrative-онбординг «От нуля до релиза» (то куда ведёт миграция).
-- [USAGE-GUIDE-RU.md](USAGE-GUIDE-RU.md) — reference manual для 15 команд fpl-skills.
+- [USAGE-GUIDE-RU.md](USAGE-GUIDE-RU.md) — reference manual для 38 скиллов fpl-skills.
 - [`plugins/fpl-skills/README-RU.md`](../plugins/fpl-skills/README-RU.md) — полный README плагина.
 - [`plugins/dev-toolkit/README-RU.md`](../plugins/dev-toolkit/README-RU.md) — текущее состояние dev-toolkit (deprecated, но сохранён).
 - [ARCHITECTURE-RU.md § Карта плагинов](ARCHITECTURE-RU.md#карта-плагинов) — где какой плагин в 4-system mental model.

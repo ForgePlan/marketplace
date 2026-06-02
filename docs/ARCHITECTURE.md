@@ -159,15 +159,21 @@ Orchestra: Task "OAuth" Status=Review, Phase=Evidence
 
 | System | Plugin(s) | Notes |
 |--------|----------|-------|
-| **Glue layer** | **fpl-skills** | **Flagship**: 15 commands composing Forgeplan + FPF + SPARC + (optional) UX. Includes `/fpl-init` for one-shot project bootstrap. Replaces dev-toolkit for forgeplan users. |
+| **Glue layer** | **fpl-skills** | **Flagship**: 38 skills composing Forgeplan + FPF + SPARC + (optional) UX. Includes `/fpl-init` for one-shot project bootstrap. Replaces dev-toolkit for forgeplan users. |
 | Orchestra | forgeplan-orchestra | `/sync` and `/session` for multi-session coordination. |
 | Forgeplan | forgeplan-workflow | `/forge-cycle` and `/forge-audit` — tighter forgeplan-only loop (alternative to fpl-skills' broader bundle). |
 | FPF | fpf | Structured reasoning: decompose / evaluate / reason / lookup. Pairs with fpl-skills' `/refine` and `/diagnose`. |
 | SPARC | agents-sparc | 5 phase agents — `/sprint` activates them when it detects a Deep task. |
+| TDD | agents-tdd | Enforced-TDD methodology pack: tdd-orchestrator + RED/GREEN agents + fail-closed PreToolUse gate. |
+| BMAD | agents-bmad | BMAD greenfield methodology pack: bmad-orchestrator persona-walk (Analyst → PM → Architect → SM → Dev → QA) + no-code-before-plan gate. |
 | UX | laws-of-ux | `ux-reviewer` agent + `/ux-review` + auto-hint hook on frontend file edits. |
 | Agents | agents-core / agents-domain / agents-pro / agents-github | Specialised subagents that `/audit`, `/sprint`, etc. compose when relevant. |
 | Universal toolkit (legacy) | dev-toolkit | Soft-deprecated, superseded by fpl-skills. Use only if forgeplan CLI is unavailable. |
 | Brownfield ingest | forgeplan-brownfield-pack | 5 mappings (c4, ddd, madr, obsidian, autoresearch) + 12 extraction skills + 2 playbooks for migrating legacy code + docs into a forgeplan graph. |
+| Memory | fpl-hsmem | Hindsight cross-session memory: 13 MCP tools + 3 auto-hooks (recall / retain / force-retain) + 5 helper skills. Per-project bank. |
+| Reference (cookbook) | fp-cookbook | Practical forgeplan CLI recipes — getting-started, troubleshooting, reference. |
+| Reference (skill authoring) | agentic-rag | Methodology skill for writing skills in agentic-RAG format (router + sections + content files). |
+| Reference (Claude Code) | cc-best | Opinionated agentic-RAG guide for CLAUDE.md, plugins, agents, hooks, MCP, and anti-patterns. |
 
 Install command: `/plugin install <plugin-name>@ForgePlan-marketplace`.
 
@@ -183,6 +189,6 @@ Install command: `/plugin install <plugin-name>@ForgePlan-marketplace`.
 | 👥 Multi-session / team | `fpl-skills` + `forgeplan-orchestra` |
 | 🏚 Brownfield migration | `fpl-skills` + `forgeplan-brownfield-pack` |
 | 🔧 Any developer (no forgeplan) | `dev-toolkit` + `agents-core` (legacy) |
-| Full stack (all systems) | all 12 plugins |
+| Full stack (all systems) | all 18 plugins |
 
 For per-persona Day 0 walkthroughs see [DEVELOPER-JOURNEY.md](DEVELOPER-JOURNEY.md).

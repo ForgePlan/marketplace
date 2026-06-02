@@ -2,7 +2,7 @@
 
 # fpl-skills
 
-> Flagship workflow plugin for the [ForgePlan](https://github.com/ForgePlan/forgeplan) ecosystem. One install bundles 15 engineering skills built on top of forgeplan's artifact lifecycle.
+> Flagship workflow plugin for the [ForgePlan](https://github.com/ForgePlan/forgeplan) ecosystem. One install bundles 38 engineering skills built on top of forgeplan's artifact lifecycle.
 
 Install `fpl-skills` + the `forgeplan` CLI and you have everything you need for the full **route → shape → build → audit → activate** loop. Replaces the older `dev-toolkit` plugin (which is now soft-deprecated).
 

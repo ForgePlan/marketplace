@@ -4,9 +4,9 @@
 >
 > **Time budget**: ~30 minutes for a full hands-on walkthrough. Skip to "Smoke results" at the bottom if you just want proof that things work.
 >
-> **Test environment for this guide**: macOS Darwin 25.1.0, Claude Code 2.1.143, forgeplan CLI v0.31.0, catalog v1.53.0+, session 2026-05-19+ (last verified 2026-05-20 Sprint N).
+> **Test environment for this guide**: macOS Darwin 25.1.0, Claude Code 2.1.143, forgeplan CLI v0.31.0, catalog v1.88.0+, session 2026-05-19+ (last verified 2026-05-20 Sprint N).
 >
-> **Verified state**: 68 marketplace agents 0 errors 0 warns, 100 forgeplan artifacts in test workspace, `forgeplan_health` verdict `healthy`.
+> **Verified state**: 75 marketplace agents 0 errors 0 warns, 100 forgeplan artifacts in test workspace, `forgeplan_health` verdict `healthy`.
 
 ---
 
@@ -17,7 +17,7 @@ After this walkthrough, you'll have:
 1. A `.forgeplan/` workspace in your project directory (LanceDB + markdown projections)
 2. A first PRD that went through the full lifecycle (draft → validate → evidence → activate, R_eff=1.0 grade A)
 3. Memory wired (Hindsight) — facts retained across Claude Code sessions
-4. 13 marketplace plugins installed and verified — 0 lint errors, 0 lint warnings
+4. 18 marketplace plugins installed and verified — 0 lint errors, 0 lint warnings
 5. Confidence that the pipeline doesn't lie to you
 
 ---
@@ -59,7 +59,7 @@ Then install the flagship plugins:
 
 **Verify** (in Claude Code, run a quick check):
 - Type `/help` — you should see `/fpl-init`, `/forge-cycle`, `/forge-audit` listed
-- Or check `~/.claude/plugins/marketplaces/ForgePlan-marketplace/.claude-plugin/marketplace.json` for catalog v1.53.0+ (Sprint N closure date)
+- Or check `~/.claude/plugins/marketplaces/ForgePlan-marketplace/.claude-plugin/marketplace.json` for catalog v1.88.0+
 
 > ⚠️ **Plugin cache gotcha**: if `/plugin install` says "already installed" but you don't see the latest version, run `/plugin marketplace update ForgePlan-marketplace` first. Catalog metadata version controls when updates pull.
 
@@ -206,7 +206,7 @@ Expected: `{ "artifact_id": "PRD-002", "message": "Activated PRD-002 (draft → 
 
 ## Step 5 — Canonical agent dispatch (test all 5 profiles)
 
-The marketplace ships 17 forgeplan-aware agents implementing the **B2 paradigm** (`disallowedTools` denylist + MCP propagation). Test each profile:
+The marketplace ships 25 forgeplan-aware agents implementing the **B2 paradigm** (`disallowedTools` denylist + MCP propagation). Test each profile:
 
 | Profile | Agent to try | What to ask |
 |---|---|---|
@@ -236,7 +236,7 @@ After Sprint A-D, 5 new fpl-skills augment the canonical pipeline. Each closes a
 | `/agent-advisor "<task>"` | Recommends specialist canonical agent for described task — consults `mm-agent-selection` mental model + embedded CRUD-R-A map | A | Gap E (right-agent-for-job) |
 | `/agent-fetcher "<task>"` | Suggests agents from other installed marketplaces (cc-marketplace, claude-plugins-official) — SUGGEST-ONLY, NEVER auto-installs | B | Gap G (cross-marketplace fetcher) |
 | `/project-agent-scaffold` | Detects project tech stack (package.json/Cargo.toml/etc.) → proposes 1-3 project-scoped agents → user confirms each before write | B | Gap F (custom project agent) |
-| `/forge-progress` | Live read-only orchestrator state snapshot (sprint/phase/wave/agents-in-flight/files-modified/ETA) | B (Wave 3) | Gap D (progress dashboard) |
+| `/progress-dashboard` | Live read-only orchestrator state snapshot (sprint/phase/wave/agents-in-flight/files-modified/ETA) | B (Wave 3) | Gap D (progress dashboard) |
 | `/forge-cleanup` | Sweep drafts, classify into 3 tiers (AUTO/ADI/USER) per pipeline self-healing framework | D | Anomaly #7 (stuck drafts) |
 
 ### Auto-routing hook (Sprint A)
@@ -325,7 +325,7 @@ In the marketplace repo (if you're contributing):
 ```bash
 ./scripts/validate-all-plugins.sh
 # Expected tail:
-#   Scanned: 68 agents (17 forgeplan-aware, 51 legacy)
+#   Scanned: 75 agents (25 forgeplan-aware, 50 legacy)
 #   Errors:  0
 #   Warns:   0
 #   ALL PASSED

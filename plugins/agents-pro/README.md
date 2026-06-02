@@ -30,11 +30,11 @@ For context on how smith and the canonical pipeline agents (Profile A creators, 
 
 Trigger phrases: `smith`, `кузнец`, `что дальше`, `scrum master`, `master orchestrator`.
 
-## Agents (29)
+## Agents (30)
 
 Legend: ⚙ = forgeplan-aware (B2 paradigm — `disallowedTools` denylist + canonical pipeline profile A/B/C/D).
 
-### Forgeplan canonical pipeline (13 agents, all ⚙)
+### Forgeplan canonical pipeline (14 agents, all ⚙)
 
 | Agent | Profile | Description |
 |-------|:-------:|-------------|
@@ -46,6 +46,7 @@ Legend: ⚙ = forgeplan-aware (B2 paradigm — `disallowedTools` denylist + cano
 | `architect-reviewer` ⚙ | B | RFC fitness review against parent PRD — modular boundaries, coupling, data-flow, blast radius |
 | `brief-intake` ⚙ | A | First-touch intake — raw idea → structured Brief NOTE artifact |
 | `evidence-recorder` ⚙ | B (fallback) | Generic Profile B EVIDENCE recorder for phases without kind-specialist |
+| `evidence-gatherer` ⚙ | B (research) | Trust Calculus evidence collector — searches 20-30 sources across 5+ categories, scores F+G+R per hypothesis, writes a canonical EVID; dispatched by `adr-architect` / `/decision` / `guardian` when an existing hypothesis scores below threshold |
 | `goal-planner` ⚙ | A | GOAP decomposition — PRD/EPIC → set of RFC tasks via `forgeplan_decompose` |
 | `guardian` ⚙ | B-gate | Pre-activation gate — binary verdict PASS/CONCERNS/BLOCKER from full EVID chain |
 | `research-analyst` ⚙ | C (read-only) | Read-only research — internal context + external prior art, never persists state |
@@ -95,7 +96,7 @@ Legend: ⚙ = forgeplan-aware (B2 paradigm — `disallowedTools` denylist + cano
 
 ## Forgeplan-aware agent layer (PRD-026)
 
-The 12 forgeplan-aware agents in this pack implement the **B2 paradigm** — `disallowedTools` denylist (not `tools:` allowlist) — to work around Claude Code's MCP propagation bug (#53865) where wildcard entries in subagent tools silently strip the entire MCP server.
+The 14 forgeplan-aware agents in this pack implement the **B2 paradigm** — `disallowedTools` denylist (not `tools:` allowlist) — to work around Claude Code's MCP propagation bug (#53865) where wildcard entries in subagent tools silently strip the entire MCP server.
 
 Each agent has a **canonical profile** dictating its forgeplan surface:
 
@@ -135,7 +136,8 @@ Task({ subagent_type: "prompt-engineer", prompt: "Optimize this system prompt" }
   - Forgeplan-aware agents include methodology citation as first line of description (BMAD-Brief / MADR 3.0 / FPF-Decompose / CRUD-R-A profile labels)
   - Closed marketplace-wide lint warnings 121 → 0 (LR-1..LR-3 pass)
 - **v1.8.1** (Sprint E) — Profile B agents patched with Step 9b sentinel emit instruction (organic `<<NEEDS_ACTIVATION>>` emission per PRD-032 + PRD-033)
-- **v1.10.0+** (current, EPIC-002, 2026-05-26) — **Smith master-orchestrator agent added** — first Profile B-orchestrator sub-profile in the marketplace; 12-context routing matrix + 27 methodology cards (4 user-facing skills live in `fpl-skills` v1.31.1). See [Smith section](#smith--master-orchestrator-new-v1100) and [`docs/SMITH.md`](../../docs/SMITH.md).
+- **v1.10.0+** (EPIC-002, 2026-05-26) — **Smith master-orchestrator agent added** — first Profile B-orchestrator sub-profile in the marketplace; 12-context routing matrix + 27 methodology cards (4 user-facing skills live in `fpl-skills`). See [Smith section](#smith--master-orchestrator-new-v1100) and [`docs/SMITH.md`](../../docs/SMITH.md).
+- **v1.12.0** (current) — EPIC-003 guardian Step 5 verdict-matrix rows + `evidence-gatherer` Trust Calculus agent in the canonical pipeline (30 agents total, 14 forgeplan-aware).
 
 For complete change history, see [`forgeplan-marketplace/CLAUDE.md`](../../CLAUDE.md) § Sprint A-E session.
 

@@ -4,9 +4,9 @@
 >
 > **Бюджет времени**: ~30 минут на полный hands-on прогон. Если нужно только доказательство что работает — листайте в самый низ к секции "Smoke-результаты".
 >
-> **Тестовое окружение этого гайда**: macOS Darwin 25.1.0, Claude Code 2.1.143, forgeplan CLI v0.31.0, catalog v1.53.0+, сессия 2026-05-19+ (последняя проверка 2026-05-20 Sprint N).
+> **Тестовое окружение этого гайда**: macOS Darwin 25.1.0, Claude Code 2.1.143, forgeplan CLI v0.31.0, catalog v1.88.0+, сессия 2026-05-19+ (последняя проверка 2026-05-20 Sprint N).
 >
-> **Verified state**: 68 marketplace-агентов 0 errors 0 warns, 100 forgeplan-артефактов в тестовом workspace, `forgeplan_health` verdict=`healthy`.
+> **Verified state**: 75 marketplace-агентов 0 errors 0 warns, 100 forgeplan-артефактов в тестовом workspace, `forgeplan_health` verdict=`healthy`.
 
 ---
 
@@ -17,7 +17,7 @@
 1. Workspace `.forgeplan/` в директории вашего проекта (LanceDB + markdown-проекции)
 2. Первый PRD, прошедший полный lifecycle (draft → validate → evidence → activate, R_eff=1.0 grade A)
 3. Подключённая память (Hindsight) — факты сохраняются между сессиями Claude Code
-4. 13 плагинов маркетплейса установлены и проверены — 0 lint-ошибок, 0 lint-предупреждений
+4. 18 плагинов маркетплейса установлены и проверены — 0 lint-ошибок, 0 lint-предупреждений
 5. Уверенность, что пайплайн вас не обманывает
 
 ---
@@ -59,7 +59,7 @@ brew install gh && gh auth login
 
 **Проверка** (в Claude Code, быстрый чек):
 - Введите `/help` — должны увидеть в списке `/fpl-init`, `/forge-cycle`, `/forge-audit`
-- Или посмотрите файл `~/.claude/plugins/marketplaces/ForgePlan-marketplace/.claude-plugin/marketplace.json` — должна быть catalog v1.53.0+ (на момент Sprint N closure)
+- Или посмотрите файл `~/.claude/plugins/marketplaces/ForgePlan-marketplace/.claude-plugin/marketplace.json` — должна быть catalog v1.88.0+
 
 > ⚠️ **Подводный камень с кешем плагинов**: если `/plugin install` говорит "already installed", но новой версии нет — сначала запустите `/plugin marketplace update ForgePlan-marketplace`. Версия в catalog metadata управляет тем, когда обновления подтягиваются.
 
@@ -206,7 +206,7 @@ mcp__forgeplan__forgeplan_activate(id="PRD-002")
 
 ## Шаг 5 — Канонический диспатч агентов (тест всех 5 профилей)
 
-Маркетплейс поставляется с 17 forgeplan-aware агентами, реализующими **B2 paradigm** (`disallowedTools` denylist + MCP propagation). Протестируйте каждый профиль:
+Маркетплейс поставляется с 25 forgeplan-aware агентами, реализующими **B2 paradigm** (`disallowedTools` denylist + MCP propagation). Протестируйте каждый профиль:
 
 | Profile | Какого агента вызывать | Что попросить |
 |---|---|---|
@@ -236,7 +236,7 @@ mcp__forgeplan__forgeplan_activate(id="PRD-002")
 | `/agent-advisor "<задача>"` | Рекомендует специализированного канонического агента для описанной задачи — консультирует mental model `mm-agent-selection` + встроенную CRUD-R-A карту | A | Gap E (правильный агент для задачи) |
 | `/agent-fetcher "<задача>"` | Предлагает агентов из других установленных маркетплейсов (cc-marketplace, claude-plugins-official) — только SUGGEST-ONLY, НИКОГДА не авто-устанавливает | B | Gap G (cross-marketplace fetcher) |
 | `/project-agent-scaffold` | Определяет tech stack проекта (package.json/Cargo.toml/и т.д.) → предлагает 1-3 агентов под проект → пользователь подтверждает каждый перед записью | B | Gap F (кастомный агент проекта) |
-| `/forge-progress` | Live read-only снимок состояния оркестратора (sprint/phase/wave/agents-in-flight/files-modified/ETA) | B (Wave 3) | Gap D (progress dashboard) |
+| `/progress-dashboard` | Live read-only снимок состояния оркестратора (sprint/phase/wave/agents-in-flight/files-modified/ETA) | B (Wave 3) | Gap D (progress dashboard) |
 | `/forge-cleanup` | Просматривает черновики, классифицирует по 3 уровням (AUTO/ADI/USER) согласно фреймворку самовосстановления пайплайна | D | Anomaly #7 (застрявшие черновики) |
 
 ### Хук авторутинга (Sprint A)
@@ -325,7 +325,7 @@ mcp__plugin_fpl-hsmem_hindsight__memory_recall(
 ```bash
 ./scripts/validate-all-plugins.sh
 # Ожидаемый хвост:
-#   Scanned: 68 agents (17 forgeplan-aware, 51 legacy)
+#   Scanned: 75 agents (25 forgeplan-aware, 50 legacy)
 #   Errors:  0
 #   Warns:   0
 #   ALL PASSED

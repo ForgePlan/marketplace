@@ -71,4 +71,3 @@ remains the job of a future RIPER-Research instance.
 - **RFC-013** — the BMAD instance (this plugin's mandate).
 - **ADR-010** — the AD/AID-PDLC sub-cycle contract.
 - **RFC-012** / `agents-tdd` — the sibling first instance; `bmad-lib.sh` ports its `tdd-lib.sh`.
-- `bmad-staging/BMAD-DESIGN.md` — the C1-C7 contract-map design doc.

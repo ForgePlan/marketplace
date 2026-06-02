@@ -1,6 +1,6 @@
 # cc-best — Claude Code Ecosystem Best Practices
 
-> Opinionated reference guide for the Claude Code ecosystem. Six topical sections (CLAUDE.md, plugins, agents, hooks, MCP, anti-patterns). Currently shipping section 1 of 6 (claude-md); the others are stubs queued for follow-up sprints.
+> Opinionated reference guide for the Claude Code ecosystem. Six topical sections (CLAUDE.md, plugins, agents, hooks, MCP, anti-patterns), all authored.
 
 ## What this plugin gives you
 
@@ -18,11 +18,11 @@ Example queries the skill handles:
 | Section | Status | RFC | What's in it |
 |---|---|---|---|
 | **claude-md** | DONE | RFC-004 | File structure, hierarchy, patterns, anti-patterns, examples |
-| plugins | STUB | RFC-005 | Manifest, components, distribution, versioning, common mistakes |
-| agents | STUB | RFC-006 | Frontmatter canon, profiles, real production examples |
-| hooks | STUB | RFC-007 | Types, ordering, BANNED patterns, examples |
-| mcp | STUB | RFC-008 | When to use, propagation gotchas, debugging |
-| antipatterns | STUB | RFC-009 | Synthesis of 30+ findings + standalone repo packaging |
+| **plugins** | DONE | RFC-005 | Manifest, components, distribution, versioning, common mistakes |
+| **agents** | DONE | RFC-006 | Frontmatter canon, profiles, real production examples |
+| **hooks** | DONE | RFC-007 | Types, ordering, BANNED patterns, examples |
+| **mcp** | DONE | RFC-008 | When to use, propagation gotchas, debugging |
+| **antipatterns** | DONE | RFC-009 | Synthesis of 30+ findings + standalone repo packaging |
 
 ## Install
 
@@ -60,5 +60,5 @@ MIT. Use freely. Pull requests welcome.
 ## Refs
 
 - PRD-015 — Parent product spec (Sprint Y decomposition).
-- RFC-004 — claude-md section scope (this release).
-- RFC-005..RFC-009 — the other 5 sections, future sprints.
+- RFC-004 — claude-md section scope.
+- RFC-005..RFC-009 — the other 5 sections (plugins, agents, hooks, mcp, anti-patterns).
