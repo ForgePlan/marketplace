@@ -4,6 +4,7 @@ description: |
   The OPTIONAL `## Conformance Vectors` enrichment for spec-driven development (ADR-008): a frozen, hash-pinned, language-neutral conformance corpus that is the SOLE behavioral oracle for an implementation, plus a per-language harness and a cross-language equivalence gate. Use when a SPEC targets MORE THAN ONE implementation language (REQUIRED — prose scenarios alone diverge across languages) or for a pure algorithmic core where prose under-specifies. Do NOT use for ordinary single-language features — the SPEC's `#### Scenario` blocks are the oracle there. Proven across 4 languages (TS/Py/Go/Rust) in `reference/semver/` (EVID-119).
 
   Triggers: "conformance vectors", "conformance corpus", "cross-language equivalence", "multi-language spec", "frozen oracle", "language-neutral corpus", "spec conformance harness", "конформанс-вектора", "кросс-языковая эквивалентность"
+origin: forgeplan
 ---
 
 # conformance-vectors — frozen, language-neutral conformance corpus (SDD optional enrichment)

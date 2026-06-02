@@ -4,6 +4,7 @@ description: |
   Fast path for recording a routine decision as a light ADR (200-400 words, 6-section DDR shape). Use when you just chose one approach over another and want to capture the why before it slips out of memory. NOT for big architecture — that's `adr-architect` agent territory.
 
   Triggers: "record decision", "/decision", "запиши решение", "quick adr", "light adr", "ddr"
+origin: forgeplan
 ---
 
 # /decision — quick decision record

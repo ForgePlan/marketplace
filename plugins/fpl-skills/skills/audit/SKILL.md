@@ -1,6 +1,7 @@
 ---
 name: audit
 description: Multi-expert audit of code, architecture, or a finished feature — at least 4 parallel reviewer agents, each with a specialization (logic, architecture/SOLID, typing, security; optionally tests, backend patterns, frontend, task-completion). Each runs its own checklist. Output is cross-validation, score, verdict, and action plan. On completion, **automatically writes an EvidencePack via forgeplan MCP** (`mcp__forgeplan__forgeplan_new` + `forgeplan_update` + `forgeplan_link`) so the audit lands in the artifact graph and R_eff reflects it — no manual step required (CLI fallback if MCP not connected). Use when the user wants a sharp second pair of eyes on code, a PR, a branch diff, or a sprint. Triggers (EN/RU) — "audit", "review", "проверь код", "ревью", "оцени качество", "всё ли правильно", "code audit", "expert review", "/audit".
+origin: forgeplan
 ---
 
 # Multi-Expert Audit

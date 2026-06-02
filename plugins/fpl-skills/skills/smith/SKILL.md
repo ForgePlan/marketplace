@@ -4,6 +4,7 @@ description: |
   Master-orchestrator entry-point. Reads project state (forgeplan_health, memory_recall, git), classifies context (1 of 12: greenfield / brownfield / feature / bug-fix / refactor / decision / audit / discovery / tech-debt / incident), applies methodology routing matrix, returns a structured Plan and recommends specialist-agent dispatches. Calls the `smith` agent for the planning + the routing-map.md for the brain. Default behaviour: status + recommend next step. Sub-modes via args: `bootstrap` (greenfield onboarding), `plan <task>` (per-task plan), `routing` (educational walkthrough), `status` (current state only).
 
   Triggers: "smith", "/smith", "кузнец", "что дальше", "куда идём", "возьми управление", "scrum master", "master orchestrator", "captain mode", "оркеструй", "take charge"
+origin: forgeplan
 ---
 
 # /smith — master orchestrator entry-point

@@ -1,6 +1,7 @@
 ---
 name: restore
 description: Restores working session context — collects fresh info on the current branch, recent commits, uncommitted changes, stashes, and (if available) decisions from a memory system. When forgeplan is reachable, probes **MCP-first** (`mcp__forgeplan__forgeplan_health` + `forgeplan_list` + `forgeplan_blocked`) with CLI fallback when MCP is not connected. Use at the start of a new session or after a long break, when you need to recall "where we left off". Triggers (EN/RU) — "restore context", "where did I stop", "что я делал", "восстанови контекст", "напомни на чём я остановился", "session start", "/recall".
+origin: forgeplan
 ---
 
 # Restore Context

@@ -11,6 +11,7 @@ description: |
   Triggers: "methodology check", "check methodology", "4-layer coverage", "layer report",
   "/methodology-check", "проверь методологии", "layer coverage", "pipeline check",
   "coverage report", "method check"
+origin: forgeplan
 ---
 
 # /methodology-check — 4-Layer Pipeline Coverage Report

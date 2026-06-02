@@ -10,6 +10,7 @@ description: |
   "evolve ADR", "replace ADR", "/supersede"
 
   Sprint Z8 PRD-058 — EPIC-001 S12 OpenSpec layer.
+origin: forgeplan
 ---
 
 # /supersede — Supersede ADR with OpenSpec delta-spec

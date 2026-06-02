@@ -1,6 +1,7 @@
 ---
 name: ddd-decompose
 description: Interview-driven Domain-Driven Design decomposition skill. Walks through identifying bounded contexts, aggregates, ubiquitous language, and domain events for a system or new feature. Outputs a DDD context map (Markdown + Mermaid) plus optional forgeplan artifacts (Epic + per-context PRDs + Spec). Pairs with /fpf-decompose (general decomposition) — use /ddd-decompose when DDD framing matters (multi-team boundaries, complex business domains). **MCP-first per PRD-022 Tier A** — Epic/PRD/Spec/ADR creation uses `mcp__forgeplan__forgeplan_new` + `_link` + `_validate` + `_reason` when MCP available; CLI fallback when MCP server not connected. Triggers (EN/RU) — "ddd decompose", "bounded contexts", "ubiquitous language", "domain model", "разложи по DDD", "ограниченные контексты", "доменная модель", "/ddd-decompose".
+origin: forgeplan
 disable-model-invocation: true
 allowed-tools: Read Write Edit Bash(test *) Bash(forgeplan *) Bash(command *) Bash(grep *) Bash(ls *) Bash(mkdir *)
 ---

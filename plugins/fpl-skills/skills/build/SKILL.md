@@ -1,6 +1,7 @@
 ---
 name: build
 description: Runs the implementation team from a finished research report — reads IMPLEMENTATION-PLAN.md (phases, file ownership, acceptance criteria) and the SUMMARY with ADRs, spawns teammates by phase (sequential or parallel), and verifies the result via build/typecheck/tests. On completion, **automatically writes a single EvidencePack via forgeplan MCP** (`mcp__forgeplan__forgeplan_new` + `forgeplan_update` + `forgeplan_link`) so the build lands in the artifact graph — no manual step required (CLI fallback if MCP not connected; explicit warning if neither available, never a silent skip). Use when research is already done (via research or manually) and only "execute the plan" is left. Triggers (EN/RU) — "build from research", "execute IMPLEMENTATION-PLAN", "implement based on research report", "имплементируй по research", "выполни план", "/build".
+origin: forgeplan
 ---
 
 # Build from Research

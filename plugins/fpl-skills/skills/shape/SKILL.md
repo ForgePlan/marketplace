@@ -1,6 +1,7 @@
 ---
 name: shape
 description: Interview-from-scratch skill that turns a raw idea into a structured PRD draft. Asks one focused question at a time, sharpens the problem statement and goals, surfaces target users and constraints, and writes the result as a forgeplan PRD draft via **MCP-first** path (`mcp__forgeplan__forgeplan_new` + `forgeplan_update` + `forgeplan_validate`) with CLI fallback when MCP is not connected, or plain markdown when neither is available. Pairs with `/refine` (which polishes an existing plan) — `/shape` creates the plan from a fuzzy idea. Triggers (EN/RU) — "shape this idea", "I have an idea", "help me think this through", "от идеи к PRD", "продумать фичу", "оформить идею", "/shape".
+origin: forgeplan
 disable-model-invocation: true
 ---
 

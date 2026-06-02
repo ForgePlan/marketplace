@@ -5,6 +5,7 @@ description: |
   EN: When canonical 17 forgeplan-aware agents don't fit the task, searches installed marketplaces (~/.claude/plugins/marketplaces/) for matching agents/skills. Ranks by keyword overlap + trust tier + specificity. Surfaces top 3 with description + install command + security caveats. NEVER auto-installs — user runs the command manually. Falls back to external catalogs (VoltAgent awesome-*, DenisSergeevitch) when no local match.
   RU: Когда канонических 17 forgeplan-aware агентов не хватает, ищет среди установленных маркетплейсов подходящих агентов/скиллов. Ранжирует по ключевым словам + tier + специфичности. Показывает топ-3 с описанием + командой установки + предупреждениями. НЕ устанавливает автоматически. Fallback на external catalogs.
   Triggers: "find agent for", "fetch agent", "external agent", "cross-marketplace agent", "search marketplaces", "найди агента", "поищи в маркетплейсах", "/agent-fetcher"
+origin: forgeplan
 disable-model-invocation: true
 allowed-tools: Read Bash(ls *) Bash(cat *) Bash(find *) Bash(grep *)
 ---

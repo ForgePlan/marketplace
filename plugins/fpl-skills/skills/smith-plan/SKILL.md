@@ -4,6 +4,7 @@ description: |
   Task-planning skill. Takes a SPECIFIC TASK as input (e.g., "refactor auth module", "ship payment service", "audit security of API gateway"), classifies it into one of 12 routing-map contexts, applies the matching methodology, and renders a structured Plan using templates/smith-plan.md. Dispatches the `smith` agent for routing decisions, returns a Plan markdown ready for orchestrator hand-off. Optionally creates a NOTE artifact to persist the Plan via forgeplan.
 
   Triggers: "smith plan", "/smith-plan", "спланируй задачу", "plan this task", "how should we approach", "как подойти к задаче"
+origin: forgeplan
 ---
 
 # /smith-plan — per-task structured plan

@@ -1,6 +1,7 @@
 ---
 name: briefing
 description: Morning briefing on tasks and messages — collects overdue, due today, @mentions, unread chats, and project stats from any available task tracker (Orchestra MCP, Linear MCP, Jira MCP, GitHub Issues) or from local TODO files. When forgeplan is reachable, augments with **MCP-first** artifact signals (`mcp__forgeplan__forgeplan_list` + `forgeplan_blocked` + `forgeplan_stale` + `forgeplan_blindspots`) with CLI fallback when MCP is not connected. Use at the start of the workday or when the user asks "what's on my plate", "morning standup", or similar. Triggers (EN/RU) — "daily briefing", "what's on my plate", "morning standup", "что у меня сегодня", "что висит", "брифинг", "standup", "/briefing".
+origin: forgeplan
 ---
 
 # Daily Briefing

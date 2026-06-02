@@ -1,6 +1,7 @@
 ---
 name: gh-project
 description: Project-agnostic GitHub Projects v2 integration. Reads per-project config from .forgeplan/state/gh-project.yaml; never hardcodes project numbers. Five operations — init (one-time setup), add-pr (current/given PR → board), link-prd (Standard+ PRD → matching GH issue + board entry with Forgeplan-ID field), sync-status (read forgeplan artifact status, write project board Status field), list (current items on board). **MCP-first read-only per PRD-022 Tier A** — uses `mcp__forgeplan__forgeplan_get` and `mcp__forgeplan__forgeplan_validate` when MCP available (no mutating ops on forgeplan side); CLI fallback (`bash forgeplan get|validate|list`) when MCP not connected. Gracefully degrades when gh CLI scopes are missing or config absent. Triggers (EN/RU) — "gh-project", "add to project", "link prd to issue", "sync project status", "/gh-project", "добавь на доску", "связи с проектом", "обнови статус на доске".
+origin: forgeplan
 disable-model-invocation: true
 allowed-tools: Read Write Edit Bash(test *) Bash(ls *) Bash(cat *) Bash(pwd *) Bash(command *) Bash(git *) Bash(gh *) Bash(forgeplan *) Bash(jq *) Bash(python3 *)
 ---

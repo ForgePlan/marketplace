@@ -1,6 +1,7 @@
 ---
 name: diagnose
 description: Disciplined diagnosis loop for hard bugs and performance regressions. Six phases — build feedback loop → reproduce → hypothesise → instrument → fix + regression test → cleanup + post-mortem. Phase 1 (the feedback loop) is the entire skill — everything else is mechanical once you have a fast deterministic pass/fail signal. On verified fix, captures **Evidence via MCP-first path** (`mcp__forgeplan__forgeplan_new` + `forgeplan_link`) with CLI fallback when MCP is not connected. Use when a bug is non-trivial, intermittent, performance-related, or has resisted obvious fixes. Triggers (EN/RU) — "diagnose this", "debug this", "find the root cause", "performance regression", "intermittent bug", "продиагностируй", "найди причину бага", "отладь", "/diagnose".
+origin: forgeplan
 ---
 
 # Diagnose

@@ -1,6 +1,7 @@
 ---
 name: c4-diagram
 description: Interactive C4 architecture diagram generator. Walks through the four C4 levels (Context, Container, Component, Code) via guided questions and produces Mermaid diagrams plus a context document. Pairs with /ddd-decompose (which produces a domain context map) — /c4-diagram adds the deployment / runtime structure layer. Maps cleanly to forgeplan via c4-to-forge.yaml in forgeplan-brownfield-pack. **MCP-first per PRD-022 Tier A** — Epic/Note/PRD/RFC/ADR creation uses `mcp__forgeplan__forgeplan_new` + `_link` + `_reason` when MCP available; CLI fallback when MCP server not connected. Triggers (EN/RU) — "c4 diagram", "architecture diagram", "context container component", "архитектурная диаграмма", "c4 нарисуй", "/c4-diagram".
+origin: forgeplan
 disable-model-invocation: true
 allowed-tools: Read Write Edit Bash(test *) Bash(forgeplan *) Bash(command *) Bash(grep *) Bash(ls *) Bash(mkdir *)
 ---

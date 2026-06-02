@@ -4,6 +4,7 @@ description: |
   Scan all active ADR artifacts for fired Revisit Triggers (Evidence Decay). Reports which triggers fired, which need human verification, which are stale because the ADR uses pre-Sprint-Z2 prose format. Use periodically (weekly + at session start) — keeps decisions from quietly going stale.
 
   Triggers: "decay watch", "/decay-watch", "проверь триггеры пересмотра", "stale ADR", "revisit trigger check", "evidence decay scan"
+origin: forgeplan
 ---
 
 # /decay-watch — Revisit Trigger scanner

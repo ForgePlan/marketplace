@@ -1,6 +1,7 @@
 ---
 name: team
 description: Foundational skill for launching multi-agent teams — TeamCreate vs parallel Task() (sub-agents), team-lead vs teammate roles, file ownership, dynamically spawning new agents for additional work, cleanup. Used as the base layer by other multi-agent skills (research, audit, sprint, wave) or directly when the user asks to parallelize a task. **No direct forgeplan dependency** (per PRD-022 Tier B): pure team-dispatch primitive; downstream sub-agents handle MCP-first forgeplan ops on their own per their canonical profile (A/B/C/C-coder/D). Triggers (EN/RU) — "create agent team", "run agents in parallel", "team up", "split work across agents", "распараллель", "запусти команду агентов", "team up", "/team-up".
+origin: forgeplan
 ---
 
 # Agent Team Orchestration

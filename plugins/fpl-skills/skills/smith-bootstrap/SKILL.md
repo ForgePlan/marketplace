@@ -4,6 +4,7 @@ description: |
   Greenfield-project onboarding skill. For a fresh repo (no CLAUDE.md, no forgeplan, no AGENTS.md), runs an active infrastructure setup (plugin gate → forgeplan MCP auto-wire via `forgeplan mcp install` → Hindsight detection + env-var remap guidance → `.claude/hooks/` baseline bundle → reload + verify) → pre-flight detection → forgeplan init → CLAUDE.md scaffold → AGENTS.md scaffold → plugin install recommendations → first Brief via brief-intake agent → first PRD via specification agent. Output: bootstrap checklist artifact + a confirmed greenfield project ready for the canonical /forge-cycle pipeline.
 
   Triggers: "smith bootstrap", "/smith-bootstrap", "bootstrap project", "новый проект", "fresh start", "greenfield onboarding", "init this project"
+origin: forgeplan
 ---
 
 # /smith-bootstrap — greenfield onboarding

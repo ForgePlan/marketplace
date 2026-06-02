@@ -1,6 +1,6 @@
 {
   "name": "agents-tdd",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "v0.2.1: tdd-orchestrator denylist adds forgeplan_validate - B-orchestrator parity (DEFER-015 / EVID-157 F1): a master coordinates, it does not validate; now matches smith/sparc + the AGENT-AUTHORING-GUIDE canon. Enforced-TDD methodology: tdd-orchestrator master + RED/GREEN phase agents + fail-closed PreToolUse gate (first instance of the AD/AID-PDLC sub-cycle contract). Implements RFC-012 / ADR-010: tdd-planner (scenarios\u2192plan) + coder-tdd (plan\u2192failing tests, RED) + tdd-test-validator (independent C4 verifier) + PreToolUse tdd-gate (permissionDecision:deny, exit2 fail-closed) + normalized full-file SPEC hash freeze (FR-6).",
   "author": {
     "name": "ForgePlan"

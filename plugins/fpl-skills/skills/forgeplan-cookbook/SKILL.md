@@ -4,6 +4,7 @@ description: |
   Live reference for the 66 mcp__forgeplan__* MCP tools and the 82 forgeplan CLI subcommands shipped in forgeplan 0.32.1. Agents and humans consult this skill when they know what they want to do (create an artifact, score a graph, dispatch sub-agents, detect anomalies) but don't yet know which tool name to call. Organised by use-case (lifecycle / discovery / quality / health / AI-driven / multi-agent / brownfield / activity / FPF / playbooks / plugins / release / safety) rather than alphabetically. Each section maps tools to canonical use-cases + which Profile A / B / C / D agent or which skill should call them. Includes known safety warnings (forgeplan#350 MCP body literal-string-only, forgeplan#348 score-all hint typo, forgeplan#351 plugins doctor install syntax).
 
   Triggers: "forgeplan tool reference", "which forgeplan command", "forgeplan-cookbook", "/forgeplan-cookbook", "what mcp tool", "how do I create artifact via mcp", "forgeplan cli vs mcp", "forgeplan capabilities"
+origin: forgeplan
 ---
 
 # forgeplan-cookbook — tool reference for agents and humans

@@ -1,6 +1,7 @@
 ---
 name: refine
 description: Interview-driven refinement of a plan, design, or proposal. Walks the user down each branch of the design tree one question at a time, sharpening fuzzy terminology, surfacing contradictions against the existing domain model, stress-testing edge cases with concrete scenarios, and updating CONTEXT.md and ADRs inline as decisions crystallise. Use when a plan is rough, when terms are being used loosely, when the user said "thoughts?" or "does this make sense?", or before kicking off a sprint where ambiguity will cost time. When forgeplan is reachable, **MCP-first** — recommends `mcp__forgeplan__forgeplan_new` for ADRs/NOTEs surfaced during refinement, `mcp__forgeplan__forgeplan_link` to connect to parent PRD, `mcp__forgeplan__forgeplan_validate` after refining existing artifact; CLI fallback (`bash forgeplan ...`) when MCP not connected. Adapted from Matt Pocock's grill-with-docs. Triggers (EN/RU) — "refine this plan", "stress-test this", "review my design", "sharpen the spec", "уточни план", "проверь на прочность", "доведи до ума", "/refine".
+origin: forgeplan
 ---
 
 # Refine

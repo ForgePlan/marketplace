@@ -5,6 +5,7 @@ description: |
   EN: Detects project tech stack from package manifests (package.json, Cargo.toml, go.mod, pyproject.toml, pom.xml, mix.exs, Gemfile, composer.json, Package.swift, pubspec.yaml) + secondary signals (tailwind.config.*, next.config.*, nuxt.config.*, docker-compose.yml). Classifies signals into a stack profile, proposes 1–3 project-scoped agents (project:<slug>-pro) baked from agent-template.md with stack-specific patterns. Asks approval per proposal before writing any file. Does NOT auto-create — user always confirms. Writes agent files to .claude/agents/ on approval and suggests project-agent-matrix.yaml entries for dispatch overrides.
   RU: Определяет технологический стек проекта по package-манифестам + вторичным сигналам. Классифицирует в stack profile, предлагает 1–3 project-scoped агента (project:<slug>-pro) на базе agent-template.md. Спрашивает подтверждения для каждого предложения. Записывает только после согласия пользователя. НЕ создаёт автоматически.
   Triggers: "scaffold project agent", "create project agent", "detect project stack", "project-specific agent", "agent for my stack", "создай agent для проекта", "agent под мой стек", "agent под мой проект", "/project-agent-scaffold"
+origin: forgeplan
 disable-model-invocation: true
 allowed-tools: Read Write Edit Bash(ls *) Bash(cat *) Bash(test *) Bash(find *) Bash(grep *)
 ---

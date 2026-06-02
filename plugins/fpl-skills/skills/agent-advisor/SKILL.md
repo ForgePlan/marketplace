@@ -1,6 +1,7 @@
 ---
 name: agent-advisor
 description: Recommends the right canonical agent (or set of agents) for a described engineering task. Consults the `mm-agent-selection` mental model in Hindsight when available, falls back to embedded knowledge of the 17 forgeplan-aware canonical agents + their CRUD-R-A profile matrix (PRD-026). Returns a structured recommendation — primary agent, optional secondaries, profile letter, short rationale, and a ready-to-paste `Task({ subagent_type: ... })` invocation snippet. Use when the user describes a task in natural language and asks "which agent should I use?", or when you (Claude) want to dispatch the right specialist for a phase but are not 100% sure of the canonical mapping. Triggers (EN/RU) — "which agent for", "recommend agent", "what agent should I use", "agent for this task", "какого агента", "посоветуй агента", "/agent-advisor".
+origin: forgeplan
 ---
 
 # agent-advisor — pick the right canonical agent

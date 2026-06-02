@@ -1,6 +1,7 @@
 ---
 name: spec-author
 description: Author a forgeplan SPEC in the spec-driven LIGHT pipeline (OpenSpec/SpecKit-style on the SPEC kind) — iterate until "ideal", then freeze for implementation. Produces a SPEC where `## Requirements` (`### Requirement` + `#### Scenario` GIVEN/WHEN/THEN) is the PRIMARY, frozen, reviewed oracle, plus `## Behavioral Contract` (pseudocode + invariants), `## Contracts`, and an OPTIONAL `## Conformance Vectors` block (pure algorithmic cores / multi-language conformance only). Self-validates via `forgeplan_validate` + `forgeplan_reason`, then hands to guardian; the per-language coder turns each frozen scenario into a test (TDD) and may NOT edit the scenarios. Use when shaping a feature or behaviour into a testable spec BEFORE any code. Triggers (EN/RU) — "author a spec", "write a SPEC", "spec-driven", "scenarios for this feature", "напиши спеку", "оформи поведение в спеку", "сценарии для фичи", "/spec-author". Not for: tactical one-line fixes (Row 5), non-behavioral docs, or the heavy conformance corpus as a default (it is optional — see ADR-008).
+origin: forgeplan
 ---
 
 # /spec-author — author a light-path SPEC (scenarios are the oracle)

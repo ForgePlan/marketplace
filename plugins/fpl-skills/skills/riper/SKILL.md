@@ -1,6 +1,7 @@
 ---
 name: riper
 description: RIPER methodology orchestrator — Research → Innovate → Plan → Execute → Review — the FOURTH instance of the AD/AID-PDLC sub-cycle contract (ADR-010 / RFC-018). Drives a bug / scoped change / investigation in an EXISTING active system through five modes, MAIN-SESSION-orchestrated (hook-gate=No → no dispatched master, no hook), with a mandatory independent C4 verifier at every mode gate and — uniquely — a dedicated C4+C6 on the non-freezable Research product (a Research NOTE + an `## Pinned revision` EVID + a Plan-gate pin-freshness re-check): RIPER is the first instance to exercise ADR-010's conditional-freeze path end-to-end. Each phase delegates to existing fpl-skills (/research, /refine or /fpf-decompose, /rfc create, /sprint or /forge-cycle, /audit) with explicit phase tracking. **MCP-first per PRD-022 Tier A** — forgeplan artifact creation uses `mcp__forgeplan__forgeplan_new` + `_link` + `_validate` when MCP is available; CLI fallback (`bash forgeplan ...`) only when MCP server not connected. Triggers (EN/RU) — "riper", "research innovate plan execute review", "/riper", "пройди riper", "RIPER цикл", "production bug", "investigate before fixing".
+origin: forgeplan
 disable-model-invocation: true
 allowed-tools: Read Write Edit Bash(test *) Bash(forgeplan *) Bash(command *) Bash(grep *) Bash(ls *)
 ---

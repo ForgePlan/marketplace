@@ -4,6 +4,7 @@ description: |
   Educational routing skill. Walks the user through smith's methodology routing matrix without committing to a specific task. Use to learn "when do I apply BMAD vs SPARC?", "what methodology for brownfield?", "explain the bug fix workflow". Pulls from routing-map.md (12 contexts + 25 methodology cards) and sections/NN-*.md (detailed playbooks). Output: educational comparison + recommendation when user describes their situation. Does NOT produce a Plan artifact — for that, use /smith-plan.
 
   Triggers: "smith routing", "/smith-routing", "explain methodology", "какая методология", "when do I use", "compare methodologies", "routing walkthrough", "BMAD vs SPARC", "Strangler Fig or rewrite", "show me the routing matrix"
+origin: forgeplan
 ---
 
 # /smith-routing — educational walkthrough
