@@ -388,6 +388,42 @@ else:
     print(f"  OK: No command collisions ({len(owners)} commands checked)")
 PYEOF
 
+# ============================================================
+# CI security + integrity gates (scripts/ci/*.js)
+# Per #147 + #148. Each gate ASSERTS against the real tree and exits
+# non-zero on a violation; any failure here increments ERRORS so the
+# whole script fails. These are Node scripts — Node must be available.
+#
+# catalog-check is wired READ-ONLY (no --flags): a CI gate asserts on
+# doc/disk drift, it must NEVER auto-mutate docs. Do NOT add --write.
+# (The --write floor-marker idempotency defect is tracked separately;
+# read-only assert mode is unaffected by it.)
+# ============================================================
+echo ""
+echo "=== CI security + integrity gates (scripts/ci) ==="
+if ! command -v node >/dev/null 2>&1; then
+    echo "  FAIL: node not found on PATH — the scripts/ci gates require Node.js"
+    ERRORS=$((ERRORS + 1))
+else
+    CI_DIR="$SCRIPT_DIR/ci"
+    # gate name -> invocation. catalog-check is intentionally flag-less (read-only).
+    run_gate() {
+        local label="$1"; shift
+        echo "--- gate: $label ---"
+        if "$@"; then
+            echo "  OK: $label"
+        else
+            echo "  FAIL: $label (exit $?)"
+            ERRORS=$((ERRORS + 1))
+        fi
+    }
+    run_gate "catalog-check (read-only)" node "$CI_DIR/catalog-check.js"
+    run_gate "cross-ref-check"           node "$CI_DIR/cross-ref-check.js"
+    run_gate "check-unicode-safety"      node "$CI_DIR/check-unicode-safety.js"
+    run_gate "validate-no-personal-paths" node "$CI_DIR/validate-no-personal-paths.js"
+    run_gate "validate-workflow-security" node "$CI_DIR/validate-workflow-security.js"
+fi
+
 echo ""
 if [ $ERRORS -gt 0 ]; then
     echo "FAILED: $ERRORS error(s) found"

@@ -14,6 +14,13 @@ on:
       - '.claude-plugin/marketplace.json'
       - '.github/workflows/**'
 
+# The validate job only reads files (JSON validation + the scripts/ci gates).
+# Pin the workflow token to read-only so a compromised step cannot push, open
+# issues, or edit the repo. This also silences the WF-PERMS-MISSING warning that
+# scripts/ci/validate-workflow-security.js raises on a permissions-less workflow.
+permissions:
+  contents: read
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -169,4 +176,33 @@ jobs:
             fi
           done
           [ "$found" -eq 0 ] && echo "No plugin test suites found (skipped)"
+          [ "$errors" -eq 0 ] || exit 1
+
+      - name: CI security + integrity gates (scripts/ci)
+        run: |
+          # The 5 gates are Node scripts (Node >= 18). ubuntu-latest ships Node;
+          # echo the version both as a diagnostic and to fail fast if it is absent.
+          node --version
+          # Each gate ASSERTS against the checked-out tree and exits non-zero on a
+          # violation. Run all five, collecting failures so the log shows every
+          # offending gate, then fail the job if any failed.
+          #
+          # catalog-check is READ-ONLY (no --flags): a CI gate asserts on doc/disk
+          # drift, it must NEVER auto-mutate docs. Do NOT add --write here.
+          errors=0
+          run_gate() {
+            label="$1"; shift
+            echo "--- gate: $label ---"
+            if "$@"; then
+              echo "OK: $label"
+            else
+              echo "FAIL: $label (exit $?)"
+              errors=$((errors + 1))
+            fi
+          }
+          run_gate "catalog-check (read-only)"    node scripts/ci/catalog-check.js
+          run_gate "cross-ref-check"              node scripts/ci/cross-ref-check.js
+          run_gate "check-unicode-safety"         node scripts/ci/check-unicode-safety.js
+          run_gate "validate-no-personal-paths"   node scripts/ci/validate-no-personal-paths.js
+          run_gate "validate-workflow-security"   node scripts/ci/validate-workflow-security.js
           [ "$errors" -eq 0 ] || exit 1
