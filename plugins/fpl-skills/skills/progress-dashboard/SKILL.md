@@ -5,6 +5,7 @@ description: |
   EN: Renders structured snapshot of running orchestrator state — current sprint, phase, wave, agents in flight (via forgeplan_claims), TaskList progress, forgeplan_health, recent EVID, files modified count, ETA estimate. Read-only: consumes existing data sources (forgeplan MCP claims/health/list, in-session TaskList, .forgeplan/session.yaml if present, git log). Does NOT introduce a new event system. Single snapshot per invocation — user re-invokes for updated view. Use during long /sprint or /autorun runs when you want a "where are we" check without scrolling agent output.
   RU: Рендерит структурированный snapshot состояния запущенного оркестратора — текущий sprint, phase, wave, агенты в полёте (через forgeplan_claims), прогресс TaskList, forgeplan_health, недавние EVID, count файлов в коммитах, оценка ETA. Read-only: использует существующие data sources (forgeplan MCP claims/health/list, in-session TaskList, .forgeplan/session.yaml если есть, git log). НЕ создаёт новую event system. Один snapshot за вызов — пользователь перевызывает для обновления. Use во время долгих /sprint или /autorun когда нужно "где мы" без скролла agent output.
   Triggers: "forge progress", "where are we", "current state", "sprint status", "что происходит", "где мы сейчас", "статус спринта", "/forge-progress"
+origin: forgeplan
 disable-model-invocation: true
 allowed-tools: Read Bash(git log *) Bash(test *) Bash(ls *) Bash(cat *)
 ---

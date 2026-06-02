@@ -1,6 +1,7 @@
 ---
 name: rfc
 description: Creates, reads, and updates RFCs (Request for Comments) / design docs — structured documents for architectural decisions via **MCP-first** path (`mcp__forgeplan__forgeplan_new` + `forgeplan_update` + `forgeplan_link` + `forgeplan_validate`) with CLI fallback when MCP is not connected, or plain markdown when neither is available. Knows the canonical structure (Meta header, Phase Progress, Implementation TODO, ADR), the rules for updating progress bars, and the checkbox format. Use when proposing a new technical solution, documenting architecture, or updating progress on an existing RFC after a sprint/wave. Triggers (EN/RU) — "write RFC", "create design doc", "update RFC progress", "draft proposal", "ADR", "напиши RFC", "сделай design doc", "обнови прогресс RFC", "создай предложение", "архитектурное решение".
+origin: forgeplan
 ---
 
 # RFC Document

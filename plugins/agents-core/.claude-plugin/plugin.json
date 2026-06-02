@@ -1,6 +1,6 @@
 {
   "name": "agents-core",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "v1.4.1: coder body gains a 'TDD GREEN-phase discipline' section (RFC-012 FR-4) — when dispatched in a TDD GREEN phase, never Write/Edit test files; on a wrong test STOP and emit TEST_BUG; lint after each change. v1.4.0: code-reviewer + tester (Profile B) bodies gain Step 4.5 Ground-truth verification clause (RFC-011 FR-3) — reviewers MUST read frozen git diff themselves before PASS; empty diff on a claimed change = BLOCKER (vacuous green). Core development agents: debugger, code reviewer, error detective, performance engineer, production validator, plus a complete dev team (coder, planner, researcher, reviewer, tester, TDD London School). v1.3.1: code-reviewer + tester (Profile B) bodies patched with Step 9b NEEDS_ACTIVATION sentinel emit instruction per Sprint E PRD-033 — Profile B reviewers now emit `<<NEEDS_ACTIVATION: EVID-XXX>>` on first line of return to enable orchestrator auto-activation. v1.3: 8 legacy specialists canonical-lint compliant. v1.2: coder Profile C-coder + code-reviewer + tester (batch 2 forgeplan-aware migration).",
   "author": {"name": "ForgePlan"},
   "homepage": "https://github.com/ForgePlan/marketplace",

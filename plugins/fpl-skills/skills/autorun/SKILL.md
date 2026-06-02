@@ -1,6 +1,7 @@
 ---
 name: autorun
 description: Autonomous orchestrator for green-light / overnight execution. Takes one task and runs the full engineering cycle (research → plan → sprint → audit → report) end-to-end without approval checkpoints. Uses TeamCreate with explicit file-ownership and blockedBy edges between waves, resolves blockers via ADI (Abduct → Induct → Deduce) instead of asking the user, and only stops on red-line actions (push to main, secret writes, destructive ops, deploys). Use when you want to give one prompt and let it run unattended — overnight runs, bypassPermissions sessions, or when you can't watch checkpoints. Triggers (EN/RU) — "autorun X", "run unattended", "do this overnight", "запусти автопилот", "сделай всё автономно", "ночной прогон", "/autorun".
+origin: forgeplan
 disable-model-invocation: true
 ---
 

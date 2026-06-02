@@ -1,6 +1,7 @@
 ---
 name: fpl-init
 description: One-command project bootstrap for the ForgePlan ecosystem. Probes the forgeplan CLI, runs `forgeplan init`, wires `.mcp.json` and `.claude/settings.json`, then chains `/bootstrap` (universal CLAUDE.md template) and `/setup` (docs/agents/ wizard) so a fresh repo is fully wired in one shot. Recommends — but does not install — companion plugins (fpf, laws-of-ux, agents-core, forgeplan-workflow, forgeplan-orchestra). v2.0: Adds optional `--canonize` step that scaffolds the canonical agent layer (project-agent-matrix.yaml + project-config.yaml + Hindsight mental models) for forgeplan-aware projects per PRD-026 Phase 5. Use on a brand-new project, or on an existing project that has none of `.forgeplan/`, `CLAUDE.md`, `docs/agents/`. Triggers (EN/RU) — "fpl init", "init project", "bootstrap forgeplan", "set up everything", "full project setup", "/fpl-init", "поставь всё", "разверни проект с нуля", "инициализируй проект", "fpl init canonize", "setup agent matrix", "v2 bootstrap".
+origin: forgeplan
 disable-model-invocation: true
 allowed-tools: Read Write Edit Bash(test *) Bash(ls *) Bash(cat *) Bash(pwd *) Bash(command *) Bash(git *) Bash(forgeplan *) Bash(mkdir *) Bash(jq *) Bash(python3 *) Bash(cp *) Bash(sed *) Bash(basename *) Bash(grep *)
 ---

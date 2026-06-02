@@ -5,6 +5,7 @@ description: |
   EN: Explicit draft sweep skill for marketplace workspaces. Scans all draft artifacts via mcp__forgeplan__forgeplan_list, classifies each into 9 outcomes (ready_to_activate / incomplete / stale_unreferenced / ambiguous / orphan_link / mistyped_based_on / expired_evidence / phase_mismatch / link_direction_footgun) mapped to 3 resolution tiers (AUTO = silent activate with batch confirmation, ADI = FPF reasoning loop, USER = per-artifact explicit decision). Executes AUTO tier after user batch-confirm; dispatches ADI sub-agents for ambiguous cases; surfaces USER tier per artifact for explicit decisions. Use at end of /forge-cycle or /autorun runs, or manually when forgeplan_health shows accumulating drafts. Closes Anomaly #7 from Sprint A+B+C log.
   RU: Explicit-скилл для draft sweep маркетплейс воркспейсов. Сканирует все draft артефакты через MCP, классифицирует в 9 исходов (4 оригинальных + 4 Sprint F + 1 Sprint M: orphan_link / mistyped_based_on / expired_evidence / phase_mismatch / link_direction_footgun), мапит на 3 tier resolution (AUTO молча активирует, ADI запускает FPF reasoning loop, USER через AskUserQuestion). Применяет AUTO batch с подтверждением; диспатчит ADI sub-agents для ambiguous; surfaces USER per артефакт.
   Triggers: "forge cleanup", "draft sweep", "clean up drafts", "почисти drafts", "разгрести drafts", "/forge-cleanup"
+origin: forgeplan
 disable-model-invocation: true
 allowed-tools: Read Bash(test *) Bash(ls *) Bash(date *)
 ---

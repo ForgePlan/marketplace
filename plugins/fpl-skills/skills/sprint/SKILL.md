@@ -1,6 +1,7 @@
 ---
 name: sprint
 description: Wave-based execution of a feature/task by a multi-agent team — research → wave plan (5-8 agents in 2-5 waves) → approval → wave-by-wave teammate spawn via TeamCreate. Two modes — full sprint (with research phase) and lightweight wave (uses current chat context). Each wave is independent parallel work by agents under strict file ownership; dependent tasks go in the next wave. At every wave-close, **automatically emits one EvidencePack per touched artifact via forgeplan MCP** (`mcp__forgeplan__forgeplan_new` + `forgeplan_update` + `forgeplan_link`) — no opt-in. At sprint-close, prompts the user to bulk-activate the collected EVIDs. Soft CLI fallback if MCP unavailable; warns instead of silent-skip if a sprint closes with zero EVIDs. Use for large feature implementation, refactor sprints, milestones. Triggers (EN/RU) — "sprint", "wave plan", "implement feature in waves", "запусти спринт", "распланируй волны", "реализуй фичу", "implement RFC-XXX", "/sprint", "/wave".
+origin: forgeplan
 ---
 
 # Wave-Based Sprint Execution

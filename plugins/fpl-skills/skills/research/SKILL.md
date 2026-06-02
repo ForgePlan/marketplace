@@ -1,6 +1,7 @@
 ---
 name: research
 description: Deep multi-agent research on a topic — parallel scout agents cover source code, design docs/RFCs, TODO/status files, reference implementations, persistent memory. Each agent gets a bounded domain and its own context. Use when the topic is large (auth chain, competitor comparison, gap-analysis for a feature) and one agent/context isn't enough. When forgeplan is reachable, **MCP-first** plug-in to artifact graph — recommends `mcp__forgeplan__forgeplan_new` (note/prd/adr/rfc) + `mcp__forgeplan__forgeplan_link` + `mcp__forgeplan__forgeplan_validate` for outputs; CLI fallback when MCP not connected. Triggers (EN/RU) — "deep research", "explore X across the project", "compare our X with Y", "gap analysis for X", "разберись", "изучи", "сравни", "глубокий research", "что есть по теме X", "/research".
+origin: forgeplan
 ---
 
 # Multi-Agent Deep Research

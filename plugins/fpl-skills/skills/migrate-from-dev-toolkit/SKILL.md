@@ -1,6 +1,7 @@
 ---
 name: migrate-from-dev-toolkit
 description: One-command migration from dev-toolkit to fpl-skills. Probes installed plugins, scans CLAUDE.md and project docs for /dev-toolkit:* references, offers Mode A (side-by-side, zero risk) or Mode B (clean cut), executes the steps from docs/MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS.md. **One-time bootstrap, no runtime forgeplan calls** (per PRD-022 Tier B): operates on local plugin manifests + project file paths; the migrated fpl-skills become MCP-first separately at their own runtime. Triggers (EN/RU) — "migrate from dev-toolkit", "switch to fpl-skills", "переедь на fpl-skills", "переехать с dev-toolkit", "перейти на fpl-skills", "/migrate-from-dev-toolkit".
+origin: forgeplan
 disable-model-invocation: true
 allowed-tools: Read Write Edit Bash(grep *) Bash(sed *) Bash(ls *) Bash(test *) Bash(find *) Bash(cat *) Bash(command *) Bash(diff *) Bash(cp *) Bash(mv *) Bash(rm *) Bash(echo *)
 ---
