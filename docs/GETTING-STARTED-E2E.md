@@ -1,3 +1,5 @@
+[English](GETTING-STARTED-E2E.md) | [Русский](GETTING-STARTED-E2E-RU.md)
+
 # Getting Started — End-to-End Walkthrough
 
 > **Audience**: New user who just discovered ForgePlan and wants to verify everything works from scratch on their own machine.

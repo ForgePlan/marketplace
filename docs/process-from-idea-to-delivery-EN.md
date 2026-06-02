@@ -1,3 +1,5 @@
+[English](process-from-idea-to-delivery-EN.md) | [Русский](process-from-idea-to-delivery-RU.md)
+
 # Process from Idea to Delivery - ForgePlan System Reference
 
 > **This is a normative document.** It describes how the system **must** work from the first line of an idea to a commit on the main branch. It is used as:
@@ -6,7 +8,7 @@
 > 2. **Audit reference** - the real implementation is checked against this document; discrepancies are counted as technical debt
 > 3. **Template for creation** - when new artifact types or new methodologies are added, they fit into this scheme
 >
-> **Version**: 1.2 (2026-05-28)
+> **Version**: 1.3 (2026-06-02)
 > **Author**: collective knowledge, formatted as course material
 > **Status**: reference.
 
@@ -45,7 +47,7 @@ The machine consists of four entities:
 
 - **Artifacts** (PRD, RFC, ADR, EVID, NOTE, EPIC, PROBLEM, SOLUTION, SPEC, REFRESH) - record decisions and verifications
 - **Agents** (five canonical roles) - perform work in isolated contexts
-- **Methodologies** (BMAD, FPF ADI, SPARC, RIPER-5 and others) - define how exactly to approach the task
+- **Methodologies** (BMAD, FPF ADI, SPARC, RIPER-5 and others) - define how exactly to approach the task. TDD, BMAD, SPARC and RIPER are now the four shipped **instances of the AD/AID-PDLC sub-cycle contract** (ADR-010) - see §3.0.
 - **Quality gates** (forge-cycle, guardian, methodology-check, forgeplan checks) - prevent skipping steps
 
 Below, in detail about each entity and how they connect into one process.
@@ -210,6 +212,21 @@ Also a sub-profile of Profile B, but with a special role. Does not look for new 
 ## 3. Methodologies - which one and when
 
 The agent's role says **what it is allowed to do**. The methodology says **how exactly to approach the task**. One role can map to several methodologies - for example, the `specification` agent applies BMAD for PRDs, while `adr-architect` applies FPF ADI for ADRs. Both are Profile A.
+
+### 3.0 The AD/AID-PDLC sub-cycle contract (ADR-010)
+
+The four build methodologies below are not ad-hoc - since RFC-012/013/016/018 they are the **four shipped instances of one reusable contract** (ADR-010), each governed by the forgeplan harness:
+
+| # | Instance | Plugin / entry | Span | hook-gate |
+|---|----------|----------------|------|-----------|
+| 1 | **TDD** | `agents-tdd` (`/tdd`) | single Build stage | Yes (fail-closed test-immutability hook) |
+| 2 | **BMAD** | `agents-bmad` (`/bmad`) | whole greenfield arc | Yes (no-code-before-plan hook) |
+| 3 | **SPARC** | `agents-sparc` (`/sparc`) | one feature in an active system | No (harness phase-ordering) |
+| 4 | **RIPER** | `fpl-skills` (`/riper`) | a bug / scoped change / investigation | No (main-session walk) |
+
+Every instance reuses the same six contract elements - **C1** entry-gate -> **C2** stage-master -> **C3** phase agents -> **C4** independent verifier -> **C5** enforcement -> **C6** EVIDENCE-out (+ **C7** FPF on demand) - with the invariant **generator != verifier at every stage** (the entity that produces work never certifies it). The **hook-gate** decision (ADR-012) is whether an instance needs a fail-closed PreToolUse hook (TDD/BMAD) or just harness phase-ordering + a main-session walk (SPARC/RIPER). Spec-driven development is the spine (ADR-008); `## Conformance Vectors` (the `/conformance-vectors` skill) is its optional cross-language enrichment, required only for multi-language SPECs.
+
+Sections 3.1-3.4 describe each methodology in teaching detail; this subsection is the contract that unifies them.
 
 ### 3.1 BMAD - four phases from idea to PRD
 
