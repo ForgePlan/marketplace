@@ -1,3 +1,5 @@
+[English](GITHUB-PROJECTS.md) | [Русский](GITHUB-PROJECTS-RU.md)
+
 # GitHub Projects v2 integration — guide
 
 > Bilingual: this is the English version. The Russian version is at [GITHUB-PROJECTS-RU.md](GITHUB-PROJECTS-RU.md).

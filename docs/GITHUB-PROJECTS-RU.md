@@ -1,3 +1,5 @@
+[English](GITHUB-PROJECTS.md) | [Русский](GITHUB-PROJECTS-RU.md)
+
 # Интеграция с GitHub Projects v2 — гайд
 
 > Двуязычный документ. English version: [GITHUB-PROJECTS.md](GITHUB-PROJECTS.md).
