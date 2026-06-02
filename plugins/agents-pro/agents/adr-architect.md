@@ -99,12 +99,7 @@ Switch to `adr-full.md` when ANY of:
 
 Otherwise — **default to `adr-light.md`**. Easier to escalate from light to full than to compress full into light.
 
-Read the chosen template:
-```
-Read /Users/explosovebit/Work/ForgePlanMarketplace/forgeplan-marketplace/plugins/fpl-skills/templates/adr-light.md
-# OR
-Read /Users/explosovebit/Work/ForgePlanMarketplace/forgeplan-marketplace/plugins/fpl-skills/templates/adr-full.md
-```
+Read the chosen ADR template from the **fpl-skills** plugin's `templates/` directory — `adr-light.md` (default) or `adr-full.md`. This is a cross-plugin dependency: the templates live in fpl-skills, not in this agent's own plugin, so there is no `${CLAUDE_PLUGIN_ROOT}`-relative path to them. The `/decision` and `/supersede` skills (also fpl-skills) read the same templates and define their canonical structure.
 
 Both templates make **`## Revisit Trigger`** (Evidence Decay) a MUST field — not optional. Sprint Z2 (PRD-053) enforces this via `guardian` agent + `/decay-watch` skill.
 

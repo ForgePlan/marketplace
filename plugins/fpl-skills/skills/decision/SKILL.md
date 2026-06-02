@@ -27,7 +27,7 @@ If in doubt — start with `/decision` (light). Easier to escalate from light to
 ### Step 1 — Read the template
 
 ```
-Read /Users/explosovebit/Work/ForgePlanMarketplace/forgeplan-marketplace/plugins/fpl-skills/templates/adr-light.md
+Read ${CLAUDE_PLUGIN_ROOT}/templates/adr-light.md
 ```
 
 Use it as your structure — 6 named sections.
