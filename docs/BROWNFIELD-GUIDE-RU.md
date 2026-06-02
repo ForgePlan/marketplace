@@ -49,10 +49,13 @@ Greenfield — это чистый лист. Ты пишешь первую ст
 
 `/smith-bootstrap` — для пустых реп. Он засевает Brief, первый PRD и первый ADR. В brownfield-репе со 100+ коммитов ничего из этого тебе не нужно — не нужно изобретать контекст; код его уже содержит. Тебе нужно его извлечь.
 
-В brownfield ты хочешь:
+В brownfield ты хочешь задиспатчить discover-агента:
 
 ```bash
-/discover
+# Через оркестратор (Task tool в Claude Code):
+Task(subagent_type="forgeplan-brownfield-pack:discover",
+     description="Brownfield onboarding",
+     prompt="Run discovery in default mode against this repo")
 ```
 
 Или вызови smith в режиме по умолчанию и пусть он сам тебя смаршрутит:
@@ -89,7 +92,7 @@ Discover Agent гоняет **строгий приоритет источник
 Discover-агент закрывает сессию через `forgeplan_discover_complete`, потом эмитит `<<NEEDS_ACTIVATION: ARTIFACT-ID>>` sentinels на каждый черновой артефакт, чтобы оркестратор их активировал. После этого `forgeplan health` отражает реальную карту репы, а downstream-агенты (`architect-reviewer`, `ddd-domain-expert`, `security-expert`) могут маршрутить от неё.
 
 > [!TIP]
-> Для реп >100K LOC запускай `/discover --deep`. Для >2M LOC или критичных для бизнеса — `/discover --full`. Оба добавляют углубляющие проходы, которые фанаут параллельных саб-агентов на каждый модульный RFC. Подробнее по режимам — в [README Discover-агента](../plugins/forgeplan-brownfield-pack/agents/discover/README.md).
+> Для реп >100K LOC диспатчи агента в режиме `--deep`; для >2M LOC или критичных для бизнеса — в режиме `--full` (режим передаётся в prompt диспатча, например `prompt="Run discovery in --deep mode against this repo"`). Оба добавляют углубляющие проходы, которые фанаут параллельных саб-агентов на каждый модульный RFC. Замечание: в v1-плагине `--deep`/`--full` пока откатываются к поведению Pass 1 — подробнее по режимам в [README Discover-агента](../plugins/forgeplan-brownfield-pack/agents/discover/README.md).
 
 ## Шаг 3 — Типичные ситуации brownfield и как их разруливать
 
@@ -102,7 +105,7 @@ Discover-агент закрывает сессию через `forgeplan_discov
 **Последовательность**:
 
 ```bash
-/discover                                              # Pass 1: 7-фазная карта того, что есть
+Task(subagent_type="forgeplan-brownfield-pack:discover", ...)  # Pass 1: 7-фазная карта того, что есть
 /smith-plan "modernize the User domain into bounded contexts"
 # smith выбирает строку 2 → диспатчит ddd-domain-expert (A) → adr-architect (A)
 forgeplan_reason PRD-NNN                               # ADI ≥3 гипотезы: lift-and-shift / Strangler / leave-alone

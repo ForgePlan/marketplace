@@ -201,22 +201,20 @@
 
 ---
 
-## Не в этой экосистеме (упоминается, но не в forgeplan и не в маркетплейсе)
+## Часто спрашиваемые методологии (где живёт каждая)
 
 ### RIPER — Research / Innovate / Plan / Execute / Review
 
-**Статус**: не в ядре forgeplan, не в маркетплейсе.
+**Статус**: поставляется в плагине `fpl-skills` как команда-оркестратор `/riper` — **четвёртый инстанс** контракта подцикла AD/AID-PDLC (ADR-010 / RFC-018), рядом с `/tdd` (RFC-012), `/bmad` (RFC-013) и `/sparc` (RFC-016).
 
-**Ближайший аналог**: жизненный цикл forgeplan — **Route → Shape → Build → Evidence → Activate**. Фазы по сути отличаются: RIPER акцентирует итеративную идеацию; forgeplan — отслеживаемые артефакты и evidence по слабейшему звену.
-
-Если очень хочется именно RIPER-терминологию — можно собрать вручную:
+**Что делает**: проводит баг / точечное изменение / расследование в существующей активной системе через пять фаз RIPER — **Research → Innovate → Plan → Execute → Review** — делегируя на каждой фазе существующим fpl-skills с явным трекингом прогресса:
 - Research → `/research`
 - Innovate → `/refine` или `/fpf-decompose`
 - Plan → `/rfc create`
 - Execute → `/sprint` или `/forge-cycle`
 - Review → `/audit`
 
-Но единой команды `/riper` нет.
+Сверх словарного оверлея contract-conformant путь добавляет обязательный независимый C4-верификатор на каждом гейте фазы плюс выделенный non-freezable Research C4+C6 + перепроверку свежести pin на Plan-гейте — дисциплину, которой у `/forge-cycle` нет. Сюда маршрутизирует Row 4 у smith (production-баг, нетривиальный). Замечание: `/riper` — это `hook-gate=No` (без fail-closed hook); гарантия «нет кода до утверждения Plan» держится на человеке на переходе Plan→Execute, поэтому не запускайте RIPER полностью автономно (см. ADR-010 / NOTE-013 DEFER-016).
 
 ### AI-SDLC
 
@@ -251,7 +249,7 @@
 | MADR | Карта в brownfield-pack | Только ингест через `madr-to-forge.yaml` |
 | Obsidian | Карта в brownfield-pack | Только ингест через `obsidian-to-forge.yaml` |
 | Autoresearch | Внешний companion (`uditgoenka/autoresearch`) | Ставится отдельно; ингест через `autoresearch-to-forge.yaml`. См. [AUTORESEARCH-INTEGRATION-RU.md](AUTORESEARCH-INTEGRATION-RU.md). |
-| RIPER | НЕТ в экосистеме | Вручную — связка `/research` → `/refine` → `/rfc` → `/sprint` → `/audit` |
+| RIPER | `/riper` (fpl-skills) | Research → Innovate → Plan → Execute → Review |
 | AI-SDLC | НЕ названо так, приближение через `/autorun` | `/autorun "<задача>"` |
 
 ---

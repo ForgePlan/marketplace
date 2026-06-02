@@ -87,7 +87,8 @@ Add your plugin to `.claude-plugin/marketplace.json`:
 
 1. Make changes in `plugins/your-plugin-name/`
 2. Bump `version` in both `plugin.json` and `marketplace.json`
-3. Submit PR with title: `Update plugin: your-plugin-name v1.1.0`
+3. Bump the catalog `metadata.version` in `.claude-plugin/marketplace.json` — **required**: without it, `/plugin marketplace update` delivers nothing to users (the catalog version is the cache-invalidation key).
+4. Submit PR with title: `Update plugin: your-plugin-name v1.1.0`
 
 ## Plugin quality checklist
 

@@ -49,10 +49,13 @@ Install the standard ForgePlan Marketplace plugins, plus the brownfield-specific
 
 `/smith-bootstrap` is for empty repos. It seeds a Brief, a first PRD, and a first ADR. On a brownfield repo with 100+ commits, none of that is what you want — you don't need to invent context; the code already contains it. You need to extract it.
 
-For brownfield you want:
+For brownfield you want to dispatch the discover agent:
 
 ```bash
-/discover
+# Via the orchestrator (Claude Code Task tool):
+Task(subagent_type="forgeplan-brownfield-pack:discover",
+     description="Brownfield onboarding",
+     prompt="Run discovery in default mode against this repo")
 ```
 
 Or invoke smith in its default mode and let it route you:
@@ -89,7 +92,7 @@ The 7 phases run in sequence (canon — never skip ahead to docs):
 The discover agent closes its session with `forgeplan_discover_complete`, then emits `<<NEEDS_ACTIVATION: ARTIFACT-ID>>` sentinels for every draft artifact so the orchestrator activates them. After that, your `forgeplan health` reflects an actual map of the repo, and downstream agents (architect-reviewer, ddd-domain-expert, security-expert) can route off it.
 
 > [!TIP]
-> For repos >100K LOC, run `/discover --deep`. For >2M LOC or business-critical, run `/discover --full`. Both add deepening passes that fan out parallel sub-agents per module RFC. See the [Discover Agent README](../plugins/forgeplan-brownfield-pack/agents/discover/README.md) for mode details.
+> For repos >100K LOC, dispatch the agent in `--deep` mode; for >2M LOC or business-critical, in `--full` mode (pass the mode in the dispatch prompt, e.g. `prompt="Run discovery in --deep mode against this repo"`). Both add deepening passes that fan out parallel sub-agents per module RFC. Note: as of the v1 plugin, `--deep`/`--full` fall back to Pass 1 behavior — see the [Discover Agent README](../plugins/forgeplan-brownfield-pack/agents/discover/README.md) for mode details.
 
 ## Step 3 — Common brownfield situations + how to handle them
 
@@ -102,7 +105,7 @@ The discover agent closes its session with `forgeplan_discover_complete`, then e
 **Sequence**:
 
 ```bash
-/discover                                              # Pass 1: 7-phase map of what's there
+Task(subagent_type="forgeplan-brownfield-pack:discover", ...)  # Pass 1: 7-phase map of what's there
 /smith-plan "modernize the User domain into bounded contexts"
 # smith picks row 2 → dispatches ddd-domain-expert (A) → adr-architect (A)
 forgeplan_reason PRD-NNN                               # ADI ≥3 hypotheses: lift-and-shift / Strangler / leave-alone

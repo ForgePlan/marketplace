@@ -8,7 +8,7 @@
 
 Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/ForgePlan) — UX, workflow, engineering, and developer tools.
 
-**16 plugins** | **20 marketplace-aware agents (plus project-scoped agents per repo)** | **33+ skills** | **9+ knowledge bases**
+**18 plugins** | **25 marketplace-aware agents (75 total)** | **38+ skills** | **9+ knowledge bases**
 
 > **ForgePlan ecosystem**: this marketplace + [`forgeplan` CLI](https://github.com/ForgePlan/forgeplan) (artifact lifecycle) + [`@forgeplan/web`](https://github.com/ForgePlan/forgeplan-web) (browser viewer with time-travel + graph). Three siblings; install what you need.
 
@@ -58,20 +58,20 @@ Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/
 | Your role | Install these | Why |
 |-----------|--------------|-----|
 | **I want a master orchestrator** | **fpl-skills + agents-pro** | Start here → `/smith` routes 12 contexts to 27 methodologies |
-| **Forgeplan user (recommended)** | **fpl-skills** | One install, 15 skills, full route → ship loop |
+| **Forgeplan user (recommended)** | **fpl-skills** | One install, 38 skills, full route → ship loop |
 | Any developer (no forgeplan) | dev-toolkit + agents-core | Universal tools, no CLI dependency |
 | Frontend | fpl-skills + laws-of-ux + agents-domain | UX + framework agents |
 | Architect | fpl-skills + fpf + agents-pro + agents-sparc | Thinking + SPARC |
 | Multi-session / team | fpl-skills + forgeplan-orchestra | Coordination + Inbox Pattern |
 | Brownfield migration | fpl-skills + forgeplan-brownfield-pack | Ingest legacy docs + C4/DDD/research analyses |
-| Everything | All 12 plugins | Complete ecosystem |
+| Everything | All 18 plugins | Complete ecosystem |
 
 ## Available Plugins
 
 ### [fpl-skills](plugins/fpl-skills/)
 
 > [!TIP]
-> **Flagship — recommended for forgeplan users.** Bundles 15 engineering skills built on top of forgeplan's artifact lifecycle. Replaces `dev-toolkit` (now soft-deprecated).
+> **Flagship — recommended for forgeplan users.** Bundles 38 engineering skills built on top of forgeplan's artifact lifecycle. Replaces `dev-toolkit` (now soft-deprecated).
 
 Full **route → shape → build → audit → activate** loop in one install. Includes `/fpl-init` for one-command project bootstrap.
 
@@ -259,9 +259,41 @@ Implements the **orchestrator model** ([ADR-009](https://github.com/ForgePlan/fo
 
 ---
 
+### [cc-best](plugins/cc-best/)
+
+> Claude Code ecosystem reference — opinionated agentic-RAG guide for CLAUDE.md, plugins, agents, hooks, MCP, and anti-patterns. Synthesises 47+ audit findings from ForgePlan marketplace work.
+
+All 6 sections authored: `claude-md`, `plugins`, `agents`, `hooks`, `mcp`, `anti-patterns`.
+
+```bash
+/plugin install cc-best@ForgePlan-marketplace
+```
+
+---
+
+### [fp-cookbook](plugins/fp-cookbook/)
+
+> Practical cookbook of forgeplan CLI recipes — 26 recipes covering init, PRD walkthrough, EVID flows, link directions, R_eff cascade fixes, polyglot patterns.
+
+```bash
+/plugin install fp-cookbook@ForgePlan-marketplace
+```
+
+---
+
+### [agentic-rag](plugins/agentic-rag/)
+
+> Methodology skill for writing skills in agentic RAG format — SKILL.md as router + `sections/_index.md` + content files (~30-50 LOC each). 6 sections: when-to-use, structure, description-craft, content-quality, templates, distribution.
+
+```bash
+/plugin install agentic-rag@ForgePlan-marketplace
+```
+
+---
+
 ## Agent Packs
 
-Five specialized agent packs providing 55 ready-to-use agents for Claude Code.
+Seven specialized agent packs providing 69 ready-to-use agents for Claude Code.
 
 Install any pack: `/plugin install <pack-name>@ForgePlan-marketplace`
 
@@ -269,9 +301,11 @@ Install any pack: `/plugin install <pack-name>@ForgePlan-marketplace`
 |------|:------:|-------|---------|
 | [agents-core](plugins/agents-core/) | 11 | debugger, code-reviewer, planner, tester, TDD, production-validator | `agents-core` |
 | [agents-domain](plugins/agents-domain/) | 11 | TypeScript, Go, React, Next.js, Electron, mobile, WebSocket | `agents-domain` |
-| [agents-pro](plugins/agents-pro/) | 21 | security, architecture, creative, research, infrastructure | `agents-pro` |
+| [agents-pro](plugins/agents-pro/) | 30 | security, architecture, creative, research, infrastructure | `agents-pro` |
 | [agents-github](plugins/agents-github/) | 7 | PR management, issues, releases, multi-repo, workflows | `agents-github` |
 | [agents-sparc](plugins/agents-sparc/) | 5 | SPARC methodology: spec → pseudo → architecture → refinement | `agents-sparc` |
+| [agents-tdd](plugins/agents-tdd/) | 4 | TDD instance #1 (RFC-012): tdd-orchestrator + RED/GREEN agents + test-validator | `agents-tdd` |
+| [agents-bmad](plugins/agents-bmad/) | 1 | BMAD instance #2 (RFC-013): bmad-orchestrator persona-walk + no-code-before-plan gate | `agents-bmad` |
 
 ---
 

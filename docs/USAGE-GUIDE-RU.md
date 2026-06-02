@@ -33,7 +33,7 @@ Reference manual для маркетплейса. **Если ты новеньк
 См. [Рекомендуемые стеки](#рекомендуемые-стеки-по-персонам) ниже. Большинству нужен:
 
 ```
-/plugin install fpl-skills@ForgePlan-marketplace   # флагман — 15 команд, /fpl-init
+/plugin install fpl-skills@ForgePlan-marketplace   # флагман — 38 скиллов, /fpl-init
 /reload-plugins
 ```
 
@@ -77,7 +77,7 @@ End-to-end развёртка: `forgeplan init`, MCP wiring, CLAUDE.md, docs/age
 
 ## Quick reference (все команды)
 
-19 команд в 5 плагинах. `fpl-skills` даёт основу; companion-плагины добавляют специализированные команды.
+`fpl-skills` даёт 38 скиллов (большинство slash-invocable); companion-плагины добавляют 14 `commands/` (dev-toolkit, forgeplan-workflow, forgeplan-orchestra, fpf, laws-of-ux).
 
 > [!TIP]
 > **Не понимаешь какую команду брать?** Запусти `/smith` — он прочитает состояние проекта и порекомендует следующий dispatch (например `/forge-cycle`, `/autorun`, `/forge-cleanup`, `/sprint`). Для обучающего walkthrough по всем 12 контекстам роутинга — `/smith-routing`.
@@ -233,7 +233,7 @@ Worked example (`добавить аутентификацию` end-to-end) — 
 
 ### `fpl-skills` — Флагманский workflow-плагин
 
-15 инженерных скиллов поверх forgeplan lifecycle. **Заменяет `dev-toolkit` для пользователей forgeplan.** См. [plugins/fpl-skills/README-RU.md](../plugins/fpl-skills/README-RU.md).
+38 инженерных скиллов поверх forgeplan lifecycle. **Заменяет `dev-toolkit` для пользователей forgeplan.** См. [plugins/fpl-skills/README-RU.md](../plugins/fpl-skills/README-RU.md).
 
 **Требует**: CLI forgeplan в `$PATH`.
 
@@ -276,7 +276,7 @@ Worked example (`добавить аутентификацию` end-to-end) — 
 
 **Требует**: ничего.
 
-### Agent packs (5 плагинов, 55 агентов)
+### Agent packs (7 паков)
 
 Специализированные сабагенты, которые `/audit`, `/sprint` и другие команды композят при необходимости.
 
@@ -284,9 +284,11 @@ Worked example (`добавить аутентификацию` end-to-end) — 
 |---|:---:|---|
 | `agents-core` | 11 | Debugger, code-reviewer, planner, tester, TDD, production-validator |
 | `agents-domain` | 11 | TypeScript, Go, React, Next.js, Electron, mobile, WebSocket |
-| `agents-pro` | 21 | Security, architecture, DDD, creative, research, infrastructure |
+| `agents-pro` | 30 | Security, architecture, DDD, creative, research, infrastructure |
 | `agents-github` | 7 | PR, issues, releases, multi-repo, project boards, workflows |
 | `agents-sparc` | 5 | SPARC методология — orchestrator + 4 phase specialists |
+| `agents-tdd` | 4 | TDD методология — orchestrator + RED/GREEN агенты + test-validator |
+| `agents-bmad` | 1 | BMAD методология — bmad-orchestrator persona-walk |
 
 Ставь только то что используешь. `/audit` и `/sprint` автоматически подхватывают любые установленные паки.
 

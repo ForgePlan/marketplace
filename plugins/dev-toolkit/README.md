@@ -95,6 +95,7 @@ Ready to continue feat/auth-system.
 | Command | `/audit` | 4 parallel expert reviewers with severity report and auto-fix |
 | Command | `/sprint` | Wave-based parallel task execution with plan approval |
 | Command | `/recall` | Session context restore from git, CLAUDE.md, and memory tools |
+| Command | `/report` | Structured summary of recent work — pick a template (build/audit/decision/incident/migration), output a scannable report via the `forge-report` skill |
 | Agent | `dev-advisor` | Background advisor: suggests audits, flags security, recommends sprints |
 | Hook | Safety | Blocks `git push --force`, `rm -rf /`, `DROP TABLE` before execution |
 | Hook | Test reminder | Nudges you when a new public function has no test |

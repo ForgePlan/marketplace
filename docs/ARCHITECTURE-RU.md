@@ -159,15 +159,21 @@ Orchestra: Task "OAuth" Status=Review, Phase=Evidence
 
 | Система | Плагин(ы) | Заметки |
 |---------|----------|---------|
-| **Связующий слой** | **fpl-skills** | **Флагман**: 15 команд, композящих Forgeplan + FPF + SPARC + (опционально) UX. Включает `/fpl-init` для one-shot развёртки проекта. Заменяет dev-toolkit для пользователей forgeplan. |
+| **Связующий слой** | **fpl-skills** | **Флагман**: 38 скиллов, композящих Forgeplan + FPF + SPARC + (опционально) UX. Включает `/fpl-init` для one-shot развёртки проекта. Заменяет dev-toolkit для пользователей forgeplan. |
 | Orchestra | forgeplan-orchestra | `/sync` и `/session` для multi-session координации. |
 | Forgeplan | forgeplan-workflow | `/forge-cycle` и `/forge-audit` — узкий forgeplan-only loop (альтернатива broader bundle fpl-skills). |
 | FPF | fpf | Структурное мышление: decompose / evaluate / reason / lookup. Пара к `/refine` и `/diagnose` из fpl-skills. |
 | SPARC | agents-sparc | 5 фазных агентов — `/sprint` активирует их при детекции Deep задачи. |
+| TDD | agents-tdd | Pack методологии enforced-TDD: tdd-orchestrator + RED/GREEN агенты + fail-closed PreToolUse gate. |
+| BMAD | agents-bmad | Pack greenfield-методологии BMAD: bmad-orchestrator проводит по аркам персон (Analyst → PM → Architect → SM → Dev → QA) + no-code-before-plan gate. |
 | UX | laws-of-ux | `ux-reviewer` агент + `/ux-review` + auto-hint hook при правке frontend-файлов. |
 | Агенты | agents-core / agents-domain / agents-pro / agents-github | Специализированные сабагенты, которые `/audit`, `/sprint` и др. композят при необходимости. |
 | Универсальный тулкит (legacy) | dev-toolkit | Soft-deprecated, superseded by fpl-skills. Используй только если CLI forgeplan недоступен. |
 | Brownfield ингест | forgeplan-brownfield-pack | 5 карт соответствия (c4, ddd, madr, obsidian, autoresearch) + 12 скиллов извлечения + 2 playbooks для миграции legacy-кода и доков в forgeplan-граф. |
+| Память | fpl-hsmem | Cross-session память Hindsight: 13 MCP-инструментов + 3 auto-hook'а (recall / retain / force-retain) + 5 вспомогательных скиллов. Bank на проект. |
+| Reference (cookbook) | fp-cookbook | Практические рецепты forgeplan CLI — getting-started, troubleshooting, reference. |
+| Reference (написание скиллов) | agentic-rag | Скилл-методология написания скиллов в формате agentic-RAG (роутер + секции + контент-файлы). |
+| Reference (Claude Code) | cc-best | Opinionated agentic-RAG гайд по CLAUDE.md, плагинам, агентам, hooks, MCP и анти-паттернам. |
 
 Команда установки: `/plugin install <plugin-name>@ForgePlan-marketplace`.
 
@@ -183,6 +189,6 @@ Orchestra: Task "OAuth" Status=Review, Phase=Evidence
 | 👥 Multi-session / команда | `fpl-skills` + `forgeplan-orchestra` |
 | 🏚 Brownfield миграция | `fpl-skills` + `forgeplan-brownfield-pack` |
 | 🔧 Любой разработчик (без forgeplan) | `dev-toolkit` + `agents-core` (legacy) |
-| Полный стек (все системы) | все 12 плагинов |
+| Полный стек (все системы) | все 18 плагинов |
 
 Per-persona Day 0 walkthroughs — см. [DEVELOPER-JOURNEY-RU.md](DEVELOPER-JOURNEY-RU.md).

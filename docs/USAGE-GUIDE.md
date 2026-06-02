@@ -33,7 +33,7 @@ Reference manual for the marketplace. **If you're new, start with [DEVELOPER-JOU
 See [Recommended stacks](#recommended-stacks-by-persona) below. Most users want:
 
 ```
-/plugin install fpl-skills@ForgePlan-marketplace   # flagship — 15 commands, /fpl-init
+/plugin install fpl-skills@ForgePlan-marketplace   # flagship — 38 skills, /fpl-init
 /reload-plugins
 ```
 
@@ -77,7 +77,7 @@ Mirror of root [README.md](../README.md) "Where to Start?" matrix, with cross-li
 
 ## Quick reference (all commands)
 
-19 commands across 5 plugins. `fpl-skills` provides the bulk; companion plugins add specialised commands.
+`fpl-skills` provides 38 skills (most slash-invocable); the companion plugins add 14 `commands/` (dev-toolkit, forgeplan-workflow, forgeplan-orchestra, fpf, laws-of-ux).
 
 > [!TIP]
 > **Not sure which command to use?** Run `/smith` — it reads project state and recommends the next dispatch (e.g. `/forge-cycle`, `/autorun`, `/forge-cleanup`, `/sprint`). For an educational walkthrough of all 12 routing contexts, run `/smith-routing`.
@@ -233,7 +233,7 @@ Brief overview. For full READMEs see `plugins/<name>/README.md`.
 
 ### `fpl-skills` — Flagship workflow plugin
 
-15 engineering skills built on top of forgeplan's artifact lifecycle. **Replaces `dev-toolkit` for forgeplan users.** See [plugins/fpl-skills/README.md](../plugins/fpl-skills/README.md).
+38 engineering skills built on top of forgeplan's artifact lifecycle. **Replaces `dev-toolkit` for forgeplan users.** See [plugins/fpl-skills/README.md](../plugins/fpl-skills/README.md).
 
 **Requires**: forgeplan CLI on `$PATH`.
 
@@ -276,7 +276,7 @@ Structured reasoning for decompose / evaluate / reason / lookup. 224 FPF spec se
 
 **Requires**: nothing.
 
-### Agent packs (5 plugins, 55 agents)
+### Agent packs (7 agent packs)
 
 Specialised subagents that `/audit`, `/sprint`, and other commands compose when relevant.
 
@@ -284,9 +284,11 @@ Specialised subagents that `/audit`, `/sprint`, and other commands compose when 
 |---|:---:|---|
 | `agents-core` | 11 | Debugger, code-reviewer, planner, tester, TDD, production-validator |
 | `agents-domain` | 11 | TypeScript, Go, React, Next.js, Electron, mobile, WebSocket |
-| `agents-pro` | 21 | Security, architecture, DDD, creative, research, infrastructure |
+| `agents-pro` | 30 | Security, architecture, DDD, creative, research, infrastructure |
 | `agents-github` | 7 | PR, issues, releases, multi-repo, project boards, workflows |
 | `agents-sparc` | 5 | SPARC methodology — orchestrator + 4 phase specialists |
+| `agents-tdd` | 4 | TDD methodology — orchestrator + RED/GREEN agents + test-validator |
+| `agents-bmad` | 1 | BMAD methodology — bmad-orchestrator persona-walk |
 
 Install only what you use. `/audit` and `/sprint` automatically draw from whichever packs are present.
 

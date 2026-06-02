@@ -1,7 +1,7 @@
 # fp-cookbook
 
 Practical cookbook of forgeplan CLI recipes. 25+ task-oriented how-to guides organised
-into 8 sections. Each recipe follows a uniform structure:
+into 9 sections. Each recipe follows a uniform structure:
 **Цель → Команда → Пример → Common errors → Refs**.
 
 Complements `forgeplan-methodology` (what-is reference) by answering **"how do I do X?"**.
@@ -24,6 +24,7 @@ Complements `forgeplan-methodology` (what-is reference) by answering **"how do I
 | 06 | recipes-ai-pair | Profile selection, task dispatch, sentinel conventions |
 | 07 | troubleshooting | Sprint A-O anomalies: R_eff cascade, EVID draft, FSM rejections, link footguns |
 | 08 | cli-cheatsheet | One-page CLI + MCP quick reference |
+| 09 | polyglot | Rust+Go+TypeScript+Python monorepos: CLAUDE.md cascade, per-language AC gates, worktree cold start, dispatch bucketing, tester scoping |
 
 ## Usage
 
@@ -32,4 +33,4 @@ The skill router will load only the relevant recipe (~50 lines), not the full co
 
 ## Version
 
-1.0.0 — Sprint P 2026-05-20. Implements PRD-013.
+1.2.1 — Implements PRD-013; the `polyglot` section (09) covers Rust+Go+TypeScript+Python monorepos.

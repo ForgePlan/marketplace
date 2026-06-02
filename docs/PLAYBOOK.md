@@ -175,13 +175,13 @@ Red lines (push to main, secrets writes, deploys) **stop autopilot** and ask for
 /smith                                        # default mode auto-detects brownfield and routes here
 # (or /smith-bootstrap if the repo has no .forgeplan/ yet)
 # Run Discover Agent (canonical in plugins/forgeplan-brownfield-pack/agents/discover/) for codebase map
-# Then chain extraction skills:
-/extract ubiquitous-language                  # build domain glossary
-/extract use-cases                            # find user-facing scenarios
-/extract intent --confidence-tagged           # infer business why
-/extract invariants                           # detect rules that always hold
-/triangulate hypotheses                       # ADI cycle on uncertain claims
-/interview <domain owner>                     # validate intent claims
+# Then chain the brownfield extraction skills:
+/ubiquitous-language                          # build domain glossary (C1)
+/use-case-miner                               # find user-facing scenarios (C2)
+/intent-inferrer                              # infer business why (C3)
+/invariant-detector                           # detect rules that always hold (C4)
+/hypothesis-triangulator                      # ADI cycle on uncertain claims (C6)
+/interview-packager                           # package open questions for domain-owner interviews (C7)
 /forge-cycle "<reproduce key flow>"           # canonical reproduction
 ```
 

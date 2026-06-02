@@ -343,6 +343,6 @@ Tactical artifacts (row 5: trivial hotfix) are scoped to S12+S13 only; S10/S11 a
 | Catalog version at write | v1.71.0 |
 | Forgeplan-aware agent count at write | 19 |
 | Rows | 13 (row 13 = TDD-first feature, RFC-012/ADR-010 — agents-tdd dispatch) |
-| Methodology cards | 27 |
+| Methodology cards | 29 |
 | Agent index entries | 26 (25 agents + 1 skill cross-reference) |
 | Last sync with CLAUDE.md | 2026-05-25 (Sprints Z6–Z10 + EPIC-001 4-layer pipeline) |

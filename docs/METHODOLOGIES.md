@@ -201,22 +201,20 @@ For new ADRs, use `forgeplan new adr` (DDR template for Deep+).
 
 ---
 
-## Not in this ecosystem (mentioned but not part of forgeplan or marketplace)
+## Often-asked methodologies (where each one actually lives)
 
 ### RIPER — Research / Innovate / Plan / Execute / Review
 
-**Status**: not part of forgeplan core, not in our marketplace.
+**Status**: ships in the `fpl-skills` plugin as the `/riper` orchestrator command — the **fourth instance** of the AD/AID-PDLC sub-cycle contract (ADR-010 / RFC-018), alongside `/tdd` (RFC-012), `/bmad` (RFC-013), and `/sparc` (RFC-016).
 
-**Closest equivalent**: forgeplan's own lifecycle is **Route → Shape → Build → Evidence → Activate**. The phases differ in framing — RIPER emphasises iterative ideation; forgeplan emphasises traceable artifacts and weakest-link evidence.
-
-If you specifically want RIPER terminology — you can layer it manually:
+**What it does**: walks a bug / scoped change / investigation in an existing active system through the five RIPER phases — **Research → Innovate → Plan → Execute → Review** — delegating to existing fpl-skills at each phase with explicit progress tracking:
 - Research → `/research`
 - Innovate → `/refine` or `/fpf-decompose`
 - Plan → `/rfc create`
 - Execute → `/sprint` or `/forge-cycle`
 - Review → `/audit`
 
-But there's no `/riper` orchestrator command.
+Beyond the vocabulary overlay, the contract-conformant path adds a mandatory independent C4 verifier at every mode gate plus a dedicated non-freezable Research C4+C6 + Plan-gate pin-freshness re-check — discipline `/forge-cycle` does not have. smith Row 4 (production bug, non-trivial) routes here. Note: `/riper` is `hook-gate=No` (no fail-closed hook); its "no code before the Plan is approved" guarantee rests on a human at the Plan→Execute transition, so do not run RIPER work fully autonomously (see ADR-010 / NOTE-013 DEFER-016).
 
 ### AI-SDLC
 
@@ -251,7 +249,7 @@ If you want to read the original BMAD spec → see `sources/BMAD-METHOD/` in the
 | MADR | brownfield pack mapping | `madr-to-forge.yaml` ingest only |
 | Obsidian | brownfield pack mapping | `obsidian-to-forge.yaml` ingest only |
 | Autoresearch | external companion (`uditgoenka/autoresearch`) | Install separately; ingest via `autoresearch-to-forge.yaml`. See [AUTORESEARCH-INTEGRATION.md](AUTORESEARCH-INTEGRATION.md). |
-| RIPER | NOT in ecosystem | Manual — chain `/research` → `/refine` → `/rfc` → `/sprint` → `/audit` |
+| RIPER | `/riper` (fpl-skills) | Research → Innovate → Plan → Execute → Review |
 | AI-SDLC | NOT named, approximated by `/autorun` | `/autorun "<task>"` |
 
 ---

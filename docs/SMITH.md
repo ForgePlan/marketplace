@@ -36,7 +36,7 @@ Smith is the canonical first point of contact when you (or another agent) don't 
 - At **session start** when unsure what to do next — smith reads `forgeplan_health` + recent journal and proposes the next action.
 - On a **fresh repo** with no artifacts — `/smith-bootstrap` seeds Brief / PRD / first ADR via the greenfield row.
 - For a **specific task** of any depth — `/smith-plan <task>` picks the matching row, names the methodology, lists the dispatch sequence.
-- For **learning the methodology surface** — `/smith-routing` inspects the 12 contexts + 27 methodology cards without committing to a task.
+- For **learning the methodology surface** — `/smith-routing` inspects the 12 contexts + 29 methodology cards without committing to a task.
 - When existing entry points (`/forge-cycle`, `/autorun`) don't fit — cross-context work, ambiguous depth, methodology mismatch.
 - **Trigger phrases** (EN / RU): `smith`, `кузнец`, `что дальше`, `what's next`, `scrum master`, `master orchestrator`, `which methodology`, `какую методологию`.
 
@@ -72,7 +72,7 @@ Why one row per task: blending BMAD + SPARC + Spec Kit "to cover all bases" prod
 
 ## Methodologies smith knows
 
-Twenty-seven methodologies catalogued in [`routing-map.md`](../plugins/fpl-skills/skills/smith/routing-map.md). Each card states the one-sentence definition, when it shines, when NOT to use, and a primary source link. Grouped:
+Twenty-nine methodologies catalogued in [`routing-map.md`](../plugins/fpl-skills/skills/smith/routing-map.md). Each card states the one-sentence definition, when it shines, when NOT to use, and a primary source link. Grouped:
 
 - **AI-coding workflows** — BMAD-METHOD (analyst-PM-architect-dev split), SPARC (Spec → Pseudo → Arch → Refine → Complete), RIPER-5 (Research-Innovate-Plan-Execute-Review), GitHub Spec Kit (spec-driven greenfield), FPF ADI (Abduction → Deduction → Induction).
 - **Architecture lenses** — C4 Model (L1+L2 default, L3 only when needed), Domain-Driven Design, Event Storming, Clean Architecture, Hexagonal Architecture (Ports & Adapters), ADR / MADR.
@@ -96,7 +96,7 @@ Smith follows a 4-step procedure on every invocation:
 4. **Hand off** — the orchestrator (Claude Code session, `/forge-cycle`, `/autorun`, or a human) executes the Plan; smith does **not** dispatch agents itself unless explicitly asked. Plan output is consumed by the orchestrator one agent at a time, with gates after each step.
 
 > [!IMPORTANT]
-> Smith is a **Profile B-orchestrator** agent: it denies `Write`, `Edit`, `NotebookEdit`, `forgeplan_activate`, `forgeplan_new` for non-NOTE kinds, and any agent-dispatch primitive. The only mutations smith may perform are NOTE creation (for the Plan, when explicitly asked) and `memory_recall` reads. See [`../plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md`](../plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md) for the canonical profile definitions.
+> Smith is a **Profile B-orchestrator** agent: it denies `Write`, `Edit`, `NotebookEdit`, `forgeplan_new` (outright — including NOTE kinds), `forgeplan_update`, `forgeplan_link`, `forgeplan_validate`, `forgeplan_activate`, `forgeplan_reason`, and any agent-dispatch primitive. Smith performs **no mutations at all** — it only reads state (`forgeplan_health`, `memory_recall`, git) and emits a routing Plan as its final message. If that Plan should be persisted as a Plan-NOTE, the orchestrator dispatches `agents-pro:artifact-author` to create it; smith never calls `forgeplan_new` itself. See [`../plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md`](../plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md) for the canonical profile definitions.
 
 Example output shape (abbreviated):
 
@@ -156,7 +156,7 @@ The 12-context routing table is **CLI-agnostic** — it names methodologies and 
 
 ## Related documentation
 
-- [`METHODOLOGIES.md`](METHODOLOGIES.md) — full background on the 27 methodologies smith routes
+- [`METHODOLOGIES.md`](METHODOLOGIES.md) — full background on the 29 methodologies smith routes
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — 4-layer S10→S13 pipeline mental model
 - [`PLAYBOOK.md`](PLAYBOOK.md) — use-case matrix mapping situations to commands
 - [`DEVELOPER-JOURNEY.md`](DEVELOPER-JOURNEY.md) — 30-minute onboarding walkthrough
@@ -164,7 +164,7 @@ The 12-context routing table is **CLI-agnostic** — it names methodologies and 
 - [`../AGENTS.md`](../AGENTS.md) — cross-CLI manifest with the canonical smith section
 - [`../plugins/agents-pro/agents/smith.md`](../plugins/agents-pro/agents/smith.md) — the smith agent body (370 lines, Profile B-orchestrator master agent)
 - [`../plugins/fpl-skills/skills/smith/SKILL.md`](../plugins/fpl-skills/skills/smith/SKILL.md) — main `/smith` entry-point skill
-- [`../plugins/fpl-skills/skills/smith/routing-map.md`](../plugins/fpl-skills/skills/smith/routing-map.md) — 12-context table + 27 methodology cards + agent index
+- [`../plugins/fpl-skills/skills/smith/routing-map.md`](../plugins/fpl-skills/skills/smith/routing-map.md) — 12-context table + 29 methodology cards + agent index
 - [`../plugins/fpl-skills/skills/smith-bootstrap/SKILL.md`](../plugins/fpl-skills/skills/smith-bootstrap/SKILL.md) — greenfield bootstrap dispatch path
 - [`../plugins/fpl-skills/skills/smith-plan/SKILL.md`](../plugins/fpl-skills/skills/smith-plan/SKILL.md) — per-task planning skill
 - [`../plugins/fpl-skills/skills/smith-routing/SKILL.md`](../plugins/fpl-skills/skills/smith-routing/SKILL.md) — routing-table inspection skill
