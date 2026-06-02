@@ -1,10 +1,10 @@
 # ForgePlan Marketplace — Claude Code Configuration
 
 **Repo**: [ForgePlan/marketplace](https://github.com/ForgePlan/marketplace)
-**Catalog version**: 1.85.1
+**Catalog version**: 1.88.0
 **Plugins**: 18 (10 workflow + 7 agent packs + 1 memory plugin fpl-hsmem) — adds the AD/AID-PDLC sub-cycle instance packs agents-tdd (#1) + agents-bmad (#2) alongside agents-sparc (#3, finished to B-orchestrator) + smith master-orchestrator (EPIC-002, Profile B-orchestrator)
 **Agents**: 25 of 75 forgeplan-aware (PRD-026 B2 paradigm — `disallowedTools` denylist; + the AD/AID-PDLC sub-cycle masters tdd-orchestrator / bmad-orchestrator, sparc-orchestrator finished to B-orchestrator, and the C4 verifier tdd-test-validator. **`memory: project` REJECTED Sprint R** — Hindsight covers use case.)
-**Last Updated**: 2026-06-01 (post AD/AID-PDLC sub-cycle program — TDD (RFC-012) / BMAD (RFC-013) / SPARC (RFC-016) / RIPER (RFC-018) shipped as the four instances of the ADR-010 contract; program CLOSED at 4 — contract proven across all hook-gate=Yes/No × freezable/conditional-freeze dimensions. The ADR-012 gate is rendered `hook-gate` in shipped artifacts; the Cyrillic codename is retained only in immutable graph decision records. catalog v1.85.1, fpl-skills v1.44.1, agents-sparc v1.3.2, agents-tdd v0.2.1, agents-bmad v0.1.2.)
+**Last Updated**: 2026-06-02 (post-program cleanup + 5-lane AgentTeams audit — shipped PR #140 DEFER-018 (/riper FR-5 pin-hash basis), #141 DEFER-016 (/autorun RIPER Plan→Execute human gate), #142 /conformance-vectors SDD enrichment (DEFER-012), #143 cc-best v1.1.0 (all 6 sections, DEFER-005..009). The AD/AID-PDLC sub-cycle program is CLOSED at 4 instances (NOTE-027); the ADR-012 gate is rendered `hook-gate` in shipped artifacts, Cyrillic codename retained only in immutable graph records. catalog v1.88.0, fpl-skills v1.46.0, cc-best v1.1.0, agents-sparc v1.3.2, agents-tdd v0.2.1, agents-bmad v0.1.2.)
 
 ---
 
@@ -664,14 +664,14 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # rulesets
 
 ---
 
-## Plugin versions (catalog v1.85.1)
+## Plugin versions (catalog v1.88.0)
 
 ### Workflow plugins
 
 | Plugin | Version |
 |--------|:-------:|
-| **fpl-skills** | **1.44.1** (AD/AID-PDLC instances #1-#4 smith routing: Row 13 TDD + Row 1 BMAD + Row 3 SPARC + Row 4 RIPER reframes + /riper formalized (DEFER-018 pin-hash basis fix) + /methodology-check Step 10; RFC-011 FR-3 ground-truth clause; EPIC-002 smith 4-skill cluster) |
-| **cc-best** | **1.0.0** (Sprint Y phase 1: claude-md section + 5 STUB sections) |
+| **fpl-skills** | **1.46.0** (v1.46.0 /conformance-vectors SDD enrichment, DEFER-012; v1.45.0 /autorun RIPER Plan→Execute human gate, DEFER-016; v1.44.1 /riper FR-5 pin-hash basis, DEFER-018; AD/AID-PDLC instances #1-#4 smith routing + /methodology-check Step 10; EPIC-002 smith 4-skill cluster) |
+| **cc-best** | **1.1.0** (all 6 sections authored: claude-md + plugins + agents + hooks + mcp + anti-patterns — RFC-005..009 / DEFER-005..009 closed) |
 | **fpl-hsmem** | 2.1.0 |
 | **forgeplan-workflow** | **1.12.0** (Sprint Z7: Step 4.5 FPF ADI mandatory for Standard+; Sprint Z6: Step 6.5 BMAD adversarial review mandatory for Standard+) |
 | **forgeplan-orchestra** | 1.4.1 |
