@@ -18,7 +18,9 @@
  *   - per-plugin skills  skill count for each plugin (fpl-skills drives the "38 skills" claim)
  *
  * Asserted markers, per file:
- *   - CLAUDE.md           "**Plugins**: N"; "**Agents**: F of T forgeplan-aware"
+ *   - CLAUDE.md           "**Plugins**: N"; "**Agents**: F of T forgeplan-aware";
+ *                         "**Catalog version**: X" === marketplace.json metadata.version
+ *                         (exact string match — a fixed version, not a count or floor)
  *   - README.md           header "N plugins | F marketplace-aware agents (T total) | S+ skills";
  *                         pack table rows "| [<plugin>](...) | N |"
  *   - README-RU.md        header "N плагинов | F marketplace-aware агентов (T всего) | S+ скиллов";
@@ -105,6 +107,19 @@ function isForgeplanAware(filePath) {
   return FORGEPLAN_AWARE_PATTERN.test(body);
 }
 
+function readMarketplaceVersion(root) {
+  // The catalog's canonical version string lives in metadata.version. CLAUDE.md mirrors it
+  // in its "**Catalog version**: <X>" header; the version assertion below holds them in sync.
+  const marketplacePath = path.join(root, '.claude-plugin', 'marketplace.json');
+  try {
+    const parsed = JSON.parse(fs.readFileSync(marketplacePath, 'utf8'));
+    const version = parsed && parsed.metadata && parsed.metadata.version;
+    return typeof version === 'string' ? version : null;
+  } catch (error) {
+    return null;
+  }
+}
+
 function buildCatalog(root = ROOT) {
   const pluginsDir = path.join(root, 'plugins');
   const pluginNames = listDirNames(pluginsDir).filter(name => (
@@ -143,6 +158,10 @@ function buildCatalog(root = ROOT) {
   return {
     pluginNames,
     plugins,
+    // The catalog's canonical version string (marketplace.json metadata.version). Unlike the
+    // count fields this is not derived from a directory scan; CLAUDE.md's "**Catalog version**"
+    // header is asserted equal to it (exact string match — a fixed version, not a floor).
+    metadataVersion: readMarketplaceVersion(root),
     counts: {
       plugins: pluginNames.length,
       agents: agentsTotal,
@@ -234,6 +253,19 @@ function parseClaudeExpectations(content, catalog) {
     () => catalog.counts.agents,
   ));
 
+  // Catalog version: CLAUDE.md's canonical "**Catalog version**: <X>" line must EXACTLY equal
+  // marketplace.json metadata.version. This is a fixed string (not a count, not a floor), so the
+  // 'exact' mode does plain === — every catalog bump must update this CLAUDE.md line in lockstep.
+  // catalog-check.js previously asserted counts but not this version string, so it drifted unguarded.
+  const versionMatch = content.match(/\*\*Catalog version\*\*:\s*(\S+)/);
+  if (!versionMatch) {
+    throw new Error('CLAUDE.md is missing the "**Catalog version**: <X>" header marker');
+  }
+  expectations.push(exact(
+    'catalog version', versionMatch[1], 'CLAUDE.md header',
+    () => catalog.metadataVersion,
+  ));
+
   return expectations;
 }
 
@@ -252,6 +284,15 @@ function syncClaude(content, catalog) {
       `${prefix}${catalog.counts.forgeplanAware}${mid}${catalog.counts.agents}${suffix}`,
     'CLAUDE.md header (agents)',
   );
+  // Autosync the canonical catalog-version line to marketplace.json metadata.version.
+  if (catalog.metadataVersion) {
+    next = replaceOrThrow(
+      next,
+      /(\*\*Catalog version\*\*:\s*)(\S+)/,
+      (_, prefix) => `${prefix}${catalog.metadataVersion}`,
+      'CLAUDE.md header (catalog version)',
+    );
+  }
   return next;
 }
 
@@ -548,6 +589,11 @@ function evaluateExpectations(expectations) {
 }
 
 function formatCheck(check) {
+  // The catalog-version check compares CLAUDE.md against marketplace.json metadata.version
+  // (not a disk-scan count), so it gets a precise message naming both sides of the mismatch.
+  if (check.label === 'catalog version') {
+    return `CLAUDE.md catalog version ${check.expected} vs metadata.version ${check.actual}`;
+  }
   const comparator = check.mode === 'minimum' ? '>=' : '=';
   const base = `${check.source} -> ${check.label} claimed ${comparator} ${check.expected} vs disk ${check.actual}`;
   return check.detail ? `${base} (${check.detail})` : base;
