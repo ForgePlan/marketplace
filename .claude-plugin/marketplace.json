@@ -6,12 +6,18 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.89.0"
+    "version": "1.90.0"
   },
   "plugins": [
     {
       "name": "fpl-hsmem",
       "source": "./plugins/fpl-hsmem",
+      "cost": "light",
+      "stability": "stable",
+      "dependencies": [],
+      "targets": [
+        "claude-code"
+      ],
       "description": "ForgePlan Hindsight memory plugin for Claude Code. Long-term cross-session memory wrapping Hindsight (vectorize-io). Provides 13 MCP tools (memory_* + mental_model_* + document_ingest_*), 3 auto-hooks (recall on UserPromptSubmit, retain on Stop, force-retain on SessionEnd), and 5 helper skills (/status, /bootstrap, /mental-model, /diagnose, /export-bank). Three activation modes: plugin install (default-on, bank derived from cwd), per-project setup CLI (explicit `.mcp.json`), or direct MCP wire-up (standalone bundle). v2.1.0 \u2014 full documentation set (GETTING-STARTED, CONFIGURATION, USAGE, TROUBLESHOOTING, CHANGELOG) and source code colocation.",
       "version": "2.1.0",
       "author": {
@@ -35,6 +41,12 @@
     {
       "name": "fpl-skills",
       "source": "./plugins/fpl-skills",
+      "cost": "heavy",
+      "stability": "stable",
+      "dependencies": [],
+      "targets": [
+        "claude-code"
+      ],
       "description": "Flagship workflow plugin for the ForgePlan ecosystem. 38 engineering skills + dev-advisor agent + 5 hooks (+ smith greeting + RIPER auto-route + decay Layer 3). v1.46.0: NEW /conformance-vectors skill — `## Conformance Vectors` SDD enrichment (ADR-008 / DEFER-012): frozen-corpus oracle + generic freeze/conformance/cross-language-equivalence harness (live negative-control-verified) + promoted 4-lang semver reference (EVID-119). v1.45.0: /autorun RIPER Plan→Execute human gate — Row-4 bug tasks HOLD before Execute pending a human (DEFER-016 / RFC-018 FR-4 / G8). v1.44.1: /riper FR-5 pin-hash basis clarified to the Research NOTE body content (excluding mutable frontmatter), NOT the projection file (false-stales on unrelated activation/link/score) — DEFER-018 / EVID-172 F1+F2. v1.44.0: RIPER instance #4 (RFC-018 / ADR-010 #4) shipped. v1.43.0: smith routing-map Row 3 (new feature in existing service) reframed as the explicit SPARC instance — master-coordinated sparc-orchestrator dispatch + mandatory per-gate independent C4 + Pseudocode-absorption + Refinement→TDD delegation + SPARC/BMAD/TDD/Strangler disambiguator (RFC-016/ADR-010 instance #3). v1.42.0: smith routing-map Row 1 (greenfield) reframed as the explicit BMAD instance — master-coordinated agents-bmad dispatch + 3 mandatory C4 gates + BMAD/SPARC/TDD/Strangler disambiguator (RFC-013/ADR-010 instance #2). v1.41.1: smith routing-map adds a 'TDD-first feature' context row routing to the agents-tdd dispatch sequence (RFC-012/ADR-010). v1.40.0: RFC-011 FR-3 ground-truth verification clause (generator\u2260verifier) \u2014 AGENT-AUTHORING-GUIDE 'Profile B Step 4.5' canonical section + universal HARD RULE 8 (empty git diff on a claimed change = BLOCKER even with green tests; makes ML-13 enforceable), smith routing-map methodology card (applies to every Build/Audit row), worktree under-claim corrected (isolation works for standalone subagents + Workflow + AgentTeams teammates). Refs PROB-002/RFC-011/ADR-009. v1.38.1: cookbook \u00a707 + \u00a714.4 fix \u2014 final-e2e found forgeplan#353 (CLI rejects `/` in agent ID, MCP accepts). Workaround: dash-form agent IDs. v1.38.0: /forgeplan-cookbook skill (66 MCP + 82 CLI across 14 sections). v1.37.x: MCP safety + --help audit.",
       "version": "1.47.0",
       "author": {
@@ -59,6 +71,12 @@
     {
       "name": "fp-cookbook",
       "source": "./plugins/fp-cookbook",
+      "cost": "light",
+      "stability": "stable",
+      "dependencies": [],
+      "targets": [
+        "claude-code"
+      ],
       "description": "Practical cookbook of forgeplan CLI recipes. v1.2.1: Sprint T PRD-046 \u2014 recipes updated to v0.32.1 patterns (EVID 2-step parent_id auto-link via #295, MCP unlink primary + CLI fallback per #286). v1.2.0: Sprint R polyglot section. v1.1.0: Sprint Q evals. v1.0.0: 26 recipes Sprint P.",
       "version": "1.2.1",
       "author": {
@@ -80,6 +98,12 @@
     {
       "name": "agentic-rag",
       "source": "./plugins/agentic-rag",
+      "cost": "light",
+      "stability": "stable",
+      "dependencies": [],
+      "targets": [
+        "claude-code"
+      ],
       "description": "Methodology skill for writing skills in agentic RAG format \u2014 SKILL.md as router + sections/_index.md + content files (~30-50 LOC each). 6 sections (when-to-use, structure, description-craft, content-quality, templates, distribution). v1.1.0: Sprint Q PRD-042 \u2014 added evals/evals.json (5 substantive prompts per ASM \u00a76) + refactored anti-patterns to good/bad pair structure per ASM \u00a75 Layer 2 (15 new pair files in references/anti-patterns/). v1.0.0 PRD-014 Sprint O.",
       "version": "1.1.0",
       "author": {
@@ -101,6 +125,12 @@
     {
       "name": "laws-of-ux",
       "source": "./plugins/laws-of-ux",
+      "cost": "medium",
+      "stability": "stable",
+      "dependencies": [],
+      "targets": [
+        "claude-code"
+      ],
       "description": "UX laws knowledge base and frontend code reviewer. Analyzes HTML/CSS/JS/React/Vue/Svelte code against 30 Laws of UX principles with actionable recommendations. v1.4.1: ux-reviewer agent canonical-lint compliant (LR-1..LR-3).",
       "version": "1.4.1",
       "author": {
@@ -121,6 +151,12 @@
     {
       "name": "forgeplan-workflow",
       "source": "./plugins/forgeplan-workflow",
+      "cost": "medium",
+      "stability": "stable",
+      "dependencies": [],
+      "targets": [
+        "claude-code"
+      ],
       "description": "Structured engineering workflow for forgeplan users. Provides /forge-cycle (full SDLC cycle) and /forge-audit. v1.12.0: Sprint Z7 PRD-059 \u2014 Step 4.5 FPF ADI mandatory for Standard+ (\u22653 hypotheses; guardian BLOCKER when no ADI EVID). v1.11.0: Sprint Z6 PRD-057 \u2014 Step 6.5 BMAD adversarial review mandatory for Standard+ activation. v1.10.3: Sprint T PRD-046 \u2014 forgeplan_unlink MCP adopted.",
       "version": "1.12.0",
       "author": {
@@ -142,6 +178,12 @@
     {
       "name": "dev-toolkit",
       "source": "./plugins/dev-toolkit",
+      "cost": "medium",
+      "stability": "deprecated",
+      "dependencies": [],
+      "targets": [
+        "claude-code"
+      ],
       "description": "[DEPRECATED \u2014 superseded by fpl-skills] Universal engineering toolkit: multi-expert audit, wave-based sprints, session context recall, card-based structured reports with auto-trigger hooks, and safety hooks. New users should install fpl-skills@ForgePlan-marketplace instead. v1.6.3: dev-advisor agent canonical-lint compliant (LR-1..LR-3).",
       "version": "1.6.3",
       "deprecated": true,
@@ -165,6 +207,12 @@
     {
       "name": "fpf",
       "source": "./plugins/fpf",
+      "cost": "medium",
+      "stability": "stable",
+      "dependencies": [],
+      "targets": [
+        "claude-code"
+      ],
       "description": "First Principles Framework (FPF) \u2014 thinking amplifier for structured reasoning, decomposition, and decision-making. Enhanced plugin with /fpf command, applied patterns, forgeplan integration, and FPF advisor agent. Based on FPF by Anatoly Levenchuk. v1.4.1: fpf-advisor agent canonical-lint compliant (LR-1..LR-3).",
       "version": "1.4.1",
       "author": {
@@ -185,6 +233,12 @@
     {
       "name": "forgeplan-orchestra",
       "source": "./plugins/forgeplan-orchestra",
+      "cost": "light",
+      "stability": "stable",
+      "dependencies": [],
+      "targets": [
+        "claude-code"
+      ],
       "description": "Unified workflow: Forgeplan artifacts + Orchestra task tracking + Claude Code AI execution. Bidirectional sync, Session Start Protocol with Inbox Pattern, and methodology knowledge base. Requires forgeplan CLI + Orchestra MCP server. v1.4.1: orchestra-advisor agent canonical-lint compliant (LR-1..LR-3).",
       "version": "1.4.1",
       "author": {
@@ -205,6 +259,12 @@
     {
       "name": "forgeplan-brownfield-pack",
       "source": "./plugins/forgeplan-brownfield-pack",
+      "cost": "medium",
+      "stability": "stable",
+      "dependencies": [],
+      "targets": [
+        "claude-code"
+      ],
       "description": "Brownfield extraction pack: 12 extraction skills + 2 playbooks + 3 integrations + 5 mappings (c4, ddd, madr, obsidian, autoresearch) + templates + examples. Two-tier extraction (Factum vs Intent) with confidence taxonomy and ADI cycle. v1.4.0: Sprint V (PRD-048) \u2014 discover agent migrated from standalone to plugin (canonical Profile A pattern, MCP-first 7-phase procedure, 9 brownfield MCP primitives wired).",
       "version": "1.5.0",
       "author": {
@@ -228,6 +288,12 @@
     {
       "name": "agents-core",
       "source": "./plugins/agents-core",
+      "cost": "medium",
+      "stability": "stable",
+      "dependencies": [],
+      "targets": [
+        "claude-code"
+      ],
       "description": "Core development agents: debugger, code reviewer, error detective, performance engineer, production validator, plus complete dev team (coder, planner, researcher, reviewer, tester, TDD). v1.4.1: coder body gains a 'TDD GREEN-phase discipline' section (RFC-012 FR-4) \u2014 when dispatched in a TDD GREEN phase, never Write/Edit test files; on a wrong test STOP and emit TEST_BUG; lint after each change. v1.3.2: Sprint Q PRD-042 \u2014 ASM-canon frontmatter added to 3 forgeplan-aware agents (skills preload, maxTurns; coder gets isolation:worktree as only writer; code-reviewer + tester get memory:project as learners). v1.3.1: Sprint E body patches.",
       "version": "1.5.0",
       "author": {
@@ -239,6 +305,12 @@
     {
       "name": "agents-domain",
       "source": "./plugins/agents-domain",
+      "cost": "medium",
+      "stability": "stable",
+      "dependencies": [],
+      "targets": [
+        "claude-code"
+      ],
       "description": "Language and framework specialist agents: TypeScript, Go, React, Next.js, Electron, embedded systems, mobile, WebSocket, and more. v1.1: 11 agents canonical-lint compliant (LR-1..LR-3).",
       "version": "1.1.0",
       "author": {
@@ -250,6 +322,12 @@
     {
       "name": "agents-pro",
       "source": "./plugins/agents-pro",
+      "cost": "heavy",
+      "stability": "stable",
+      "dependencies": [],
+      "targets": [
+        "claude-code"
+      ],
       "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.11.0: EPIC-003 / Sprint AA \u2014 guardian Step 5 +2 rows: C4 CONCERNS (Sprint Z9 PRD-060 gate) + OpenSpec BLOCKER (Sprint Z8 PRD-058 activation gate). Closes G2+G4. v1.10.1: EPIC-002 niceties patch. v1.10.0: EPIC-002 PRD-062 \u2014 new `smith` master-orchestrator agent (Profile B-orchestrator).",
       "version": "1.13.0",
       "author": {
@@ -261,6 +339,12 @@
     {
       "name": "agents-github",
       "source": "./plugins/agents-github",
+      "cost": "light",
+      "stability": "stable",
+      "dependencies": [],
+      "targets": [
+        "claude-code"
+      ],
       "description": "GitHub operations agents: PR management, issue tracking, release automation, multi-repo coordination, project boards, workflow engineering, and repo architecture. v1.1: 7 agents canonical-lint compliant (LR-1..LR-3) \u2014 sonnet model, hex colors, bilingual EN/RU/Triggers descriptions.",
       "version": "1.1.0",
       "author": {
@@ -272,6 +356,12 @@
     {
       "name": "agents-sparc",
       "source": "./plugins/agents-sparc",
+      "cost": "light",
+      "stability": "stable",
+      "dependencies": [],
+      "targets": [
+        "claude-code"
+      ],
       "description": "SPARC development methodology: orchestrator with quality gates plus 4 phase specialists (specification, pseudocode, architecture, refinement). v1.3.0: THIRD instance of the AD/AID-PDLC sub-cycle contract (ADR-010 / RFC-016) — sparc-orchestrator finished to a Profile B-orchestrator (disallowedTools denylist + Task-dispatch + C1-C6 framing; closes the LR-8 tools allowlist) + NEW /sparc skill (5-phase master-coordinated walk, mandatory per-gate independent C4, Pseudocode-absorption, Refinement→TDD delegation). hook-gate=No — no hook/lib/init. v1.2.2: refinement notes enforced-TDD delegation (RFC-012) \u2014 RED test-writing delegates to agents-tdd:coder-tdd and GREEN to agents-core:coder; refinement retains refactor-after-green. v1.2.1: Sprint Q PRD-042 \u2014 ASM-canon frontmatter added to 2 forgeplan-aware agents (specification + architecture get skills preload + maxTurns; architecture gets memory:project as learner). v1.2: ALL 5 agents canonical-lint compliant.",
       "version": "1.4.0",
       "author": {
@@ -297,6 +387,12 @@
     {
       "name": "agents-tdd",
       "source": "./plugins/agents-tdd",
+      "cost": "light",
+      "stability": "beta",
+      "dependencies": [],
+      "targets": [
+        "claude-code"
+      ],
       "description": "Enforced-TDD methodology: tdd-orchestrator master + RED/GREEN phase agents + fail-closed PreToolUse gate (first instance of the AD/AID-PDLC sub-cycle contract, ADR-010). Implements RFC-012: tdd-planner (scenarios\u2192plan) + coder-tdd (plan\u2192failing tests, RED) + tdd-test-validator (independent C4 verifier) + PreToolUse tdd-gate (permissionDecision:deny, exit2 fail-closed) + normalized full-file SPEC hash freeze (FR-6). GREEN reuses agents-core:coder.",
       "version": "0.3.0",
       "author": {
@@ -324,6 +420,12 @@
     {
       "name": "agents-bmad",
       "source": "./plugins/agents-bmad",
+      "cost": "light",
+      "stability": "beta",
+      "dependencies": [],
+      "targets": [
+        "claude-code"
+      ],
       "description": "BMAD greenfield methodology: bmad-orchestrator master walks the persona arc (Analyst → PM → Architect → Scrum-Master → Dev → QA) with a blocking quality-gate at every handoff and a fail-closed no-code-before-plan PreToolUse gate (second instance of the AD/AID-PDLC sub-cycle contract, ADR-010). Implements RFC-013: reuses existing forgeplan-aware personas (brief-intake/specification/adr-architect/architecture/goal-planner/coder/tester/code-reviewer/guardian/evidence-recorder) + a new bmad-orchestrator + /bmad + /bmad-init + bmad-gate (permissionDecision:deny, exit2 fail-closed) reading a per-branch phase state file. GREEN/Dev reuses agents-core:coder.",
       "version": "0.2.0",
       "author": {
@@ -348,6 +450,12 @@
     {
       "name": "cc-best",
       "source": "./plugins/cc-best",
+      "cost": "light",
+      "stability": "stable",
+      "dependencies": [],
+      "targets": [
+        "claude-code"
+      ],
       "description": "Claude Code ecosystem reference \u2014 opinionated agentic-RAG guide for CLAUDE.md, plugins, agents, hooks, MCP, and anti-patterns. Synthesises 47+ audit findings from ForgePlan marketplace work. v1.1.0: all 6 sections authored \u2014 claude-md + plugins + agents + hooks + mcp + anti-patterns (RFC-005..009 closed / DEFER-005..009).",
       "version": "1.1.0",
       "author": {
@@ -377,5 +485,58 @@
         "hooks": []
       }
     }
-  ]
+  ],
+  "profiles": {
+    "forgeplan-core": [
+      "fpl-skills",
+      "forgeplan-workflow",
+      "fpl-hsmem",
+      "fpf"
+    ],
+    "developer": [
+      "fpl-skills",
+      "agents-core",
+      "agents-domain",
+      "fp-cookbook",
+      "agentic-rag",
+      "cc-best"
+    ],
+    "security": [
+      "agents-pro",
+      "forgeplan-workflow"
+    ],
+    "frontend": [
+      "laws-of-ux",
+      "agents-domain"
+    ],
+    "agents": [
+      "agents-core",
+      "agents-domain",
+      "agents-pro",
+      "agents-github",
+      "agents-sparc",
+      "agents-tdd",
+      "agents-bmad"
+    ],
+    "full": [
+      "fpl-hsmem",
+      "fpl-skills",
+      "fp-cookbook",
+      "agentic-rag",
+      "laws-of-ux",
+      "forgeplan-workflow",
+      "dev-toolkit",
+      "fpf",
+      "forgeplan-orchestra",
+      "forgeplan-brownfield-pack",
+      "agents-core",
+      "agents-domain",
+      "agents-pro",
+      "agents-github",
+      "agents-sparc",
+      "agents-tdd",
+      "agents-bmad",
+      "cc-best"
+    ]
+  }
 }

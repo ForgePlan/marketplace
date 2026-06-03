@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/ForgePlan/marketplace/scripts/ci/schemas/install-manifest.schema.json",
+  "title": "ForgePlan marketplace install-manifest fields",
+  "description": "Schema for the install-profiles metadata added to .claude-plugin/marketplace.json (#150): per-plugin cost/stability/dependencies/targets and the top-level named profiles map. Describes ONLY the new fields plus the existing plugin name; other existing fields (source/version/description/category/keywords/...) are intentionally not constrained here.",
+  "type": "object",
+  "required": ["plugins", "profiles"],
+  "properties": {
+    "plugins": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "cost", "stability", "dependencies", "targets"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
+          "cost": {
+            "description": "Relative install + runtime footprint bucket.",
+            "type": "string",
+            "enum": ["light", "medium", "heavy"]
+          },
+          "stability": {
+            "description": "Maturity / support level of the plugin.",
+            "type": "string",
+            "enum": ["stable", "beta", "experimental", "deprecated"]
+          },
+          "dependencies": {
+            "description": "Hard plugin-to-plugin install dependencies (other plugin names in this catalog). The shared external forgeplan MCP is NOT a plugin dependency.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]*$"
+            },
+            "uniqueItems": true
+          },
+          "targets": {
+            "description": "CLI targets the plugin is built for.",
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "profiles": {
+      "description": "Named install bundles. Each key is a profile name; each value is a list of plugin names that must all resolve to real plugins in the catalog. The `full` profile must contain every plugin.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "uniqueItems": true
+      }
+    }
+  }
+}

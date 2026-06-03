@@ -422,6 +422,7 @@ else
     run_gate "check-unicode-safety"      node "$CI_DIR/check-unicode-safety.js"
     run_gate "validate-no-personal-paths" node "$CI_DIR/validate-no-personal-paths.js"
     run_gate "validate-workflow-security" node "$CI_DIR/validate-workflow-security.js"
+    run_gate "validate-install-manifests" node "$CI_DIR/validate-install-manifests.js"
 fi
 
 echo ""

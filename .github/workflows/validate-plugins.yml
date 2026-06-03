@@ -205,4 +205,5 @@ jobs:
           run_gate "check-unicode-safety"         node scripts/ci/check-unicode-safety.js
           run_gate "validate-no-personal-paths"   node scripts/ci/validate-no-personal-paths.js
           run_gate "validate-workflow-security"   node scripts/ci/validate-workflow-security.js
+          run_gate "validate-install-manifests"   node scripts/ci/validate-install-manifests.js
           [ "$errors" -eq 0 ] || exit 1
