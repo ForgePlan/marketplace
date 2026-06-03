@@ -1,10 +1,10 @@
 # ForgePlan Marketplace — Claude Code Configuration
 
 **Repo**: [ForgePlan/marketplace](https://github.com/ForgePlan/marketplace)
-**Catalog version**: 1.88.0
+**Catalog version**: 1.91.1
 **Plugins**: 18 (10 workflow + 7 agent packs + 1 memory plugin fpl-hsmem) — adds the AD/AID-PDLC sub-cycle instance packs agents-tdd (#1) + agents-bmad (#2) alongside agents-sparc (#3, finished to B-orchestrator) + smith master-orchestrator (EPIC-002, Profile B-orchestrator)
 **Agents**: 25 of 75 forgeplan-aware (PRD-026 B2 paradigm — `disallowedTools` denylist; + the AD/AID-PDLC sub-cycle masters tdd-orchestrator / bmad-orchestrator, sparc-orchestrator finished to B-orchestrator, and the C4 verifier tdd-test-validator. **`memory: project` REJECTED Sprint R** — Hindsight covers use case.)
-**Last Updated**: 2026-06-02 (post-program cleanup + 5-lane AgentTeams audit — shipped PR #140 DEFER-018 (/riper FR-5 pin-hash basis), #141 DEFER-016 (/autorun RIPER Plan→Execute human gate), #142 /conformance-vectors SDD enrichment (DEFER-012), #143 cc-best v1.1.0 (all 6 sections, DEFER-005..009). The AD/AID-PDLC sub-cycle program is CLOSED at 4 instances (NOTE-027); the ADR-012 gate is rendered `hook-gate` in shipped artifacts, Cyrillic codename retained only in immutable graph records. catalog v1.88.0, fpl-skills v1.46.0, cc-best v1.1.0, agents-sparc v1.3.2, agents-tdd v0.2.1, agents-bmad v0.1.2.)
+**Last Updated**: 2026-06-02 (post-program cleanup + 5-lane AgentTeams audit — shipped PR #140 DEFER-018 (/riper FR-5 pin-hash basis), #141 DEFER-016 (/autorun RIPER Plan→Execute human gate), #142 /conformance-vectors SDD enrichment (DEFER-012), #143 cc-best v1.1.0 (all 6 sections, DEFER-005..009). The AD/AID-PDLC sub-cycle program is CLOSED at 4 instances (NOTE-027); the ADR-012 gate is rendered `hook-gate` in shipped artifacts, Cyrillic codename retained only in immutable graph records. catalog v1.91.1, fpl-skills v1.46.0, cc-best v1.1.0, agents-sparc v1.3.2, agents-tdd v0.2.1, agents-bmad v0.1.2.)
 
 ---
 
@@ -666,7 +666,7 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # rulesets
 
 ---
 
-## Plugin versions (catalog v1.88.0)
+## Plugin versions (catalog v1.91.1)
 
 ### Workflow plugins
 
