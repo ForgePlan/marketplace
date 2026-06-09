@@ -29,7 +29,7 @@ fi
 # Pull active ADRs (JSON output piped through python for date parsing).
 # If the CLI call fails (uninitialized workspace, stale state) we still want
 # Layer 3 to run — it is filesystem-only — so do NOT exit on failure here.
-ACTIVE_ADRS=$(forgeplan list --kind adr --status active --output json 2>/dev/null || echo "[]")
+ACTIVE_ADRS=$(forgeplan list --type adr --status active --json 2>/dev/null || echo "[]")
 
 # Parse + check using python (POSIX-safe, no jq dependency). Any python error
 # is swallowed; Layer 3 below still runs (filesystem-only, no Python).
@@ -65,7 +65,7 @@ for adr in adrs:
     adr_id = adr.get("id") or adr.get("id_display", "ADR-???")
     try:
         body_proc = subprocess.run(
-            ["forgeplan", "get", adr_id, "--output", "json"],
+            ["forgeplan", "get", adr_id, "--json"],
             capture_output=True, text=True, timeout=10,
         )
         body_payload = json.loads(body_proc.stdout)
@@ -92,7 +92,7 @@ for adr in adrs:
 # Layer 2 — NOTE-013 deferred items (Sprint Z5 PRD-056)
 try:
     note_proc = subprocess.run(
-        ["forgeplan", "get", "NOTE-013", "--output", "json"],
+        ["forgeplan", "get", "NOTE-013", "--json"],
         capture_output=True, text=True, timeout=10,
     )
     note_payload = json.loads(note_proc.stdout)
