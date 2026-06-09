@@ -17,19 +17,52 @@ BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo "—")
 
 ARTIFACT_COUNT=0
 DRAFT_COUNT=0
+ACTIVE_COUNT=0
 if [ "$HAS_FORGEPLAN_DIR" = "yes" ]; then
-  # Count active markdown artifacts (skip lance vector index).
-  # `wc -l` always emits a number even on empty stdin; no fallback needed.
-  # Avoid `|| echo 0` because pipefail can yield "N\n0" when an upstream
-  # command (e.g. grep with no matches) returns non-zero and we still pipe
-  # successfully through wc — breaking later arithmetic.
-  ARTIFACT_COUNT=$( { find .forgeplan -maxdepth 2 -name "*.md" -not -path "*/lance/*" 2>/dev/null || true; } | wc -l | tr -d ' ')
-  # Cheap draft probe — grep frontmatter line across top-level artifact dirs only.
-  DRAFT_COUNT=$( { grep -l "^status: draft" .forgeplan/*/*.md 2>/dev/null || true; } | wc -l | tr -d ' ')
+  # Counts come from the forgeplan CLI (LanceDB truth) in ONE call, NOT from
+  # grepping the markdown projections. The projection body carries a frozen
+  # `status:` frontmatter that is NOT rewritten on activation — so
+  # `grep "^status: draft"` over-counts drafts (it catches activated artifacts
+  # whose body still reads "draft", plus soft-deleted rows under
+  # .forgeplan/trash/). That stale-grep is the source of the historical
+  # "NN stale/draft of NNN" falsehood. Ask forgeplan instead; parse total +
+  # draft + active from a single `forgeplan list --json` (flag is `--json`,
+  # NOT `--output json`). Best-effort + time-boxed; never fail SessionStart.
+  if command -v forgeplan >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1; then
+    if command -v timeout >/dev/null 2>&1; then
+      _FP_JSON=$(timeout 2 forgeplan list --json 2>/dev/null || echo "")
+    else
+      _FP_JSON=$(forgeplan list --json 2>/dev/null || echo "")
+    fi
+    _FP_COUNTS=$(printf '%s' "$_FP_JSON" | python3 -c 'import json,sys
+try:
+    d = json.load(sys.stdin)
+    a = d if isinstance(d, list) else d.get("artifacts", [])
+    print(len(a),
+          sum(1 for x in a if x.get("status") == "draft"),
+          sum(1 for x in a if x.get("status") == "active"))
+except Exception:
+    pass' 2>/dev/null)
+    if [ -n "$_FP_COUNTS" ]; then
+      ARTIFACT_COUNT=$(printf '%s\n' "$_FP_COUNTS" | awk '{print $1}')
+      DRAFT_COUNT=$(printf '%s\n' "$_FP_COUNTS" | awk '{print $2}')
+      ACTIVE_COUNT=$(printf '%s\n' "$_FP_COUNTS" | awk '{print $3}')
+    fi
+  fi
+  # Fallback ONLY if forgeplan was unavailable/failed: count files for the total
+  # (excluding lance index + trash receipts), report 0 drafts rather than grep
+  # the stale projections (an honest "unknown→0" beats a false "30"), and treat
+  # all non-draft as active for the greeting.
+  if ! [[ "$ARTIFACT_COUNT" =~ ^[0-9]+$ ]]; then
+    ARTIFACT_COUNT=$( { find .forgeplan -maxdepth 2 -name "*.md" -not -path "*/lance/*" -not -path "*/trash/*" 2>/dev/null || true; } | wc -l | tr -d ' ')
+    DRAFT_COUNT=0
+    ACTIVE_COUNT=$ARTIFACT_COUNT
+  fi
 fi
 # Sanitise to integers (defensive — guards arithmetic below).
 [[ "$ARTIFACT_COUNT" =~ ^[0-9]+$ ]] || ARTIFACT_COUNT=0
 [[ "$DRAFT_COUNT" =~ ^[0-9]+$ ]] || DRAFT_COUNT=0
+[[ "$ACTIVE_COUNT" =~ ^[0-9]+$ ]] || ACTIVE_COUNT=0
 
 # ─── Smith state classification ────────────────────────────────────────────
 # GREENFIELD: no .forgeplan/ or no CLAUDE.md → user should bootstrap
@@ -60,13 +93,9 @@ case "$SMITH_STATE" in
     echo "🛠  fpl-skills active — Smith greeting: greenfield repo detected${STATUS:+ ($STATUS)}. Run /smith-bootstrap to scaffold."
     ;;
   attention)
-    ACTIVE_COUNT=$((ARTIFACT_COUNT - DRAFT_COUNT))
-    [ "$ACTIVE_COUNT" -lt 0 ] && ACTIVE_COUNT=0
-    echo "🛠  fpl-skills active — Smith alert: $DRAFT_COUNT stale/draft item(s) (of $ARTIFACT_COUNT artifacts, branch: $BRANCH). Run /forge-progress or /smith for details."
+    echo "🛠  fpl-skills active — Smith alert: $DRAFT_COUNT draft artifact(s) of $ARTIFACT_COUNT total ($ACTIVE_COUNT active, branch: $BRANCH). Run /forge-progress or /smith for details."
     ;;
   healthy)
-    ACTIVE_COUNT=$((ARTIFACT_COUNT - DRAFT_COUNT))
-    [ "$ACTIVE_COUNT" -lt 0 ] && ACTIVE_COUNT=0
     echo "🛠  fpl-skills active — Smith ready ($ARTIFACT_COUNT artifacts, $ACTIVE_COUNT active, branch: $BRANCH). Say \"smith\" or \"/smith\" for routing."
     ;;
 esac
