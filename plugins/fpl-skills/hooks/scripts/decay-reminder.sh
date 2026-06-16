@@ -53,6 +53,12 @@ if not adrs:
 
 # Trigger patterns
 ADR_TRIGGER_RE = re.compile(r'^- \[([ x])\] \*\*Type\*\*:\s*(date|metric|event)\s*[—\-]\s*(.+)$', re.MULTILINE)
+# `finding` Kind is DELIBERATELY excluded from this alternation: machine findings
+# (the NOTE-013 `## Machine findings (auto-tracked)` section, RFC-019/RFC-020) are
+# written by /forge-insight and acted on by /forge-heal — they are NOT human
+# deferrals and must never fire a human-deferral alert here. Adding `finding` to
+# this regex would be a bug (it would re-surface churning machine rows as if a
+# human had deliberately deferred them).
 NOTE_DEFER_RE = re.compile(r'^- \[([ x])\] \*\*Kind\*\*:\s*(issue|metric|date|event)\s*[—\-]\s*(.+)$', re.MULTILINE)
 ISO_DATE_RE = re.compile(r'\b(\d{4}-\d{2}-\d{2})\b')
 ISSUE_NUM_RE = re.compile(r'(?:forgeplan)?#(\d+)')
