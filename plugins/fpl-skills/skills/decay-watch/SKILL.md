@@ -63,6 +63,8 @@ note_body = forgeplan_get(id="NOTE-013")
 
 Parse with regex: `^- \[([ x])\] \*\*Kind\*\*:\s*(issue|metric|date|event)\s*[—\-]\s*(.+)$` (note `Kind` not `Type`; same dash tolerance as ADR triggers).
 
+**`Kind: finding` is a SEPARATE machine track — do NOT fold it into human deferrals.** The NOTE-013 `## Machine findings (auto-tracked)` section (RFC-019 / RFC-020) holds machine-generated anomaly findings written by `/forge-insight` and acted on by `/forge-heal`. The human-deferral regex above deliberately does NOT match `finding`, so those rows are excluded from human-deferral counts and never fire a human revisit trigger. When surfacing NOTE-013 state, report them on their own line — `machine findings: N open (owned by /forge-heal)` — not folded into the human deferral total. They self-clean (auto-close on the next `/forge-insight` pass), so a churning count is expected and is not a human-action signal. (RFC-019 R-8 / RFC-020 scanner follow-up.)
+
 For each row:
 - `[x]` → CLOSED (deferred item resolved, archived)
 - `[ ]` AND `kind=date` AND past ISO date → DATE-FIRED
