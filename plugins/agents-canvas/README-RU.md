@@ -9,6 +9,11 @@ RFC-021): мастер (`canvas-coordinator`) ведёт шестифазную 
 через `Task`**, так что генератор никогда не является верификатором, а fail-closed PreToolUse-хук
 блокирует исходники дизайн-системы, пока не активирован токен-контракт (**hook-gate = Yes**).
 
+CANVAS **агностичен к бренду/стилю**: визуальный стиль -- это вход, который даёт проект, читаемый из
+forgeplan scope-артефакта (активного PRD/Brief, ADR с design-direction или зафиксированного решения по
+design-токенам); если стиль ещё не зафиксирован, Designer сначала помогает выбрать его и фиксирует, прежде
+чем начинать проектирование.
+
 > `agents-canvas` -- агенты `canvas-*` -- входной скилл `/canvas`. Топология: фреймворк-агностичные
 > **Web Components** (канонический слой на Lit) + тонкие обёртки React/Vue/Svelte/Angular/Solid. Токены:
 > **Style-Dictionary -> CSS custom properties** из единого `tokens.json`, никогда не форкается.
@@ -96,8 +101,8 @@ SPARC, greenfield в BMAD, баги в RIPER. `canvas-coordinator` -- это L2 
 
 - **getdesign.md** -- `canvas-designer` обращается к [`https://getdesign.md/`](https://getdesign.md/)
   через WebFetch: кураторский каталог проанализированных продакшн-систем DESIGN.md (паттерны цвета/
-  типографики/компонентов/токенов, машиночитаемо для AI-агентов). **Только референс** -- адаптируй под наш
-  warm-paper бренд, никогда не копируй 1:1.
+  типографики/компонентов/токенов, машиночитаемо для AI-агентов). **Только референс** -- адаптируй под
+  выбранный бренд твоего проекта (тот, что зафиксирован в scope-артефакте), никогда не копируй 1:1.
 - **context7** -- агенты, касающиеся кода (`canvas-coder`, `canvas-porter-storybook`,
   `canvas-porter-framework`, `canvas-storybook-validator`, и `canvas-design` там, где он трогает
   Storybook/Style-Dictionary), **обязаны** использовать **context7 MCP** (`resolve-library-id` ->
@@ -115,7 +120,7 @@ SPARC, greenfield в BMAD, баги в RIPER. `canvas-coordinator` -- это L2 
 ## Статус
 
 `beta` -- v0.1.0. Мастер `canvas-coordinator` + 7 ролевых агентов + пять KB-скиллов + команды + хук
-`canvas-gate.sh` написаны по phased build из RFC-021 (на dogfooding против реальных экранов ExtraBoost).
+`canvas-gate.sh` написаны по phased build из RFC-021 (на dogfooding против реальных экранов продукта).
 
 ## Лицензия
 

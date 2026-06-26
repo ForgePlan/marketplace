@@ -9,6 +9,11 @@ independent quality gate at every handoff. CANVAS is an instance of the AD/AID-P
 every verifier via `Task`** so the generator is never the verifier, while a fail-closed PreToolUse hook
 blocks design-system source until the token contract is active (**hook-gate = Yes**).
 
+CANVAS is **brand/style-agnostic**: the visual style is an input the project provides -- read from a
+forgeplan scope artifact (the active PRD/Brief, an ADR design-direction, or a recorded design-tokens
+decision); if none is recorded yet, the Designer first helps you choose one and records it before any
+design work begins.
+
 > `agents-canvas` -- agents `canvas-*` -- entry skill `/canvas`. Topology: framework-agnostic **Web
 > Components** (Lit canonical) + thin React/Vue/Svelte/Angular/Solid wrappers. Tokens:
 > **Style-Dictionary -> CSS custom properties** from a single `tokens.json`, never forked.
@@ -96,8 +101,8 @@ that map; `/smith` is the master-of-masters above it.
 
 - **getdesign.md** -- the `canvas-designer` consults [`https://getdesign.md/`](https://getdesign.md/) via
   WebFetch: a curated catalog of analyzed production DESIGN.md systems (color/typography/component/
-  token patterns, authored machine-readable for AI agents). **Reference-only** -- adapt to our warm-paper
-  brand, never copy 1:1.
+  token patterns, authored machine-readable for AI agents). **Reference-only** -- adapt to your project's
+  chosen brand (the one recorded in the scope artifact), never copy 1:1.
 - **context7** -- the code-touching agents (`canvas-coder`, `canvas-porter-storybook`,
   `canvas-porter-framework`, `canvas-storybook-validator`, and `canvas-design` where it touches
   Storybook/Style-Dictionary) **must** use the **context7 MCP** (`resolve-library-id` -> `query-docs`)
@@ -114,7 +119,7 @@ that map; `/smith` is the master-of-masters above it.
 ## Status
 
 `beta` -- v0.1.0. The `canvas-coordinator` master + 7 role agents + the five KB skills + the commands +
-the `canvas-gate.sh` hook are authored per RFC-021's phased build (dogfooded against real ExtraBoost
+the `canvas-gate.sh` hook are authored per RFC-021's phased build (dogfooded against real product
 screens).
 
 ## License

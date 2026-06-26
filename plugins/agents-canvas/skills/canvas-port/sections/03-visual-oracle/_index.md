@@ -85,7 +85,7 @@ test('button focus-visible matches the design', async ({ page }) => {
 
 1. First run: no committed baseline -> the runner writes the browser baseline. **Do not auto-trust it.**
 2. The porter (or Coder) compares each new browser baseline against the Pencil reference visually and
-   confirms intent parity (color, spacing, hierarchy, the warm-paper brand). Mismatch -> fix the component
+   confirms intent parity (color, spacing, hierarchy, the project's chosen brand). Mismatch -> fix the component
    or the token contract, not the threshold.
 3. Commit the approved baselines under `__image_snapshots__/`. Subsequent runs diff against them; a real
    visual regression fails CI.

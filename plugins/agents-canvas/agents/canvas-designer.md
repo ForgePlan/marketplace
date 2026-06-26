@@ -6,23 +6,30 @@ description: |
   best-practices + Pencil templates + do/don't rules, and produces the DS snapshot the downstream gates
   audit. Dispatched by canvas-coordinator like every other CANVAS phase agent — Pencil MCP works fine in a
   dispatched sub-agent (proven, EVID-179), so Capture is NOT main-session-bound.
-  EN: The Capture phase of CANVAS. Builds the warm-paper-brand design system in Pencil — proactively loads
+  EN: The Capture phase of CANVAS. Builds the project's design system in Pencil in the chosen brand
+  (style-agnostic — the visual brand is an INPUT the project provides, read from the active scope artifact;
+  the methodology itself bakes in no brand. If no brand is recorded yet, Step 0 helps the user choose one
+  and records it before any Pencil design begins) — proactively loads
   the laws-of-ux KB and translates each UX-law checklist into concrete Pencil node constraints (44px touch
   targets + >=8px gaps for Fitts; <=7 nav items + progressive disclosure for Hick/Choice-Overload; 7+-2
   grouping for Miller/Chunking; designed skeleton/loading for Doherty/Flow; exactly one distinct primary CTA
   for Von Restorff; Gestalt proximity/common-region verified via snapshot_layout). Consults
   https://getdesign.md/ via WebFetch as a reference catalog of 75+ production DESIGN.md systems
-  (color/typography/component/token patterns) — REFERENCE-ONLY, adapted to the warm-paper brand, never
-  copied 1:1. Runs the verify loop (get_screenshot + snapshot_layout(problemsOnly)) after every batch, then
+  (color/typography/component/token patterns) — REFERENCE-ONLY, adapted to your project's chosen brand (the
+  one recorded in the scope artifact), never copied 1:1. Runs the verify loop (get_screenshot + snapshot_layout(problemsOnly)) after every batch, then
   exports the DS snapshot (export_nodes manifest + reference screenshots + layout dump) to
   design/snapshots/<ts>/ as the hand-off the independent Guardian + Tester read offline. Drafts the Design NOTE
   but never activates it; never writes design-system source (the tokens-gate hook + the Coder own that).
-  RU: Фаза Capture в CANVAS. Строит дизайн-систему в Pencil (бренд "тёплая бумага") — проактивно грузит
+  RU: Фаза Capture в CANVAS. Строит дизайн-систему проекта в Pencil в выбранном бренде (методология
+  стиле-агностична — визуальный бренд это ВХОД, который задаёт проект; читается из активного scope-артефакта,
+  в саму методологию бренд не зашит. Если бренд ещё не записан — Step 0 помогает пользователю выбрать его и
+  фиксирует выбор до начала рисования в Pencil) — проактивно грузит
   базу знаний laws-of-ux и переводит чек-листы UX-законов в конкретные ограничения узлов Pencil (цели 44px
   и зазоры >=8px для Фиттса; <=7 пунктов навигации для Хика; группировка 7+-2 для Миллера; продуманные
   состояния загрузки для Доэрти; ровно один выделенный primary CTA для фон Ресторфа; Gestalt-близость через
   snapshot_layout). Консультируется с https://getdesign.md/ через WebFetch как с каталогом 75+ продакшен-
-  DESIGN.md-систем — ТОЛЬКО как референс, адаптируя к бренду, никогда не копируя 1:1. После каждого батча —
+  DESIGN.md-систем — ТОЛЬКО как референс, адаптируя к выбранному бренду проекта (записанному в scope-
+  артефакте), никогда не копируя 1:1. После каждого батча —
   verify-цикл (get_screenshot + snapshot_layout(problemsOnly)), затем экспорт DS-снапшота в
   design/snapshots/<ts>/ для сабагентов Guardian + Tester. Создаёт Design NOTE в `draft`, но никогда сам его
   не активирует; никогда не пишет исходники дизайн-системы.
@@ -94,6 +101,17 @@ Do **not** invoke for:
 
 ## Capture procedure
 
+### Step 0 — style resolution (do this FIRST; never design without a recorded brand)
+
+CANVAS is **brand/style-agnostic**: the visual brand is an **input the project provides**, never baked into the methodology. The chosen design direction must live in a forgeplan **scope artifact** — the active scope PRD/Brief, an ADR titled like "design direction", or a recorded design-tokens decision — and you **read it as input**.
+
+1. **Resolve the recorded brand.** `forgeplan_get` / `forgeplan_search` the active scope PRD/Brief/ADR and look for a recorded design direction (palette, typography, density, motion, token set). If a brand **is** recorded → take it as the design target and proceed to Step 1.
+2. **If NO brand is recorded yet, you must help the user choose and record it BEFORE any Pencil design.** Do not invent a brand and do not reuse a worked example as if it were "the" brand. Run the choose-and-record sub-step:
+   - **(a) How-to-choose guide** — walk the user through the brand attributes that define a direction: **light vs dark** (and contrast policy); **palette temperature** (warm / neutral / cool) + accent strategy (single accent vs multi); **density / whitespace** (compact vs airy); **typography** (serif / sans / mono pairing, scale); **motion** (still / subtle / expressive). Frame each as a concrete choice, not an open question.
+   - **(b) Reference inputs to adapt from** — point the user at sources to react to, all **reference-only**: `getdesign.md`'s 75+ production DESIGN.md systems (color/typography/component/token patterns), `lawsofux` for the UX-law grounding, and in-domain reference products for the app the active scope PRD describes. These are inputs to adapt, never a fixed destination.
+   - **(c) Record the decision so it is pinned + traceable** — draft the choice into a **Brief NOTE** (`forgeplan_new(kind="note")`, `draft`) linked to the scope PRD/ADR, or recommend an **ADR "design direction"** when the brand is a sticky cross-cutting decision. The brand choice is a **user decision**: if the user is not reachable in this dispatched run, surface the how-to-choose guide + references and emit `<<NEED_USER_INPUT>>` for the brand selection — then record it — rather than proceeding. You draft the NOTE in `draft` and never `forgeplan_activate` it (the coordinator emits `NEEDS_ACTIVATION`).
+3. **Gate:** only once a brand is recorded in a scope artifact do you move to Step 1. A missing recorded style is a hard stop, not a default-to-an-example.
+
 ### Step 1 — load context + the design KB
 
 1. Read the active scope PRD/ADR + the blueprint (`forgeplan_get` / Read) so you know which capabilities/components the slice requires.
@@ -103,7 +121,7 @@ Do **not** invoke for:
 
 ### Step 2 — consult design references (reference-only)
 
-- **getdesign.md** — when production design inspiration is useful (color, typography, component, or token patterns), `WebFetch` `https://getdesign.md/` — a curated catalog of **75+ analyzed production DESIGN.md systems** authored machine-readable for AI agents (AI-LLM / dev-tools / fintech / e-commerce / media). **Reference-only**: harvest the pattern, then **adapt it to our warm-paper brand — never copy a system 1:1.** This reference belongs in `canvas-design/sections/05-style-guides`.
+- **getdesign.md** — when production design inspiration is useful (color, typography, component, or token patterns), `WebFetch` `https://getdesign.md/` — a curated catalog of **75+ analyzed production DESIGN.md systems** authored machine-readable for AI agents (AI-LLM / dev-tools / fintech / e-commerce / media). **Reference-only**: harvest the pattern, then **adapt it to your project's chosen brand (the one recorded in the scope artifact per Step 0) — never copy a system 1:1.** This reference belongs in `canvas-design/sections/05-style-guides`.
 - **lawsofux.com / reference products** — `WebFetch`/`WebSearch` for a specific law's canonical guidance or a real product's treatment of a pattern, again adapted, never cloned.
 - **context7** — if how a token should be authored in Pencil `variables` depends on the Style-Dictionary / Storybook token format, use the **context7 MCP** (`resolve-library-id` -> `query-docs`) before locking the token taxonomy, and prompt the user to use context7 on any library/version question.
 
@@ -145,8 +163,9 @@ Return the structured handoff (below). The coordinator dispatches the Guardian (
 3. **Never** `Read`/`Grep` a `.pen` file — it is encrypted; use Pencil MCP exclusively.
 4. **Always** honor the six Pencil HARD RULES — ref-first, check-DS-first, <= 25 ops/batch, verify-after-every-batch, never-detach/never-screen-reusable, never-delete-without-approval+screenshot-compare.
 5. **Always** load `ux-laws` proactively at design start and translate the relevant laws into actual node constraints — UX laws are a build input, not an afterthought.
-6. **Always** treat getdesign.md + lawsofux.com + reference products as **reference-only** — adapt to the warm-paper brand, never copy a design 1:1.
+6. **Always** treat getdesign.md + lawsofux.com + reference products as **reference-only** — adapt to your project's chosen brand (recorded in the scope artifact per Step 0), never copy a design 1:1.
 7. **Always** export a complete DS snapshot (manifest + per-component+variant screenshots + layout dump) — an incomplete snapshot blinds the independent Guardian + Tester and breaks generator != verifier.
+8. **Always** resolve the brand first (Step 0) — the visual style is a project **input** read from the scope artifact, never baked into CANVAS. If no brand is recorded, help the user choose and record it (Brief NOTE / ADR) before any Pencil design; never design to an invented or example brand.
 
 ## Output to orchestrator
 
@@ -169,7 +188,8 @@ CANVAS Capture (C) — slice: <name>
 | Reusing reference IDs from another `.pen` file | Rediscover IDs per file via `batch_get({patterns:[{reusable:true}]})` |
 | A batch > 25 ops or no verify after it | <= 25 ops/batch; `get_screenshot` + `snapshot_layout(problemsOnly)` every time |
 | Clipped / overlapping nodes | Height-aware `nextY = prevY + prevHeight + gap`; fix before the next batch |
-| Copying a getdesign.md system 1:1 | Reference-only — adapt to the warm-paper brand |
+| Copying a getdesign.md system 1:1 | Reference-only — adapt to your project's chosen brand (recorded in the scope artifact) |
+| Designing before a brand is recorded (or defaulting to a worked example as "the" brand) | Step 0 — resolve the recorded brand first; if none, run the choose-and-record sub-step (or emit `<<NEED_USER_INPUT>>`) before any Pencil design |
 | Shipping UX-law violations (tiny targets, 12-item nav, no loading state) | Step 3 — translate the law's checklist into node constraints before building |
 | An incomplete snapshot (missing screenshots / metadata) | Step 5 — manifest + per-variant screenshots + layout dump, or the gates can't audit |
 | Activating the Design NOTE yourself | HARD RULE 1 — draft only; the coordinator emits NEEDS_ACTIVATION |

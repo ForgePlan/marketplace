@@ -19,8 +19,10 @@ not trust the prompt's list. From the scope artifact, extract the atoms of *requ
   slot picker", "a status badge per platform").
 - **Named components / capabilities** the PRD or a linked ADR explicitly calls for (a token palette, an
   AppShell, a Multi-platform Publish table, a primary CTA per screen).
-- **Brand / token decisions** an ADR fixed (e.g. "warm-paper surface", "one distinct primary action") — these
-  are *required tokens/atoms*, counted as coverage items, not as free styling.
+- **Brand / token decisions** the scope artifact fixed (e.g. an example recorded brand might fix a "warm-paper
+  surface" token or "one distinct primary action") — these are *required tokens/atoms*, counted as coverage
+  items, not as free styling. The brand itself is an **input** the scope artifact records, never baked into the
+  check.
 
 Each extracted item gets a stable handle: `FR-12 → "platform status badge"`. That handle is the matrix row.
 

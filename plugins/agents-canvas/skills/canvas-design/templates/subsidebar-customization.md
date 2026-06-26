@@ -34,11 +34,12 @@ subSidebar=I(content, {
 ```
 
 **Active/inactive convention:** active = `$--foreground` + weight 500 + filled bg; inactive =
-`$--muted-foreground` + normal weight + transparent bg. (Warm-paper adapts the exact accent — §05.)
+`$--muted-foreground` + normal weight + transparent bg. (Your project's chosen brand adapts the exact accent — §05.)
 
 **Module → items** (reference taxonomy — replace with the active product's modules from the scope PRD):
 IAM · Pipelines · Observe · Knowledge · Discovery · AI · Settings (see [§02](../sections/02-layout-b/_index.md)).
-For ExtraBoost, expect editorial modules (Sources / Stories / Variants / Schedule / Publish) — read the scope.
+For an editorial product, for example, expect modules like Sources / Stories / Variants / Schedule / Publish —
+always read your app's modules from the active scope PRD.
 
 **Apply UX laws (§07):** keep items grouped (Miller 7±2), the active one distinct (Von Restorff), targets
 ≥44px (Fitts).

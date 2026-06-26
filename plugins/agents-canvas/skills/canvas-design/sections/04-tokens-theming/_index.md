@@ -21,7 +21,8 @@ Never hardcode a hex when a token exists. The Guardian FAILs hardcoded hex where
 { type:"frame", fill:"#FAF6EF" }
 ```
 
-Common token names (warm-paper brand — see §05 for values; confirm against the active tokens RFC):
+Common token names (values come from your project's chosen brand — see §05 for how to choose/record one and
+worked examples; confirm against the active tokens RFC):
 `$--background`, `$--foreground`, `$--muted`, `$--muted-foreground`, `$--border`, `$--accent`,
 `$--destructive`, `$--success`, `$--warning`, `$--radius-md`, `$--font-primary`.
 
@@ -45,11 +46,12 @@ A token holds **per-theme values**. The DS frame (and screens) declare which the
 
 ```
 // a themed color: default (Light) + a Dark override
+// (example values from a chosen brand — here a warm-paper one; use your recorded brand's values)
 "--background": {
   type:"color",
   value:[
-    { value:"#FAF6EF" },                          // Light (warm paper)
-    { value:"#1A1714", theme:{ Mode:"Dark" } }    // Dark (warm ink)
+    { value:"#FAF6EF" },                          // Light (example: warm paper)
+    { value:"#1A1714", theme:{ Mode:"Dark" } }    // Dark (example: warm ink)
   ]
 }
 ```
@@ -112,7 +114,7 @@ step does.
 
 ## Cross-references
 
-- Token **values** for the warm-paper brand + the Expo monochrome preset → [§05 style-guides](../05-style-guides/_index.md).
+- How to **choose & record** the brand whose values fill these tokens (plus worked examples — warm-paper, Expo monochrome) → [§05 style-guides](../05-style-guides/_index.md).
 - Where `$--background` etc. get applied on the DS frame → [§03 ds-organization](../03-ds-organization/_index.md).
 - The full token-contract → CSS-var → framework mapping → `canvas-port` §01-token-contract.
 - Template: [`themed-color-var`](../../templates/themed-color-var.md).
