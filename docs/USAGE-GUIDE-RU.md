@@ -80,16 +80,16 @@ End-to-end развёртка: `forgeplan init`, MCP wiring, CLAUDE.md, docs/age
 `fpl-skills` даёт 38 скиллов (большинство slash-invocable); companion-плагины добавляют 14 `commands/` (dev-toolkit, forgeplan-workflow, forgeplan-orchestra, fpf, laws-of-ux).
 
 > [!TIP]
-> **Не понимаешь какую команду брать?** Запусти `/smith` — он прочитает состояние проекта и порекомендует следующий dispatch (например `/forge-cycle`, `/autorun`, `/forge-cleanup`, `/sprint`). Для обучающего walkthrough по всем 12 контекстам роутинга — `/smith-routing`.
+> **Не понимаешь какую команду брать?** Запусти `/smith` — он прочитает состояние проекта и порекомендует следующий dispatch (например `/forge-cycle`, `/autorun`, `/forge-cleanup`, `/sprint`). Для обучающего walkthrough по всем 14 строкам роутинга — `/smith-routing`.
 
 ### Из `fpl-skills` (флагман)
 
 | Команда | Что делает |
 |---|---|
-| `/smith` | **Мастер-оркестратор / пре-роутер.** Читает состояние проекта, классифицирует контекст по матрице из 12 ситуаций, рекомендует следующий dispatch. Sub-modes: `/smith status` (только снимок) и `/smith handoff` (саммари в конце сессии). Триггеры: `smith`, `кузнец`, `что дальше`, `scrum master`, `master orchestrator`. Полный гайд: [SMITH-RU.md](SMITH-RU.md). Мозг роутинга: [`../plugins/fpl-skills/skills/smith/routing-map.md`](../plugins/fpl-skills/skills/smith/routing-map.md). |
+| `/smith` | **Мастер-оркестратор / пре-роутер.** Читает состояние проекта, классифицирует контекст по матрице из 14 строк, рекомендует следующий dispatch. Sub-modes: `/smith status` (только снимок) и `/smith handoff` (саммари в конце сессии). Триггеры: `smith`, `кузнец`, `что дальше`, `scrum master`, `master orchestrator`. Полный гайд: [SMITH-RU.md](SMITH-RU.md). Мозг роутинга: [`../plugins/fpl-skills/skills/smith/routing-map.md`](../plugins/fpl-skills/skills/smith/routing-map.md). |
 | `/smith-bootstrap` | Оркестратор онбординга greenfield. Свежий репо → pre-flight матрица → `forgeplan init` → каркас CLAUDE.md → каркас AGENTS.md → рекомендации какие плагины поставить → первый Brief → первый PRD. Используй сразу после `git init`. Триггеры: `smith bootstrap`, `greenfield`, `новый проект`. |
-| `/smith-plan <задача>` | Генератор плана под конкретную задачу. Классифицирует задачу в 1 из 12 контекстов routing-map; рендерит Plan-markdown с цитатами методологий + последовательностью dispatch + требованиями к evidence. Используй когда понимаешь *что* хочешь, но не *как*. Триггеры: `smith plan`, `как сделать`, `построй план`. |
-| `/smith-routing` | Обучающий walkthrough матрицы из 12 контекстов. 3 режима: Comparison (`X vs Y`), Walkthrough (показать все 12), Q&A («что для brownfield?»). Read-only — Plan-артефакты не создаёт. Триггеры: `smith routing`, `какая команда для`, `routing map`. |
+| `/smith-plan <задача>` | Генератор плана под конкретную задачу. Классифицирует задачу в 1 из 14 строк routing-map; рендерит Plan-markdown с цитатами методологий + последовательностью dispatch + требованиями к evidence. Используй когда понимаешь *что* хочешь, но не *как*. Триггеры: `smith plan`, `как сделать`, `построй план`. |
+| `/smith-routing` | Обучающий walkthrough матрицы из 14 строк. 3 режима: Comparison (`X vs Y`), Walkthrough (показать все 14), Q&A («что для brownfield?»). Read-only — Plan-артефакты не создаёт. Триггеры: `smith routing`, `какая команда для`, `routing map`. |
 | `/fpl-init` | One-shot развёртка проекта — forgeplan init + MCP wiring + CLAUDE.md + docs/agents/. Idempotent. |
 | `/restore` | Восстановление контекста сессии: ветка, dirty state, recent commits, stash, снипеты памяти. |
 | `/briefing` | Обзор трекера — Orchestra/GitHub Issues/Linear/Jira или локальные TODO. |
@@ -125,6 +125,8 @@ End-to-end развёртка: `forgeplan init`, MCP wiring, CLAUDE.md, docs/age
 | `/forge-audit` | forgeplan-workflow | 6-агентный forgeplan-aware аудит. |
 | `/sync` | forgeplan-orchestra | Двунаправленная синхронизация Forgeplan ↔ Orchestra. |
 | `/session` | forgeplan-orchestra | Session Start Protocol с Inbox Pattern. |
+| `/canvas` | agents-canvas | CANVAS-оркестратор — порт дизайн-системы в код: Pencil→Storybook→фреймворки. hook-gate=Yes (токены до кода). Один раз `/canvas-init`, потом `/canvas`. |
+| `/canvas-init` | agents-canvas | Разовая инициализация состояния CANVAS для текущей ветки (детектит раскладку пакетов, прописывает guarded globs, которые читает hook «токены до кода»). |
 
 ### Legacy команды (dev-toolkit, deprecated)
 
@@ -276,7 +278,7 @@ Worked example (`добавить аутентификацию` end-to-end) — 
 
 **Требует**: ничего.
 
-### Agent packs (7 паков)
+### Agent packs (8 паков)
 
 Специализированные сабагенты, которые `/audit`, `/sprint` и другие команды композят при необходимости.
 
@@ -289,6 +291,7 @@ Worked example (`добавить аутентификацию` end-to-end) — 
 | `agents-sparc` | 5 | SPARC методология — orchestrator + 4 phase specialists |
 | `agents-tdd` | 4 | TDD методология — orchestrator + RED/GREEN агенты + test-validator |
 | `agents-bmad` | 1 | BMAD методология — bmad-orchestrator persona-walk |
+| `agents-canvas` | 8 | CANVAS методология — дизайн-система→код (Pencil→Storybook→фреймворки); мастер canvas-coordinator + 7 ролевых агентов вкл. canvas-storybook-validator |
 
 Ставь только то что используешь. `/audit` и `/sprint` автоматически подхватывают любые установленные паки.
 

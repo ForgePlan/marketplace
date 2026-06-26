@@ -216,6 +216,20 @@ For new ADRs, use `forgeplan new adr` (DDR template for Deep+).
 
 Beyond the vocabulary overlay, the contract-conformant path adds a mandatory independent C4 verifier at every mode gate plus a dedicated non-freezable Research C4+C6 + Plan-gate pin-freshness re-check — discipline `/forge-cycle` does not have. smith Row 4 (production bug, non-trivial) routes here. Note: `/riper` is `hook-gate=No` (no fail-closed hook); its "no code before the Plan is approved" guarantee rests on a human at the Plan→Execute transition, so do not run RIPER work fully autonomously (see ADR-010 / NOTE-013 DEFER-016).
 
+### CANVAS — design-system → code
+
+**Status**: ships in the `agents-canvas` plugin (v0.1.0) as the `/canvas` orchestrator command — the **fifth instance** of the AD/AID-PDLC sub-cycle contract (ADR-010 / RFC-021), alongside `/tdd` (RFC-012), `/bmad` (RFC-013), `/sparc` (RFC-016), and `/riper` (RFC-018).
+
+**What it does**: turns a design system into code — a Pencil design (Figma is a future seam) ported to a Storybook component library plus framework wrappers — walking six phases — **Capture → Audit → Norm-check → Vectorize → Assemble → Spread** — each a fresh-context dispatch with a blocking generator≠verifier gate between stages:
+- Capture → `canvas-designer` (Pencil snapshot + Design NOTE)
+- Audit → `canvas-guardian` (design-system conventions)
+- Norm-check → `canvas-tester` (traceability vs the forgeplan PRD/ADR/EVID chain)
+- Vectorize → `canvas-porter-storybook` (tokens contract + Storybook story specs)
+- Assemble → `canvas-coder` (Web Components / Lit code + stories + visual-regression tests)
+- Spread → `canvas-porter-framework` (React / Vue / Svelte / Angular / Solid wrappers — parallel fan-out)
+
+Beyond the vocabulary overlay, CANVAS is **`hook-gate=Yes`**: a fail-closed `canvas-gate` PreToolUse hook denies writes to `packages/design-system/**` + the framework packages until the tokens RFC is active — a tokens-before-code stop in the same shape as BMAD's no-code-before-plan, enforced structurally rather than by prose (so it binds human edits too, not just dispatched agents). That gate warrants a dedicated master, `canvas-coordinator` (the fourth narrow B-orchestrator), which dispatches every phase + verifier and owns the gate's state file. It ships seven new role agents — including the independent `canvas-storybook-validator`, which checks the built Storybook against the Pencil source only (generator≠verifier vs `canvas-coder`). It reuses RIPER's conditional-freeze pin pattern for its non-freezable Pencil products (the Design NOTE, the DS snapshot, and the port manifest each get a `## Pinned revision` re-checked for freshness at the next gate). smith Row 14 (design-system → code) routes here. CANVAS is **not** a NOTE-027 reopen — it introduces no new ADR-010 contract dimension; it occupies the previously-empty `{hook-gate=Yes, conditional-freeze}` cell and is admitted as a post-closure hook-gate methodology per the ADR-012 hook-gate test (NOTE-027 amendment 2026-06-26).
+
 ### AI-SDLC
 
 **Status**: not named as such in our ecosystem. The closest thing we have is `/autorun` (autopilot orchestrator) which approximates an end-to-end AI-driven dev cycle, but isn't branded as AI-SDLC.
@@ -250,6 +264,7 @@ If you want to read the original BMAD spec → see `sources/BMAD-METHOD/` in the
 | Obsidian | brownfield pack mapping | `obsidian-to-forge.yaml` ingest only |
 | Autoresearch | external companion (`uditgoenka/autoresearch`) | Install separately; ingest via `autoresearch-to-forge.yaml`. See [AUTORESEARCH-INTEGRATION.md](AUTORESEARCH-INTEGRATION.md). |
 | RIPER | `/riper` (fpl-skills) | Research → Innovate → Plan → Execute → Review |
+| CANVAS | `/canvas` (agents-canvas) | Capture → Audit → Norm-check → Vectorize → Assemble → Spread |
 | AI-SDLC | NOT named, approximated by `/autorun` | `/autorun "<task>"` |
 
 ---

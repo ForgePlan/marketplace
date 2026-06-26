@@ -1,7 +1,7 @@
 ---
 name: smith
 description: |
-  Master-orchestrator entry-point. Reads project state (forgeplan_health, memory_recall, git), classifies context (1 of 12: greenfield / brownfield / feature / bug-fix / refactor / decision / audit / discovery / tech-debt / incident), applies methodology routing matrix, returns a structured Plan and recommends specialist-agent dispatches. Calls the `smith` agent for the planning + the routing-map.md for the brain. Default behaviour: status + recommend next step. Sub-modes via args: `bootstrap` (greenfield onboarding), `plan <task>` (per-task plan), `routing` (educational walkthrough), `status` (current state only).
+  Master-orchestrator entry-point. Reads project state (forgeplan_health, memory_recall, git), classifies context (1 of 14: greenfield / brownfield / feature / bug-fix / refactor / decision / audit / discovery / tech-debt / incident), applies methodology routing matrix, returns a structured Plan and recommends specialist-agent dispatches. Calls the `smith` agent for the planning + the routing-map.md for the brain. Default behaviour: status + recommend next step. Sub-modes via args: `bootstrap` (greenfield onboarding), `plan <task>` (per-task plan), `routing` (educational walkthrough), `status` (current state only).
 
   Triggers: "smith", "/smith", "кузнец", "что дальше", "куда идём", "возьми управление", "scrum master", "master orchestrator", "captain mode", "оркеструй", "take charge"
 origin: forgeplan
@@ -11,7 +11,7 @@ origin: forgeplan
 
 `/smith` is the **strategic entry-point** for the ForgePlan ecosystem. When invoked, it inspects
 the current project state (forgeplan artifacts, hindsight memory, git tree), classifies the
-situation against the **12-context routing matrix**, and returns a structured **Plan** that names
+situation against the **14-context routing matrix**, and returns a structured **Plan** that names
 which specialist agents to dispatch in which order, with which methodology backing each step.
 
 This skill is **strategic, not executional**: smith picks the route; the orchestrator walks it.
@@ -148,7 +148,7 @@ Task(subagent_type="agents-pro:smith",
        - git: branch=<name>, uncommitted=<count>, recent_commits=<count>
        - user intent (verbatim): <what the user actually typed; may be empty>
 
-       Read routing-map.md, classify the context against the 12-row matrix,
+       Read routing-map.md, classify the context against the 14-row matrix,
        and return a Plan using templates/smith-plan.md.
      """)
 ```
@@ -159,10 +159,10 @@ the chosen row needs a deeper playbook, and applies the matrix.
 
 ### Step 5 — Smith agent applies routing matrix → returns Plan markdown
 
-The smith agent picks **exactly one row** from the 12-context matrix (no blending — see Hard
+The smith agent picks **exactly one row** from the 14-context matrix (no blending — see Hard
 Rules below) and returns a Plan markdown that fills out `templates/smith-plan.md`:
 
-- **Context-type** (1 of 12)
+- **Context-type** (1 of 14)
 - **Methodology-primary** + **Methodology-secondary**
 - **Dispatch sequence** (numbered list of agent dispatches in execution order)
 - **Evidence requirements** (parseable checklist for the guardian gate)
@@ -287,7 +287,7 @@ These rules are absolute. Violations are CONCERNS at the next Profile B review.
 
 - **`plugins/agents-pro/agents/smith.md`** — the smith agent invoked in default mode Step 4.
   Profile B-orchestrator. Reads the routing map, classifies, returns the Plan.
-- **`plugins/fpl-skills/skills/smith/routing-map.md`** — the smith **brain**. 12 contexts, 25
+- **`plugins/fpl-skills/skills/smith/routing-map.md`** — the smith **brain**. 14 routing rows, 25
   methodology cards, 26-agent index. Loaded by the smith agent on every dispatch.
 - **`plugins/fpl-skills/skills/smith/sections/`** — agentic-RAG section files
   (`01-greenfield.md` through `12-incident.md`). Loaded by the smith agent on demand when the
@@ -367,7 +367,7 @@ User: /smith routing для bug fix
 
 ## References
 
-- **`routing-map.md`** (in this skill folder) — the 12-context routing matrix + 25 methodology
+- **`routing-map.md`** (in this skill folder) — the 14-context routing matrix + 25 methodology
   cards + 26-agent index.
 - **`smith` agent** — `plugins/agents-pro/agents/smith.md`. Profile B-orchestrator. Reads the
   routing map and produces the Plan.

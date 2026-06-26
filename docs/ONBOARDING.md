@@ -13,7 +13,7 @@ You're about to wire up three things to your Claude Code: a **marketplace** (a c
 The vocabulary in two lines:
 
 - **forgeplan** — the artifact engine. It stores your PRDs, RFCs, ADRs, evidence, and decisions as typed structured records (not loose Markdown files). Every artifact has status, links, and a quality score.
-- **smith** — a routing agent. You tell it "I want to build X" or "the prod is on fire" and it picks the right methodology (out of 12 pre-built ones), names which specialist agents to dispatch, and in what order. It never writes code itself — it routes.
+- **smith** — a routing agent. You tell it "I want to build X" or "the prod is on fire" and it picks the right methodology (out of 14 pre-built ones), names which specialist agents to dispatch, and in what order. It never writes code itself — it routes.
 
 Don't try to memorize this — by the end of this guide, smith will be running things and you'll see what each piece does.
 
@@ -138,9 +138,14 @@ Two real examples:
 /smith-plan "users report intermittent 504 on the /sync endpoint, started yesterday"
 # → Row 4 (non-trivial production bug). Methodology: RIPER-5 + 5 Whys.
 #   Dispatch: debugger → coder → tester → guardian. Evidence: reproducer + root cause.
+
+# A design system → code port
+/smith-plan "port the Pencil design system to Storybook + React/Vue/Svelte wrappers"
+# → Row 14 (design system to code). Methodology: CANVAS (hook-gate=Yes — tokens before code).
+#   Dispatch: canvas-coordinator → designer → guardian/tester → porter-storybook → coder → porter-framework.
 ```
 
-Smith picks **exactly one** of the 12 methodology rows — it doesn't blend them. The output is a structured plan you can read in 30 seconds.
+Smith picks **exactly one** of the 14 methodology rows — it doesn't blend them. The output is a structured plan you can read in 30 seconds.
 
 ### When the prod is on fire
 
@@ -175,7 +180,7 @@ If you want to do X, run Y:
 | I just opened a session, what do I do? | `/smith` | Status + recommend next step |
 | I'm starting from zero on a new repo | `/smith-bootstrap` | Greenfield onboarding interview |
 | I have a task in mind | `/smith-plan "<task>"` | Plan + dispatch sequence + methodology |
-| Compare BMAD vs SPARC vs other | `/smith-routing` | Educational walkthrough of all 12 rows |
+| Compare BMAD vs SPARC vs other | `/smith-routing` | Educational walkthrough of all 14 rows |
 | Standard cycle: feature → activate | `/forge-cycle <PRD-NNN>` | Reactive 4-layer enforcer through to activation |
 | Run everything that's unblocked | `/autorun` | Autonomous loop until done or blocked |
 | Audit code or sprint | `/audit` | Multi-expert parallel review (4-6 agents) |

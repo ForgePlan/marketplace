@@ -29,7 +29,7 @@ All artifacts live in `.forgeplan/` (PRD / RFC / ADR / EVID / NOTE structure).
 
 ## Smith — master orchestrator
 
-**Smith** is the master orchestrator of the ForgePlan ecosystem — the canonical first point of contact when an agent (or a human via an agent) does not yet know which methodology, dispatch chain, or pipeline depth applies to the work in front of them. Smith inspects repository state and user intent, applies a **12-context routing matrix** (greenfield, brownfield, feature, bug, refactor, architecture decision, security audit, performance audit, product discovery, tech-debt cleanup, live incident, hotfix), and recommends a specialist-agent dispatch sequence plus evidence requirements per the 4-layer S10–S13 pipeline. Smith is the ForgePlan ecosystem's equivalent of BMAD's "Master" persona — a Profile B-orchestrator agent that **never writes code or activates artifacts**; it routes and recommends. Smith lives in `plugins/agents-pro/agents/smith.md` (the agent) plus `plugins/fpl-skills/skills/smith/` (the 12-context brain) and is reachable from any CLI that honours AGENTS.md.
+**Smith** is the master orchestrator of the ForgePlan ecosystem — the canonical first point of contact when an agent (or a human via an agent) does not yet know which methodology, dispatch chain, or pipeline depth applies to the work in front of them. Smith inspects repository state and user intent, applies a **14-row routing matrix** (greenfield, brownfield, feature, bug, refactor, architecture decision, security audit, performance audit, product discovery, tech-debt cleanup, live incident, hotfix, TDD test-first, design-system→code), and recommends a specialist-agent dispatch sequence plus evidence requirements per the 4-layer S10–S13 pipeline. Smith is the ForgePlan ecosystem's equivalent of BMAD's "Master" persona — a Profile B-orchestrator agent that **never writes code or activates artifacts**; it routes and recommends. Smith lives in `plugins/agents-pro/agents/smith.md` (the agent) plus `plugins/fpl-skills/skills/smith/` (the 14-row brain) and is reachable from any CLI that honours AGENTS.md.
 
 > **Complete workflow reference**: For end-to-end context on how smith fits into the idea-to-delivery cycle, see [Process Reference (EN)](docs/process-from-idea-to-delivery-EN.md) / [Process Reference (RU)](docs/process-from-idea-to-delivery-RU.md). Covers all 5 agent profiles (CRUD-R-A), the 10 artifact kinds, the 4-layer pipeline (S10-S13), and how smith routing integrates with the build/audit cycle.
 
@@ -38,11 +38,11 @@ All artifacts live in `.forgeplan/` (PRD / RFC / ADR / EVID / NOTE structure).
 - At **session start** when unsure what to do next — smith reads `forgeplan_health` + recent journal and proposes the next action.
 - For a **fresh repository** with no artifacts yet — invoke `/smith-bootstrap` to seed Brief / PRD / first ADR via the greenfield row of the routing map.
 - For a **specific task** of any depth — invoke `/smith-plan <task description>` and smith picks the matching row, names the methodology, and lists the dispatch sequence.
-- For **learning the methodology surface** — invoke `/smith-routing` to inspect the 12 contexts + 29 methodology cards without committing to a task.
+- For **learning the methodology surface** — invoke `/smith-routing` to inspect the 14 routing rows + 29 methodology cards without committing to a task.
 - When the existing entry points (`/forge-cycle`, `/autorun`) do not fit — e.g. cross-context work, ambiguous depth, methodology mismatch — smith disambiguates first.
 - **Trigger phrases** (English): `smith`, `what's next`, `scrum master`, `master orchestrator`, `which methodology`, `take charge`, `captain mode`. The agent file at `plugins/agents-pro/agents/smith.md` also registers bilingual Russian triggers per the agent-frontmatter exception in the Language policy section below — those triggers exist in the agent file, not here.
 
-### The 12 contexts smith routes
+### The 14 routing rows smith routes
 
 The full table — primary methodology + dispatch sequence + evidence requirements — lives in `plugins/fpl-skills/skills/smith/routing-map.md`. Compact summary:
 
@@ -60,13 +60,15 @@ The full table — primary methodology + dispatch sequence + evidence requiremen
 | 10 | Product discovery (PDLC) | What to build — JTBD + Lean + Double Diamond |
 | 11 | Tech debt cleanup | Pay-down sprint — A3 + Fishbone + ADR-supersede |
 | 12 | Live incident response | Outage handling — Incident Command + blameless post-mortem |
+| 13 | TDD test-first feature | Test-first discipline — TDD RED→GREEN→REFACTOR + fail-closed test-gate |
+| 14 | Design-system → code | Pencil design → Storybook + framework wrappers — CANVAS + tokens-before-code hook-gate |
 
 Smith **picks exactly one row** per task — methodology cocktails are forbidden. If the situation sits between two rows, smith emits the `<<NEED_USER_INPUT>>` sentinel with ≥3 hypotheses on which row to pick (FPF ADI discipline per Sprint Z7/PRD-059). Only in autonomous-mode incidents where the ambiguity blocks a live response does smith pick the higher-risk row (brownfield > greenfield, audit > feature) and record the deviation in its Plan output. The single-row rule prevents the common failure mode where teams blend BMAD + SPARC + Spec Kit "to cover all bases" and end up with artefacts that match no community pattern — none of the three communities recognise the output as their canonical shape.
 
 ### How smith works internally
 
 1. **Intake** — read user intent (free-form text from `/smith-plan` or session start), call `forgeplan_health` + `forgeplan_session` for current state, infer context tags (greenfield vs brownfield, depth, urgency).
-2. **Route** — match intake against the 12 rows in `routing-map.md`; on ambiguity, dispatch FPF ADI (`forgeplan_reason`) to surface ≥3 candidate rows + recommend one.
+2. **Route** — match intake against the 14 rows in `routing-map.md`; on ambiguity, dispatch FPF ADI (`forgeplan_reason`) to surface ≥3 candidate rows + recommend one.
 3. **Recommend** — emit a structured plan: chosen row, primary + secondary methodology, dispatch sequence (named agents, in order), evidence requirements per S10–S13 layer.
 4. **Hand off** — the orchestrator (Claude Code session, `/forge-cycle`, `/autorun`, or a human) executes the plan; smith does **not** dispatch agents itself unless explicitly asked, because Profile B-orchestrator's role is to recommend, not to mutate state.
 
@@ -111,12 +113,12 @@ Smith's manifest is declared here in AGENTS.md so non-Claude-Code CLIs (Codex, G
 - **Codex CLI**: dispatch via Codex's agent invocation; AGENTS.md is read natively per `codex-rs/core/src/agents_md.rs`.
 - **Goose / Cursor**: dispatch via their respective agent layers; the routing-map skill is portable Markdown.
 
-The 12-context routing table is **CLI-agnostic** — it names methodologies and Profile-A / B / C / D agent roles, not Claude-specific primitives. Each CLI maps the Profile names to its own dispatch model.
+The 14-row routing table is **CLI-agnostic** — it names methodologies and Profile-A / B / C / D agent roles, not Claude-specific primitives. Each CLI maps the Profile names to its own dispatch model.
 
 ### References
 
 - `plugins/agents-pro/agents/smith.md` — the smith agent itself (Profile B-orchestrator master agent, 368 lines).
-- `plugins/fpl-skills/skills/smith/routing-map.md` — the 12-context routing table + 29 methodology cards + agent index.
+- `plugins/fpl-skills/skills/smith/routing-map.md` — the 14-row routing table + 29 methodology cards + agent index.
 - `plugins/fpl-skills/skills/smith/SKILL.md` — the main entry skill (loader + index).
 - `plugins/fpl-skills/skills/smith-bootstrap/SKILL.md` — greenfield bootstrap dispatch path.
 - `plugins/fpl-skills/skills/smith-plan/SKILL.md` — per-task planning skill.

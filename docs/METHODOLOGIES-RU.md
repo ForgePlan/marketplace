@@ -216,6 +216,20 @@
 
 Сверх словарного оверлея contract-conformant путь добавляет обязательный независимый C4-верификатор на каждом гейте фазы плюс выделенный non-freezable Research C4+C6 + перепроверку свежести pin на Plan-гейте — дисциплину, которой у `/forge-cycle` нет. Сюда маршрутизирует Row 4 у smith (production-баг, нетривиальный). Замечание: `/riper` — это `hook-gate=No` (без fail-closed hook); гарантия «нет кода до утверждения Plan» держится на человеке на переходе Plan→Execute, поэтому не запускайте RIPER полностью автономно (см. ADR-010 / NOTE-013 DEFER-016).
 
+### CANVAS — дизайн-система → код
+
+**Статус**: поставляется в плагине `agents-canvas` (v0.1.0) как команда-оркестратор `/canvas` — **пятый инстанс** контракта подцикла AD/AID-PDLC (ADR-010 / RFC-021), рядом с `/tdd` (RFC-012), `/bmad` (RFC-013), `/sparc` (RFC-016) и `/riper` (RFC-018).
+
+**Что делает**: превращает дизайн-систему в код — дизайн в Pencil (Figma — будущий шов) портируется в библиотеку компонентов на Storybook плюс обёртки под фреймворки — проходя шесть фаз — **Capture → Audit → Norm-check → Vectorize → Assemble → Spread** — каждая в свежем контексте, с блокирующим гейтом generator≠verifier между этапами:
+- Capture → `canvas-designer` (снимок Pencil + Design NOTE)
+- Audit → `canvas-guardian` (соглашения дизайн-системы)
+- Norm-check → `canvas-tester` (трассируемость к цепочке PRD/ADR/EVID в forgeplan)
+- Vectorize → `canvas-porter-storybook` (контракт токенов + спецификации stories для Storybook)
+- Assemble → `canvas-coder` (код на Web Components / Lit + stories + визуально-регрессионные тесты)
+- Spread → `canvas-porter-framework` (обёртки React / Vue / Svelte / Angular / Solid — параллельный fan-out)
+
+Сверх словарного оверлея CANVAS — это **`hook-gate=Yes`**: fail-closed PreToolUse-хук `canvas-gate` запрещает запись в `packages/design-system/**` и пакеты фреймворков, пока RFC токенов не активирован — остановка «токены до кода» той же формы что и «нет кода до плана» у BMAD, обеспеченная структурно, а не текстом (поэтому связывает и ручные правки, не только диспатченных агентов). Этот гейт оправдывает выделенного мастера `canvas-coordinator` (четвёртый узкий B-orchestrator), который диспатчит каждую фазу и верификатор и владеет state-файлом гейта. Поставляется семь новых ролевых агентов — включая независимый `canvas-storybook-validator`, который сверяет собранный Storybook только с исходником Pencil (generator≠verifier против `canvas-coder`). Переиспользует паттерн условной заморозки (conditional-freeze pin) из RIPER для своих не-замораживаемых Pencil-продуктов (Design NOTE, снимок дизайн-системы и port manifest получают `## Pinned revision`, свежесть которого перепроверяется на следующем гейте). Сюда маршрутизирует Row 14 у smith (дизайн-система → код). CANVAS — **не** переоткрытие NOTE-027: новой размерности контракта ADR-010 он не вводит; он занимает ранее пустую ячейку `{hook-gate=Yes, conditional-freeze}` и допущен как post-closure hook-gate методология по тесту hook-gate из ADR-012 (поправка к NOTE-027 от 2026-06-26).
+
 ### AI-SDLC
 
 **Статус**: не названо так у нас. Ближайшее что есть — `/autorun` (автопилот-оркестратор) который примерно покрывает end-to-end цикл AI-разработки, но не брендирован как AI-SDLC.
@@ -250,6 +264,7 @@
 | Obsidian | Карта в brownfield-pack | Только ингест через `obsidian-to-forge.yaml` |
 | Autoresearch | Внешний companion (`uditgoenka/autoresearch`) | Ставится отдельно; ингест через `autoresearch-to-forge.yaml`. См. [AUTORESEARCH-INTEGRATION-RU.md](AUTORESEARCH-INTEGRATION-RU.md). |
 | RIPER | `/riper` (fpl-skills) | Research → Innovate → Plan → Execute → Review |
+| CANVAS | `/canvas` (agents-canvas) | Capture → Audit → Norm-check → Vectorize → Assemble → Spread |
 | AI-SDLC | НЕ названо так, приближение через `/autorun` | `/autorun "<задача>"` |
 
 ---

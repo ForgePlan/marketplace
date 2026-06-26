@@ -19,7 +19,7 @@
 | 👋 [Онбординг](docs/ONBOARDING-RU.md) | **Читай первым** — карманный гайд, дружелюбный тон, от нуля до автономного диспатча агентов за 30-60 минут. Настройка Hindsight + справочник команд + матрица «когда ты нужен» |
 | 🚧 [Brownfield-гайд](docs/BROWNFIELD-GUIDE-RU.md) | Спутник онбординга — для существующих кодбейзов, Discover Agent, Strangler Fig + DDD + ACL с конкретными примерами |
 | 🚀 [Developer Journey](docs/DEVELOPER-JOURNEY-RU.md) | Расширенный 30-минутный walkthrough от нуля до первой зашипованной функциональности, с 4 ролевыми walkthrough |
-| 🧭 [Smith — мастер-оркестратор](docs/SMITH-RU.md) | Карта маршрутизации: 12 контекстов × 27 методологий. Когда и как звать `/smith` — BMAD-мастер, который сам подбирает воркфлоу под задачу |
+| 🧭 [Smith — мастер-оркестратор](docs/SMITH-RU.md) | Карта маршрутизации: 14 контекстов × 27 методологий. Когда и как звать `/smith` — BMAD-мастер, который сам подбирает воркфлоу под задачу |
 | 📋 [Памятка по сценариям](docs/PLAYBOOK-RU.md) | Какую команду запустить под какую задачу (пустой проект, brownfield, ночной прогон, …) |
 | 📖 [Руководство](docs/USAGE-GUIDE-RU.md) | Справочник: 18 команд, хуки, правила активации агентов, разбор частых проблем |
 | 🏛 [Архитектура](docs/ARCHITECTURE-RU.md) | Четырёхслойная ментальная модель — Orchestra (где) · Forgeplan (что) · FPF (как думать) · SPARC (как кодить) |
@@ -55,7 +55,7 @@
 
 | Ваша роль | Установить | Зачем |
 |-----------|-----------|-------|
-| **Я хочу мастер-оркестратор** | **fpl-skills + agents-pro** | Начни с `/smith` — маршрутизирует 12 контекстов на 27 методологий |
+| **Я хочу мастер-оркестратор** | **fpl-skills + agents-pro** | Начни с `/smith` — маршрутизирует 14 контекстов на 27 методологий |
 | **Пользователь Forgeplan (рекомендуется)** | **fpl-skills** | Одна установка, 38 скиллов, полный цикл route → ship |
 | Любой разработчик (без forgeplan) | dev-toolkit + agents-core | Универсальные инструменты, без CLI зависимости |
 | Фронтенд | fpl-skills + laws-of-ux + agents-domain | UX + агенты фреймворков |
@@ -94,7 +94,7 @@
 ### Smith — мастер-оркестратор
 
 > [!TIP]
-> **BMAD-мастер экосистемы ForgePlan.** Маршрутизирует 12 контекстов (greenfield, brownfield, audit, sprint, refactor, supersede, …) к нужной методологии + последовательности dispatch. Зови `/smith` когда понимаешь чего хочешь, но не знаешь какую команду запускать.
+> **BMAD-мастер экосистемы ForgePlan.** Маршрутизирует 14 контекстов (greenfield, brownfield, audit, sprint, refactor, supersede, …) к нужной методологии + последовательности dispatch. Зови `/smith` когда понимаешь чего хочешь, но не знаешь какую команду запускать.
 
 Smith — Profile B-orchestrator агент с четырьмя скилами. Читает задачу, выбирает методологию из routing-map на 27 записей (BMAD, OpenSpec, FPF ADI, C4, SPARC, …) и диспатчит правильную цепочку скилов. Используй как парадную дверь к любой нетривиальной задаче в этом маркетплейсе.
 
@@ -102,7 +102,7 @@ Smith — Profile B-orchestrator агент с четырьмя скилами. 
 |---|---|
 | Агент `smith` | `plugins/agents-pro/agents/smith.md` |
 | Скиллы `/smith` (×4) | `plugins/fpl-skills/skills/smith*/` |
-| Routing map (12 ctx × 27 методологий) | `plugins/fpl-skills/skills/smith/routing-map.md` |
+| Routing map (14 контекстов × 27 методологий) | `plugins/fpl-skills/skills/smith/routing-map.md` |
 
 Полный гайд: [`docs/SMITH-RU.md`](docs/SMITH-RU.md).
 
@@ -267,7 +267,7 @@ Smith — Profile B-orchestrator агент с четырьмя скилами. 
 
 ## Пакеты агентов
 
-Семь специализированных пакетов с 69 готовыми агентами для Claude Code.
+Восемь специализированных пакетов с 77 готовыми агентами для Claude Code.
 
 Установка любого пакета: `/plugin install <имя-пакета>@ForgePlan-marketplace`
 
@@ -280,6 +280,7 @@ Smith — Profile B-orchestrator агент с четырьмя скилами. 
 | [agents-sparc](plugins/agents-sparc/) | 5 | SPARC: spec → pseudo → architecture → refinement | `agents-sparc` |
 | [agents-tdd](plugins/agents-tdd/) | 4 | TDD instance #1 (RFC-012): tdd-orchestrator + RED/GREEN агенты + test-validator | `agents-tdd` |
 | [agents-bmad](plugins/agents-bmad/) | 1 | BMAD instance #2 (RFC-013): bmad-orchestrator persona-walk + no-code-before-plan gate | `agents-bmad` |
+| [agents-canvas](plugins/agents-canvas/) | 8 | CANVAS instance #5 (RFC-021): design-system→code (`/canvas`, hook-gate=Yes) — canvas-coordinator master + tokens-before-code gate + 7 role agents (incl. canvas-storybook-validator) | `agents-canvas` |
 
 ---
 

@@ -4,7 +4,7 @@
 
 > The "BMAD Master" of the ForgePlan ecosystem — a Profile B-orchestrator agent that reads project state, picks the right methodology per task, and recommends a dispatch sequence of specialist agents.
 
-Smith is the canonical first point of contact when you (or another agent) don't yet know which methodology, dispatch chain, or pipeline depth applies to the work in front of you. It inspects the repository, classifies the situation against a **12-context routing matrix**, and returns a structured Plan naming agents, methodologies, and evidence requirements per the 4-layer S10–S13 pipeline. Smith **never writes code or activates artifacts** — it routes and recommends.
+Smith is the canonical first point of contact when you (or another agent) don't yet know which methodology, dispatch chain, or pipeline depth applies to the work in front of you. It inspects the repository, classifies the situation against a **14-context routing matrix**, and returns a structured Plan naming agents, methodologies, and evidence requirements per the 4-layer S10–S13 pipeline. Smith **never writes code or activates artifacts** — it routes and recommends.
 
 
 > **Wider context**: For the complete idea-to-delivery process reference (covering all 5 agent profiles, 10 artifact kinds, 4-layer pipeline, and how smith integrates with the build cycle), see [Process Reference (EN)](process-from-idea-to-delivery-EN.md) / [(RU)](process-from-idea-to-delivery-RU.md).
@@ -36,7 +36,7 @@ Smith is the canonical first point of contact when you (or another agent) don't 
 - At **session start** when unsure what to do next — smith reads `forgeplan_health` + recent journal and proposes the next action.
 - On a **fresh repo** with no artifacts — `/smith-bootstrap` seeds Brief / PRD / first ADR via the greenfield row.
 - For a **specific task** of any depth — `/smith-plan <task>` picks the matching row, names the methodology, lists the dispatch sequence.
-- For **learning the methodology surface** — `/smith-routing` inspects the 12 contexts + 29 methodology cards without committing to a task.
+- For **learning the methodology surface** — `/smith-routing` inspects the 14 routing rows + 29 methodology cards without committing to a task.
 - When existing entry points (`/forge-cycle`, `/autorun`) don't fit — cross-context work, ambiguous depth, methodology mismatch.
 - **Trigger phrases** (EN / RU): `smith`, `кузнец`, `что дальше`, `what's next`, `scrum master`, `master orchestrator`, `which methodology`, `какую методологию`.
 
@@ -45,7 +45,7 @@ Smith is the canonical first point of contact when you (or another agent) don't 
 
 ---
 
-## The 12 contexts smith routes
+## The 14 contexts smith routes
 
 Full table with dispatch sequences + evidence requirements lives in [`../plugins/fpl-skills/skills/smith/routing-map.md`](../plugins/fpl-skills/skills/smith/routing-map.md). Compact summary:
 
@@ -63,8 +63,10 @@ Full table with dispatch sequences + evidence requirements lives in [`../plugins
 | 10 | Product discovery (PDLC) | Jobs-To-Be-Done + Lean Startup + Double Diamond |
 | 11 | Tech debt cleanup | A3 Problem Solving + Fishbone + ADR-supersede |
 | 12 | Live incident response | Incident Command System + Blameless post-mortem |
+| 13 | TDD-first feature (tests frozen before code) | Enforced-TDD (RFC-012, ADR-010 #1, hook-gate=Yes) |
+| 14 | Design-system → code (Pencil/Figma → Storybook → framework wrappers) | CANVAS (RFC-021, ADR-010 #5, hook-gate=Yes) |
 
-Each row binds a primary methodology + 1–2 secondaries + a named dispatch sequence + the evidence artifacts that must exist before activation. Rows 1–4, 6–11 produce Standard+ artifacts gated by the full S10–S13 pipeline. Row 5 (trivial hotfix) is explicitly scoped to S12+S13 only. Row 12 (live incident) splits into a fire-fighting phase (no PRD during the outage) and a post-mortem phase (BMAD-gated PRD afterward).
+Each row binds a primary methodology + 1–2 secondaries + a named dispatch sequence + the evidence artifacts that must exist before activation. Rows 1–4, 6–11, 13–14 produce Standard+ artifacts gated by the full S10–S13 pipeline. Row 5 (trivial hotfix) is explicitly scoped to S12+S13 only. Row 12 (live incident) splits into a fire-fighting phase (no PRD during the outage) and a post-mortem phase (BMAD-gated PRD afterward). Rows 13 (TDD) and 14 (CANVAS) are AD/AID-PDLC sub-cycle instances (ADR-010) — both `hook-gate=Yes`, each dispatched through its own master (`tdd-orchestrator`, `canvas-coordinator`).
 
 Why one row per task: blending BMAD + SPARC + Spec Kit "to cover all bases" produces artifacts that none of the three communities recognise as their canonical shape. The team then has to re-invent review checklists, agent prompts, and quality gates from scratch — and the methodology benefits evaporate.
 
@@ -91,7 +93,7 @@ Every row of the routing map cites a primary methodology + 1–2 secondaries —
 Smith follows a 4-step procedure on every invocation:
 
 1. **Intake** — read user intent (free-form text from `/smith-plan` or session start), call `forgeplan_health` + `forgeplan_session` for current state, scan `git status` + `git log --oneline -10`, and infer context tags (greenfield vs brownfield, depth, urgency).
-2. **Classify** — match intake against the 12 rows in [`routing-map.md`](../plugins/fpl-skills/skills/smith/routing-map.md); on ambiguity, dispatch FPF ADI (`forgeplan_reason`) to surface ≥3 candidate rows and recommend one. Risk-asymmetric tie-break: brownfield over greenfield, audit over feature, incident over everything.
+2. **Classify** — match intake against the 14 rows in [`routing-map.md`](../plugins/fpl-skills/skills/smith/routing-map.md); on ambiguity, dispatch FPF ADI (`forgeplan_reason`) to surface ≥3 candidate rows and recommend one. Risk-asymmetric tie-break: brownfield over greenfield, audit over feature, incident over everything.
 3. **Recommend** — emit a structured Plan: chosen row, primary + secondary methodology, dispatch sequence (named agents, in order), evidence requirements per the S10–S13 pipeline (FPF design / BMAD quality gate / OpenSpec structure / Forgeplan automation).
 4. **Hand off** — the orchestrator (Claude Code session, `/forge-cycle`, `/autorun`, or a human) executes the Plan; smith does **not** dispatch agents itself unless explicitly asked. Plan output is consumed by the orchestrator one agent at a time, with gates after each step.
 
@@ -150,7 +152,7 @@ Smith's manifest is declared in [`../AGENTS.md`](../AGENTS.md) so non-Claude-Cod
 - **Gemini CLI** — equivalent dispatch via the Gemini agent SDK; the routing-map skill loads via the `.agents/skills/smith/` interop directory.
 - **Goose / Cursor** — dispatch via their respective agent layers; the routing-map skill is portable Markdown.
 
-The 12-context routing table is **CLI-agnostic** — it names methodologies and Profile A/B/C/D agent roles, not Claude-specific primitives. Each CLI maps Profile names to its own dispatch model.
+The 14-context routing table is **CLI-agnostic** — it names methodologies and Profile A/B/C/D agent roles, not Claude-specific primitives. Each CLI maps Profile names to its own dispatch model.
 
 ---
 
@@ -164,7 +166,7 @@ The 12-context routing table is **CLI-agnostic** — it names methodologies and 
 - [`../AGENTS.md`](../AGENTS.md) — cross-CLI manifest with the canonical smith section
 - [`../plugins/agents-pro/agents/smith.md`](../plugins/agents-pro/agents/smith.md) — the smith agent body (370 lines, Profile B-orchestrator master agent)
 - [`../plugins/fpl-skills/skills/smith/SKILL.md`](../plugins/fpl-skills/skills/smith/SKILL.md) — main `/smith` entry-point skill
-- [`../plugins/fpl-skills/skills/smith/routing-map.md`](../plugins/fpl-skills/skills/smith/routing-map.md) — 12-context table + 29 methodology cards + agent index
+- [`../plugins/fpl-skills/skills/smith/routing-map.md`](../plugins/fpl-skills/skills/smith/routing-map.md) — 14-context table + 29 methodology cards + agent index
 - [`../plugins/fpl-skills/skills/smith-bootstrap/SKILL.md`](../plugins/fpl-skills/skills/smith-bootstrap/SKILL.md) — greenfield bootstrap dispatch path
 - [`../plugins/fpl-skills/skills/smith-plan/SKILL.md`](../plugins/fpl-skills/skills/smith-plan/SKILL.md) — per-task planning skill
 - [`../plugins/fpl-skills/skills/smith-routing/SKILL.md`](../plugins/fpl-skills/skills/smith-routing/SKILL.md) — routing-table inspection skill

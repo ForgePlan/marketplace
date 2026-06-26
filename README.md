@@ -19,7 +19,7 @@ Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/
 | 👋 [Onboarding](docs/ONBOARDING.md) | **Read this first** — pocket guide, friendly tone, get from zero to autonomous agent dispatch in 30-60 min. Hindsight setup + command cookbook + when-you're-needed matrix |
 | 🚧 [Brownfield guide](docs/BROWNFIELD-GUIDE.md) | Companion to Onboarding — existing codebases, Discover Agent, Strangler Fig + DDD + ACL with concrete examples |
 | 🚀 [Developer Journey](docs/DEVELOPER-JOURNEY.md) | Longer 30-min walkthrough from zero to your first shipped feature, with 4 persona Day 0 walkthroughs |
-| 🧭 [Smith — master orchestrator](docs/SMITH.md) | Routing map: 12 contexts × 27 methodologies. When and how to dispatch `/smith` as the BMAD-style master that picks the right workflow for the task |
+| 🧭 [Smith — master orchestrator](docs/SMITH.md) | Routing map: 14 routing rows × 27 methodologies. When and how to dispatch `/smith` as the BMAD-style master that picks the right workflow for the task |
 | 📋 [Playbook](docs/PLAYBOOK.md) | Use-case matrix: which command for which scenario (empty project, brownfield, night-run, …) |
 | 📖 [Usage Guide](docs/USAGE-GUIDE.md) | Reference manual: 18 commands, hooks, agent activation rules, troubleshooting |
 | 🏛 [Architecture](docs/ARCHITECTURE.md) | 4-layer mental model — Orchestra (where) · Forgeplan (what) · FPF (how to think) · SPARC (how to code) |
@@ -57,7 +57,7 @@ Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/
 
 | Your role | Install these | Why |
 |-----------|--------------|-----|
-| **I want a master orchestrator** | **fpl-skills + agents-pro** | Start here → `/smith` routes 12 contexts to 27 methodologies |
+| **I want a master orchestrator** | **fpl-skills + agents-pro** | Start here → `/smith` routes 14 routing rows to 27 methodologies |
 | **Forgeplan user (recommended)** | **fpl-skills** | One install, 38 skills, full route → ship loop |
 | Any developer (no forgeplan) | dev-toolkit + agents-core | Universal tools, no CLI dependency |
 | Frontend | fpl-skills + laws-of-ux + agents-domain | UX + framework agents |
@@ -96,7 +96,7 @@ Full **route → shape → build → audit → activate** loop in one install. I
 ### Smith — master orchestrator
 
 > [!TIP]
-> **The BMAD Master of the ForgePlan ecosystem.** Routes 12 contexts (greenfield, brownfield, audit, sprint, refactor, supersede, …) to the right methodology + dispatch sequence. Use `/smith` when you know what you want but don't know which command to run.
+> **The BMAD Master of the ForgePlan ecosystem.** Routes 14 routing rows (greenfield, brownfield, audit, sprint, refactor, supersede, …) to the right methodology + dispatch sequence. Use `/smith` when you know what you want but don't know which command to run.
 
 Smith is a Profile B-orchestrator agent paired with four skills. It reads the task, picks a methodology from a 27-entry routing map (BMAD, OpenSpec, FPF ADI, C4, SPARC, …), and dispatches the correct skill chain. Treat it as the front door for any non-trivial task in this marketplace.
 
@@ -104,7 +104,7 @@ Smith is a Profile B-orchestrator agent paired with four skills. It reads the ta
 |---|---|
 | `smith` agent | `plugins/agents-pro/agents/smith.md` |
 | `/smith` skills (×4) | `plugins/fpl-skills/skills/smith*/` |
-| Routing map (12 ctx × 27 methodologies) | `plugins/fpl-skills/skills/smith/routing-map.md` |
+| Routing map (14 routing rows × 27 methodologies) | `plugins/fpl-skills/skills/smith/routing-map.md` |
 
 Full guide: [`docs/SMITH.md`](docs/SMITH.md).
 
@@ -293,7 +293,7 @@ All 6 sections authored: `claude-md`, `plugins`, `agents`, `hooks`, `mcp`, `anti
 
 ## Agent Packs
 
-Seven specialized agent packs providing 69 ready-to-use agents for Claude Code.
+Eight specialized agent packs providing 77 ready-to-use agents for Claude Code.
 
 Install any pack: `/plugin install <pack-name>@ForgePlan-marketplace`
 
@@ -306,6 +306,7 @@ Install any pack: `/plugin install <pack-name>@ForgePlan-marketplace`
 | [agents-sparc](plugins/agents-sparc/) | 5 | SPARC methodology: spec → pseudo → architecture → refinement | `agents-sparc` |
 | [agents-tdd](plugins/agents-tdd/) | 4 | TDD instance #1 (RFC-012): tdd-orchestrator + RED/GREEN agents + test-validator | `agents-tdd` |
 | [agents-bmad](plugins/agents-bmad/) | 1 | BMAD instance #2 (RFC-013): bmad-orchestrator persona-walk + no-code-before-plan gate | `agents-bmad` |
+| [agents-canvas](plugins/agents-canvas/) | 8 | CANVAS instance #5 (RFC-021): design-system→code (`/canvas`, hook-gate=Yes) — canvas-coordinator master + tokens-before-code gate + 7 role agents (incl. canvas-storybook-validator) | `agents-canvas` |
 
 ---
 
