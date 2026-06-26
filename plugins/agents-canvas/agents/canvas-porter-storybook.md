@@ -127,4 +127,3 @@ If blocked on a knowledge gap, emit `<<NEED_USER_INPUT: ...>>` at the start of a
 | Missing a theme axis in the oracle | Capture every canonical variant + state in BOTH Light and Dark. |
 | Stale Style-Dictionary / Storybook API | context7 `resolve-library-id` + `query-docs` before writing config. |
 | Encoding a Pencil detach as a story variant | A detach is a Guardian finding — flag it, do not vectorize it. |
-</content>

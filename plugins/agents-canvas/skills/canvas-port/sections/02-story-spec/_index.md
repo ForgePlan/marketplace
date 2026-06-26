@@ -138,4 +138,3 @@ the visual tests. No spec entry -> no component -> the Tester flags a coverage g
    variants are untestable.
 5. **context7 before writing CSF** — verify the Storybook `web-components` story shape and the Lit
    binding syntax; prompt the user to use context7 on any version question.
-</content>

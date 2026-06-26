@@ -143,4 +143,3 @@ If blocked on a knowledge gap, emit `<<NEED_USER_INPUT: ...>>` at the start of a
 | Stale Lit / Storybook API | context7 `resolve-library-id` + `query-docs` before coding. |
 | Reporting green with no runner installed | A missing runner is CONCERNS with the command + output, never PASS. |
 | Encoding a detach as component structure | Slots / `::part` / custom properties only; a detach is a Guardian finding. |
-</content>

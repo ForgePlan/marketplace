@@ -141,4 +141,3 @@ If blocked on a knowledge gap, emit `<<NEED_USER_INPUT: ...>>` at the start of a
 | Stale interop API | context7 `resolve-library-id` + `query-docs` for your assigned framework before the wrapper. |
 | Writing another framework's package | Own only `packages/canvas-<framework>/`; sibling porters own the rest — cross-package writes break disjoint ownership (FR-9). |
 | Assuming worktree isolation | Verify `git worktree list` != main before writing; assume-without-verify is the same failure class as trusting a self-report. |
-</content>

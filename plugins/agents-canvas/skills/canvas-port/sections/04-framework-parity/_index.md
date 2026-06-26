@@ -120,4 +120,3 @@ test('react wrapper reaches visual parity with the canonical Primary story', asy
    `CUSTOM_ELEMENTS_SCHEMA`/`isCustomElement`/`prop:`, SSR/DSD — per the gotchas table.
 5. **context7 before each wrapper** — resolve + query that framework's custom-element interop and Lit's
    wrapper utilities; prompt the user to use context7 on any version question.
-</content>

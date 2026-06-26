@@ -159,4 +159,3 @@ supersede/new-cycle action, not an inline edit.
 4. **Two axes only in MVP: Light + Dark.** Adding an axis is a contract change -> new Gate V.
 5. **context7 before the config** — verify the Style-Dictionary v4 API and the Lit `static styles`
    pattern; prompt the user to use context7 on any version question.
-</content>

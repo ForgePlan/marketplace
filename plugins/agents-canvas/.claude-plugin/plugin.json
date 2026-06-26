@@ -24,7 +24,7 @@
     "smith",
     "context7"
   ],
-  "category": "workflow",
+  "category": "methodology",
   "requires": {
     "cli": [],
     "mcp": ["pencil"],

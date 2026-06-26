@@ -89,5 +89,4 @@ orchestrator activate the tokens RFC, and only then is the Coder unblocked to wr
 - `canvas-conventions` (Guardian) + `canvas-truth-map` (Tester) — the Gate A+N this port follows.
 - Agents: `canvas-porter-storybook` (V), `canvas-coder` (A), `canvas-porter-framework` (S).
 - `/canvas-review` — the post-export code + UX gate over the generated `*.ts/*.css`.
-</content>
 </invoke>

@@ -114,4 +114,3 @@ input:
    `postVisit` hook.
 5. **context7 before wiring** — verify the test-runner hook signature and the screenshot matcher API;
    prompt the user to use context7 on any version question.
-</content>
