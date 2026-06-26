@@ -8,6 +8,18 @@
 
 ---
 
+## Repository map
+
+New here, or need to find where something lives? **[`docs/INDEX.md`](docs/INDEX.md)** is the single repository map / file-RAG — it locates every plugin, agent (by pack), skill, hook, script, doc, and the forgeplan artifacts, plus a "how to find X" lookup.
+
+- **Plugins + versions** → `.claude-plugin/marketplace.json` (19: 10 workflow + 8 agent packs + 1 memory)
+- **Agents** → `plugins/<pack>/agents/`; **skills** → `plugins/<plugin>/skills/<skill>/SKILL.md`; **agent authoring** → `plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md`
+- **Methodology routing (smith)** → `plugins/fpl-skills/skills/smith/routing-map.md` (14 rows)
+- **Guides** → `docs/` (indexed in `docs/INDEX.md`); **validation** → `scripts/validate-all-plugins.sh` + `scripts/ci/`
+- **forgeplan artifacts (PRD/RFC/ADR/EVID/NOTE)** → the **parent workspace** `../.forgeplan/` (NOT in this git repo) — via forgeplan MCP/CLI
+
+---
+
 ## 4-Layer Pipeline (S10→S13) — methodology conveyor
 
 Every Standard+ artifact passes through 4 enforced layers before activation:

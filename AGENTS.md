@@ -13,6 +13,10 @@
 
 ForgePlan marketplace is a catalog of plugins for AI coding agents with a central `forgeplan` MCP server that delivers an **artifact-driven SDLC pipeline**.
 
+## Repository map
+
+**[`docs/INDEX.md`](docs/INDEX.md)** is the single navigation map — where every plugin / agent / skill / hook / doc / forgeplan artifact lives, with a "how to find X" lookup. Quick orientation: plugins in `plugins/<name>/` (catalog: `.claude-plugin/marketplace.json`); agents in `plugins/<pack>/agents/`; skills in `plugins/<plugin>/skills/<skill>/SKILL.md`; smith routing in `plugins/fpl-skills/skills/smith/routing-map.md`; guides in `docs/`; **forgeplan artifacts live in the parent workspace `../.forgeplan/`, not this repo** (via forgeplan MCP/CLI).
+
 ## Architecture canonical reference
 
 Read these in order to understand the pipeline:
