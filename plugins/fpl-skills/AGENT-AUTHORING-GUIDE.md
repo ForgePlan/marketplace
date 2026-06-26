@@ -1272,6 +1272,7 @@ affected_files:
 
 - Original surfacing: PRD-038 Sprint L (forgeplan_dispatch verdict = LIMITED-USE precisely because of this nudge).
 - Mental model candidate: extend `mm-pipeline-methodology` with "PRD authoring → include affected_files for dispatch".
+- **Canonical parallel-orchestration guidance**: `plugins/fpl-skills/skills/smith/routing-map.md` § "Parallel dispatch & orchestration discipline". `affected_files` (this step) is the input that lets `forgeplan_dispatch` bucket work into file-disjoint parallel siblings; that section covers the rest of the discipline — Workflow tool vs AgentTeams, `blockedBy` sequencing, strict file ownership, git-worktree isolation for concurrent code writers vs on-branch (no-worktree) doc/markdown writers, and serial generator≠verifier gate chains.
 
 ---
 

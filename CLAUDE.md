@@ -1,10 +1,10 @@
 # ForgePlan Marketplace — Claude Code Configuration
 
 **Repo**: [ForgePlan/marketplace](https://github.com/ForgePlan/marketplace)
-**Catalog version**: 1.93.1
-**Plugins**: 18 (10 workflow + 7 agent packs + 1 memory plugin fpl-hsmem) — adds the AD/AID-PDLC sub-cycle instance packs agents-tdd (#1) + agents-bmad (#2) alongside agents-sparc (#3, finished to B-orchestrator) + smith master-orchestrator (EPIC-002, Profile B-orchestrator)
-**Agents**: 25 of 75 forgeplan-aware (PRD-026 B2 paradigm — `disallowedTools` denylist; + the AD/AID-PDLC sub-cycle masters tdd-orchestrator / bmad-orchestrator, sparc-orchestrator finished to B-orchestrator, and the C4 verifier tdd-test-validator. **`memory: project` REJECTED Sprint R** — Hindsight covers use case.)
-**Last Updated**: 2026-06-16 (self-aware integrity scanner patch — /decay-watch + decay-reminder.sh now treat NOTE-013 `Kind: finding` as a SEPARATE machine track (excluded from human-deferral counts/triggers, owned by /forge-heal; RFC-019 R-8 / RFC-020 follow-up); + a live /forge-heal AUTO-path demo on EVID-135 (phase heal validate→evidence then rollback — reversibility verified, prod restored). brick 2 (Layer 4 heal-or-task): NEW /forge-heal skill — propose-not-silent 3-tier dispatch (AUTO/ADI/USER) of findings onto PRD-032; AUTO auto-fixes only 2 reversible kinds (phase_mismatch, complete stuck_draft) after batch-confirm + journal + one-call rollback (phase rollback via `phase_advance --to`, not undo_last); USER → tracked NOTE-013 task; never silent-mutates (PRD-074/RFC-020, EVID-177 review CONCERNS→resolved). brick 1 (2026-06-09): /forge-insight + insight-watchdog + accurate session counts + decay-reminder fix (PRD-074/RFC-019). ADR-014 cross-CLI decision activated. Earlier 2026-06-02: shipped PR #140-143 (DEFER-018/016/012/005..009). The AD/AID-PDLC sub-cycle program is CLOSED at 4 instances (NOTE-027); the ADR-012 gate is rendered `hook-gate` in shipped artifacts, Cyrillic codename retained only in immutable graph records. catalog v1.93.1, fpl-skills v1.49.1, cc-best v1.1.0, agents-sparc v1.3.2, agents-tdd v0.2.1, agents-bmad v0.1.2.)
+**Catalog version**: 1.94.0
+**Plugins**: 19 (10 workflow + 8 agent packs + 1 memory plugin fpl-hsmem) — adds the AD/AID-PDLC sub-cycle instance packs agents-tdd (#1) + agents-bmad (#2) + agents-canvas (#5 — CANVAS design-system→code, RFC-021, hook-gate=Yes) alongside agents-sparc (#3, finished to B-orchestrator) + smith master-orchestrator (EPIC-002, Profile B-orchestrator)
+**Agents**: 33 of 83 forgeplan-aware (PRD-026 B2 paradigm — `disallowedTools` denylist; + the AD/AID-PDLC sub-cycle masters tdd-orchestrator / bmad-orchestrator, sparc-orchestrator finished to B-orchestrator, and the C4 verifier tdd-test-validator. **`memory: project` REJECTED Sprint R** — Hindsight covers use case.)
+**Last Updated**: 2026-06-26 (CANVAS design-system→code methodology shipped — agents-canvas v0.1.0, instance #5 of the AD/AID-PDLC contract (RFC-021, hook-gate=Yes per the ADR-012 test; NOT a program reopen — admitted by the NOTE-027 2026-06-26 amendment; canvas-coordinator is the 4th narrow B-orchestrator). Earlier 2026-06-16: self-aware integrity scanner patch — /decay-watch + decay-reminder.sh now treat NOTE-013 `Kind: finding` as a SEPARATE machine track (excluded from human-deferral counts/triggers, owned by /forge-heal; RFC-019 R-8 / RFC-020 follow-up); + a live /forge-heal AUTO-path demo on EVID-135 (phase heal validate→evidence then rollback — reversibility verified, prod restored). brick 2 (Layer 4 heal-or-task): NEW /forge-heal skill — propose-not-silent 3-tier dispatch (AUTO/ADI/USER) of findings onto PRD-032; AUTO auto-fixes only 2 reversible kinds (phase_mismatch, complete stuck_draft) after batch-confirm + journal + one-call rollback (phase rollback via `phase_advance --to`, not undo_last); USER → tracked NOTE-013 task; never silent-mutates (PRD-074/RFC-020, EVID-177 review CONCERNS→resolved). brick 1 (2026-06-09): /forge-insight + insight-watchdog + accurate session counts + decay-reminder fix (PRD-074/RFC-019). ADR-014 cross-CLI decision activated. Earlier 2026-06-02: shipped PR #140-143 (DEFER-018/016/012/005..009). The AD/AID-PDLC sub-cycle proving-program closed at 4 instances FOR NEW DIMENSIONS (NOTE-027); CANVAS (#5) adds no new dimension and is admitted as a post-closure hook-gate=Yes methodology per the ADR-012 test (NOTE-027 amendment 2026-06-26), not a reopen; the ADR-012 gate is rendered `hook-gate` in shipped artifacts, Cyrillic codename retained only in immutable graph records. catalog v1.94.0, fpl-skills v1.50.0, cc-best v1.1.0, agents-sparc v1.3.2, agents-tdd v0.2.1, agents-bmad v0.2.0, agents-canvas v0.1.0.)
 
 ---
 
@@ -666,13 +666,13 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # rulesets
 
 ---
 
-## Plugin versions (catalog v1.93.1)
+## Plugin versions (catalog v1.94.0)
 
 ### Workflow plugins
 
 | Plugin | Version |
 |--------|:-------:|
-| **fpl-skills** | **1.49.1** (v1.49.1 scanner patch — /decay-watch + decay-reminder.sh treat NOTE-013 `Kind: finding` as a separate machine track (excluded from human-deferral counts/triggers), RFC-019 R-8; v1.49.0 self-aware integrity brick 2 — /forge-heal skill: Layer 4 heal-or-task, propose-not-silent 3-tier (AUTO/ADI/USER), AUTO fixes 2 reversible kinds only, USER→NOTE-013 task, PRD-074/RFC-020; v1.48.0 brick 1 — /forge-insight + insight-watchdog + accurate session counts + decay-reminder flag fix, PRD-074/RFC-019; v1.46.0 /conformance-vectors SDD enrichment, DEFER-012; v1.45.0 /autorun RIPER Plan→Execute human gate, DEFER-016; v1.44.1 /riper FR-5 pin-hash basis, DEFER-018; AD/AID-PDLC instances #1-#4 smith routing + /methodology-check Step 10; EPIC-002 smith 4-skill cluster) |
+| **fpl-skills** | **1.50.0** (v1.50.0 CANVAS smith routing row + 'Parallel dispatch & orchestration discipline' note in routing-map + AGENT-AUTHORING-GUIDE pointer, RFC-021; v1.49.1 scanner patch — /decay-watch + decay-reminder.sh treat NOTE-013 `Kind: finding` as a separate machine track (excluded from human-deferral counts/triggers), RFC-019 R-8; v1.49.0 self-aware integrity brick 2 — /forge-heal skill: Layer 4 heal-or-task, propose-not-silent 3-tier (AUTO/ADI/USER), AUTO fixes 2 reversible kinds only, USER→NOTE-013 task, PRD-074/RFC-020; v1.48.0 brick 1 — /forge-insight + insight-watchdog + accurate session counts + decay-reminder flag fix, PRD-074/RFC-019; v1.46.0 /conformance-vectors SDD enrichment, DEFER-012; v1.45.0 /autorun RIPER Plan→Execute human gate, DEFER-016; v1.44.1 /riper FR-5 pin-hash basis, DEFER-018; AD/AID-PDLC instances #1-#4 smith routing + /methodology-check Step 10; EPIC-002 smith 4-skill cluster) |
 | **cc-best** | **1.1.0** (all 6 sections authored: claude-md + plugins + agents + hooks + mcp + anti-patterns — RFC-005..009 / DEFER-005..009 closed) |
 | **fpl-hsmem** | 2.1.0 |
 | **forgeplan-workflow** | **1.12.0** (Sprint Z7: Step 4.5 FPF ADI mandatory for Standard+; Sprint Z6: Step 6.5 BMAD adversarial review mandatory for Standard+) |
@@ -694,7 +694,8 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # rulesets
 | **agents-github** | 1.1.0 | — |
 | **agents-sparc** | 1.3.2 | SPARC instance #3 (RFC-016) — sparc-orchestrator → B-orchestrator + /sparc skill |
 | **agents-tdd** | 0.2.1 | TDD instance #1 (RFC-012) — tdd-orchestrator + RED/GREEN agents + tdd-test-validator + fail-closed gate |
-| **agents-bmad** | 0.1.2 | BMAD instance #2 (RFC-013) — bmad-orchestrator persona-walk + no-code-before-plan gate |
+| **agents-bmad** | 0.2.0 | BMAD instance #2 (RFC-013) — bmad-orchestrator persona-walk + no-code-before-plan gate |
+| **agents-canvas** | 0.1.0 | CANVAS instance #5 (RFC-021) — canvas-coordinator design→code master + tokens-before-code hook-gate + 7 role agents (incl. canvas-storybook-validator) |
 
 > Source of truth: `.claude-plugin/marketplace.json` and `plugins/*/.claude-plugin/plugin.json`. Always verify before PR.
 
