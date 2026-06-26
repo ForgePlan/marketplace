@@ -80,16 +80,16 @@ Mirror of root [README.md](../README.md) "Where to Start?" matrix, with cross-li
 `fpl-skills` provides 38 skills (most slash-invocable); the companion plugins add 14 `commands/` (dev-toolkit, forgeplan-workflow, forgeplan-orchestra, fpf, laws-of-ux).
 
 > [!TIP]
-> **Not sure which command to use?** Run `/smith` — it reads project state and recommends the next dispatch (e.g. `/forge-cycle`, `/autorun`, `/forge-cleanup`, `/sprint`). For an educational walkthrough of all 12 routing contexts, run `/smith-routing`.
+> **Not sure which command to use?** Run `/smith` — it reads project state and recommends the next dispatch (e.g. `/forge-cycle`, `/autorun`, `/forge-cleanup`, `/sprint`). For an educational walkthrough of all 14 routing rows, run `/smith-routing`.
 
 ### From `fpl-skills` (flagship)
 
 | Command | What it does |
 |---|---|
-| `/smith` | **Master orchestrator / pre-router.** Reads state, classifies context against the 12-context routing map, recommends the next dispatch. Default sub-modes: `/smith status` (snapshot only) and `/smith handoff` (end-of-session summary). Triggers: `smith`, `кузнец`, `что дальше`, `scrum master`, `master orchestrator`. Full guide: [SMITH.md](SMITH.md). Routing brain: [`../plugins/fpl-skills/skills/smith/routing-map.md`](../plugins/fpl-skills/skills/smith/routing-map.md). |
+| `/smith` | **Master orchestrator / pre-router.** Reads state, classifies context against the 14-row routing map, recommends the next dispatch. Default sub-modes: `/smith status` (snapshot only) and `/smith handoff` (end-of-session summary). Triggers: `smith`, `кузнец`, `что дальше`, `scrum master`, `master orchestrator`. Full guide: [SMITH.md](SMITH.md). Routing brain: [`../plugins/fpl-skills/skills/smith/routing-map.md`](../plugins/fpl-skills/skills/smith/routing-map.md). |
 | `/smith-bootstrap` | Greenfield onboarding orchestrator. Fresh repo → pre-flight matrix → `forgeplan init` → CLAUDE.md scaffold → AGENTS.md scaffold → plugin install recommendations → first Brief → first PRD. Use when you've just `git init`'d. Triggers: `smith bootstrap`, `greenfield`, `новый проект`. |
-| `/smith-plan <task>` | Per-task plan generator. Classifies a specific task into 1 of 12 routing-map contexts; renders a Plan markdown with methodology citations + dispatch sequence + evidence requirements. Use when you know what you want to do but not how. Triggers: `smith plan`, `как сделать`, `построй план`. |
-| `/smith-routing` | Educational walkthrough of the 12-context routing map. 3 modes: Comparison (`X vs Y`), Walkthrough (show all 12 contexts), Q&A ("what for brownfield?"). Read-only — does not produce Plan artifacts. Triggers: `smith routing`, `какая команда для`, `routing map`. |
+| `/smith-plan <task>` | Per-task plan generator. Classifies a specific task into 1 of 14 routing-map rows; renders a Plan markdown with methodology citations + dispatch sequence + evidence requirements. Use when you know what you want to do but not how. Triggers: `smith plan`, `как сделать`, `построй план`. |
+| `/smith-routing` | Educational walkthrough of the 14-row routing map. 3 modes: Comparison (`X vs Y`), Walkthrough (show all 14 rows), Q&A ("what for brownfield?"). Read-only — does not produce Plan artifacts. Triggers: `smith routing`, `какая команда для`, `routing map`. |
 | `/fpl-init` | One-shot project bootstrap — forgeplan init + MCP wiring + CLAUDE.md + docs/agents/. Idempotent. |
 | `/restore` | Session-context recall: branch, dirty state, recent commits, stash, memory snippets. |
 | `/briefing` | Tracker overview — Orchestra/GitHub Issues/Linear/Jira or local TODO files. |
@@ -125,6 +125,8 @@ Mirror of root [README.md](../README.md) "Where to Start?" matrix, with cross-li
 | `/forge-audit` | forgeplan-workflow | 6-agent forgeplan-aware audit. |
 | `/sync` | forgeplan-orchestra | Bidirectional sync Forgeplan ↔ Orchestra. |
 | `/session` | forgeplan-orchestra | Session Start Protocol with Inbox Pattern. |
+| `/canvas` | agents-canvas | CANVAS orchestrator — design-system→code port: Pencil→Storybook→framework. hook-gate=Yes (tokens before code). Run `/canvas-init` once, then `/canvas`. |
+| `/canvas-init` | agents-canvas | One-time CANVAS state init for the current branch (detects package layout, seeds the guarded globs the tokens-before-code hook reads). |
 
 ### Legacy commands (dev-toolkit, deprecated)
 
@@ -276,7 +278,7 @@ Structured reasoning for decompose / evaluate / reason / lookup. 224 FPF spec se
 
 **Requires**: nothing.
 
-### Agent packs (7 agent packs)
+### Agent packs (8 agent packs)
 
 Specialised subagents that `/audit`, `/sprint`, and other commands compose when relevant.
 
@@ -289,6 +291,7 @@ Specialised subagents that `/audit`, `/sprint`, and other commands compose when 
 | `agents-sparc` | 5 | SPARC methodology — orchestrator + 4 phase specialists |
 | `agents-tdd` | 4 | TDD methodology — orchestrator + RED/GREEN agents + test-validator |
 | `agents-bmad` | 1 | BMAD methodology — bmad-orchestrator persona-walk |
+| `agents-canvas` | 8 | CANVAS methodology — design-system→code (Pencil→Storybook→framework); canvas-coordinator master + 7 role agents incl. canvas-storybook-validator |
 
 Install only what you use. `/audit` and `/sprint` automatically draw from whichever packs are present.
 

@@ -434,14 +434,14 @@ Reference: PRD-061, EPIC-001 (4-layer pipeline meta-layer, Sprint Z10).
 
 ## Smith — methodology router (EPIC-002)
 
-Foundation: EPIC-002 «smith master-orchestrator» — the ForgePlan equivalent of BMAD-METHOD's BMAD Master persona. A **Profile B-orchestrator** sub-profile agent that reads broad project state (forgeplan_health + list + blocked + stale + hindsight recall + git status), classifies the situation against a **12-context routing matrix**, and returns a structured Markdown plan naming which specialist agents to dispatch, in which order, with which methodology backing each step. Smith **never writes code or activates artifacts** — it routes and recommends; downstream specialists execute.
+Foundation: EPIC-002 «smith master-orchestrator» — the ForgePlan equivalent of BMAD-METHOD's BMAD Master persona. A **Profile B-orchestrator** sub-profile agent that reads broad project state (forgeplan_health + list + blocked + stale + hindsight recall + git status), classifies the situation against a **14-context routing matrix**, and returns a structured Markdown plan naming which specialist agents to dispatch, in which order, with which methodology backing each step. Smith **never writes code or activates artifacts** — it routes and recommends; downstream specialists execute.
 
 ### When to invoke smith
 
 - At **session start** when unsure what to do next — smith reads health + recent journal and proposes the next action.
 - On a **fresh repo** with no artifacts — `/smith-bootstrap` seeds Brief / PRD / first ADR via the greenfield row.
 - For a **specific task** of any depth — `/smith-plan <task>` picks the matching row, names the methodology, lists the dispatch sequence.
-- For **learning the methodology surface** — `/smith-routing` walks the 12 contexts + 27 methodology cards without committing to a task.
+- For **learning the methodology surface** — `/smith-routing` walks the 14 routing rows + 27 methodology cards without committing to a task.
 - When existing entry points (`/forge-cycle`, `/autorun`) don't fit — cross-context work, ambiguous depth, methodology mismatch.
 
 If you already know which agent to dispatch, call it directly. Smith picks **which**; it doesn't replace any specialist.
@@ -453,9 +453,9 @@ If you already know which agent to dispatch, call it directly. Smith picks **whi
 | `/smith` | Default — status + recommended next step from current state |
 | `/smith-bootstrap` | Greenfield repo onboarding — seeds Brief / PRD / first ADR |
 | `/smith-plan <task>` | Per-task plan — routing-map row + methodology + dispatch sequence + evidence |
-| `/smith-routing` | Educational walkthrough of 12 contexts + 27 methodology cards |
+| `/smith-routing` | Educational walkthrough of 14 routing rows + 27 methodology cards |
 
-### 12-context routing matrix (compact reference)
+### 14-context routing matrix (compact reference)
 
 | # | Context | Primary methodology |
 |---|---|---|
@@ -472,7 +472,7 @@ If you already know which agent to dispatch, call it directly. Smith picks **whi
 | 11 | Tech debt cleanup | A3 Problem Solving + Fishbone + ADR-supersede |
 | 12 | Live incident response | Incident Command System + Blameless post-mortem |
 
-Smith picks **exactly one row** per task — methodology cocktails are forbidden. If two rows genuinely tie, smith emits `<<NEED_USER_INPUT>>` with ≥3 hypotheses per FPF ADI (PRD-059). Full table with dispatch sequences + evidence requirements + agent index in [`plugins/fpl-skills/skills/smith/routing-map.md`](plugins/fpl-skills/skills/smith/routing-map.md).
+The 12 rows above are the base contexts — Row 13 (TDD-first feature, RFC-012) and Row 14 (CANVAS design-system→code, RFC-021, hook-gate=Yes) extend them to **14 routing rows** in the full map. Smith picks **exactly one row** per task — methodology cocktails are forbidden. If two rows genuinely tie, smith emits `<<NEED_USER_INPUT>>` with ≥3 hypotheses per FPF ADI (PRD-059). Full table with dispatch sequences + evidence requirements + agent index in [`plugins/fpl-skills/skills/smith/routing-map.md`](plugins/fpl-skills/skills/smith/routing-map.md).
 
 ### Profile B-orchestrator sub-profile
 

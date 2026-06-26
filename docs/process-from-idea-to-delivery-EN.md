@@ -47,7 +47,7 @@ The machine consists of four entities:
 
 - **Artifacts** (PRD, RFC, ADR, EVID, NOTE, EPIC, PROBLEM, SOLUTION, SPEC, REFRESH) - record decisions and verifications
 - **Agents** (five canonical roles) - perform work in isolated contexts
-- **Methodologies** (BMAD, FPF ADI, SPARC, RIPER-5 and others) - define how exactly to approach the task. TDD, BMAD, SPARC and RIPER are now the four shipped **instances of the AD/AID-PDLC sub-cycle contract** (ADR-010) - see §3.0.
+- **Methodologies** (BMAD, FPF ADI, SPARC, RIPER-5 and others) - define how exactly to approach the task. TDD, BMAD, SPARC, RIPER and CANVAS are now the five shipped **instances of the AD/AID-PDLC sub-cycle contract** (ADR-010) - see §3.0.
 - **Quality gates** (forge-cycle, guardian, methodology-check, forgeplan checks) - prevent skipping steps
 
 Below, in detail about each entity and how they connect into one process.
@@ -157,7 +157,7 @@ A special sub-profile. Does not review a specific artifact, does not create an E
 - Denylist same as Profile B, plus all forgeplan mutations (`new`, `update`, `link`, ...)
 - Does not write files, does not dispatch agents itself - returns a plan as Markdown
 - Input: snapshot of project state (`forgeplan_health`, `git status`, `memory_recall`)
-- Output: a plan with exactly one selected context out of 12 + an agent dispatch sequence
+- Output: a plan with exactly one selected routing row out of 14 + an agent dispatch sequence
 
 ### 2.4 Profile B-gate (guardian) - final gate
 
@@ -215,7 +215,7 @@ The agent's role says **what it is allowed to do**. The methodology says **how e
 
 ### 3.0 The AD/AID-PDLC sub-cycle contract (ADR-010)
 
-The four build methodologies below are not ad-hoc - since RFC-012/013/016/018 they are the **four shipped instances of one reusable contract** (ADR-010), each governed by the forgeplan harness:
+The five build methodologies below are not ad-hoc - since RFC-012/013/016/018/021 they are the **five shipped instances of one reusable contract** (ADR-010), each governed by the forgeplan harness:
 
 | # | Instance | Plugin / entry | Span | hook-gate |
 |---|----------|----------------|------|-----------|
@@ -223,8 +223,9 @@ The four build methodologies below are not ad-hoc - since RFC-012/013/016/018 th
 | 2 | **BMAD** | `agents-bmad` (`/bmad`) | whole greenfield arc | Yes (no-code-before-plan hook) |
 | 3 | **SPARC** | `agents-sparc` (`/sparc`) | one feature in an active system | No (harness phase-ordering) |
 | 4 | **RIPER** | `fpl-skills` (`/riper`) | a bug / scoped change / investigation | No (main-session walk) |
+| 5 | **CANVAS** | `agents-canvas` (`/canvas`) | a design-system → code port (Pencil→Storybook→framework) | Yes (fail-closed tokens-before-code gate) |
 
-Every instance reuses the same six contract elements - **C1** entry-gate -> **C2** stage-master -> **C3** phase agents -> **C4** independent verifier -> **C5** enforcement -> **C6** EVIDENCE-out (+ **C7** FPF on demand) - with the invariant **generator != verifier at every stage** (the entity that produces work never certifies it). The **hook-gate** decision (ADR-012) is whether an instance needs a fail-closed PreToolUse hook (TDD/BMAD) or just harness phase-ordering + a main-session walk (SPARC/RIPER). Spec-driven development is the spine (ADR-008); `## Conformance Vectors` (the `/conformance-vectors` skill) is its optional cross-language enrichment, required only for multi-language SPECs.
+Every instance reuses the same six contract elements - **C1** entry-gate -> **C2** stage-master -> **C3** phase agents -> **C4** independent verifier -> **C5** enforcement -> **C6** EVIDENCE-out (+ **C7** FPF on demand) - with the invariant **generator != verifier at every stage** (the entity that produces work never certifies it). The **hook-gate** decision (ADR-012) is whether an instance needs a fail-closed PreToolUse hook (TDD/BMAD/CANVAS) or just harness phase-ordering + a main-session walk (SPARC/RIPER). Spec-driven development is the spine (ADR-008); `## Conformance Vectors` (the `/conformance-vectors` skill) is its optional cross-language enrichment, required only for multi-language SPECs.
 
 Sections 3.1-3.4 describe each methodology in teaching detail; this subsection is the contract that unifies them.
 
@@ -1532,7 +1533,7 @@ This generalizes: **do not write parsers when the signal is semantic, not struct
 
 When it is unclear which methodology to start with - `/smith`. This is the master-orchestrator that reads project state and returns a plan: which methodology to apply + dispatch sequence.
 
-### Twelve matrix contexts
+### Fourteen routing rows
 
 ```
 +----+-------------------------------+--------------------------------------+
@@ -1552,6 +1553,8 @@ When it is unclear which methodology to start with - `/smith`. This is the maste
 | 11 | Tech-debt cleanup             | A3 + Fishbone + ADR-supersede        |
 | 12 | Live production incident      | Incident Command System              |
 |    |                               | + blameless post-mortem              |
+| 13 | Single-stage test-first build | TDD (agents-tdd) red-green-refactor  |
+| 14 | Design-system -> code port    | CANVAS (Pencil -> Storybook -> code) |
 +----+-------------------------------+--------------------------------------+
 ```
 
@@ -1584,7 +1587,7 @@ When it is unclear which methodology to start with - `/smith`. This is the maste
 Markdown plan with **8 mandatory sections**:
 
 ```
-1. Context type - one of the 12 rows
+1. Context type - one of the 14 rows
 2. Methodology decision - primary + rationale
 3. Dispatch sequence - numbered list of agents
 4. Evidence requirements - checklist for the guardian gate

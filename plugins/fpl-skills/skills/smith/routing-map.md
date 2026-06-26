@@ -46,7 +46,7 @@ this file for the canonical names and source plugins.
 
 ---
 
-## The 12 contexts
+## The 14 routing rows
 
 | # | Context | Trigger phrases (EN / RU) | Primary methodology | Secondary | Dispatch sequence (agents) | Evidence required | Why this combo |
 |---|---|---|---|---|---|---|---|
@@ -67,7 +67,7 @@ this file for the canonical names and source plugins.
 
 ---
 
-> **Wider context**: For complete process reference on how these 12 contexts map to the artifact lifecycle and 5-role agent dispatch, see [Process Reference (EN)](../../../../docs/process-from-idea-to-delivery-EN.md) / [(RU)](../../../../docs/process-from-idea-to-delivery-RU.md).
+> **Wider context**: For complete process reference on how these 14 routing rows map to the artifact lifecycle and 5-role agent dispatch, see [Process Reference (EN)](../../../../docs/process-from-idea-to-delivery-EN.md) / [(RU)](../../../../docs/process-from-idea-to-delivery-RU.md).
 
 ## Methodology cards
 
@@ -281,7 +281,7 @@ Each methodology referenced in the table above. Five lines per card: one-sentenc
 
 ## Agent index
 
-Quick alphabetical lookup of every agent named in the 12 rows above. Each entry: **name** (source plugin) — Profile — one-line description.
+Quick alphabetical lookup of every agent named in the 14 rows above. Each entry: **name** (source plugin) — Profile — one-line description.
 
 | Agent | Plugin | Profile | One-liner |
 |---|---|---|---|
