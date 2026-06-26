@@ -19,7 +19,7 @@ The one-pager. Read before any `batch_design`. Each line maps to a HARD RULE (HR
 | Build a new component (`reusable:true`) for a structural change, then ref it | the only clean alternative to detach | §01 |
 | Use `$--var` tokens for color/spacing/font | single source of truth, re-themes | §04 |
 | Define themed colors with both Light + Dark values | the Mode axis maps to the port | §04 |
-| Consult **getdesign.md** via WebFetch for patterns, then recolor to warm-paper | reference-only priors from shipping systems | §05 |
+| Consult **getdesign.md** via WebFetch for patterns, then recolor to YOUR chosen brand | reference-only priors; adapt to the brand recorded in the scope artifact | §05 |
 | Consult **context7** before touching Style-Dictionary / Storybook / Lit config | versions drift; don't guess | §04 |
 | Apply UX laws as node constraints at design time (Fitts/Hick/Miller/Doherty/Von Restorff/Gestalt) | the hook can't see `.pen`; design correct first | §07 |
 | `M` (move) content into a new shell during a refactor | preserves content, no loss | HR6, §06 |
@@ -39,7 +39,7 @@ The one-pager. Read before any `batch_design`. Each line maps to a HARD RULE (HR
 | Run `batch_design` without verifying after | breakage compounds silently | HR4, §06 |
 | Exceed 25 ops in one `batch_design` | a failed mega-batch is undiagnosable | HR3 |
 | Hardcode a hex where a `$--var` exists | forks the source of truth; Guardian FAIL | §04 |
-| Copy getdesign.md / Expo hexes 1:1 into the DS | forks the single source; breaks warm-paper brand | §05 |
+| Copy getdesign.md / Expo hexes 1:1 into the DS | forks the single source; breaks the chosen brand | §05 |
 | Split the DS / screens across multiple `.pen` files | cross-file refs don't resolve | §06 |
 | Place an atom in MOLECULES (or a molecule in ATOMS, etc.) | atomic-placement FAIL | §03 |
 | `D` (delete) / refactor before user approval + OLD-vs-NEW screenshots | irreversible content loss | HR6, §06 |

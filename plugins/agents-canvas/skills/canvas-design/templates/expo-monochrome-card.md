@@ -1,11 +1,15 @@
 # Template — Expo monochrome card (flat / bordered / shadowless)
 
-**Use when:** a flat structural card in the **Expo monochrome** discipline — rectangular, no shadow, thin
-border, separation by border not elevation. **Recolor to warm-paper `$--vars`; do not paste Expo's hexes**
-(§05).
+> **Example reference preset — recolor to your chosen brand.** "Expo monochrome" is one *named* discipline
+> you can adapt from, not the house style. The destination is your project's chosen brand — the one recorded
+> in the scope artifact (active PRD/Brief, brand ADR, or tokens decision; see §05). Read it as input.
 
-**Expo discipline → warm-paper mapping:**
-| Trait | Expo | Use instead |
+**Use when:** a flat structural card in the **Expo monochrome** discipline (an *example* reference preset) —
+rectangular, no shadow, thin border, separation by border not elevation. **Recolor to your chosen brand's
+`$--vars`; do not paste the preset's reference hexes** (§05).
+
+**Example preset discipline → your chosen brand mapping:**
+| Trait | Expo (example preset) | Use instead (your chosen brand) |
 |---|---|---|
 | Radius | 0px | 0 (structural) — `cornerRadius:0` |
 | Shadow | none | none |

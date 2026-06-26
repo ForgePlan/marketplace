@@ -81,7 +81,7 @@ through `descendants`. Discover the child IDs with `batch_get({nodeIds:["<SUBSID
 then map: header icon + title, the active item (icon + label + background), and each inactive item. Pattern
 and a worked block live in [`subsidebar-customization`](../../templates/subsidebar-customization.md).
 
-**Active vs inactive convention (warm-paper adapts these — confirm via tokens, see §04/§05):**
+**Active vs inactive convention (adapt to your chosen brand — confirm via tokens, see §04/§05):**
 - Active item: foreground fill (`$--foreground`), `fontWeight:"500"`, a filled background (`$--accent`/`$--muted`).
 - Inactive items: `$--muted-foreground` fill, normal weight, `transparent` background.
 
@@ -97,8 +97,9 @@ and a worked block live in [`subsidebar-customization`](../../templates/subsideb
 | AI | Chat, Models, Providers, Prompts, Agents, Tools, Memory |
 | Settings | General, Integrations, Security, Billing, Cache |
 
-> These modules belong to the reference product. For ExtraBoost / the active scope PRD, the modules differ
-> (e.g. Sources, Stories, Variants, Schedule, Publish). Read the scope artifact and §07 before inventing nav.
+> These modules belong to the reference product. For the active scope PRD's app, the modules differ
+> (e.g. an editorial product might have Sources, Stories, Variants, Schedule, Publish). Read the scope
+> artifact and §07 before inventing nav.
 
 ---
 

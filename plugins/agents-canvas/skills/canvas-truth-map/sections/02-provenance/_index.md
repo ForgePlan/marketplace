@@ -39,7 +39,8 @@ same tokens). If they drift from the recorded palette, every downstream framewor
    `get_variables` dump captured into the snapshot). You are a sub-agent: read the **snapshot**, never live
    Pencil.
 2. Find the **palette decision** an ADR recorded (the ADR that fixed the `set_variables` values — names,
-   roles, theme axes like `Mode:Light/Dark`, the warm-paper brand surface).
+   roles, theme axes like `Mode:Light/Dark`, the chosen brand's surface recorded in the scope artifact — e.g.
+   a "warm-paper surface" in one example recorded brand).
 3. Compare **value-by-value and name-by-name**:
    - A token whose value differs from the ADR-frozen value → **BLOCKER** (`token drift: <name> = <snapshot>
      but ADR-NNN froze <value>`). The DS contradicts a frozen decision.
@@ -54,7 +55,8 @@ same tokens). If they drift from the recorded palette, every downstream framewor
 ## Check 3 — fixed rules (atomic layering, brand invariants)
 
 Some ADRs fix *structural* rules, not values: an atomic-layering rule (atom-in-ATOMS), a "one distinct primary
-CTA per screen" brand invariant, a "warm-paper, never pure-white surface" rule. For each such rule the scope
+CTA per screen" brand invariant, or a surface rule the chosen brand records (e.g. an example brand's
+"warm-paper, never pure-white surface" rule). For each such rule the scope
 ADR records, confirm the snapshot honors it (the layout dump + manifest show the rule satisfied). A violation
 of a *recorded* rule is a provenance finding here (a violation of an *unrecorded* build convention is
 Guardian's job, not yours — do not double-report it).

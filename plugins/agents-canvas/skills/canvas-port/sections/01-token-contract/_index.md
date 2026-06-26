@@ -48,7 +48,7 @@ packages/design-system/.canvas-port/tokens/
 // color.light.tokens.json  (mirrors Pencil Mode:Light)
 {
   "color": {
-    "bg":     { "base": { "$value": "#FBF7F0", "$type": "color" } },   // warm-paper brand
+    "bg":     { "base": { "$value": "#FBF7F0", "$type": "color" } },   // example token from a chosen brand
     "fg":     { "base": { "$value": "#1A1714", "$type": "color" } },
     "accent": { "primary": { "$value": "#C2410C", "$type": "color" } }
   }
@@ -138,9 +138,9 @@ The Tester + architect-reviewer validate the contract before the Coder is unbloc
    story specs.
 2. **Theme-correct** — both `Mode:Light` and `Mode:Dark` axes resolve; the selectors switch cleanly; no
    mode-varying token is hardcoded into `base.tokens.json`.
-3. **Traceable to the ADR** — the palette + scale match the recorded brand/token ADR decisions
-   (warm-paper brand). The Tester maps token -> ADR; a token with no backing decision is scope creep, a
-   decision with no token is a gap.
+3. **Traceable to the ADR** — the palette + scale match the recorded brand/token ADR decisions: every
+   token traces to a recorded design decision (the chosen brand), not a hardcoded house style. The Tester
+   maps token -> ADR; a token with no backing decision is scope creep, a decision with no token is a gap.
 4. **References preserved** — semantic tokens emit `var(--primitive)`, not flattened values, so the
    single-source cascade holds.
 

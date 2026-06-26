@@ -1,6 +1,6 @@
 ---
 name: canvas-design
-description: "Pencil designer knowledge base for the CANVAS methodology — how to design and extend a .pen Design System with refs, slots, descendants, Layout B, atomic organization, themed tokens, style presets, and UX-law-driven node constraints. Use when designing or extending a Pencil DS, building screens/components, fixing layout clipping, organizing ATOMS/MOLECULES/ORGANISMS/TEMPLATES, wiring theme variables, or translating UX laws into Pencil nodes. Triggers on: pencil design, design in pencil, .pen, design system, batch_design, refs and descendants, Layout B, subsidebar, atomic design, design tokens, theme variables, screen template, table actions, clipping, snapshot_layout, get_screenshot, warm-paper brand, expo monochrome, style guide, ds organization, ux constraints in pencil."
+description: "Pencil designer knowledge base for the CANVAS methodology — how to design and extend a .pen Design System with refs, slots, descendants, Layout B, atomic organization, themed tokens, style presets, and UX-law-driven node constraints. Use when designing or extending a Pencil DS, building screens/components, fixing layout clipping, organizing ATOMS/MOLECULES/ORGANISMS/TEMPLATES, wiring theme variables, or translating UX laws into Pencil nodes. Triggers on: pencil design, design in pencil, .pen, design system, batch_design, refs and descendants, Layout B, subsidebar, atomic design, design tokens, theme variables, screen template, table actions, clipping, snapshot_layout, get_screenshot, choosing and recording a brand/style, warm-paper + Expo monochrome shown as worked examples, style guide, ds organization, ux constraints in pencil."
 ---
 
 # canvas-design — the fat lazy Pencil-designer KB
@@ -54,7 +54,7 @@ instructions.)
 | Building a screen (the AppShell / Layout B skeleton, subsidebar map, screen-template table) | [§02 layout-b](sections/02-layout-b/_index.md) |
 | Placing components in the DS canvas (ATOMS/MOLECULES/ORGANISMS/TEMPLATES, grid, height-aware Y) | [§03 ds-organization](sections/03-ds-organization/_index.md) |
 | Wiring theme tokens (`$--vars`, Mode:Light/Dark, get/set_variables, Style-Dictionary seam) | [§04 tokens-theming](sections/04-tokens-theming/_index.md) |
-| Choosing a visual style (warm-paper brand, Expo monochrome, reference products, **getdesign.md**) | [§05 style-guides](sections/05-style-guides/_index.md) |
+| Choosing & recording a brand/style before designing (warm-paper + Expo monochrome as worked examples, reference products, **getdesign.md**) | [§05 style-guides](sections/05-style-guides/_index.md) |
 | Debugging clipping, cross-file refs, file-specific IDs, legacy DS, deep nesting | [§06 gotchas](sections/06-gotchas/_index.md) |
 | Translating a UX law into concrete Pencil node constraints (Fitts/Hick/Miller/Doherty/Von Restorff/Gestalt) | [§07 ux-task-map](sections/07-ux-task-map/_index.md) |
 
@@ -79,7 +79,7 @@ a `snapshot_layout` dump → `design/snapshots/<ts>/`) — the hand-off Guardian
 | 02 | [layout-b](sections/02-layout-b/_index.md) | The AppShell / Layout B skeleton, ref roles, SubSidebar module map, screen-template matching table |
 | 03 | [ds-organization](sections/03-ds-organization/_index.md) | Atomic layering, the DS canvas grid (`layout:none`), spacing scale, **height-aware Y formula**, section headers, the snapshot |
 | 04 | [tokens-theming](sections/04-tokens-theming/_index.md) | `$--var` tokens, the theme axis (Mode:Light/Dark), `get_variables`/`set_variables`, the Style-Dictionary → CSS-var seam (**context7**) |
-| 05 | [style-guides](sections/05-style-guides/_index.md) | The **warm-paper** brand, the Expo monochrome preset, reference products by module, the **getdesign.md** reference workflow |
+| 05 | [style-guides](sections/05-style-guides/_index.md) | Choosing & recording a brand/style before designing (**warm-paper** + Expo monochrome shown as worked examples), reference products by module, the **getdesign.md** reference workflow |
 | 06 | [gotchas](sections/06-gotchas/_index.md) | Clipping, cross-file refs, file-specific IDs, legacy single-frame DS, nesting depth, encrypted `.pen` |
 | 07 | [ux-task-map](sections/07-ux-task-map/_index.md) | Task → UX-law routing → Pencil node constraint; good/bad component library; `laws-of-ux` integration |
 
