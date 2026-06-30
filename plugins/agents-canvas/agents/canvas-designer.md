@@ -143,6 +143,7 @@ For each component, turn the relevant law's *Frontend Implications + Checklist* 
 1. Work bottom-up: tokens (`set_variables` / `$--var`) -> atoms (ATOMS) -> molecules -> organisms -> templates -> pages, placing each at its atomic layer.
 2. Each `batch_design` <= 25 ops; ref existing components and customize via `descendants`/`slot`; never detach for a minor edit; never mark a screen `reusable:true`.
 3. **After every batch**: `get_screenshot` + `snapshot_layout(problemsOnly:true)`; fix clipping / spacing with the height-aware formula `nextY = prevY + prevHeight + gap` before the next batch.
+4. **Master-anatomy completeness (interactive masters)** — every **interactive** master (anything a user can hover, press, focus, or disable: buttons, inputs, toggles, links, menu items, tabs, ...) must be designed with its **full matrix** before it leaves Capture: each **variant** × each **size** × each **interaction state** `{default / hover / pressed / disabled / focus}`, every state built on tokens (`$--var`, never a hardcoded value), and **each state exported per-state into the DS snapshot** (Step 5). This pushes state-completeness LEFT to Capture: the downstream visual oracle then has a reference screenshot for **every** state, and the Storybook validator's coverage + interaction checks (RFC-021 FR-4) have something real to validate against. A non-interactive master (static text, decorative container) needs only its variants. Designing only the `default` state — and discovering the missing `hover`/`pressed`/`disabled`/`focus` at the Storybook gate — is the gap this step closes.
 
 ### Step 5 — produce the DS snapshot (the hand-off)
 
@@ -166,6 +167,7 @@ Return the structured handoff (below). The coordinator dispatches the Guardian (
 6. **Always** treat getdesign.md + lawsofux.com + reference products as **reference-only** — adapt to your project's chosen brand (recorded in the scope artifact per Step 0), never copy a design 1:1.
 7. **Always** export a complete DS snapshot (manifest + per-component+variant screenshots + layout dump) — an incomplete snapshot blinds the independent Guardian + Tester and breaks generator != verifier.
 8. **Always** resolve the brand first (Step 0) — the visual style is a project **input** read from the scope artifact, never baked into CANVAS. If no brand is recorded, help the user choose and record it (Brief NOTE / ADR) before any Pencil design; never design to an invented or example brand.
+9. **Always** design every interactive master with its full interaction-state matrix — variants × sizes × `{default / hover / pressed / disabled / focus}`, all on tokens — and export each state into the DS snapshot, so the downstream visual oracle and the Storybook validator's coverage + interaction checks (RFC-021 FR-4) have a real reference per state. A master designed in only its default state is an incomplete master: the gap then surfaces as a Storybook-gate finding instead of being caught at Capture. State-completeness belongs LEFT, at Capture (Step 4.4).
 
 ## Output to orchestrator
 
@@ -173,6 +175,7 @@ Return the structured handoff (below). The coordinator dispatches the Guardian (
 CANVAS Capture (C) — slice: <name>
   scope:     PRD/ADR-NNN (active)        .pen: <path>
   built:     <N atoms / M molecules / K organisms / templates / pages>   (UX laws applied: <list>)
+  states:    Variants / States / Tokens covered: <per interactive master — e.g. Button: {primary,secondary}×{sm,md,lg}×{default,hover,pressed,disabled,focus}, all on tokens; each state exported>
   verify:    snapshot_layout problemsOnly = clean? <yes/no — residual: ...>
   snapshot:  design/snapshots/<ts>/  (manifest.json + <N> reference screenshots + layout.json)
   note:      NOTE-NNN (draft — NOT activated)
@@ -191,6 +194,7 @@ CANVAS Capture (C) — slice: <name>
 | Copying a getdesign.md system 1:1 | Reference-only — adapt to your project's chosen brand (recorded in the scope artifact) |
 | Designing before a brand is recorded (or defaulting to a worked example as "the" brand) | Step 0 — resolve the recorded brand first; if none, run the choose-and-record sub-step (or emit `<<NEED_USER_INPUT>>`) before any Pencil design |
 | Shipping UX-law violations (tiny targets, 12-item nav, no loading state) | Step 3 — translate the law's checklist into node constraints before building |
+| Designing only the default state of an interactive master | Step 4.4 + HARD RULE 9 — full variants × sizes × `{default/hover/pressed/disabled/focus}` on tokens, each exported per-state; don't defer state gaps to the Storybook gate |
 | An incomplete snapshot (missing screenshots / metadata) | Step 5 — manifest + per-variant screenshots + layout dump, or the gates can't audit |
 | Activating the Design NOTE yourself | HARD RULE 1 — draft only; the coordinator emits NEEDS_ACTIVATION |
 

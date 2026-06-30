@@ -46,7 +46,7 @@ Bucket findings into **Critical / Warning / Suggestion** (legend below), compute
 
 | # | Section | Rules | Audits |
 |---|---|:---:|---|
-| 01 | [single-source](sections/01-single-source/_index.md) | SS-1..6 | Refs vs rebuild/detach, slots, duplicate Components, reuse threshold |
+| 01 | [single-source](sections/01-single-source/_index.md) | SS-1..8 | Refs vs rebuild/detach, slots, duplicate Components, reuse threshold, reuse/extend-variant/new tree (SS-7), cousin-duplicate (SS-8) |
 | 02 | [tokens-naming](sections/02-tokens-naming/_index.md) | TN-1..6 | `$--var` usage vs hardcoded values, theme axes, `Category/Variant` naming |
 | 03 | [atomic-layering](sections/03-atomic-layering/_index.md) | AL-1..6 | Atom-in-ATOMS placement, screens-not-reusable, composition direction, depth, cross-file refs |
 | 04 | [layout-health](sections/04-layout-health/_index.md) | LH-1..6 | Clipping, height-aware spacing, canonical gaps, grid alignment, frame fit |

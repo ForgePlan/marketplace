@@ -23,6 +23,31 @@ Read the approved DS atomic layers in order via Pencil MCP (or the exported snap
 - **descendant-override points** — the nodes a Pencil instance customizes via `descendants` (these become
   CSS Custom Properties / parts / slotted overrides, NOT detached forks).
 
+## Step 1.5 — reuse vs extend-variant vs new (run before emitting each spec entry)
+
+Before you emit a spec entry for a candidate Pencil node, decide whether it is a **new component at
+all**. Compare the candidate against the components already in the manifest (and the DS's existing
+tags) on **four axes**:
+
+| Axis | Question |
+|---|---|
+| **visual** | Same shape/role in the layout — does it look like an existing component? |
+| **functional** | Same job — does it do the same thing (submits, groups, navigates)? |
+| **behavioral** | Same interactions — same triggers + expected reactions (Step 3.6)? |
+| **contextual** | Same place in the hierarchy — same atomic layer / same parent contexts? |
+
+Three outcomes:
+
+- **reuse** — all four axes match an existing component -> use it as-is, emit **no** new spec entry.
+- **extend-variant** — differs in **exactly one** axis -> add a `variant`/`size` to the **existing**
+  component's variant matrix (Step 2), **never a new tag**. Grow that component's `spec.yaml` matrix;
+  do not fork a component.
+- **new** — the **functional** axis differs (or two-plus axes differ) -> a new tag + a new `spec.yaml`.
+
+> Anti-pattern: minting `PrimaryButton` / `DangerButton` / `LargeButton` as separate components.
+> `"PrimaryButton"` is a `variant` of `<canvas-button>`, **not** a new component — a different *look*
+> or *size* is a matrix row, not a new tag. A new tag is justified only by a different **function**.
+
 ## Step 2 — the variant matrix
 
 Enumerate the full cross-product the DS actually uses (not every theoretical combination — the ones the
@@ -73,6 +98,63 @@ slot_map:
     never: "detached structural forks — a Card instance must not re-arrange header/body/footer"
 ```
 
+## The acceptance oracle — Steps 2 + 3.5 + 3.6
+
+> **Meta-pattern (RFC-021 C4 / ADR-010).** The porter authors the per-component **acceptance oracle**:
+> the variant matrix (Step 2) + the data states (Step 3.5) + the interactions (Step 3.6). The Storybook
+> validator then runs *that spec-derived checklist* — **not only its fixed six checks**. The spec IS the
+> per-component test plan: a variant, data state, or interaction the porter omits is a check the
+> validator can never run. Completeness of the oracle is load-bearing — author it, do not assume the
+> validator will infer it.
+
+## Step 3.5 — data states (the data oracle — MANDATORY for data-driven layers)
+
+A **data state** is the shape of the *data* the component renders — orthogonal to a *visual* state.
+For every component on the **ORGANISM / TEMPLATE / PAGES** layers (the layers that bind to data) the
+spec MUST enumerate the data states, and the DS must have **one story per data state**:
+
+| Data state | What it renders |
+|---|---|
+| `empty` | no data yet — the zero/empty-state design |
+| `loading` | data in flight — skeleton / spinner |
+| `error` | the fetch/validation failed — the error design |
+| `success` | a transient success acknowledgement (only if the design defines one) |
+| `populated` | the normal case — data present and rendered |
+
+```yaml
+data_states: [empty, loading, error, populated]   # ORGANISM/TEMPLATE/PAGES — one story EACH
+# add `success` only when the design defines a distinct success acknowledgement
+```
+
+**ATOMS / MOLECULES that bind no data are exempt** — write `data_states: n/a` **explicitly** (never
+omit the key). A `<canvas-button>` has no data states; a `<canvas-order-table>` MUST cover them.
+
+**Data states are NOT visual states.** `hover` / `focus-visible` / `active` / `disabled` stay in the
+**variant matrix** (Step 2, `states (visual)`). `empty` / `loading` / `error` are *data* and live
+here, one named story export each (the validator counts them). Do not conflate the two axes.
+
+## Step 3.6 — interactions (the interaction oracle — every affordance accounted for)
+
+For **every interactive affordance** the component exposes, list a row of
+`(affordance | trigger | expected reaction)`:
+
+```yaml
+interactions:
+  - affordance: submit button        # the thing the user can act on
+    trigger: click | Enter           # how it is actuated
+    reaction: emits `submit` event, sets loading=true     # the observable expected reaction
+  - affordance: row checkbox
+    trigger: click | Space
+    reaction: toggles row selection, emits `selection-change`
+  - affordance: decorative banner    # not interactive
+    trigger: —
+    reaction: static                 # explicitly marked — never silently skipped
+```
+
+**ANTI-OMISSION.** Every affordance that appears in the variant matrix is **either** spec'd with an
+expected reaction **or** explicitly marked `static`. An affordance that is neither is a spec gap, not
+a passing component — never silently skip one (HARD RULE 7).
+
 ## Step 4 — the CSF story (illustrative — confirm via context7)
 
 One file per component, `web-components` renderer, Lit `html` render functions, `argTypes` driving the
@@ -120,12 +202,14 @@ Each component's spec is one entry in the manifest under `packages/design-system
 .canvas-port/
   components/
     canvas-button/
-      spec.yaml          # name + variant matrix + slot map + override points (steps 2-3)
+      spec.yaml          # name + variant matrix + slot map + override points + data_states + interactions (steps 1.5-3.6)
       refs/              # reference screenshots per canonical variant + state (section 03)
 ```
 
 The Coder reads `spec.yaml` + `refs/` and emits `canvas-button.ts` (Lit) + `canvas-button.stories.ts` +
-the visual tests. No spec entry -> no component -> the Tester flags a coverage gap.
+the visual tests. No spec entry -> no component -> the Tester flags a coverage gap. The `spec.yaml`
+acceptance oracle (variant matrix + `data_states` + `interactions`) is also the Storybook validator's
+spec-derived checklist — an omitted oracle row is a check that never runs.
 
 ## HARD RULES (this section)
 
@@ -138,3 +222,12 @@ the visual tests. No spec entry -> no component -> the Tester flags a coverage g
    variants are untestable.
 5. **context7 before writing CSF** — verify the Storybook `web-components` story shape and the Lit
    binding syntax; prompt the user to use context7 on any version question.
+6. **`data_states` is mandatory for ORGANISM/TEMPLATE/PAGES**, one story per state
+   (`empty`/`loading`/`error`/`populated`, `success` if defined); data-less atoms/molecules write
+   `data_states: n/a` explicitly. Data states are NOT visual states — `hover`/`focus`/`disabled` stay
+   in the variant matrix (Step 3.5).
+7. **Anti-omission: every affordance is accounted for.** Each affordance in the variant matrix is
+   either spec'd in `interactions` with an expected reaction **or** explicitly marked `static` — never
+   silently skipped (Step 3.6).
+8. **Reuse vs extend-variant vs new (Step 1.5).** A look/size-only difference grows an existing
+   component's variant matrix — it is NEVER a new tag. Mint a new tag only for a different function.
