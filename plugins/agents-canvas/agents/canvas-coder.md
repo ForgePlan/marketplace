@@ -81,7 +81,7 @@ Load `canvas-port` and follow `01-token-contract` + `02-story-spec` + `03-visual
 
 ### Step 1 — confirm the unlock + read the manifest
 
-Verify the tokens RFC id you were given is active (the unlock proof). Read `.canvas-port/`: the token contract, each `components/<tag>/spec.yaml`, and `components/<tag>/refs/`. If the unlock is not in place, your writes will be hook-blocked — surface it and stop rather than fighting the gate.
+Verify the tokens RFC id you were given is active (the unlock proof). Read `.canvas-port/`: the token contract, each `components/<tag>/spec.yaml`, and `components/<tag>/refs/`. If the unlock is not in place, your writes will be hook-blocked — surface it and stop rather than fighting the gate. As you read, confirm each component (and each variant/state) in your scope **has** both a `spec.yaml` master and a `refs/` reference-oracle screenshot to build and snapshot against; any component or variant with neither is a **missing master** — do not build it (HARD RULE 8), route it back via the coordinator.
 
 ### Step 2 — context7 before any code
 
@@ -116,6 +116,7 @@ Return the structured handoff. The coordinator dispatches Gate Code (`code-revie
 5. **Always** cover every canonical variant + state with a story AND a visual-regression assertion in both theme axes; an un-snapshotted variant is untested.
 6. **Always** consult context7 before writing Lit / Storybook / Style-Dictionary code, and prompt the user to use context7 on any version question.
 7. **Never** fake-pass a test run — a missing or failing runner is reported as CONCERNS with the exact command + output, never as PASS.
+8. **Never** fabricate a missing master — if a required component or variant in the port manifest has **no `spec.yaml` master** or **no reference-oracle screenshot** (`components/<tag>/refs/`) to build and snapshot against, do **not** invent the missing structure or its states. STOP that component and route the gap back via the coordinator: surface it as a `missing-master` signal so the coordinator files a forgeplan PROBLEM (`kind=problem`, tagged `missing-master`, owner: `canvas-designer`) and returns the slice to Capture for the master to be designed. A component with no design master / no visual oracle is untestable by definition (HARD RULE 5) — synthesizing it forks a second source of truth the gates can never validate against the Pencil design (RFC-021 FR-4 — the Storybook validator certifies coverage + visual parity against the oracle, ADR-010 generator≠verifier). *(Distinct from HARD RULE 2: a missing **token value** is a `tokens.json` contract change you route to the porter; a missing **master / oracle** is a Capture-phase gap you route to the designer — never something you fill in code.)*
 
 ## Output to orchestrator
 
@@ -143,3 +144,4 @@ If blocked on a knowledge gap, emit `<<NEED_USER_INPUT: ...>>` at the start of a
 | Stale Lit / Storybook API | context7 `resolve-library-id` + `query-docs` before coding. |
 | Reporting green with no runner installed | A missing runner is CONCERNS with the command + output, never PASS. |
 | Encoding a detach as component structure | Slots / `::part` / custom properties only; a detach is a Guardian finding. |
+| Building a component whose master / oracle is missing from the manifest | Don't fabricate it (HARD RULE 8); route a `missing-master` PROBLEM (owner: canvas-designer) back via the coordinator to Capture. |

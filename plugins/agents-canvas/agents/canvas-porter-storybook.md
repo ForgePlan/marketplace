@@ -65,7 +65,7 @@ Do **not** invoke for:
 
 ## Procedure
 
-Load `canvas-port` and follow its sections `01-token-contract` + `02-story-spec` + `03-visual-oracle`.
+Load `canvas-port` and follow its sections `01-token-contract` + `02-story-spec` + `03-visual-oracle` (+ `05-missing-master` when a scope-required component/variant has no portable Pencil master).
 
 ### Step 1 — context7 before any contract
 
@@ -82,7 +82,13 @@ Load `canvas-port` and follow its sections `01-token-contract` + `02-story-spec`
 
 ### Step 4 — walk the DS top-down, emit story specs
 
-`pencil export_nodes(...)` / `pencil batch_get({patterns:[{reusable:true}]})` to walk ATOMS -> MOLECULES -> ORGANISMS -> TEMPLATES. For each `reusable:true` component, write `.canvas-port/components/<tag>/spec.yaml`: the variant matrix, the slot map, and the descendant-override points (section 02). Distinguish slots / CSS-custom-property hooks / `::part` overrides from detaches (a detach is a Guardian finding, not a variant).
+`pencil export_nodes(...)` / `pencil batch_get({patterns:[{reusable:true}]})` to walk ATOMS -> MOLECULES -> ORGANISMS -> TEMPLATES. For each `reusable:true` component, write `.canvas-port/components/<tag>/spec.yaml`: the variant matrix, the slot map, the descendant-override points, **plus the acceptance oracle** — `data_states` (`empty`/`loading`/`error`/`populated`; MANDATORY for ORGANISM/TEMPLATE/PAGES, `data_states: n/a` for data-less atoms/molecules) and `interactions` (every affordance -> expected reaction, or marked `static`) (section 02 Steps 1.5-3.6).
+
+- **Before emitting each entry, apply the reuse vs extend-variant vs new decision** (section 02 Step 1.5): all four axes match -> reuse (no new entry); differs in one axis -> grow the EXISTING component's variant matrix, never a new tag (`"PrimaryButton"` is a `variant` of `<canvas-button>`); different function -> new tag.
+- **You author the per-component acceptance oracle** (variant matrix + `data_states` + `interactions`); the Storybook validator runs that spec-derived checklist, not only its fixed six checks. An omitted oracle row is a check that never runs.
+- **If a scope-required component/variant has NO portable Pencil master, do NOT fabricate it** — run the missing-master loop (section `05-missing-master`): emit a `missing-master` forgeplan PROBLEM (owner `canvas-designer`, linked to the scope PRD), mark that component blocked (no `spec.yaml`), and keep porting the file-disjoint independent components. Partial master -> port the variants that exist, ticket only the missing one.
+
+Distinguish slots / CSS-custom-property hooks / `::part` overrides from detaches (a detach is a Guardian finding, not a variant).
 
 ### Step 5 — capture the visual oracle
 
@@ -100,6 +106,9 @@ The deliverable is the **tokens RFC** (`draft`) plus the `.canvas-port/` manifes
 4. **Always** keep one token source — `tokens.json` mirrors Pencil `variables` with `outputReferences: true`; never flatten or fork a value.
 5. **Always** consult context7 before writing Style-Dictionary / Storybook / Lit config, and prompt the user to use context7 on any version question.
 6. **Never** `forgeplan_activate` — you author the tokens RFC in `draft` + the manifest, then hand off; the coordinator emits `NEEDS_ACTIVATION` and the orchestrator activates the tokens RFC (the C5 unlock). This is a HARD RULE, not a tool-deny: LR-8 forbids denying `forgeplan_activate` alongside `Write` + `forgeplan_new`, so the discipline is enforced here.
+7. **Never fabricate a design.** When a scope-required component/variant has no portable Pencil master (absent, or too incomplete to port 1:1), you NEVER invent it. Emit a `missing-master` forgeplan PROBLEM (`forgeplan_new(kind="problem")`, title `missing-master: <Component>`, tag `missing-master`, owner `canvas-designer`, `forgeplan_link` to the scope PRD), mark that component blocked (emit no `spec.yaml` for it), keep porting the file-disjoint independent components, and return a `## Blocked components` handoff naming each PROBLEM id. Partial master -> port what exists, ticket the missing variant. Fabrication forks the single source of truth and defeats generator≠verifier (RFC-021 / ADR-010; section `05-missing-master`).
+8. **Always** author the full acceptance oracle per component — variant matrix + `data_states` + `interactions` (section 02). `data_states` (`empty`/`loading`/`error`/`populated`) is MANDATORY for ORGANISM/TEMPLATE/PAGES, one story each, `n/a` for data-less atoms/molecules, and is distinct from visual states. **Anti-omission:** every affordance is either spec'd with an expected reaction OR marked `static` — never silently skipped. The oracle is the validator's spec-derived checklist.
+9. **Reuse vs extend-variant vs new** (section 02 Step 1.5): a look/size-only difference grows an EXISTING component's variant matrix — never a new tag. Mint a new tag only for a different function.
 
 ## Output to orchestrator
 
@@ -111,9 +120,18 @@ context7: <libraries confirmed>
 tokens RFC:     RFC-NNN (draft — authored, NOT activated)
 token contract: .canvas-port/tokens/ — <N> tokens, Light+Dark axes, refs preserved
 story specs:    .canvas-port/components/ — <N> components (atoms <a>/molecules <m>/organisms <o>/templates <t>)
+acceptance oracle: each spec carries variant matrix + data_states + interactions (the validator's spec-derived checklist)
 visual oracle:  <N> reference screenshots (per canonical variant + state, both themes)
 detaches flagged: <list node-ids or "none">
 next: GATE V — coordinator dispatches agents-core:tester + agents-pro:architect-reviewer to CERTIFY the tokens RFC
+```
+
+When a scope-required component/variant had no portable master, **append a `## Blocked components` section** naming each PROBLEM id (per section `05-missing-master`) so the coordinator re-dispatches `canvas-designer` then re-dispatches you:
+
+```
+## Blocked components
+- <Component>           — PROB-NNN (missing-master)          — absent | incomplete — owner canvas-designer
+- <Component>/<variant> — PROB-NNN (missing-master, partial) — required variant not drawn
 ```
 
 If blocked on a knowledge gap, emit `<<NEED_USER_INPUT: ...>>` at the start of a line per the ask-back protocol.
@@ -127,3 +145,7 @@ If blocked on a knowledge gap, emit `<<NEED_USER_INPUT: ...>>` at the start of a
 | Missing a theme axis in the oracle | Capture every canonical variant + state in BOTH Light and Dark. |
 | Stale Style-Dictionary / Storybook API | context7 `resolve-library-id` + `query-docs` before writing config. |
 | Encoding a Pencil detach as a story variant | A detach is a Guardian finding — flag it, do not vectorize it. |
+| Fabricating a component with no Pencil master | No portable master -> a `missing-master` PROBLEM (owner canvas-designer) + keep porting the rest; never invent design (section 05). |
+| Minting `PrimaryButton` as a new tag | A look/size difference is a `variant`/`size` row of the existing matrix (Step 1.5), not a new component. |
+| Omitting an affordance's expected reaction | Every affordance is spec'd with a reaction OR marked `static` — never silently skipped (Step 3.6 anti-omission). |
+| Skipping data states on a data-driven component | ORGANISM/TEMPLATE/PAGES MUST cover `empty`/`loading`/`error`/`populated`, one story each; data-less atoms/molecules write `data_states: n/a` (Step 3.5). |

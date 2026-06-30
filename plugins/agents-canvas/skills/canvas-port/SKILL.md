@@ -21,7 +21,7 @@ phase. It is shared by three agents — read it from the role you are playing:
 
 | You are... | Phase | Read first | Then |
 |---|---|---|---|
-| `canvas-porter-storybook` (MAIN, Pencil read) | **V** Vectorize | `01-token-contract` + `02-story-spec` + `03-visual-oracle` | produce the port manifest |
+| `canvas-porter-storybook` (MAIN, Pencil read) | **V** Vectorize | `01-token-contract` + `02-story-spec` + `03-visual-oracle` | produce the port manifest (+ `05-missing-master` when a master is absent/partial) |
 | `canvas-coder` (SUB) | **A** Assemble | `01-token-contract` + `02-story-spec` + `03-visual-oracle` | implement Lit components + `*.stories.ts` + visual tests |
 | `canvas-porter-framework` (SUB) | **S** Spread | `04-framework-parity` (+ `01` for the token contract it must NOT fork) | wrap the WC base per framework + parity tests |
 
@@ -33,6 +33,7 @@ phase. It is shared by three agents — read it from the role you are playing:
 | 02 | [story-spec](sections/02-story-spec/_index.md) | Storybook `web-components` framework; one component -> one story file; the variant matrix, the slot map, and the descendant-override points; CSF + `args`/`argTypes`. | porter-storybook, coder |
 | 03 | [visual-oracle](sections/03-visual-oracle/_index.md) | Reference screenshots (per component+variant) as the source of truth for visual-regression via Playwright / the Storybook test-runner `postVisit` hook. | porter-storybook, coder |
 | 04 | [framework-parity](sections/04-framework-parity/_index.md) | Canonical Lit WC + thin React/Vue/Svelte/Angular/Solid wrappers; per-framework WC-interop gotchas (props vs attributes, events, refs, SSR); never fork token values. | porter-framework |
+| 05 | [missing-master](sections/05-missing-master/_index.md) | The no-fabrication loop: a scope-required component/variant with no portable Pencil master -> a `missing-master` forgeplan PROBLEM (owner `canvas-designer`) + keep porting the independent components + a `## Blocked components` handoff; partial master -> port what exists, ticket what's missing. | porter-storybook |
 
 ## context7 is MANDATORY for every library touch (LOCKED DECISION 7b)
 

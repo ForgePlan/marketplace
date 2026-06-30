@@ -121,9 +121,70 @@ not hardcode the children into the Component.
 
 ---
 
+## SS-7 — Reuse -> extend-variant -> new (the constructive decision)
+
+**Rule.** Before adding any component, walk the decision **in order** and stop at the first outcome that
+fits — the same tree the design side (Capture) walks, so design and code never diverge on what counts as
+"a new component":
+
+1. **REUSE** — an existing DS Component already renders this thing → `ref` it
+   (`{type:"ref", ref:<BaseID>}`) and customize via `descendants` / `slot`. No new node.
+2. **EXTEND-VARIANT** — it is the *same* component differing on **one axis** (a state, a size, a
+   color/tone, an icon slot) → add that axis to the **existing** Component as a variant / token-driven
+   override, and `ref` it with the variant selected. Do **not** mint a sibling Component.
+3. **NEW** — only when the structure *and* semantics are genuinely new (a different child tree, a
+   different role) → create a new `reusable:true` Component. A "new" Component that is really outcome #2
+   in disguise is the SS-8 cousin-duplicate violation.
+
+**Detect.** For each newly-added `reusable:true` Component, ask: "could a `descendants` / `slot` /
+variant on an existing Component have produced this?" If yes → it should have been REUSE or
+EXTEND-VARIANT, not NEW.
+
+**Severity.** Warning (Critical when the new Component duplicates a *referenced* one — consumers now
+diverge; see SS-5 / SS-8).
+
+**Fix.** Collapse the new node into a variant / override of the canonical Component and repoint refs;
+reserve a standalone Component for genuinely-new structure + semantics only.
+
+---
+
+## SS-8 — Cousin-duplicate (one-axis near-duplicate) is an extend-variant violation
+
+**Rule.** A **cousin-duplicate** is a near-duplicate Component that differs from an existing one on
+**exactly one axis** — e.g. `PrimaryButton` vs `Button` with `variant=primary`, `SmallCard` vs `Card`
+at `size=sm`, `DangerBadge` vs `Badge` with `tone=danger`. Per SS-7 this is an **EXTEND-VARIANT case**:
+the axis belongs on the existing Component as a variant, **not** as a second Component. A cousin-duplicate
+is therefore a **VIOLATION in its own right — not merely "a duplicate"** — because it bakes a value-axis
+into a *name* and forks the single source of truth along that axis.
+
+**Detect.** Group Components by structural shape; within a group flag any pair that differs only by a
+single token-able axis (a fill / tone, a size, a state, one slot) **and** encodes that axis in the
+**name** (`Primary*` / `Small*` / `Danger*` / `*Active`) instead of as a variant prop. The
+name-encodes-an-axis signal is the tell.
+
+**Severity.** Critical when both cousins are referenced (consumers diverge by accident); Warning
+otherwise.
+
+**Fix.** Keep the **base** Component, promote the differing axis to a variant / token-driven override on
+it, repoint every `ref` of the cousin to `ref:<Base>` + the variant selected, then propose deleting the
+cousin (destructive — OLD-vs-NEW screenshot + user approval per the methodology HARD RULES; the Guardian
+never deletes). **The Guardian flags a cousin-duplicate explicitly as an SS-8 extend-variant violation**
+— not as a generic SS-5 duplicate — so the fix routes to "add the variant", not "pick one of two".
+
+```
+VIOLATION   reusable Component "PrimaryButton"  +  reusable Component "Button"   (identical tree, fill differs)
+CORRECT     one reusable Component "Button" with variant {primary | secondary};
+            primary usage = { "type":"ref", "ref":"ButtonID", "descendants": { "rootID": { "variant":"primary" } } }
+```
+
+---
+
 ## Cross-checks
 
 - An SS-2/SS-3/SS-4 violation on a **screen** is usually also AL-2 (screens-not-reusable) — record both.
 - A duplicate Component (SS-5) that exists because the same atom was placed in two zones is also AL-1.
+- A cousin-duplicate (SS-8) is the **named one-axis case** of SS-5 — record it as SS-8 (extend-variant)
+  so the fix is "add the variant on the base", not just "dedupe two copies"; it also fails the SS-7
+  reuse→extend→new walk at step 2.
 - If the manifest lacks `descendants`/`ref` fields entirely, that is an export-fidelity gap — record a
   Warning ("snapshot incomplete"), do not infer a PASS.

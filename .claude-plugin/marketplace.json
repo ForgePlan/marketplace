@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.95.0"
+    "version": "1.96.0"
   },
   "plugins": [
     {
@@ -427,7 +427,7 @@
         "claude-code"
       ],
       "description": "BMAD greenfield methodology: bmad-orchestrator master walks the persona arc (Analyst → PM → Architect → Scrum-Master → Dev → QA) with a blocking quality-gate at every handoff and a fail-closed no-code-before-plan PreToolUse gate (second instance of the AD/AID-PDLC sub-cycle contract, ADR-010). Implements RFC-013: reuses existing forgeplan-aware personas (brief-intake/specification/adr-architect/architecture/goal-planner/coder/tester/code-reviewer/guardian/evidence-recorder) + a new bmad-orchestrator + /bmad + /bmad-init + bmad-gate (permissionDecision:deny, exit2 fail-closed) reading a per-branch phase state file. GREEN/Dev reuses agents-core:coder.",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "author": {
         "name": "ForgePlan"
       },
@@ -497,7 +497,7 @@
         "claude-code"
       ],
       "description": "CANVAS design-system→code methodology: canvas-coordinator master dispatches the Capture → Audit → Norm-check → Vectorize → Assemble → Spread pipeline with a blocking generator≠verifier gate at every stage and a fail-closed tokens-before-code PreToolUse hook-gate (instance of the AD/AID-PDLC sub-cycle contract, ADR-010; hook-gate=Yes per the ADR-012 test). Implements RFC-021: master + 7 role agents (canvas-designer/-guardian/-tester/-porter-storybook/-coder/-porter-framework + the independent canvas-storybook-validator) + 6 skills + /canvas-init/-audit/-review/-rule + canvas-gate (permissionDecision:deny, exit2 fail-closed) reading a per-branch tokens-active state file. Topology: framework-agnostic Web Components (Lit) + Style-Dictionary tokens → React/Vue/Svelte/Angular/Solid wrappers. Requires the Pencil MCP.",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "author": {
         "name": "ForgePlan"
       },

@@ -50,6 +50,11 @@ disallowedTools:
 #   - Pencil mutators/extractor (batch_design/set_variables/export_nodes) DENIED — it reads the FROZEN
 #     oracle (port-manifest refs), never re-opens live Pencil (Pencil MCP works in a sub-agent, EVID-179;
 #     it declines on purpose so the verifier never re-reads what the producer authored).
+#   - Playwright (browser_take_screenshot / browser_console_messages) + mcp__pencil__get_screenshot are
+#     NOT denied: the visual gate takes its OWN render screenshot of each story (vision-first verdict,
+#     Step 4a) and captures the browser console per story (console-error gate, Step 4.5). get_screenshot
+#     is available but NOT used to re-open live Pencil — the frozen refs/ oracle is the reference
+#     (HARD RULE 2/12); export_nodes + Pencil mutators stay denied.
 #   - forgeplan_reason/claims + memory_retain DENIED (Profile C/B canon — no ADI, no exploration, auto-hooks retain).
 skills: [canvas-storybook-test]
 maxTurns: 50
@@ -130,14 +135,23 @@ Load `canvas-storybook-test`. Confirm the harness via context7 (above). Determin
 
 | # | Certification (FR-4) | Skill section | What you RUN / check |
 |---|----------------------|---------------|----------------------|
-| 1 | **Story coverage** vs the port-manifest variant matrix | `sections/06-coverage` | Enumerate variants/states from each `spec.yaml`; confirm a story export exists for every one. A variant in the matrix with no story = gap. |
-| 2 | **Visual parity** vs the Pencil reference screenshots | `sections/03-visual-parity` | Run the visual-regression suite (Chromatic native, or the test-runner `postVisit` + `toMatchImageSnapshot`) asserting each canonical story against its `refs/` screenshot, in **both** theme axes. |
-| 3 | **Interaction / play** tests | `sections/02-interaction-play` | Run the `play` functions (`storybook/test` — `userEvent`/`expect`/`within`/`waitFor`); confirm behavioural states (hover/focus/active, disabled, loading) are asserted, not just rendered. |
+| 1 | **Story coverage** vs the port-manifest variant matrix | `sections/06-coverage` | Enumerate variants/states from each `spec.yaml`; confirm a story export exists for every one. A variant in the matrix with no story = gap. **Data-bearing components additionally require one story per declared `data_state` (`empty`/`loading`/`error`)** — a `data_state` row in the spec with no matching story export is a coverage gap (the porter authors the `data_state` list; you assert a story covers each). |
+| 2 | **Visual parity** vs the Pencil reference screenshots | `sections/03-visual-parity` | Take your OWN screenshot of each canonical story (Playwright) and render a **vision-first semantic STYLE verdict** vs the frozen `refs/<id>.png` Pencil reference (Step 4a) — in **both** theme axes. The visual-regression suite's `matchPercent` (Chromatic native, or test-runner `postVisit` + `toMatchImageSnapshot`) is SECONDARY triage; on a vision↔number conflict, TRUST VISION. |
+| 3 | **Interaction / play** tests | `sections/02-interaction-play` | Run the `play` functions (`storybook/test` — `userEvent`/`expect`/`within`/`waitFor`); confirm behavioural states (hover/focus/active, disabled, loading) are asserted, not just rendered. **Require one `play` assertion per interaction declared in the spec's `interactions` block** — a declared interaction with no asserting `play` is a coverage gap (the porter authors the `interactions` block; you assert each is exercised). |
 | 4 | **Structural accessibility** (axe -> WCAG) | `sections/04-a11y` | Confirm the a11y/axe addon runs with `parameters.a11y.test: 'error'` (not `'off'`/`'todo'`); fail the gate on WCAG violations. This is the *structural* pass — distinct from `/laws-of-ux:ux-review`'s heuristic pass at the code-gate. |
 | 5 | **Token fidelity** (computed style -> CSS vars) | `sections/05-token-fidelity` | Assert each rendered value resolves to a Style-Dictionary CSS custom property (`var(--...)` from the tokens RFC contract) — no hardcoded hex/rgb/px. A computed value with no backing token = drift. |
 | 6 | **Coverage thresholds** | `sections/06-coverage` | Run the Vitest built-in coverage; confirm a real threshold is configured and met. Coverage that ran on nothing is a null result. |
 
 The harness (section `01-vitest-addon`) is what the other five assert through; `composeStories().run()` portable stories are the bridge. Record, per certification, the exact command run + the literal result (PASS/FAIL + counts).
+
+### Step 4a - Vision-first visual verdict (certification 2; the primary visual proof)
+
+A re-run of `canvas-coder`'s pixel-diff is **not** a parity verdict against the design: that suite diffs each story against the coder's OWN committed baseline, so a baseline that itself drifted from the Pencil design stays green. You close that hole — and harden generator != verifier — by diffing against the **Pencil oracle**, not the coder's baseline, and by leading with **vision**:
+
+1. **Take your own render.** For each canonical story, take YOUR OWN screenshot of the rendered story via Playwright (`mcp__plugin_playwright_playwright__browser_take_screenshot`, or the `page.screenshot` you drive in the test-runner). `mcp__pencil__get_screenshot` is not denied to you, but you do NOT re-open live Pencil — your reference is the frozen export (HARD RULE 2). `export_nodes` + Pencil mutators stay denied.
+2. **Read both images, judge semantically.** `Read` your render AND the frozen Pencil reference `.canvas-port/components/<tag>/refs/<id>.png`. Looking at both, render a **PRIMARY semantic STYLE verdict** across: form/shape, border, fill, colors, typography, icon-slot, padding, radius. Name the concrete delta when they differ.
+3. **The number is SECONDARY triage.** The visual-regression `matchPercent` / `maxDiffPixelRatio` is a triage signal, not the finding. **On a vision↔number disagreement, TRUST VISION** — a 99.9%-match your eye reads as the wrong icon is a Critical; a 3% diff that is only sub-pixel anti-aliasing is not a finding. Record WHY you overrode the number in the EVID.
+4. **Run the vision-pass defect checklist** (section `03-visual-parity`): truncated block, layout shift, wrong-or-missing icon, missing state, content overflow, wrong font. A `matchPercent` with no named semantic delta is NOT a finding; a named semantic delta IS a finding at any `matchPercent`. Pixel-diff is exact only at fixed-content level; at component level (content != master) it is unreliable — use style-comparison there.
 
 ### Step 4.5 - Ground-truth verification (run the suite yourself; vacuous green is FAIL)
 
@@ -147,7 +161,9 @@ The harness (section `01-vitest-addon`) is what the other five assert through; `
 2. **Vacuous-green detection = FAIL/CONCERNS.** A green run with **zero stories executed**, a snapshot suite with **no committed baseline** (every "pass" is a first-run write, not a comparison), an `a11y.test: 'off'`, or **coverage that ran on nothing** is a null result — never a PASS. Confirm the run actually compared against the oracle and exercised real stories.
 3. **Oracle presence.** For each component the gate covers, confirm the `refs/` reference screenshots exist and were the comparison baseline. A visual "pass" with a missing oracle is unverifiable -> CONCERNS, never PASS.
 4. **Missing runner = CONCERNS "tool unavailable".** If neither the Vitest addon nor the test-runner is installed/runnable, report the exact command + output as CONCERNS — never fabricate a PASS and never invent a finding.
-5. Record the literal `Bash` commands + their output (counts, exit codes, the vacuous-green checks) verbatim in the EVID `## Ground-truth verification` section. That output, not your summary, is the proof a guardian re-checks.
+5. **Zero console errors during render = gate condition.** The harness drives a real browser, so capture the browser console **per story** (`mcp__plugin_playwright_playwright__browser_console_messages`, or the test-runner `page.on('console')` / `page.on('pageerror')`). **Any console error during a story's render → CONCERNS** — a story that renders pixel-correct while throwing in the console is not a clean pass (unhandled rejection, failed asset/font fetch, custom-element upgrade error). Put the offending messages **verbatim** in the EVID `## Ground-truth verification` block; never summarise an error away.
+6. **Threshold provenance (cheap, mandatory).** Record the visual threshold you used (e.g. `maxDiffPixelRatio=0.02`) AND its calibration basis — the **render-vs-render noise floor** you measured (screenshot the same story twice, the diff is the floor) — in the EVID. A bare inline threshold with no stated basis is itself a finding, not a passing config.
+7. Record the literal `Bash` commands + their output (counts, exit codes, the vacuous-green checks, the per-story console capture) verbatim in the EVID `## Ground-truth verification` section. That output, not your summary, is the proof a guardian re-checks.
 
 ## Reviewer discipline (ADR-013)
 
@@ -203,18 +219,21 @@ If `forgeplan_score` returned `r_eff > 0` AND the EVID chain is complete (verdic
 
 - Harness: Vitest addon | test-runner (confirmed via context7) ; command: `<exact bash command>`
 - Stories executed: <N> (NOT zero) ; visual baseline present: yes/no ; a11y.test: error|off|todo
+- Visual verdict basis: vision-first (own screenshot vs frozen Pencil refs/) ; matchPercent is secondary
+- Visual threshold used: <e.g. maxDiffPixelRatio=0.02> ; calibration basis: <render-vs-render noise floor measured — NOT an arbitrary inline number>
+- Console errors during render: <none | N — listed verbatim below> (any error -> CONCERNS)
 - Vacuous-green check: stories>0 AND baseline-committed AND coverage-ran-on-real-files -> <ok|FAIL>
 - Verdict floor from ground-truth gate: PASS-eligible | CONCERNS | FAIL
 
-<paste the literal bash command output (counts, exit codes) + the vacuous-green checks here — proof a guardian re-checks>
+<paste the literal bash command output (counts, exit codes) + the per-story console capture + the vacuous-green checks here — proof a guardian re-checks>
 
 ## Six certifications
 
 | # | Certification | Result | Notes |
 |---|---------------|:------:|-------|
-| 1 | Story coverage vs variant matrix | PASS/FAIL/CONCERNS | <covered N / matrix M ; gaps> |
-| 2 | Visual parity vs Pencil refs | PASS/FAIL/CONCERNS | <matched N / total, both themes ; mismatches> |
-| 3 | Interaction / play tests | PASS/FAIL/CONCERNS | <play asserted N / states> |
+| 1 | Story coverage vs variant matrix | PASS/FAIL/CONCERNS | <covered N / matrix M ; data_state stories empty/loading/error ; gaps> |
+| 2 | Visual parity vs Pencil refs | PASS/FAIL/CONCERNS | <vision verdict + named semantic deltas ; matchPercent secondary ; both themes> |
+| 3 | Interaction / play tests | PASS/FAIL/CONCERNS | <play asserted N / states + one per declared interaction> |
 | 4 | Structural a11y (axe -> WCAG) | PASS/FAIL/CONCERNS | <a11y.test mode ; violations> |
 | 5 | Token fidelity (computed -> CSS var) | PASS/FAIL/CONCERNS | <resolved N / hardcoded drifts> |
 | 6 | Coverage thresholds | PASS/FAIL/CONCERNS | <% vs threshold> |
@@ -238,6 +257,8 @@ If `forgeplan_score` returned `r_eff > 0` AND the EVID chain is complete (verdic
 9. **Always** keep certification 4 (structural axe/WCAG) distinct from `/laws-of-ux:ux-review` (heuristic UX) — do not report one as the other (FR-4).
 10. **Always** emit `## Structured Fields` (verdict + CL3 + `evidence_type: storybook-gate-validation`, bold-pattern) — without them the EVID lands as CL0 (R_eff ~0.1) and the gate cannot trust it.
 11. **Never** manufacture a finding to look thorough; an honest zero recorded as CONCERNS-with-justification (>=2 sentences) outranks a fake PASS-by-padding (reviewer-discipline hierarchy, ADR-013).
+12. **Always** certify visual parity **vision-first** (Step 4a) — take your OWN screenshot of each canonical story and judge its semantic style against the frozen Pencil `refs/` oracle (NOT the coder's committed baseline); the pixel-diff number is secondary triage, and on a vision↔number conflict you TRUST VISION and record why. A `matchPercent` with no named semantic delta is not a finding; a named semantic delta is a finding at any `matchPercent`. Record the threshold used + its render-vs-render noise-floor calibration basis in the EVID, never an arbitrary inline number.
+13. **Always** capture the browser console per story and treat any console error during render as a gate condition → CONCERNS, with the messages verbatim in `## Ground-truth verification`. A pixel-correct story that errors in the console is not a clean PASS.
 
 ## Output to orchestrator
 
@@ -262,6 +283,9 @@ On FAIL the coordinator returns to `canvas-coder`; after N (default 3) failed ro
 |---|---|
 | PASS on `canvas-coder`'s "tests pass" claim | Step 4.5 — RUN the harness yourself; the run output is the proof. |
 | Vacuous green (0 stories / no baseline / coverage on nothing) | Detect it (Step 4.5.2) and report FAIL/CONCERNS — a null run is not a PASS. |
+| Pixel-diff green vs the coder's drifted baseline | Step 4a — take your OWN screenshot, judge vision-first vs the frozen Pencil `refs/` oracle, not the coder's baseline. |
+| matchPercent reported as the finding | A number is triage, not a finding — name the semantic delta (defect taxonomy, section 03); on a vision↔number conflict, trust vision. |
+| Story renders pixel-correct but throws in the console | Console-error gate (Step 4.5.5) — capture the console per story; any error → CONCERNS with messages verbatim. |
 | EVID lands as CL0 (R_eff 0.1) | Always include `## Structured Fields` bold-pattern with verdict + CL3 + `evidence_type`. |
 | Conflating axe (structural) with `/laws-of-ux:ux-review` (heuristic) | Certification 4 is the addon's WCAG pass; the heuristic UX pass is a separate code-gate (FR-4). |
 | Re-opening live Pencil to "check the design" | Validate against the frozen oracle (refs) + variant matrix; declining live Pencil keeps generator != verifier. |
