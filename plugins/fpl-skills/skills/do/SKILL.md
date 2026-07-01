@@ -101,6 +101,13 @@ Approval checkpoints: after research, after draft
 Proceed? (yes / adjust pipeline / skip steps)
 ```
 
+When the pipeline includes an implementation step (Template C), fold the
+project's hard constraints (red lines from `CLAUDE.md`/`AGENTS.md`) into
+the plan shown at this checkpoint — see [`sprint`](../sprint/SKILL.md)
+"Bake project red lines into the plan" (marketplace#169). Catching a
+spec-vs-constraint conflict at the plan-approval checkpoint is cheaper than
+catching it after Step 4 spawns teammates.
+
 Wait for the answer. The user can:
 
 - **"yes" / "давай" / "1"** → execute all
@@ -191,6 +198,9 @@ Step 6: DOC (optional, if the task included docs)
   → Update TODO with [x]
   → memory_retain decisions
   → Update RFC (Implementation Log + Insights)
+  → If a red-line conflict forced omitting part of the mandate, reconcile
+    the RFC/PRD (As-Built Reconciliation note) before doc step closes —
+    see [`sprint`](../sprint/SKILL.md) Step 6 (marketplace#169)
 
 Step 7: CLEANUP
 ```
@@ -338,7 +348,7 @@ MEMORY (retain synthesis)
 
 | Situation | Action |
 |---|---|
-| Team agent fails | Retry once. If it fails again — partial report, ask user |
+| Team agent fails | Retry once. If it fails again — self-verify (re-check the affected work independently) + sweep any claim it held (marketplace#169), then partial report, ask user |
 | Research empty | "Nothing found", ask to widen keywords |
 | Doc draft rejected | Get specific feedback, rewrite |
 | Implementation fails tests | Report failures, attempt fix; if blocked — ask user |

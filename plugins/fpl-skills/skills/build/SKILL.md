@@ -213,12 +213,31 @@ Report back with:
 - Updated TODO entries (mark [x] for done, add [ ] for gaps)
 ```
 
+#### Bake project red lines into the prompt (marketplace#169)
+
+If the project has hard constraints — host-isolation, a read-only-proxy
+allow-list, primitive-ownership boundaries, or any other rule a phase MUST
+NOT violate — paste them **verbatim** into every teammate's "## Project
+Rules" block, not just "follow CLAUDE.md". A teammate that reads the raw
+constraint text at spawn time can catch a spec-vs-constraint violation
+**before writing code** (e.g. the plan calls for a server endpoint the
+project's read-only-proxy rule forbids) instead of after a failed build.
+Pull the constraints from `CLAUDE.md` / `AGENTS.md` "Hard rules" / "Red
+lines" sections if present; ask the user once if none are recorded.
+
 ### Step 5: Monitor & Coordinate
 
 - Track task completion (TaskList).
 - When backend-dev finishes stores → unblock frontend-dev for hooks.
 - When test-writer needs types → wait for backend.
 - Handle blockers, replan tasks if needed.
+- **Teammate crashes or times out** (marketplace#169): don't ship
+  unverified. Self-verify — re-run the affected phase's
+  typecheck/build/tests yourself (Step 6) and read the diff independently
+  — rather than trusting a partial or absent teammate report. If the
+  teammate held a `forgeplan_claim` (some projects claim-wrap builders the
+  way [`sprint`](../sprint/SKILL.md) does), release it before continuing —
+  see `sprint` §4c-bis for the claim-sweep half of this discipline.
 
 ### Step 6: Verify
 
@@ -376,6 +395,19 @@ honest record.
    Gaps remaining: {list}
    Key decisions: {ADRs from research}")
    ```
+
+#### Spec ↔ as-built reconciliation (marketplace#169)
+
+If the parent PRD/RFC mandated something a project red line forbade — and
+the team correctly omitted it (per the prompt-baked rule above) — the job
+is not done by omission alone. Before the parent artifact is activated
+(Step 7's activation prompt), append an "As-Built Reconciliation" section
+to its body marking the forbidden mandate superseded-by-build, with the
+reason. An artifact whose invariants still claim the forbidden surface
+while the code correctly doesn't ship it is a silent lie in the graph —
+the next reader (human or agent) trusts the stale mandate. Re-adding the
+forbidden surface "to satisfy the spec" is the wrong fix; reconciling the
+spec is the right one.
 
 ### Step 9: Cleanup
 

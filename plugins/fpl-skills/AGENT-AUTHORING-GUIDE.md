@@ -1536,6 +1536,56 @@ So the CLI exposes the *result* of scoring (`r_eff`) but not the *inputs* to it 
 
 ---
 
+## Autonomous build-workflow discipline (marketplace#169)
+
+Foundation: three reusable *methods* — not bugs — emerged from an autonomous
+multi-feature build with `/smith` + Workflows (`@forgeplan/web`, forgeplan
+0.33). They apply to any orchestrator running a design → build → verify
+pipeline (`build`, `sprint`, `do`, `/forge-cycle`) and are the how behind
+the "Claim hygiene" and "StructuredOutput precedence" sections above.
+
+### 1. Bake the red lines into the design/build agent prompt
+
+Put the project's hard constraints (host-isolation, read-only-proxy
+allow-list, primitive-ownership, etc.) **verbatim** into the design/build
+agent's prompt — not a paraphrase, not "follow CLAUDE.md" alone. The design
+phase then catches spec-vs-constraint violations **before any code is
+written**, instead of after a failed build. Codified in: `build` §"Bake
+project red lines into the prompt", `sprint` §"Bake project red lines into
+the plan", `do` Phase 3, `/forge-cycle` Step 4.6.
+
+### 2. Spec ↔ as-built reconciliation
+
+When an **active** PRD/RFC mandates something a red line forbids, two
+things are required, not one: (a) the build **omits** the forbidden
+surface, and (b) the orchestrator **reconciles the artifact body** (append
+an "As-Built Reconciliation" section marking the forbidden mandate
+superseded) **before activation** — otherwise the artifact's invariants
+*lie* about the shipped code. Re-adding the forbidden surface to satisfy
+the stale spec is the wrong fix. Codified in: `build` §"Spec ↔ as-built
+reconciliation", `sprint` Step 6, `do` Template C Step 6, `/forge-cycle`
+Step 8 (gate before `forgeplan_activate`).
+
+### 3. Resilience: self-verify + claim-sweep on agent crash
+
+When a build/verify agent crashes (e.g. the StructuredOutput retry-cap —
+see "StructuredOutput precedence" above), the orchestrator must
+**self-verify** (re-run the checks + read the diff independently) rather
+than ship unverified, **and** sweep any orphaned claims the crashed agent
+left (see "Claim hygiene" above). Don't wait for TTL; don't skip
+verification. Codified in: `build` Step 5, `sprint` §4c-bis, `do` Error
+handling table, `/forge-cycle` §"Resilience: self-verify + claim-sweep on
+reviewer crash" (after Step 6.6).
+
+### Cross-reference
+
+- **Claim hygiene** (above) — the claim-sweep half of pattern 3.
+- **StructuredOutput precedence** (above) — the crash mode pattern 3 guards against.
+- marketplace#169 — this discipline; marketplace#165/#166/#168 — the
+  sibling hardening it composes with.
+
+---
+
 ## References
 
 - **PRD-026** — Forgeplan-aware agent layer (canonical pattern + project config + fpl-init v2.0)
