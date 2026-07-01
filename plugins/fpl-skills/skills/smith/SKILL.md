@@ -97,7 +97,16 @@ mcp__forgeplan__forgeplan_health()
 mcp__forgeplan__forgeplan_list(status="active")
 mcp__forgeplan__forgeplan_blocked()
 mcp__forgeplan__forgeplan_stale()
+mcp__forgeplan__forgeplan_claims()            # who-holds-what — read-only; do NOT recommend claimed work
+mcp__forgeplan__forgeplan_activity_stats(since_hours=168)  # velocity + tool-transitions, last 7 days
+mcp__forgeplan__forgeplan_journal()           # recent ADR/Note transitions for the digest
 ```
+
+> **`forgeplan_claims` is read-only.** It is the plural list-tool ("List live claims …
+> Used by orchestrators to build dispatch plans and by sub-agents to avoid double-claiming"),
+> NOT the singular mutating `forgeplan_claim`. Calling it from smith's pre-flight is in-profile —
+> smith stays read-mostly. `forgeplan_activity_stats` + `forgeplan_journal` are likewise read-only
+> and already in smith's inherited MCP-deps. None of these mutate the workspace.
 
 Record:
 
@@ -106,6 +115,17 @@ Record:
 - `has_active_artifacts`: `forgeplan_health` returns ≥1 active PRD/RFC/ADR
 - `has_blocked_artifacts`: `forgeplan_blocked` returns ≥1 entry
 - `has_stale_drafts`: `forgeplan_stale` returns ≥1 entry
+- `live_claims`: map of `artifact-id → {agent, ttl, note}` from `forgeplan_claims`. Any artifact
+  here is **off the table** for new dispatch — smith does NOT route work onto a claimed artifact;
+  it surfaces the holder to the user instead (see Step 4 + Hard rule 9 below). An expired/orphaned
+  claim (TTL elapsed, holder not active) is flagged as `STALE CLAIM — recommend orchestrator
+  `forgeplan_release <id> --force` sweep` and is NOT treated as a live holder.
+- `health_digest`: a 4-field plain-language read of pipeline state, built from the reads above:
+  **R_eff distribution** (from `forgeplan_health` weakest-link summary — "n artifacts below 0.5,
+  weakest is <ID> @ <score>"), **velocity** (from `forgeplan_activity_stats` — "<N> tool calls /
+  7d, p95 <ms>"), **transitions** (from `forgeplan_journal` — "<N> activations, <N> supersedes since
+  last session"), **decay** (from `forgeplan_stale` — "<N> drafts older than 14d"). This digest is
+  passed verbatim into the smith-agent dispatch (Step 4) so routing is state-grounded, not vibes.
 
 ### Step 2 — Auto-route to bootstrap if greenfield
 
@@ -144,11 +164,15 @@ Task(subagent_type="agents-pro:smith",
        - active artifacts: <list IDs and titles>
        - blocked: <list>
        - stale drafts: <list>
+       - live claims (who-holds-what): <map from forgeplan_claims; mark any STALE CLAIM>
+       - health digest (R_eff / velocity / transitions / decay): <4-field digest from Step 1, plain language>
        - hindsight recall: <snippets from Step 3, or 'none'>
        - git: branch=<name>, uncommitted=<count>, recent_commits=<count>
        - user intent (verbatim): <what the user actually typed; may be empty>
 
        Read routing-map.md, classify the context against the 14-row matrix,
+       Do NOT recommend work on a claimed artifact — name the holder for the user.
+       Ground the route in the health digest, not on conversation alone.
        and return a Plan using templates/smith-plan.md.
      """)
 ```
@@ -280,6 +304,13 @@ These rules are absolute. Violations are CONCERNS at the next Profile B review.
 8. **Tactical work bypasses smith entirely.** Trivial fixes (Row 5 of the matrix) must NOT go
    through smith — process overhead exceeds the fix cost. Smith should explicitly tell the user
    «this is tactical, just do it» when the signal matches Row 5, then exit without a Plan.
+9. **Never route work onto a claimed artifact.** Step 1 calls `forgeplan_claims` (read-only) before
+   any classification. If an artifact smith would recommend is held by another agent (live, non-expired
+   claim), smith MUST NOT put it in the Dispatch sequence — instead it surfaces the holder to the user
+   ("PRD-057 is claimed by `architect-reviewer` (ttl 22m) — not routing onto it; pick a different
+   thread or wait for release"). An **expired/orphaned** claim (TTL elapsed) is reported as a sweep
+   candidate (`forgeplan_release <id> --force`, orchestrator action), never silently honoured and never
+   silently ignored. Routing onto live-claimed work is the double-assignment failure this rule blocks.
 
 ---
 

@@ -184,6 +184,10 @@ disallowedTools: Write, Edit, NotebookEdit, mcp__forgeplan__forgeplan_activate, 
 7. **Always** include `file:line` (or test name) reference for every finding. No vague "somewhere in the auth module".
 8. **Never** PASS a claimed change without reading frozen git ground truth (new "Step 4.5"). Empty git diff on a claimed change = BLOCKER even when tests are green. The transcript is supplementary; the cited diff/grep output is the proof. (Makes ML-13 enforceable — see "Ground-truth verification clause" section.)
 
+9. **When composed under a forced output schema (Workflow `StructuredOutput`), the schema instruction wins over the EVIDENCE-writing default.** A Profile B reviewer's native default is to author an EVID artifact and return a prose handoff. When the dispatch carries a structured-output contract and the harness reads ONLY the final `StructuredOutput` call, the agent MUST run its full EVID chain AND then emit `StructuredOutput` exactly once as the terminal action. Finishing the EVID chain but returning prose burns the retry cap and crashes the workflow. (marketplace#165 — observed on `architect-reviewer` and `guardian`.)
+
+10. **Release on every exit path — `forgeplan_release` is a `finally` clause, not the happy-path tail of Step 8.** From the instant a Profile B agent calls `forgeplan_claim` (Step 1), it owes a `forgeplan_release` on PASS, CONCERNS, BLOCKER, validate-failure, analyser/script crash, or any post-claim abort. A reviewer that crashes mid-review before releasing leaks the claim: the artifact stays locked, `forgeplan_claims --active` shows a ghost holder, and the orchestrator's next dispatch is blocked until TTL expiry or a manual `forgeplan_release --force`. Orchestrator-side complement: check `forgeplan_claims` for a live holder **before** dispatch, and sweep orphaned claims (`forgeplan_release --force`) after a workflow completes or an agent crashes. Read-only reviewers that have no operational need to claim should not self-claim at all. (marketplace#166 — three orphaned claims on RFC-008/009/010 from architect-reviewers that crashed before release.)
+
 Per-agent HARD RULES extend these with role-specific invariants (e.g., security-expert adds "every finding has STRIDE/OWASP/CWE attribution"; tester adds "always report skipped/flaky tests separately").
 
 > **All Profile B reviewers MUST implement Step 4.5 — see the "Profile B Step 4.5 — Ground-truth verification clause" section.** This is the enforceable form of ML-13: no agent (and no reviewer) ever verifies a claimed change by trusting the worker's word — it reads frozen git ground truth itself.
@@ -1370,6 +1374,165 @@ Do **not** rely on:
 - ML-11 entry in `docs/SPRINT-A-E-RETROSPECTIVE.md`
 - Anomaly #21 in CLAUDE.md (marketplace)
 - Mental model `mm-pipeline-anomalies` may extend with "sub_agent_overreport" anomaly kind
+
+---
+
+## Claim hygiene — read-only agents never claim; orchestrator pre-checks + sweeps (marketplace#166)
+
+Foundation: a `forgeplan_claim` is an **exclusive lease** on one artifact, recorded durably in `claims/<id>.yaml` so it survives a session re-roll and is visible to `forgeplan_health` (`active_claim_count`) and `forgeplan_claims`. That durability is the point — and the trap. A claim that is taken but never released outlives the work it guarded: the next dispatch sees the artifact as occupied, `forgeplan_dispatch` defers it to the serial queue, and a parallel sprint silently narrows to one lane. The dominant way this happens is a **crashed read-only reviewer** — an agent that claimed an artifact it had no business claiming, then died before `release`.
+
+This discipline has two halves: an agent-side rule (who may claim at all) and an orchestrator-side lifecycle (pre-check before dispatch, sweep after the run or on crash). It composes with — and does not replace — **Identity tagging — non-negotiable** above (every claim/release carries `claude-code/<ver>/<agent-name>-task-<id>`) and **rule 12 forgeplan-agent-dispatch** (the dispatch → claim → release protocol). Identity tagging makes a claim *attributable*; this section makes the claim set *clean*.
+
+### Agent-side: who may claim
+
+| Profile | May claim? | Rule |
+|---|---|---|
+| Profile A (creator) | yes — one artifact it creates/links; `forgeplan_claims` exploration allowed | claims + releases the artifact it owns |
+| Profile B (reviewer, EVID-writer) | yes — **exactly one** artifact it reviews; `forgeplan_claims` is DENIED (sibling-exploration is not its job) | claim parent → … → release parent (one lease, one release) |
+| Profile B-orchestrator (`smith`) | **no** — `forgeplan_claim`/`release` are DENIED in its denylist; it reads broad state, mutates nothing | the orchestrator that dispatches the planned agents handles claim/release per-agent |
+| Profile C (read-only researcher) | **no** — `forgeplan_claim`/`release` are DENIED; it gathers context and returns synthesis | a researcher that thinks it needs a claim is mis-profiled — it should be a Profile A/B agent |
+| Profile D (maintainer) | yes — one artifact it fixes in-place | claim → … → release |
+
+The load-bearing case: a **read-only reviewer that is dispatched in audit mode and produces no EVID** is Profile C, and Profile C **must not claim**. The denylist already blocks it; this rule is the body-level counterpart that stops an agent reaching for a claim "to be safe." A read-only pass leaves the claim set exactly as it found it.
+
+> **Profile B universal HARD RULES addendum** — bake this into every Profile B reviewer body alongside the existing list:
+>
+> N. **Never** hold more than one claim, and **always** `release` (with the same identity tag you claimed with) on every exit path — success, CONCERNS, BLOCKER, or early return. A claim you cannot release because you crashed is the orchestrator's to sweep; a claim you simply *forgot* to release is a defect.
+
+### Orchestrator-side: pre-check before dispatch
+
+Before dispatching the agents in a plan (or a `forgeplan_dispatch` bucket), the orchestrator MUST read the current claim set and refuse to double-claim:
+
+```python
+# Orchestrator, before Wave N dispatch:
+active = mcp__forgeplan__forgeplan_claims(active=True)   # [{id, agent_id, ttl, note}, ...]
+held = {c["id"] for c in active}
+
+for artifact_id in wave_targets:
+    if artifact_id in held:
+        # Someone (a prior wave, a stale session, a crashed reviewer) holds it.
+        # Do NOT issue a second claim — claims are exclusive. Defer or sweep (below).
+        defer_or_sweep(artifact_id, active)
+```
+
+`forgeplan_dispatch` already buckets by file-conflict overlap; the claim pre-check is the orthogonal guard against **lease** conflict. Both run before a wave: dispatch decides *which files are disjoint*, the claim pre-check decides *which artifacts are free*.
+
+### Orchestrator-side: sweep orphaned claims after a run or on crash
+
+A claim is **orphaned** when its holder is gone but the lease remains: the sub-agent crashed, the session was re-rolled, or a reviewer returned without releasing. The orchestrator escape hatch (rule 12) is `forgeplan_release <id> --force`. Run a sweep at two moments:
+
+1. **Workflow close** — after the last wave, diff the claim set against the agents you actually dispatched. Any claim whose `agent_id` matches a dispatch that has already returned, but is still `active`, is orphaned → `release --force`.
+2. **Crash / anomaly** — when a dispatched agent fails to return (timeout, error, anti-loop guard fired), immediately `release --force` the artifact it was sent to claim. Do not wait for the workflow to close; a held lease blocks the re-dispatch.
+
+```python
+# Sweep — workflow close OR on detected crash:
+active = mcp__forgeplan__forgeplan_claims(active=True)
+for c in active:
+    if c["agent_id"] in returned_or_crashed_dispatches:
+        mcp__forgeplan__forgeplan_release(id=c["id"], force=True,
+            agent=f"claude-code/<ver>/orchestrator-sweep-task-<id>")
+        log_anomaly(f"orphaned claim swept: {c['id']} held by {c['agent_id']}")
+```
+
+### Verified incident (this session)
+
+A multi-agent architecture review dispatched read-only `architect-reviewer` agents against RFC-008, RFC-009, and RFC-010. The reviewers claimed all three, then crashed before reaching `release`. Result: **3 orphaned claims** left active — `forgeplan_health` showed `active_claim_count: 3` after the workflow had nominally finished, and a follow-up dispatch deferred all three RFCs to the serial queue. Two failures stacked: the reviewers were **read-only and should never have claimed** (agent-side rule above), and the orchestrator **did not sweep on crash** (orchestrator-side rule above). The fix is both halves, not either alone.
+
+### Cross-reference
+
+- **Identity tagging — non-negotiable** (above) — every claim/release is attributable; the sweep release uses an orchestrator-sweep identity tag.
+- **rule 12 forgeplan-agent-dispatch** (project `.claude/rules/`) — the dispatch → claim → release protocol and the `release --force` escape hatch.
+- **Profile C / Profile B-orchestrator denylists** (above) — `forgeplan_claim`/`release` are already DENIED there; this section is the body-level reason why.
+- **Orchestrator Step 9c — Filesystem verification** (above) — the sibling orchestrator-side post-dispatch check: 9c verifies *files changed*, this verifies *leases released*.
+- marketplace#166 — claim-hygiene hardening (this discipline).
+
+---
+
+## StructuredOutput precedence — the workflow schema wins over the EVIDENCE-writing default (marketplace#165)
+
+Foundation: a Profile B agent's job is to produce an EVIDENCE artifact (`forgeplan_new` + `forgeplan_update` + link), and most of this guide's procedures end there. But a Profile B agent dispatched **inside a workflow orchestration script** is given a second, host-level contract: a **StructuredOutput schema** the script reads to drive the next step. These two contracts can collide, and when they do, the agent must satisfy the schema — not silently substitute its EVID-writing habit for the required structured return.
+
+The failure: an EVIDENCE-authoring agent (`architect-reviewer`, `guardian`) finishes its review, writes the EVID body, emits its `<<NEEDS_ACTIVATION>>` handoff prose — and **returns without calling the host's `StructuredOutput` tool**. The orchestrating script reads only the structured return; an absent structured return is read as "no result," the script retries, and the dispatch hits its **retry cap and crashes**. The agent did real work (the EVID exists, is scored, is linked) but the workflow cannot see it, because the load-bearing handoff channel for *that* dispatch was the schema, not the EVID and not free prose.
+
+### The precedence rule
+
+> **When a dispatch supplies a StructuredOutput schema, calling it is the terminal step — it wins over the EVIDENCE-writing default and over any prose handoff.**
+
+- The schema instruction is **not** in tension with EVID creation — do both. Create/score/link the EVID *and then* return via StructuredOutput. The EVID is the durable audit record; the StructuredOutput call is the machine-readable handoff the script consumes.
+- If for any reason only one can happen (turn budget exhausted, a tool failed), the **StructuredOutput call is the one that must happen** — the workflow's liveness depends on it. A dispatch that returns a valid structured result but skipped a nice-to-have lesson-retain is recoverable; a dispatch that wrote a perfect EVID but never returned the structured result crashes the run.
+- This mirrors, at the workflow layer, the **NEEDS_ACTIVATION** and **NEED_USER_INPUT** sentinel discipline: the agent has no authority to activate or to ask the user, so it *signals* and the orchestrator acts. Here the agent has no authority over the next workflow step, so it *returns the schema* and the script acts. Same separation of duty, different channel.
+
+> **Profile B universal HARD RULES addendum** — for EVIDENCE-authoring agents (`architect-reviewer`, `guardian`, `security-expert`, `tester`, `code-reviewer`) that may run under a workflow schema:
+>
+> N. **Always** treat a supplied StructuredOutput (or equivalent host structured-return) schema as the **terminal, mandatory step** of the dispatch. Call it exactly once at the end, after the EVID chain. **Never** let the EVIDENCE-writing default, the `<<NEEDS_ACTIVATION>>` handoff, or any prose substitute for the structured return — an absent structured return reads as "no result" to the script and triggers a retry-cap crash.
+
+### When NOT to apply
+
+- The agent is invoked **directly by the main conversation** (no orchestration script, no schema supplied) — then the EVID + `<<NEEDS_ACTIVATION>>` handoff is the complete contract; there is no StructuredOutput to call.
+- The schema and the EVID would carry **the same verdict** — that is expected, not a conflict. Fill both; they serve different readers (script vs artifact graph).
+
+### Self-check (author can run this)
+
+Read the dispatching skill/script. If it declares a structured-output schema and reads *only* the structured return, the agent body MUST end its procedure with an explicit "call StructuredOutput once with {schema fields}" step — placed *after* the EVID score/link/sentinel steps, never instead of them.
+
+### Cross-reference
+
+- **Profile B Step 9b — Surface NEEDS_ACTIVATION sentinel** (above) — same separation-of-duty shape: the agent signals, the orchestrator acts. Under a workflow schema, the structured return is the signal channel.
+- **Subagent ask-back protocol** (above) — the agent cannot call `AskUserQuestion`; it returns a sentinel. Same constraint family: the host owns the next step, the agent owns the structured signal.
+- **Profile B EVID-creation canonical procedure** (above) — the EVID chain this step follows, not replaces.
+- marketplace#165 — StructuredOutput-precedence hardening (this discipline).
+
+---
+
+## CLI-vs-MCP contract — the identity triple and per-EVID structured fields are NOT in CLI JSON (forgeplan#397)
+
+Foundation: forgeplan exposes the same artifacts over two surfaces — the `forgeplan` **CLI** (`list`/`get`/`score` with `--json`) and the **MCP** server (`forgeplan_get` and friends, returning a richer DTO). They are **not the same payload.** An agent or downstream consumer that reads CLI JSON and assumes it carries everything the markdown body or the MCP DTO carries will silently read fields that are not there — and treat their absence as "the field is empty" rather than "this surface does not expose it." This is the same *asymmetry* class as the `body="@file"` data-loss bug (forgeplan#350, "Critical safety convention" above): two surfaces, different semantics, no error on the thin one.
+
+### What CLI JSON does and does not carry (forgeplan 0.33.0, verified this session)
+
+`forgeplan list --json` returns **four** fields per artifact and nothing else:
+
+```json
+{ "id": "EVID-001", "kind": "evidence", "status": "active", "title": "..." }
+```
+
+`forgeplan get <ID> --json` returns a wider object — but still a fixed metadata set plus the raw `body`:
+
+```
+id, kind, status, title, slug, depth, r_eff, author,
+parent_epic, created_at, updated_at, valid_until, body, _next_action
+```
+
+Read that list carefully against two things agents routinely assume are present:
+
+| Assumed-present datum | In CLI `list`/`get` JSON? | Where it actually lives |
+|---|---|---|
+| Full **slug-canonical identity triple** (slug + canonical id + identity) | **No** — `get` carries `slug` only; there is no `canonical_id` / `identity` field | MCP DTO and markdown frontmatter |
+| Per-EVID **`congruence_level`** | **No** — not a top-level field on any `get`/`list`/`score` JSON | the EVID **body** (bold-pattern, per Step 9b.1) and the MCP DTO |
+| Per-EVID **`evidence_type`** | **No** — same | the EVID **body** (bold-pattern) and the MCP DTO |
+| Per-EVID **`verdict`** | **No** — same | the EVID **body** (bold-pattern) |
+| `r_eff` (the *computed* score) | **Yes** — `get` carries `r_eff` | both surfaces |
+
+So the CLI exposes the *result* of scoring (`r_eff`) but not the *inputs* to it (`congruence_level`, `evidence_type`, `verdict`) — those are parsed out of the body and surfaced structurally only through MCP. And it exposes one identity component (`slug`) but not the canonical triple.
+
+### The rule for agents and consumers
+
+> **Never** assume CLI `--json` (`list`/`get`/`score`) carries the identity triple or the per-EVID structured fields (`congruence_level`, `evidence_type`, `verdict`). If you need them, read the **MCP DTO** (`forgeplan_get`) or parse the **body** for the bold-pattern block (Step 9b.1) — do not infer their absence from a thin CLI payload.
+
+- A consumer that reads CLI `list --json` to build a graph gets `id/kind/status/title` — enough to render nodes, **not** enough to colour them by evidence quality. For congruence/type, go to the body or MCP.
+- An agent that falls back from MCP to CLI (per the MCP-first / CLI-fallback pattern many skills use) must **narrow its expectations** on the fallback path: the CLI branch cannot answer "what is this EVID's congruence_level?" without parsing the body itself.
+- This is a **read-surface** caveat. It does not change how you *write* those fields — they still go into the EVID body as bold-pattern markdown (Step 9b.1), never YAML frontmatter, never a CLI flag.
+
+### When NOT to worry about it
+
+- You are already on the MCP path (`forgeplan_get` returns the DTO) — the triple and structured fields are available there.
+- You only need `id/kind/status/title/r_eff` — CLI JSON is sufficient and is the cheaper read.
+
+### Cross-reference
+
+- **Critical safety convention — MCP `body` parameter is a literal string** (above, forgeplan#350) — the *write*-side asymmetry between CLI and MCP; this section is the *read*-side asymmetry. Same lesson: the two surfaces are not interchangeable, and the thin one fails silently.
+- **Profile B Step 9b.1 — EVID body MUST use markdown bold-pattern** (above) — *why* `congruence_level`/`evidence_type`/`verdict` live in the body in the first place; this section is *where they are (and are not) readable back*.
+- forgeplan#397 — CLI/MCP DTO parity tracking (this caveat). Until parity ships, treat CLI JSON as the metadata-only surface and MCP/body as the structured-fields surface.
 
 ---
 
