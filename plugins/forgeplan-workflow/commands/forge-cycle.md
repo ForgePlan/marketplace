@@ -353,6 +353,17 @@ Reference: PRD-059, EPIC-001 (4-layer pipeline S10), `/fpf-reason` skill (fpf pl
 
 ---
 
+## Step 4.6: Bake project red lines into the Build dispatch (marketplace#169)
+
+Before Step 5 spawns any build agent, fold the project's hard constraints —
+host-isolation, allow-lists, primitive-ownership, or any other MUST-NOT
+rule from `CLAUDE.md`/`AGENTS.md` "Hard rules"/"Red lines" — **verbatim**
+into the Step 5 dispatch prompt. This lets the design/build agent catch a
+spec-vs-constraint violation (e.g. the PRD mandates a server endpoint a
+read-only-proxy rule forbids) at design time and propose the
+constraint-respecting alternative, instead of shipping the violation and
+discovering it at Step 6.5/6.6 review.
+
 ## Step 5: Build
 
 Implement the code changes according to the PRD requirements.
@@ -642,6 +653,18 @@ For Deep+ depth, add `agents-pro:performance-engineer` для perf-critical path
 
 If critical findings — halt и address before Step 7. If clean — proceed to Step 7 with consolidated audit findings ready for EVID body.
 
+### Resilience: self-verify + claim-sweep on reviewer crash (marketplace#169)
+
+If a Step 6.5/6.6 reviewer dispatch crashes outright (not "zero findings" —
+an actual failure, e.g. a Workflow `StructuredOutput` retry-cap exceeded),
+the orchestrator does two things, not one: (1) **self-verify** — re-run the
+relevant checks itself (tests/lint/diff read) rather than proceeding to
+Step 7 on an unverified claim, recording the substitute verification in the
+EVID body; (2) **sweep the claim** — if the crashed reviewer held a
+`forgeplan_claim`, `forgeplan_release --force` it before continuing; don't
+wait for TTL. See `AGENT-AUTHORING-GUIDE.md` "Claim hygiene" for the
+agent-side + orchestrator-side halves of this discipline.
+
 ## Step 7: Create Evidence
 
 Create an evidence artifact linking implementation to the PRD (MCP-first):
@@ -806,6 +829,17 @@ If the review passes, activate the artifact:
 ```bash
 forgeplan activate PRD-XXX
 ```
+
+### Spec ↔ as-built reconciliation gate (marketplace#169)
+
+If Step 5 correctly omitted something the PRD/RFC mandated because it
+conflicted with a red line (per Step 4.6), do NOT activate yet. Append an
+"As-Built Reconciliation" section to the artifact body (`forgeplan_update`)
+marking the forbidden mandate superseded-by-build + the reason, THEN run
+`forgeplan review` / `forgeplan activate`. An artifact whose invariants
+still claim the forbidden surface while the shipped code correctly doesn't
+is a silent lie in the graph; re-adding the forbidden surface to satisfy
+the stale spec is the wrong fix.
 
 ## Step 9: Commit
 

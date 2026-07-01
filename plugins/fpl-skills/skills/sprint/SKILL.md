@@ -185,6 +185,18 @@ Constraints: {from CLAUDE.md, RFC, user preferences}
 
 (Adapt to subagent types available in the project's `agents/` dir.)
 
+### Bake project red lines into the plan (marketplace#169)
+
+Before Step 3 presents the plan, fold the project's hard constraints —
+host-isolation, allow-lists, primitive-ownership, or any other MUST-NOT
+rule — **verbatim** into the plan itself (not paraphrased), so the plan
+review (Step 3) catches a spec-vs-constraint violation before any teammate
+is spawned. Pull them from `CLAUDE.md`/`AGENTS.md` "Hard rules"/"Red lines"
+if present. A plan that would violate a red line should propose the
+constraint-respecting alternative directly (client-side instead of a
+forbidden server endpoint, etc.) rather than being caught only after Wave 1
+fails.
+
 ### Wave dependency patterns
 
 - **Foundation → Features → Polish**
@@ -547,6 +559,23 @@ If extra work surfaces mid-wave (bug, missing file, needed component):
 - Team-lead waits for ALL teammates (original + new) before closing the wave
 ```
 
+### 4c-bis. Resilience: self-verify + claim-sweep on teammate crash (marketplace#169)
+
+If a wave teammate crashes or a verify/review dispatch fails (e.g. the
+StructuredOutput retry-cap — see the claim-hygiene discipline in
+`AGENT-AUTHORING-GUIDE.md`), team-lead does two things, not one:
+
+1. **Self-verify** — re-run the affected checks yourself
+   (typecheck/build/tests for a crashed builder; re-read the diff for a
+   crashed reviewer) instead of closing the wave on an unverified claim.
+   Record the substitute verification in the wave's EVID body (§4b-ter).
+2. **Sweep the claim** — if the crashed teammate held a `forgeplan_claim`
+   (§4b.g), release it (`forgeplan_release --force`) before the wave
+   closes; don't wait for TTL. A held claim blocks the next wave's
+   dispatch onto that artifact.
+
+Don't ship a wave as "complete" on a crashed teammate's say-so.
+
 ### 4d. Wave handoff + token budget
 
 Between waves, hand off to the user with a progress snapshot and next-step options. Format and token-budget warning thresholds (30% / 15%) are defined verbatim in [`references/OUTPUT-FORMATS.md`](references/OUTPUT-FORMATS.md) §1.
@@ -574,6 +603,13 @@ After ALL waves complete, the team **must** extract and document insights.
 - **Bottlenecks** — context overflow, cascading errors, stale build.
 - **Tech debt** — what didn't get done, stubs, follow-ups.
 - **Reusable patterns** — what good thing emerged that's worth copying.
+- **Spec ↔ as-built reconciliation** (marketplace#169) — if a wave
+  correctly omitted something the parent PRD/RFC mandated (because it
+  conflicted with a project red line), don't leave the mandate
+  unreconciled. Append an "As-Built Reconciliation" note to the artifact
+  body (superseded-by-build + reason) BEFORE §7 offers activation — an
+  artifact that still claims the forbidden surface while the shipped code
+  correctly doesn't is a silent lie in the graph.
 
 ### Where to record
 
