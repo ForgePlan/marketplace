@@ -26,6 +26,12 @@ design work begins.
 > IS Web Components). Tokens: a single `tokens.json` -> CSS-custom-properties **contract**, tool-agnostic
 > -- Style-Dictionary is one supported token tool, never the mandatory one, never forked.
 
+## Upgrading from 0.3.0 → 1.0.0 (BREAKING)
+
+**v1.0.0 makes CANVAS stack-agnostic.** It no longer generates a Lit Web-Components master + per-framework wrappers by default. It now generates **natively in the one framework your project declares** — resolved via Step 0 from `AGENTS.md` / `CLAUDE.md` / `package.json` (announced, or force-asked if none is found). Lit/Web-Components and the multi-framework wrapper "Spread" are now an **optional, out-of-default** path (ADR-016).
+
+**Action on upgrade: run `/canvas-init` once.** The tokens-gate now derives its guarded paths per your resolved framework. On an upgraded install still carrying stale `packages/**` globs, the gate substitutes a fail-SAFE catch-all (over-guard) until you re-init — so it never silently fails open — but `/canvas-init` restores precise guarding for your actual layout.
+
 ## Quick Start
 
 ```bash
