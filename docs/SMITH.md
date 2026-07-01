@@ -64,7 +64,7 @@ Full table with dispatch sequences + evidence requirements lives in [`../plugins
 | 11 | Tech debt cleanup | A3 Problem Solving + Fishbone + ADR-supersede |
 | 12 | Live incident response | Incident Command System + Blameless post-mortem |
 | 13 | TDD-first feature (tests frozen before code) | Enforced-TDD (RFC-012, ADR-010 #1, hook-gate=Yes) |
-| 14 | Design-system → code (Pencil/Figma → Storybook → framework wrappers) | CANVAS (RFC-021, ADR-010 #5, hook-gate=Yes) |
+| 14 | Design-system → code (Pencil/Figma → Storybook → native framework code) | CANVAS (RFC-021, ADR-010 #5, hook-gate=Yes) |
 
 Each row binds a primary methodology + 1–2 secondaries + a named dispatch sequence + the evidence artifacts that must exist before activation. Rows 1–4, 6–11, 13–14 produce Standard+ artifacts gated by the full S10–S13 pipeline. Row 5 (trivial hotfix) is explicitly scoped to S12+S13 only. Row 12 (live incident) splits into a fire-fighting phase (no PRD during the outage) and a post-mortem phase (BMAD-gated PRD afterward). Rows 13 (TDD) and 14 (CANVAS) are AD/AID-PDLC sub-cycle instances (ADR-010) — both `hook-gate=Yes`, each dispatched through its own master (`tdd-orchestrator`, `canvas-coordinator`).
 
