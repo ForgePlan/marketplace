@@ -110,7 +110,46 @@ CANVAS is **brand/style-agnostic**: the visual brand is an **input the project p
    - **(a) How-to-choose guide** — walk the user through the brand attributes that define a direction: **light vs dark** (and contrast policy); **palette temperature** (warm / neutral / cool) + accent strategy (single accent vs multi); **density / whitespace** (compact vs airy); **typography** (serif / sans / mono pairing, scale); **motion** (still / subtle / expressive). Frame each as a concrete choice, not an open question.
    - **(b) Reference inputs to adapt from** — point the user at sources to react to, all **reference-only**: `getdesign.md`'s 75+ production DESIGN.md systems (color/typography/component/token patterns), `lawsofux` for the UX-law grounding, and in-domain reference products for the app the active scope PRD describes. These are inputs to adapt, never a fixed destination.
    - **(c) Record the decision so it is pinned + traceable** — draft the choice into a **Brief NOTE** (`forgeplan_new(kind="note")`, `draft`) linked to the scope PRD/ADR, or recommend an **ADR "design direction"** when the brand is a sticky cross-cutting decision. The brand choice is a **user decision**: if the user is not reachable in this dispatched run, surface the how-to-choose guide + references and emit `<<NEED_USER_INPUT>>` for the brand selection — then record it — rather than proceeding. You draft the NOTE in `draft` and never `forgeplan_activate` it (the coordinator emits `NEEDS_ACTIVATION`).
-3. **Gate:** only once a brand is recorded in a scope artifact do you move to Step 1. A missing recorded style is a hard stop, not a default-to-an-example.
+3. **Gate:** only once a brand is recorded in a scope artifact do you move to Step 0b. A missing recorded style is a hard stop, not a default-to-an-example.
+
+### Step 0b — framework/stack resolution (RFC-022 FR-2′; feeds the острый-gate derivation)
+
+This step is a sibling to the brand Step 0 above. It resolves the project's framework so that
+`/canvas-init` can derive the correct per-framework `guarded_globs` (AC-1) and arm the gate for
+the native layout. Resolution runs **before any phase that generates code**, and before
+`canvas-coordinator` arms the gate. Discipline follows RFC-022 ADI H-B (declared-intent first):
+
+1. **Detect** — read in precedence order:
+   - `AGENTS.md` → `CLAUDE.md` → `package.json` (`dependencies`/`devDependencies`) →
+     lockfile / framework-config (`next.config.*`, `vite.config.*`, `angular.json`,
+     `svelte.config.*`, etc.)
+   - Resolve: `framework` (e.g. `react`, `vue`, `svelte`, `angular`, `solid`,
+     `web-components`), `language` (TypeScript default), `design-source` (Pencil default).
+
+2. **Always announce** — even on a clean single-signal detection emit an explicit statement:
+   *"CANVAS Step 0b: found stack Next.js, framework react (language ts, design-source Pencil)
+   — resolved from package.json."*
+   Silence is forbidden (RFC-022 DD-5 / no-silent-default discipline).
+
+3. **Single-tier multi-candidate → announce-all + `<<NEED_USER_INPUT>>`** — when one tier
+   (e.g. `package.json`) lists both `react` and `vue` and no higher-tier doc disambiguates,
+   announce ALL candidates and emit the sentinel. Never silently pick the first-listed.
+
+4. **Cross-tier conflict → announce-both + `<<NEED_USER_INPUT>>`** — when a higher-precedence
+   doc (AGENTS.md/CLAUDE.md) and a lower-precedence installed signal disagree on the framework,
+   announce both and ask the user to resolve rather than silently trusting the doc tier.
+
+5. **Absent → force-ask** — when no tier yields a framework, emit `<<NEED_USER_INPUT>>` with the
+   supported list (`react/next`, `vue/nuxt`, `svelte/sveltekit`, `angular`, `solid`,
+   `web-components/lit`). Never silently default.
+
+**Forward reference (P2):** once the framework is resolved, the mandatory `context7` call
+(`resolve-library-id` → `query-docs`) for the resolved framework and its component/testing libs
+is a hard precondition of the Assemble phase (AC-5). That context7 step lands in P2/Assemble;
+this Step 0b delivers only the detect-and-announce logic needed for gate derivation in P1.
+
+Record the resolved `framework` value and hand it to `canvas-coordinator` so it can call
+`canvas-lib.sh init-framework <slug> <framework>` when arming the gate (RFC-022 AC-1).
 
 ### Step 1 — load context + the design KB
 

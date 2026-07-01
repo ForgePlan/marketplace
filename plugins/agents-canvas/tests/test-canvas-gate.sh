@@ -150,6 +150,128 @@ run_gate "$W_TRAVERSE_IN"  ; is_deny && ok "traversal INTO guarded dir (foo/../p
 run_gate "$W_TRAVERSE_OUT" ; { [ "$G_EXIT" -eq 0 ] && ! is_deny; } && ok "traversal OUT of guarded dir (packages/design-system/../safe.ts) -> allow" || nok "traversal-out allow" "exit=$G_EXIT out=$G_OUT"
 
 # ---------------------------------------------------------------------------
+# RFC-022 острый-gate tests — AC-2 / AC-10 / AC-9 / AC-11
+# ---------------------------------------------------------------------------
+echo "== RFC-022 острый-gate additions =="
+
+# AC-2: native in-app layout fail-closed deny
+# A React-native design-system at src/components/** must be denied while
+# tokens_active != true (the gate fails OPEN under the old packages/** default
+# for this layout — the verified DD-7 hazard that RFC-022 exists to fix).
+W_SRC_BTN='{"tool_name":"Write","tool_input":{"file_path":"src/components/Button.tsx","content":"x"}}'
+set_state assemble false false "src/components/**|app/**|components/**"
+run_gate "$W_SRC_BTN"
+is_deny && ok "AC-2: tokens_active=false + Write src/components/Button.tsx -> deny (native layout)" \
+          || nok "AC-2 native deny" "exit=$G_EXIT out=$G_OUT"
+
+set_state assemble true false "src/components/**|app/**|components/**"
+run_gate "$W_SRC_BTN"
+{ [ "$G_EXIT" -eq 0 ] && ! is_deny; } && ok "AC-2: tokens_active=true + Write src/components/Button.tsx -> allow (C5 unlocked)" \
+                                         || nok "AC-2 native allow after unlock" "exit=$G_EXIT out=$G_OUT"
+
+# AC-10 / F-1 / F-3: zero-match self-check — FAIL-TO-PROTECTED.
+# When no conventional component directory exists on disk, init-framework must
+# NOT leave the gate unarmed (a fail-OPEN window). It arms the fail-SAFE
+# catch-all (over-guard) AND emits <<NEED_USER_INPUT>> to confirm the real dir.
+# Guard: remove any src/app/components dirs so the zero-match path is exercised.
+rm -rf "$SB/src" "$SB/app" "$SB/components" 2>/dev/null || true
+rm -f "$STATE"
+AC10_OUT="$(cd "$SB" && bash hooks/scripts/canvas-lib.sh init-framework "$SLUG" react 2>&1)" || true
+printf '%s' "$AC10_OUT" | grep -q "NEED_USER_INPUT" \
+  && ok "AC-10: zero-match on-disk -> <<NEED_USER_INPUT>> emitted" \
+  || nok "AC-10 NEED_USER_INPUT" "out=$AC10_OUT"
+[ -f "$STATE" ] \
+  && ok "AC-10/F-3: zero-match -> state ARMED with fail-safe over-guard (no fail-open window)" \
+  || nok "AC-10/F-3 state armed" "state missing"
+AC10_GLOBS="$(cd "$SB" && bash hooks/scripts/canvas-lib.sh get "$SLUG" guarded_globs 2>/dev/null)"
+printf '%s' "$AC10_GLOBS" | grep -q 'src/\*\*' \
+  && ok "AC-10/F-1: armed globs are the fail-safe over-guard (src/** present)" \
+  || nok "AC-10/F-1 catch-all globs" "globs=$AC10_GLOBS"
+# F-1: a write under a NON-conventional dir (src/ui/) is still denied pre-token.
+W_SRC_UI='{"tool_name":"Write","tool_input":{"file_path":"src/ui/Button.tsx","content":"x"}}'
+run_gate "$W_SRC_UI"
+is_deny \
+  && ok "AC-10/F-1: non-conventional src/ui/Button.tsx denied by catch-all (tokens_active=false)" \
+  || nok "AC-10/F-1 non-conventional deny" "exit=$G_EXIT out=$G_OUT"
+
+# AC-9: stale pre-RFC-022 state migration
+# Seed a v0.3.0-style state (wrapper-only globs, no state_schema_version).
+# After migrate, guarded_globs must be re-derived to the native React set.
+mkdir -p "$SB/src/components"
+printf '{"phase":"design","tokens_rfc":"","tokens_active":false,"guarded_globs":"packages/design-system/**|packages/design-system-*/**|packages/canvas-*/**|packages/*-canvas/**","override":false,"started_at":"","phase_entered_at":""}' \
+  > "$STATE"
+AC9_OUT="$(cd "$SB" && bash hooks/scripts/canvas-lib.sh migrate "$SLUG" react 2>&1)"
+printf '%s' "$AC9_OUT" | grep -qiE "stale|migrat" \
+  && ok "AC-9: stale state -> migration message emitted" \
+  || nok "AC-9 stale message" "out=$AC9_OUT"
+AC9_GLOBS="$(cd "$SB" && bash hooks/scripts/canvas-lib.sh get "$SLUG" guarded_globs 2>/dev/null)"
+printf '%s' "$AC9_GLOBS" | grep -q "src/components" \
+  && ok "AC-9: migrated guarded_globs contain src/components/**" \
+  || nok "AC-9 migrated globs" "globs=$AC9_GLOBS"
+AC9_SV="$(cd "$SB" && bash hooks/scripts/canvas-lib.sh get "$SLUG" state_schema_version 2>/dev/null)"
+[ -n "$AC9_SV" ] && [ "$AC9_SV" != "null" ] \
+  && ok "AC-9: migrated state has state_schema_version='${AC9_SV}'" \
+  || nok "AC-9 schema_version stamped" "got='$AC9_SV'"
+
+# AC-11: end-to-end derivation -> persisted state -> gate integration
+# This is the seam test: the deny must come from REAL canvas-lib.sh init-framework
+# output, not a hand-built state literal. A glob-format bug that passes AC-1
+# (unit) and AC-2 (unit) in isolation must fail here.
+rm -f "$STATE"
+# src/components already exists from AC-9
+AC11_INIT="$(cd "$SB" && bash hooks/scripts/canvas-lib.sh init-framework "$SLUG" react 2>&1)"
+[ -f "$STATE" ] \
+  && ok "AC-11: init-framework wrote state file" \
+  || nok "AC-11 state created" "init output: $AC11_INIT"
+
+AC11_GLOBS="$(cd "$SB" && bash hooks/scripts/canvas-lib.sh get "$SLUG" guarded_globs 2>/dev/null)"
+printf '%s' "$AC11_GLOBS" | grep -q "src/components" \
+  && ok "AC-11: real init-framework persisted src/components/** in guarded_globs" \
+  || nok "AC-11 glob in state" "globs=$AC11_GLOBS"
+
+# Gate must deny src/components/Button.tsx from real init-framework state
+# (tokens_active=false by design of init-framework).
+run_gate "$W_SRC_BTN"
+is_deny \
+  && ok "AC-11 e2e: real init-framework state -> gate denies src/components/Button.tsx (tokens_active=false)" \
+  || nok "AC-11 e2e deny" "exit=$G_EXIT out=$G_OUT"
+
+# Unlock via set-tokens and assert gate then allows the same path.
+(cd "$SB" && bash hooks/scripts/canvas-lib.sh set-tokens "$SLUG" "RFC-TEST" true) >/dev/null 2>&1
+run_gate "$W_SRC_BTN"
+{ [ "$G_EXIT" -eq 0 ] && ! is_deny; } \
+  && ok "AC-11 e2e: after set-tokens true -> gate allows src/components/Button.tsx" \
+  || nok "AC-11 e2e allow after unlock" "exit=$G_EXIT out=$G_OUT"
+
+# --- F-2: the gate fails-CLOSED on STALE pre-RFC-022 state (no migrate run) ---
+# A v0.3.0 install that upgraded but never re-ran /canvas-init keeps wrapper-only
+# globs with no state_schema_version; on a native layout those guard nothing, so
+# the gate would silently fail OPEN. canvas_effective_guarded_globs must detect
+# the stale state and substitute the fail-SAFE catch-all -> the gate DENIES.
+# (EVID-194 F-2 — the only silent fail-open. canvas-gate.sh logic is unchanged.)
+rm -f "$STATE"
+printf '{"phase":"assemble","tokens_rfc":"","tokens_active":false,"guarded_globs":"packages/design-system/**|packages/design-system-*/**|packages/canvas-*/**|packages/*-canvas/**","override":false,"started_at":"","phase_entered_at":""}' \
+  > "$STATE"
+run_gate "$W_SRC_BTN"
+is_deny \
+  && ok "F-2: stale pre-RFC-022 state -> gate denies native src/components/Button.tsx (fail-safe substitution)" \
+  || nok "F-2 stale-state native deny" "exit=$G_EXIT out=$G_OUT"
+run_gate "$W_DS"
+is_deny \
+  && ok "F-2: stale state still denies packages/design-system (catch-all superset, no regression)" \
+  || nok "F-2 stale packages deny" "exit=$G_EXIT out=$G_OUT"
+# Current (schema-stamped) state must NOT trigger the stale substitution:
+# packages-only globs with schema_version -> a src/ write stays ALLOWED.
+set_state assemble false false "packages/design-system/**"
+(cd "$SB" && bash hooks/scripts/canvas-lib.sh get "$SLUG" >/dev/null 2>&1)
+# stamp schema_version onto the current state so it is NOT treated as stale
+tmp_cur="$(jq '. + {state_schema_version:"1"}' "$STATE")" && printf '%s' "$tmp_cur" > "$STATE"
+run_gate "$W_SRC_BTN"
+{ [ "$G_EXIT" -eq 0 ] && ! is_deny; } \
+  && ok "F-2: current schema state + packages-only globs -> src/components write still ALLOWED (no over-trigger to catch-all)" \
+  || nok "F-2 current-state no over-trigger" "exit=$G_EXIT out=$G_OUT"
+
+# ---------------------------------------------------------------------------
 # canvas-lib unit checks (sourced functions — no subprocess)
 # ---------------------------------------------------------------------------
 echo "== canvas-lib functions =="
