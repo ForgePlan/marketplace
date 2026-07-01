@@ -32,8 +32,7 @@ For each `covered` row from the coverage matrix:
 
 ## Check 2 — token-decision provenance (the high-value check)
 
-The DS tokens are the single source of truth for the whole Spread (React/Vue/Svelte/Angular/Solid wrap the
-same tokens). If they drift from the recorded palette, every downstream framework inherits the drift. So:
+The DS tokens are the single source of truth for the generated code (the resolved framework consumes them natively). If they drift from the recorded palette, the generated component inherits the drift. So:
 
 1. Read the snapshot's token set — the `variables` block in the manifest the Designer exported (or a
    `get_variables` dump captured into the snapshot). You are a sub-agent: read the **snapshot**, never live

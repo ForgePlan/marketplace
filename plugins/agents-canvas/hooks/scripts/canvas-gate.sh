@@ -111,8 +111,11 @@ case "/$REL/" in
   */.canvas-scratch/*) exit 0 ;;
 esac
 
-# Load the per-branch guarded globs (fall back to the lib default).
-GUARDED_GLOBS="$(jq -r '.guarded_globs // ""' "$STATE_FILE" 2>/dev/null)" || exit 2
+# Load the per-branch guarded globs through the staleness-hardened resolver
+# (RFC-022 F-2): a stale pre-RFC-022 state -> the fail-SAFE catch-all, never a
+# silent fail-open on a native layout. The gate's enforcement logic below is
+# unchanged (INV-1: only the INPUT globs are hardened, not the decision flow).
+GUARDED_GLOBS="$(canvas_effective_guarded_globs "$STATE_FILE")" || exit 2
 export GUARDED_GLOBS
 
 # 9. Guarded-path enforcement (spec section 9 / ADR-010 C5)

@@ -1,8 +1,7 @@
 # 02 - Tokens & Naming (`$--var` not hex, `Category/Variant` naming)
 
 A portable DS has **no literal design values** and **predictable names**. Every color, spacing, radius,
-and type value resolves through a `$--variable` (which becomes a single `tokens.json` -> Style-Dictionary
--> CSS custom property downstream, LOCKED DECISION 3); every Component name follows `Category/Variant` so
+and type value resolves through a `$--variable` (which becomes a single `tokens.json` -> CSS custom property downstream via the project's token tool — Style-Dictionary is one option, LOCKED DECISION 3 being the single-source `tokens.json` -> CSS-custom-property CONTRACT, not the tool); every Component name follows `Category/Variant` so
 the atomic layering and the Storybook story matrix can be derived mechanically. A hardcoded hex is a
 forked token; a freeform name breaks the port. This section pairs token-correctness with naming.
 

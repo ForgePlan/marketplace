@@ -220,15 +220,18 @@
 
 **Статус**: поставляется в плагине `agents-canvas` (v0.1.0) как команда-оркестратор `/canvas` — **пятый инстанс** контракта подцикла AD/AID-PDLC (ADR-010 / RFC-021), рядом с `/tdd` (RFC-012), `/bmad` (RFC-013), `/sparc` (RFC-016) и `/riper` (RFC-018).
 
-**Что делает**: превращает дизайн-систему в код — дизайн в Pencil (Figma — будущий шов) портируется в библиотеку компонентов на Storybook плюс обёртки под фреймворки — проходя шесть фаз — **Capture → Audit → Norm-check → Vectorize → Assemble → Spread** — каждая в свежем контексте, с блокирующим гейтом generator≠verifier между этапами:
+**Что делает**: превращает дизайн-систему в код — дизайн в Pencil (Figma — будущий шов) портируется в библиотеку компонентов на Storybook. Фреймворк — это ВХОДНОЙ параметр, разрешаемый на Шаге 0 (детект по AGENTS.md/CLAUDE.md/package.json → объявляется, а если фреймворк не задан явно — CANVAS переспрашивает); дальше CANVAS генерирует код НАТИВНО в этом одном фреймворке. По умолчанию пайплайн проходит пять фаз — **Capture → Audit → Norm-check → Vectorize → Assemble** (это и есть аббревиатура C-A-N-V-A) — каждая в свежем контексте, с блокирующим гейтом generator≠verifier между этапами:
 - Capture → `canvas-designer` (снимок Pencil + Design NOTE)
 - Audit → `canvas-guardian` (соглашения дизайн-системы)
 - Norm-check → `canvas-tester` (трассируемость к цепочке PRD/ADR/EVID в forgeplan)
 - Vectorize → `canvas-porter-storybook` (контракт токенов + спецификации stories для Storybook)
-- Assemble → `canvas-coder` (код на Web Components / Lit + stories + визуально-регрессионные тесты)
-- Spread → `canvas-porter-framework` (обёртки React / Vue / Svelte / Angular / Solid — параллельный fan-out)
+- Assemble → `canvas-coder` (нативный код в разрешённом на Шаге 0 фреймворке + stories + визуально-регрессионные тесты; Web Components/Lit — один из вариантов, применяется только если сам проект объявил Web Components своим стеком, а не канон по умолчанию)
 
-Сверх словарного оверлея CANVAS — это **`hook-gate=Yes`**: fail-closed PreToolUse-хук `canvas-gate` запрещает запись в `packages/design-system/**` и пакеты фреймворков, пока RFC токенов не активирован — остановка «токены до кода» той же формы что и «нет кода до плана» у BMAD, обеспеченная структурно, а не текстом (поэтому связывает и ручные правки, не только диспатченных агентов). Этот гейт оправдывает выделенного мастера `canvas-coordinator` (четвёртый узкий B-orchestrator), который диспатчит каждую фазу и верификатор и владеет state-файлом гейта. Поставляется семь новых ролевых агентов — включая независимый `canvas-storybook-validator`, который сверяет собранный Storybook только с исходником Pencil (generator≠verifier против `canvas-coder`). Переиспользует паттерн условной заморозки (conditional-freeze pin) из RIPER для своих не-замораживаемых Pencil-продуктов (Design NOTE, снимок дизайн-системы и port manifest получают `## Pinned revision`, свежесть которого перепроверяется на следующем гейте). Сюда маршрутизирует Row 14 у smith (дизайн-система → код). CANVAS — **не** переоткрытие NOTE-027: новой размерности контракта ADR-010 он не вводит; он занимает ранее пустую ячейку `{hook-gate=Yes, conditional-freeze}` и допущен как post-closure hook-gate методология по тесту hook-gate из ADR-012 (поправка к NOTE-027 от 2026-06-26).
+**Опциональный, вне-дефолтный путь (будущий ADR-016)**: если проект явно запрашивает мульти-фреймворк порт, добавляется шестая фаза — **Spread** → `canvas-porter-framework` (обёртки React / Vue / Svelte / Angular / Solid — параллельный fan-out, один агент на пакет, `blockedBy` код-гейта) плюс отдельный Gate Parity. Именно эта опциональная фаза даёт полное имя **CANVAS** (шестая буква — Spread); по умолчанию она не запускается.
+
+Токены: единый `tokens.json` → CSS custom properties — контракт инструмент-агностичен; Style-Dictionary — один из вариантов инструмента для генерации токенов, а не обязательный.
+
+Сверх словарного оверлея CANVAS — это **`hook-gate=Yes`**: fail-closed PreToolUse-хук `canvas-gate` запрещает запись в `packages/design-system/**` и в пакет разрешённого фреймворка, пока RFC токенов не активирован — остановка «токены до кода» той же формы что и «нет кода до плана» у BMAD, обеспеченная структурно, а не текстом (поэтому связывает и ручные правки, не только диспатченных агентов). Этот гейт оправдывает выделенного мастера `canvas-coordinator` (четвёртый узкий B-orchestrator), который диспатчит каждую фазу и верификатор и владеет state-файлом гейта. Поставляется семь новых ролевых агентов — включая независимый `canvas-storybook-validator`, который сверяет собранный Storybook только с исходником Pencil (generator≠verifier против `canvas-coder`); `canvas-porter-framework` диспатчится только на опциональном пути Spread. Переиспользует паттерн условной заморозки (conditional-freeze pin) из RIPER для своих не-замораживаемых Pencil-продуктов (Design NOTE, снимок дизайн-системы и port manifest получают `## Pinned revision`, свежесть которого перепроверяется на следующем гейте). Сюда маршрутизирует Row 14 у smith (дизайн-система → код). CANVAS — **не** переоткрытие NOTE-027: новой размерности контракта ADR-010 он не вводит; он занимает ранее пустую ячейку `{hook-gate=Yes, conditional-freeze}` и допущен как post-closure hook-gate методология по тесту hook-gate из ADR-012 (поправка к NOTE-027 от 2026-06-26). context7 остаётся ОБЯЗАТЕЛЬНЫМ для разрешённого на Шаге 0 фреймворка.
 
 ### AI-SDLC
 
@@ -264,7 +267,7 @@
 | Obsidian | Карта в brownfield-pack | Только ингест через `obsidian-to-forge.yaml` |
 | Autoresearch | Внешний companion (`uditgoenka/autoresearch`) | Ставится отдельно; ингест через `autoresearch-to-forge.yaml`. См. [AUTORESEARCH-INTEGRATION-RU.md](AUTORESEARCH-INTEGRATION-RU.md). |
 | RIPER | `/riper` (fpl-skills) | Research → Innovate → Plan → Execute → Review |
-| CANVAS | `/canvas` (agents-canvas) | Capture → Audit → Norm-check → Vectorize → Assemble → Spread |
+| CANVAS | `/canvas` (agents-canvas) | Capture → Audit → Norm-check → Vectorize → Assemble (нативный фреймворк); Spread — опционально, вне дефолта |
 | AI-SDLC | НЕ названо так, приближение через `/autorun` | `/autorun "<задача>"` |
 
 ---

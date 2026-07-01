@@ -30,10 +30,10 @@ Decide whether the input names a **CANVAS DS convention** or a **UX law**, and m
 | `$--var` not hex, Category/Variant naming | `canvas-conventions` | `sections/02-tokens-naming/_index.md` |
 | atom-in-ATOMS, screens-not-reusable, nesting depth | `canvas-conventions` | `sections/03-atomic-layering/_index.md` |
 | clipping / spacing health from `snapshot_layout` | `canvas-conventions` | `sections/04-layout-health/_index.md` |
-| `$--var` -> CSS custom property / Style-Dictionary, theme axes, `tokens.json` | `canvas-port` | `sections/01-token-contract/_index.md` |
+| `$--var` -> CSS custom property (tool-agnostic contract; Style-Dictionary is one option), theme axes, `tokens.json` | `canvas-port` | `sections/01-token-contract/_index.md` |
 | component -> story + variant matrix + slots | `canvas-port` | `sections/02-story-spec/_index.md` |
 | reference screenshots -> visual-regression oracle | `canvas-port` | `sections/03-visual-oracle/_index.md` |
-| React/Vue/Svelte/Angular/Solid parity, WC-interop | `canvas-port` | `sections/04-framework-parity/_index.md` |
+| (optional, out-of-default) React/Vue/Svelte/Angular/Solid parity, WC-interop | `canvas-port` | `sections/04-framework-parity/_index.md` |
 | DS <-> PRD/ADR/EVID coverage mapping | `canvas-truth-map` | `sections/01-coverage/_index.md` |
 | provenance / traceability checks | `canvas-truth-map` | `sections/02-provenance/_index.md` |
 
@@ -46,11 +46,12 @@ The **six Pencil HARD RULES** are always-loaded canon (no section read needed) �
 5. **Never-detach-for-minor-edits**, **never-make-a-screen-reusable**.
 6. **Never-delete/refactor without user approval** + OLD-vs-NEW screenshot comparison; **never `Read`/`Grep` a `.pen` file** (encrypted — Pencil MCP only).
 
-The **LOCKED-DECISION topology conventions** are also always-available canon (render directly for `tokens`, `topology` / `web components`, `spread` / `frameworks`, `hook gate` / `tokens gate`):
+The **framework-as-input topology** conventions are also always-available canon (render directly for `tokens`, `topology` / `framework`, `spread` / `wrappers`, `hook gate` / `tokens gate`):
 
-- **Topology** — framework-agnostic **Web Components** (Lit canonical) + thin per-framework wrappers; Storybook uses the `web-components` framework.
-- **Tokens** — **Style-Dictionary -> CSS custom properties** from a single `tokens.json` (mirrors Pencil `variables`); **one source, never forked**.
-- **Spread targets** — React, Vue, Svelte, Angular, Solid wrappers over the WC base.
+- **Topology** — the project's **framework is an INPUT**, resolved at Step 0: detect from `AGENTS.md`/`CLAUDE.md`/`package.json` -> announce the resolved framework, or force-ask if it cannot be determined. CANVAS generates **natively in that one framework** — no wrapper layer by default. Web Components (Lit) is **one selectable target**, used only when the project's declared stack IS Web Components — it is not the canon. Storybook uses the framework matching the resolved stack (`web-components` only when that's what was resolved).
+- **Tokens** — single-source `tokens.json` -> CSS custom properties is the **contract**, tool-agnostic; the project's token tool implements it (Style-Dictionary is one option, not mandatory); **one source, never forked**.
+- **Spread (optional, out-of-default)** — the 5-per-framework wrapper fan-out (React/Vue/Svelte/Angular/Solid) is **removed from the default pipeline** (native single-framework = no wrappers, C-A-N-V-A five phases). The multi-framework wrapper path remains available as an opt-in extension (future ADR-016).
+- **context7** — MANDATORY for the resolved framework, at every phase that touches its API/docs.
 - **hook-gate=YES** — the `canvas-gate.sh` PreToolUse hook blocks `Write`/`Edit` to `packages/design-system/**` until the tokens RFC is `active` (the C5 lever; `/canvas-init` arms it).
 
 **B. UX laws** — if the input names one of the 30 Laws of UX (e.g. `fitts`, `hicks`, `miller`, `jakob`, `gestalt`, `doherty`, `von restorff`, `proximity`), it is a UX-law lookup. Load it from the laws-of-ux `ux-laws` skill (`sections/01-heuristics/`, `02-cognitive/`, `03-gestalt/`, `04-principles/`, `05-code-patterns/`) exactly as `/ux-law` does — or simply tell the user to run `/laws-of-ux:ux-law <name>` for the full canonical entry, and render the one-liner + the CANVAS angle (how the Designer translates that law into Pencil node constraints).
@@ -66,7 +67,7 @@ For a DS convention: read the section's `_index.md` first (it lists the leaf rul
 ```
 # [Rule / Law name]
 
-**Source**: [canvas-design | canvas-conventions | canvas-port | canvas-truth-map | Pencil HARD RULE | LOCKED DECISION | laws-of-ux] -> [section]
+**Source**: [canvas-design | canvas-conventions | canvas-port | canvas-truth-map | Pencil HARD RULE | Topology (framework-as-input) | laws-of-ux] -> [section]
 
 ## Rule
 [The canonical statement of the convention / law]
@@ -88,9 +89,9 @@ For a DS convention: read the section's `_index.md` first (it lists the leaf rul
 After the rule, suggest 2-3 related conventions/laws that travel together. Format: `**Related**: [Rule 1] (reason), [Rule 2] (reason)`. Common pairings:
 
 - **Ref-first** relates to **Check-DS-first** (both keep one single source) and **single-source/no-duplicate** (canvas-conventions/01).
-- **Token naming (`$--var` not hex)** relates to the **token contract** (canvas-port/01) and **tokens-theming** (canvas-design/04) — naming feeds the Style-Dictionary contract.
+- **Token naming (`$--var` not hex)** relates to the **token contract** (canvas-port/01) and **tokens-theming** (canvas-design/04) — naming feeds the `tokens.json` -> CSS custom properties contract (Style-Dictionary is one implementation, not mandatory).
 - **Atomic layering** relates to **ds-organization** (canvas-design/03) and **never-make-a-screen-reusable** (Pencil HARD RULE 5).
-- **The token contract** relates to **framework-parity** (canvas-port/04 — one source, never forked) and the **hook-gate** (the tokens RFC unlocks DS source).
+- **The token contract** relates to **framework-parity** (canvas-port/04 — optional, out-of-default; relevant only when the Spread path is invoked) and the **hook-gate** (the tokens RFC unlocks DS source).
 - **Fitts's Law** relates to **Hick's Law** (interaction efficiency) and **Von Restorff** (one distinct CTA).
 - **Coverage** (canvas-truth-map/01) relates to **provenance** (canvas-truth-map/02) — every component traces to a requirement.
 
@@ -119,18 +120,21 @@ Display the CANVAS rule index + a pointer to `/ux-law` for the 30 UX laws:
 - entities-refs · layout-b · ds-organization · tokens-theming · style-guides · gotchas · ux-task-map
 
 ## Port conventions (canvas-port — the Storybook-Porter + Coder + Framework-Porter)
-- token-contract       $--var -> Style-Dictionary -> CSS custom properties, single tokens.json
+- token-contract       $--var -> CSS custom property (tool-agnostic; Style-Dictionary is one option), single tokens.json
 - story-spec           component -> story + variant matrix + slots
 - visual-oracle        reference screenshots -> visual-regression
-- framework-parity     React/Vue/Svelte/Angular/Solid wrappers, one source never forked
+- framework-parity     (optional, out-of-default) React/Vue/Svelte/Angular/Solid wrappers, one source never forked
 
 ## Truth mapping (canvas-truth-map — the Tester checks these)
 - coverage             DS <-> PRD/ADR/EVID requirement matrix
 - provenance           every component traces to a requirement / ADR decision
 
-## Topology (LOCKED DECISIONS)
-- Web Components (Lit canonical) + thin React/Vue/Svelte/Angular/Solid wrappers
-- Tokens = Style-Dictionary -> CSS custom properties, single tokens.json, never forked
+## Topology (framework is an INPUT — Step 0 resolves it)
+- Framework detected from AGENTS.md/CLAUDE.md/package.json -> announced (or force-asked if undetectable); CANVAS generates natively in that ONE framework, no wrapper layer by default
+- Web Components (Lit) = ONE selectable target, used only when the project's stack IS Web Components — not the canon
+- Tokens = tokens.json -> CSS custom properties contract (tool-agnostic; Style-Dictionary is one option), single source, never forked
+- Spread (5-per-framework wrapper fan-out) REMOVED from the default pipeline — optional, out-of-default (future ADR-016)
+- context7 MANDATORY for the resolved framework
 - hook-gate=YES — DS source blocked until the tokens RFC is active (/canvas-init arms it)
 
 Use `/canvas-rule [name]` for a single convention; `/ux-law [name]` (or `/canvas-rule [law]`) for any

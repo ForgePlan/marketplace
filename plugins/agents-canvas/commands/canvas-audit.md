@@ -131,4 +131,6 @@ Either way, never `forgeplan_activate` — activation is the orchestrator's user
 - `canvas-conventions` skill — the rule KB (`skills/canvas-conventions/SKILL.md`).
 - `/canvas-review` — the post-export code + UX gate (generated `*.ts/*.css`, wraps `/laws-of-ux:ux-review`).
 - `/canvas-rule [name]` — look up a single DS convention or UX law.
-- `/canvas` — the full Capture -> Audit -> Norm-check -> Vectorize -> Assemble -> Spread walk; ADR-010 C4.
+- `/canvas` — the full Capture -> Audit -> Norm-check -> Vectorize -> Assemble walk (C-A-N-V-A — "CANVAS" is a
+  proper name for the methodology, not a phase-by-phase acronym); ADR-010 C4. Spread (multi-framework wrapper
+  fan-out) is optional and out-of-default — see future ADR-016.

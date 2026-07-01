@@ -53,7 +53,7 @@ instructions.)
 | Deciding Frame vs Component vs Instance; using refs / slots / descendants; avoiding detach | [§01 entities-refs](sections/01-entities-refs/_index.md) |
 | Building a screen (the AppShell / Layout B skeleton, subsidebar map, screen-template table) | [§02 layout-b](sections/02-layout-b/_index.md) |
 | Placing components in the DS canvas (ATOMS/MOLECULES/ORGANISMS/TEMPLATES, grid, height-aware Y) | [§03 ds-organization](sections/03-ds-organization/_index.md) |
-| Wiring theme tokens (`$--vars`, Mode:Light/Dark, get/set_variables, Style-Dictionary seam) | [§04 tokens-theming](sections/04-tokens-theming/_index.md) |
+| Wiring theme tokens (`$--vars`, Mode:Light/Dark, get/set_variables, the token-compile seam) | [§04 tokens-theming](sections/04-tokens-theming/_index.md) |
 | Choosing & recording a brand/style before designing (warm-paper + Expo monochrome as worked examples, reference products, **getdesign.md**) | [§05 style-guides](sections/05-style-guides/_index.md) |
 | Debugging clipping, cross-file refs, file-specific IDs, legacy DS, deep nesting | [§06 gotchas](sections/06-gotchas/_index.md) |
 | Translating a UX law into concrete Pencil node constraints (Fitts/Hick/Miller/Doherty/Von Restorff/Gestalt) | [§07 ux-task-map](sections/07-ux-task-map/_index.md) |
@@ -78,7 +78,7 @@ a `snapshot_layout` dump → `design/snapshots/<ts>/`) — the hand-off Guardian
 | 01 | [entities-refs](sections/01-entities-refs/_index.md) | Frame vs Component vs Instance; `reusable:true`; `ref`; `descendants`; `slot`; detach (and why not) |
 | 02 | [layout-b](sections/02-layout-b/_index.md) | The AppShell / Layout B skeleton, ref roles, SubSidebar module map, screen-template matching table |
 | 03 | [ds-organization](sections/03-ds-organization/_index.md) | Atomic layering, the DS canvas grid (`layout:none`), spacing scale, **height-aware Y formula**, section headers, the snapshot |
-| 04 | [tokens-theming](sections/04-tokens-theming/_index.md) | `$--var` tokens, the theme axis (Mode:Light/Dark), `get_variables`/`set_variables`, the Style-Dictionary → CSS-var seam (**context7**) |
+| 04 | [tokens-theming](sections/04-tokens-theming/_index.md) | `$--var` tokens, the theme axis (Mode:Light/Dark), `get_variables`/`set_variables`, the token-compile → CSS-var seam (**context7**) |
 | 05 | [style-guides](sections/05-style-guides/_index.md) | Choosing & recording a brand/style before designing (**warm-paper** + Expo monochrome shown as worked examples), reference products by module, the **getdesign.md** reference workflow |
 | 06 | [gotchas](sections/06-gotchas/_index.md) | Clipping, cross-file refs, file-specific IDs, legacy single-frame DS, nesting depth, encrypted `.pen` |
 | 07 | [ux-task-map](sections/07-ux-task-map/_index.md) | Task → UX-law routing → Pencil node constraint; good/bad component library; `laws-of-ux` integration |
@@ -104,9 +104,9 @@ a `snapshot_layout` dump → `design/snapshots/<ts>/`) — the hand-off Guardian
 
 ## context7 obligation (when this KB touches library code)
 
-§04 (tokens-theming) and `canvas-port` reach into **Style-Dictionary** and **Storybook**. When you act on
+§04 (tokens-theming) and `canvas-port` reach into the project's **token tool** (Style-Dictionary is one option) and **Storybook**. When you act on
 that seam — config, build, the `tokens.json` → CSS-var compile — you **MUST** consult the **context7 MCP**
-(`resolve-library-id` → `query-docs`) for Style-Dictionary / Storybook / Lit docs **before** writing any
+(`resolve-library-id` → `query-docs`) for the token tool / Storybook / the resolved framework docs **before** writing any
 config or code, and prompt the user to use context7 on any library/version question. Design-stage Pencil
 work needs no context7; the moment a token contract becomes a compiled artifact, it does.
 

@@ -2,21 +2,22 @@
 name: canvas
 description: |
   Entry point for the CANVAS design-system -> code pipeline — the master-coordinated walk from a Pencil
-  design to framework-agnostic Web Component code (Capture -> Audit -> Norm-check -> Vectorize ->
-  Assemble -> Spread), an instance of the AD/AID-PDLC sub-cycle contract (ADR-010 / RFC-021),
+  design to **native code in the consuming project's own framework** (framework resolved via Step 0 —
+  Capture -> Audit -> Norm-check -> Vectorize -> Assemble), an instance of the AD/AID-PDLC sub-cycle
+  contract (ADR-010 / RFC-021),
   hook-gate=YES. Dispatches the canvas-coordinator master, which walks EVERY phase + EVERY verifier as
   separate isolated-context Task sub-agents (BMAD-shaped) — including the Pencil-touching Designer and
   Storybook-Porter (Pencil MCP works in dispatched sub-agents) — with a blocking generator-not-verifier
   gate at each handoff and a fail-closed PreToolUse tokens-gate that blocks design-system/framework
   source writes until the tokens RFC is active.
   EN: Run CANVAS on a design-system slice — Pencil DS -> Audit -> Norm-check vs ForgePlan -> Storybook
-  port manifest (Style-Dictionary tokens) -> Web Component code + visual tests -> React/Vue/Svelte/
-  Angular/Solid wrappers. Use for Pencil-to-code design-system work, not feature logic (SPARC),
-  greenfield products (BMAD), or bug hunts (RIPER).
+  port manifest (single-source tokens via the project's token tool) -> native component code in the
+  project's own framework + visual tests. Use for Pencil-to-code design-system work, not feature logic
+  (SPARC), greenfield products (BMAD), or bug hunts (RIPER).
   RU: Запусти CANVAS на срез дизайн-системы — Pencil DS -> Audit -> Norm-check против ForgePlan ->
-  Storybook port-манифест (токены Style-Dictionary) -> код Web Components + визуальные тесты -> обёртки
-  React/Vue/Svelte/Angular/Solid. Для работы "из Pencil в код", не для фич-логики (SPARC), greenfield
-  (BMAD) или поиска багов (RIPER).
+  Storybook port-манифест (единый источник токенов через инструмент проекта) -> нативный код в
+  фреймворке проекта + визуальные тесты. Для работы "из Pencil в код", не для фич-логики (SPARC),
+  greenfield (BMAD) или поиска багов (RIPER).
   Triggers: "canvas", "/canvas", "run canvas", "pencil to code", "design system pipeline", "storybook port",
   "design system to code", "tokens to storybook", "из pencil в код", "перенеси дизайн-систему в storybook",
   "проведи дизайн через canvas", "дизайн-система в код"
@@ -25,7 +26,7 @@ description: |
 # /canvas — the design-system -> code walk (Pencil -> DS -> Storybook -> framework code)
 
 `/canvas` runs the **CANVAS methodology** as a master-coordinated sub-cycle: the `canvas-coordinator`
-walks one design-system slice from a Pencil design to shipped, framework-agnostic Web Component code,
+walks one design-system slice from a Pencil design to shipped **native code in the project's declared framework** (resolved via Step 0),
 gating every handoff with an independent reviewer (generator != verifier) and blocking any
 design-system source write until the **tokens contract is active**. It is an instance of the
 AD/AID-PDLC sub-cycle contract (ADR-010); peers are `/bmad` (greenfield, RFC-013), `/tdd` (Build-stage,
@@ -37,28 +38,43 @@ no-code-before-plan), not by any new contract dimension and not by reopening the
 occupies the previously-empty `{hook-gate=Yes, conditional-freeze}` interior cell of the existing two
 axes — a recombination, not a new axis.
 
-The six CANVAS letters name the six worker phases — **C**apture, **A**udit, **N**orm-check,
-**V**ectorize, **A**ssemble, **S**pread; the canonical phase names are `Design - Audit - Norm-check -
-Port - Code - Spread` (bookended by `Intake` and `Retro`). The coordinator conducts the C-A-N-V-A-S walk
-by dispatching each phase and each verifier as its own `Task` sub-agent.
+The five worker phases are **C**apture, **A**udit, **N**orm-check, **V**ectorize, **A**ssemble; the
+canonical phase names are `Design - Audit - Norm-check - Port - Code` (bookended by `Intake` and
+`Retro`). **CANVAS** keeps its full six-letter name as a proper noun — the trailing **S** (Spread /
+per-framework wrappers) is an OPTIONAL multi-target path, out of the default single-framework pipeline
+(deferred to ADR-016). The coordinator conducts the C-A-N-V-A walk by dispatching each phase and each
+verifier as its own `Task` sub-agent.
 
-## Topology (LOCKED DECISIONS, RFC-021 FR-2)
+## Engine as input — framework / design-source / language resolved via Step 0 (RFC-022 / ADR-015)
 
-- **Framework-agnostic Web Components** (Lit-based canonical layer) + **thin per-framework wrappers**.
-  Storybook uses the `web-components` framework. Max portability — every framework wraps the same
-  custom elements.
-- **Tokens = Style-Dictionary -> CSS custom properties.** A single `tokens.json` (mirrors Pencil
-  `variables`) compiles to CSS vars consumed by the WC shadow DOM + JS token exports. **One source,
-  never forked.**
-- **Spread targets (top-5): React, Vue, Svelte, Angular, Solid** wrappers over the WC base.
-- **hook-gate = YES (fail-closed).** A PreToolUse hook hard-blocks `Write`/`Edit` to
-  `packages/design-system/**` (and the framework packages) until the tokens RFC is `active`.
+- **The consuming project's framework is an INPUT, not a fixed canon.** Step 0 resolves it: detect from
+  `AGENTS.md` / `CLAUDE.md` / `package.json` and **announce** the detected stack; if none is declared or
+  it is ambiguous, **force-ask** the user. CANVAS then generates **natively in that one framework** —
+  the default output has **no framework-agnostic master and no per-framework wrappers**.
+- **Design-source + language are Step-0 inputs too.** The canonical Pencil `.pen` design is the
+  design-source; the target language follows from the resolved stack. Both are resolved/confirmed at
+  Step 0 before any generation.
+- **Web Components are ONE selectable target, not the canon.** Lit / Shadow DOM + Storybook's
+  `web-components` framework are used **only when the project's declared stack IS Web Components** —
+  otherwise CANVAS emits idiomatic code for whatever framework Step 0 resolved.
+- **Tokens = single-source `tokens.json` -> CSS custom properties (the CONTRACT).** A single
+  `tokens.json` (mirrors Pencil `variables`) compiles to CSS vars + token exports; **one source, never
+  forked.** The CONTRACT holds regardless of tool — the token tool is the **project's own** (Style-
+  Dictionary is one option; a native stack may use its own tool).
+- **context7 is MANDATORY before generation.** The code-touching agents MUST resolve the framework via
+  the context7 MCP (`resolve-library-id` -> `query-docs`) for the **Step-0-resolved framework** (and its
+  Storybook + token toolchain) before writing any code.
+- **hook-gate = YES (fail-closed).** A PreToolUse hook (`canvas-gate.sh`) hard-blocks `Write`/`Edit` to
+  the guarded design-system globs until the tokens RFC is `active`. (Mechanism unchanged.)
+- **Multi-framework output is OPTIONAL / out-of-default.** A wrapper fan-out across several frameworks
+  (the demoted `canvas-porter-framework` porter) runs **only on an explicit multi-framework request** —
+  deferred to a future ADR-016; it is not part of the default single-framework pipeline.
 
 ## When to use CANVAS vs the neighbours
 
 | Use... | When | Primary |
 |---|---|---|
-| **`/canvas`** (this) | **Design-system -> code**: a Pencil design becomes tokens + Storybook + framework components. The whole Pencil -> DS -> Storybook -> React/Vue/... arc. | CANVAS |
+| **`/canvas`** (this) | **Design-system -> code**: a Pencil design becomes tokens + Storybook + native framework components. The whole Pencil -> DS -> Storybook -> native-framework arc. | CANVAS |
 | `/smith` Row 3 -> SPARC | A single well-scoped **feature in an existing active system** (business/application logic, not a design system) | SPARC |
 | `/bmad` | **Greenfield** — a brand-new product/service, idea -> shipped, full Analyst -> QA arc | BMAD |
 | `/smith` Row 4 -> RIPER | A **bug investigation** / defect hunt in an existing system | RIPER |
@@ -90,10 +106,10 @@ cycle. Without it the gate is dormant (allows everything) — `/canvas-init` arm
 
 | C | Element | CANVAS instantiation | Who owns it |
 |---|---|---|---|
-| **C1** | Entry gate | An **active scope PRD/ADR** defining the DS slice + the canonical `.pen` path + the target framework list; `pencil get_editor_state(include_schema:true)` confirms the schema; `git status` clean-ish. Refuse otherwise (greenfield product -> BMAD; bug -> RIPER; feature logic -> SPARC). | ForgePlan harness — coordinator enforces |
+| **C1** | Entry gate | An **active scope PRD/ADR** defining the DS slice + the canonical `.pen` path + the target framework resolved via Step 0; `pencil get_editor_state(include_schema:true)` confirms the schema; `git status` clean-ish. Refuse otherwise (greenfield product -> BMAD; bug -> RIPER; feature logic -> SPARC). | ForgePlan harness — coordinator enforces |
 | **C2** | Stage-master | `canvas-coordinator` (opus, Profile B-orchestrator) — **dispatches every phase + every verifier via `Task`**, writes nothing to the product, activates nothing, **owns the per-branch state file** (writes phase + `tokens_active` via `canvas-lib.sh`; the hook only READS). Identical posture to `bmad-orchestrator`. | this skill / the agent |
-| **C3** | Phase agents | `canvas-designer` (Capture, Pencil) -> `canvas-porter-storybook` (Vectorize, Pencil read) -> `canvas-coder` (Assemble) -> `canvas-porter-framework` (Spread). **All ordinary `Task` sub-agents** — Pencil MCP runs fine inside a dispatched sub-agent (EVID-179). | agents-canvas |
-| **C4** | Independent verifier | Fresh-context sub-agents, generator != verifier: `canvas-guardian` (Audit), `canvas-tester` (Norm-check), tokens gate (`canvas-tester` + `architect-reviewer`), **Storybook gate (`canvas-storybook-validator`)**, code gate (`code-reviewer` + `tester` + `/laws-of-ux:ux-review`), parity gate (`code-reviewer` + `tester`). Freeze/pin on PASS. | agents-canvas + reused reviewers |
+| **C3** | Phase agents | `canvas-designer` (Capture, Pencil) -> `canvas-porter-storybook` (Vectorize, Pencil read) -> `canvas-coder` (Assemble, native framework). **All ordinary `Task` sub-agents** — Pencil MCP runs fine inside a dispatched sub-agent (EVID-179). `canvas-porter-framework` is an OPTIONAL multi-target porter (Spread), dispatched only on an explicit multi-framework request — out of the default pipeline (ADR-016). | agents-canvas |
+| **C4** | Independent verifier | Fresh-context sub-agents, generator != verifier: `canvas-guardian` (Audit), `canvas-tester` (Norm-check), tokens gate (`canvas-tester` + `architect-reviewer`), **Storybook gate (`canvas-storybook-validator`)**, code gate (`code-reviewer` + `tester` + `/laws-of-ux:ux-review`). Freeze/pin on PASS. (An optional multi-framework parity gate — `code-reviewer` + `tester` — runs only on an explicit multi-target request, out of the default pipeline, ADR-016.) | agents-canvas + reused reviewers |
 | **C5** | Enforcement | **hook-gate=YES** — the `canvas-gate.sh` PreToolUse hook blocks design-system/framework source writes until `tokens_active=true`. The coordinator WRITES that flag via `canvas-lib.sh`; the hook only READS. Binds dispatched agents **and** human/out-of-band edits. | the hook |
 | **C6** | EVIDENCE-out | One EVID per gate embedding the C4 verdict + reviewed revision; a terminal Retro EVID pins all reviewed revisions. The coordinator emits `NEEDS_ACTIVATION`; the orchestrator activates. | ForgePlan harness — coordinator emits a sentinel |
 | **C7** | FPF substrate | On-demand (`/fpf` for token-system design or framework-choice trade-offs). | orthogonal, callable |
@@ -107,9 +123,10 @@ phase to caveat.
 
 CANVAS ships one master + **seven** new role agents (design-system roles with no analogue in the set):
 
-- **C3 generators (produce):** `canvas-designer` (Capture/Pencil), `canvas-porter-storybook`
-  (Vectorize/tokens+manifest), `canvas-coder` (Assemble/Web-Components), `canvas-porter-framework`
-  (Spread/wrappers).
+- **C3 generators (produce) — default single-framework pipeline:** `canvas-designer` (Capture/Pencil),
+  `canvas-porter-storybook` (Vectorize/tokens+manifest), `canvas-coder` (Assemble/native framework
+  code). The `canvas-porter-framework` porter (Spread/wrappers) ships too but is **out-of-default** —
+  an OPTIONAL multi-target porter dispatched only on an explicit multi-framework request (ADR-016).
 - **C4 verifiers (audit, fresh context):** `canvas-guardian` (Audit — DS conventions), `canvas-tester`
   (Norm-check — traceability vs PRD/ADR/EVID), `canvas-storybook-validator` (Storybook gate — built
   Storybook vs the Pencil oracle, generator != verifier vs `canvas-coder`).
@@ -132,14 +149,14 @@ any phase itself.
 
 ### Step 2 — dispatch the master
 
-Dispatch the `canvas-coordinator`; it walks the whole C-A-N-V-A-S arc as separate `Task` sub-agents
+Dispatch the `canvas-coordinator`; it walks the whole C-A-N-V-A arc as separate `Task` sub-agents
 (BMAD-shaped — every phase and every verifier is its own isolated context):
 
 ```
 Task(subagent_type="agents-canvas:canvas-coordinator",
      prompt="""
        Design-system -> code task. Canonical .pen: <path>. DS slice: <scope PRD/ADR>.
-       Frameworks: React/Vue/Svelte/Angular/Solid.
+       Framework: <the project's own stack, resolved via Step 0 — detect from AGENTS.md/CLAUDE.md/package.json, else force-ask>.
        Run the CANVAS walk per RFC-021 / ADR-010 C1-C6. Verify Precondition C1 (active scope PRD/ADR + Pencil reachable).
        Walk (each a separate Task / fresh context):
          canvas-designer (Capture) -> [C4 canvas-guardian Audit + canvas-tester Norm-check] ->
@@ -147,11 +164,11 @@ Task(subagent_type="agents-canvas:canvas-coordinator",
                                                   -> activate tokens RFC -> set-tokens true (C5 unlock)] ->
          canvas-coder (Assemble) -> [C4 canvas-storybook-validator Gate Storybook]
                                  -> [C4 code-reviewer + tester + /laws-of-ux:ux-review Gate Code] ->
-         canvas-porter-framework x5 (Spread — PARALLEL fan-out, one pkg per agent, FR-9)
-                                 -> [C4 code-reviewer + tester Gate Parity] ->
          evidence-recorder (Retro C6).
-       Sequence by blockedBy on the gate chain; the Spread fan-out is the ONLY parallel step
-       (file-disjoint, worktree-isolated, own context). Write phase/tokens transitions via canvas-lib.sh.
+       Sequence by blockedBy on the gate chain — the default single-framework walk is strictly serial
+       (no master, no wrappers, no parallel fan-out). Write phase/tokens transitions via canvas-lib.sh.
+       (Optional, only on an explicit multi-framework request — out of default, ADR-016: after Gate Code,
+       fan out canvas-porter-framework one-per-target, then a parity gate, then Retro.)
        Emit NEEDS_ACTIVATION sentinels; never activate.
        task-id: <id>
      """)
@@ -175,33 +192,26 @@ activation is the C5 unlock**: only after it is `active` does the coordinator ru
 `canvas-lib.sh set-tokens <slug> RFC-NNN true`, which lets the hook permit the Coder's design-system
 writes. The orchestrator never auto-activates; the coordinator never activates at all.
 
-## Dispatch & parallelism discipline (RFC-021 FR-9)
+## Dispatch & sequencing discipline (RFC-021 FR-9)
 
 The master is the **team lead** (Profile B-orchestrator): it owns the task graph, dispatches, and gates;
-it never edits product files. Three rules govern sequencing and concurrency:
+it never edits product files. Two rules govern sequencing:
 
 1. **Sequence by the gate chain (`blockedBy`).** Each phase is dispatched only after the prior phase's
    C4 gate returns PASS. When the master uses Workflow / AgentTeams primitives, this is encoded as
    `blockedBy` dependencies (a phase task is `blockedBy` its predecessor's gate task) — never
    fire-and-forget.
-2. **Spread is the SOLE parallel fan-out.** The Capture -> Vectorize -> Assemble spine is **strictly
-   serial** — each consumes the prior's frozen-or-pinned output, so those phases are **never run
-   concurrently**. Only the **Spread** phase fans out: one `canvas-porter-framework` agent **per
-   framework package** (React/Vue/Svelte/Angular/Solid), each
-   - owning a **disjoint file set** (its own `packages/canvas-<framework>/` subtree) — strict file
-     ownership, no two agents write the same file;
-   - running in its **own git worktree** — verify with `git worktree list` differs from `main`, never
-     assume isolation took effect;
-   - running in its **own fresh context** — no shared mutable state.
-   The master seeds each Spread worktree's CANVAS state (`tokens_active=true` + the same
-   `guarded_globs`, FR-6) so the hook-gate stays correctly active-and-unlocked in every worktree. The 5
-   Spread tasks are **siblings, all `blockedBy` the Code gate PASS**, and **Gate Parity is `blockedBy`
-   all 5**.
-3. **No cross-phase race.** Because the serial spine consumes pinned outputs, serial phases are never
-   started in parallel. The only concurrency is the file-disjoint Spread fan-out above.
+2. **The default single-framework pipeline is strictly serial.** The Capture -> Vectorize -> Assemble
+   spine each consumes the prior's frozen-or-pinned output, so those phases are **never run
+   concurrently**. Native single-framework output has **no master artifact and no per-framework
+   wrappers**, so the default pipeline has **no parallel fan-out at all**. The optional multi-framework
+   wrapper path (out-of-default, deferred to ADR-016) is the only place a per-package worktree fan-out
+   would apply — and only when the user explicitly requests multiple framework targets; it is not part
+   of the default walk.
 
 Cites the project canon: sprint/wave strict file-ownership, `agents-core:coder` `isolation: worktree`,
-the AGENT-AUTHORING-GUIDE Step 11 `affected_files` discipline, and the ground-truth worktree-verify rule.
+the AGENT-AUTHORING-GUIDE Step 11 `affected_files` discipline, and the ground-truth worktree-verify rule
+(these apply to the optional multi-target path, should it be invoked).
 
 ## The six HARD RULES (always-loaded — Pencil design discipline, RFC-021 FR-2)
 
@@ -236,10 +246,12 @@ the AGENT-AUTHORING-GUIDE Step 11 `affected_files` discipline, and the ground-tr
   patterns). **Reference-only** — adapt to our brand, never copy 1:1. Lives in
   `canvas-design/sections/05-style-guides`.
 - **context7** — the code-touching agents (`canvas-coder`, `canvas-porter-storybook`,
-  `canvas-porter-framework`, `canvas-storybook-validator`, and `canvas-design` where it touches
-  Storybook/Style-Dictionary) **MUST** use the context7 MCP (`resolve-library-id` -> `query-docs`) for
-  Storybook / Lit / Style-Dictionary / React / Vue / Svelte / Angular / Solid docs **before writing
-  code**, and prompt the user to use context7 on any library/version question.
+  `canvas-storybook-validator`, and `canvas-design` where it touches Storybook/token tooling)
+  **MUST** use the context7 MCP (`resolve-library-id` -> `query-docs`) for the **Step-0-resolved
+  framework** and its Storybook + token toolchain **before writing code**, and prompt the user to use
+  context7 on any library/version question. (When the resolved stack is Web Components, that means Lit +
+  the `web-components` Storybook framework; the optional multi-target porter resolves each additional
+  framework's docs the same way.)
 - **laws-of-ux** — the `canvas-designer` proactively loads `laws-of-ux:ux-laws` at design start and the
   Gate Code C4 runs `/laws-of-ux:ux-review` on the generated `*.tsx/*.css`.
 
@@ -258,9 +270,10 @@ the AGENT-AUTHORING-GUIDE Step 11 `affected_files` discipline, and the ground-tr
 5. **Design-system source is unlocked only when the tokens RFC is active.** Until then the hook blocks
    all design-system/framework writes — that is the methodology, not an obstacle. Never flip
    `tokens_active` by hand to "move things along".
-6. **Dispatch discipline (FR-9).** Sequence phases via `blockedBy` on the gate chain; the **Spread**
-   fan-out is the only parallel step — file-disjoint per-package ownership + git worktree isolation
-   (verified, not assumed) + own context; serial phases are never run concurrently.
+6. **Dispatch discipline (FR-9).** Sequence phases via `blockedBy` on the gate chain; the default
+   single-framework pipeline is **strictly serial** (no wrappers, no parallel fan-out). Per-package
+   worktree fan-out applies only to the optional multi-framework porter path (out-of-default, ADR-016) —
+   file-disjoint per-package ownership + git worktree isolation (verified, not assumed) + own context.
 7. **The six Pencil HARD RULES above are non-negotiable** — ref-first, check-DS-first, <=25 ops,
    verify-after-every-batch, never-detach/never-screen-reusable, never-Read-a-.pen.
 

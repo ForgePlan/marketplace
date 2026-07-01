@@ -41,6 +41,13 @@
 # Overridable per-branch in the state file (set via /canvas-init).
 : "${CANVAS_DEFAULT_GUARDED_GLOBS:=packages/design-system/**|packages/design-system-*/**|packages/canvas-*/**|packages/*-canvas/**}"
 
+# Fail-SAFE catch-all guarded set (RFC-022 F-1/F-2/F-3) — the widest over-guard:
+# the wrapper packages PLUS the native in-app component roots. Enforced when the
+# resolved framework is unknown, when a derived set matches nothing on disk
+# (non-conventional layout), or when the persisted state is stale/blind. Always
+# over-guard (deny more) — never under-guard (a silent fail-open).
+: "${CANVAS_FAILSAFE_GUARDED_GLOBS:=packages/design-system/**|packages/design-system-*/**|packages/canvas-*/**|packages/*-canvas/**|src/**|app/**|components/**}"
+
 # ---------------------------------------------------------------------------
 # branch_slug — filesystem-safe slug from a branch name
 # ---------------------------------------------------------------------------
@@ -246,6 +253,44 @@ path_is_guarded() {
 }
 
 # ---------------------------------------------------------------------------
+# canvas_effective_guarded_globs STATE_FILE — the guarded globs the gate should
+# ENFORCE, hardened against stale persisted state (RFC-022 F-2). The gate loads
+# its guarded set through this (not raw jq), so a pre-RFC-022 state (no
+# state_schema_version, carrying legacy wrapper-only globs) on a now-native
+# project can never silently fail OPEN: such state is detected as stale and the
+# fail-SAFE catch-all is substituted (over-guard). This changes only the INPUT
+# the gate enforces — the gate's path-match + tokens_active fail-closed logic is
+# UNCHANGED (RFC-022 INV-1: enforcement semantics byte-identical). Never echoes
+# empty; returns non-zero ONLY when STATE_FILE is unreadable (the gate's
+# `|| exit 2` then fail-closes on error).
+canvas_effective_guarded_globs() {
+  local sf="$1"
+  [ -f "$sf" ] || return 1
+  local globs schema_ver
+  globs="$(jq -r '.guarded_globs // ""' "$sf" 2>/dev/null)" || return 1
+  schema_ver="$(jq -r '.state_schema_version // ""' "$sf" 2>/dev/null)" || return 1
+
+  # Stale pre-RFC-022 state: no schema_version AND legacy wrapper globs. Such
+  # state predates per-framework derivation; on a native layout its packages/**
+  # globs guard non-existent dirs -> fail OPEN. Substitute the fail-SAFE
+  # catch-all (over-guard) + warn (the durable fix is `canvas-lib.sh migrate`).
+  if [ -z "$schema_ver" ] && printf '%s' "$globs" | grep -q "packages/design-system"; then
+    printf 'WARN: stale pre-RFC-022 canvas state — enforcing fail-SAFE guarded globs (run: canvas-lib.sh migrate <slug> <framework>)\n' >&2
+    printf '%s\n' "$CANVAS_FAILSAFE_GUARDED_GLOBS"
+    return 0
+  fi
+
+  # Never under-guard on an empty persisted set either.
+  if [ -z "$globs" ]; then
+    printf '%s\n' "$CANVAS_FAILSAFE_GUARDED_GLOBS"
+    return 0
+  fi
+
+  printf '%s\n' "$globs"
+  return 0
+}
+
+# ---------------------------------------------------------------------------
 # State-file locking — atomic mkdir + PID-based stale detection
 # ---------------------------------------------------------------------------
 # mkdir-based for portability (no flock dependency — works on macOS bash 3.2).
@@ -352,6 +397,176 @@ canvas_init_state() {
   echo "$sf"
 }
 
+# ---------------------------------------------------------------------------
+# RFC-022 P1 — per-framework guarded_globs derivation (AC-1), zero-match
+# self-check (AC-10), and stale-state migration (AC-9).
+# ---------------------------------------------------------------------------
+# STATE_SCHEMA_VERSION — increment when the state shape changes in a breaking
+# way. Pre-RFC-022 state lacks this field; its absence (combined with
+# wrapper-only globs) is the stale-state signal used by canvas_migrate_state.
+STATE_SCHEMA_VERSION="1"
+
+# derive_guarded_globs FRAMEWORK — return the pipe-delimited guarded-glob set
+# for the named framework (case-insensitive). Web-Components/Lit row returns
+# CANVAS_DEFAULT_GUARDED_GLOBS unchanged (AC-1 non-regression — preserves the
+# current packages/** behaviour for that stack). The UNKNOWN/native catch-all
+# over-guards (src/**|app/**|components/**) — the fail-SAFE direction: never
+# emit an empty or narrower-than-before set. Callers MUST run
+# canvas_verify_globs_on_disk after deriving (AC-10 zero-match gate).
+derive_guarded_globs() {
+  local fw_lc
+  fw_lc="$(printf '%s' "${1:-}" | tr '[:upper:]' '[:lower:]')"
+  case "$fw_lc" in
+    react|next|next.js|nextjs)
+      echo "src/components/**|app/**|components/**"
+      ;;
+    vue|nuxt)
+      echo "src/components/**"
+      ;;
+    svelte|sveltekit|svelte-kit)
+      echo "src/**"
+      ;;
+    angular)
+      echo "src/app/**"
+      ;;
+    solid|solidjs|solid.js)
+      echo "src/**"
+      ;;
+    web-components|webcomponents|lit)
+      # Preserve the existing wrapper-layout default (AC-1 non-regression):
+      # Web-Components projects still live under packages/**.
+      echo "$CANVAS_DEFAULT_GUARDED_GLOBS"
+      ;;
+    *)
+      # Unknown / native framework — fail-SAFE catch-all: over-guard rather
+      # than under-guard so no design-system path escapes the gate silently.
+      echo "$CANVAS_FAILSAFE_GUARDED_GLOBS"
+      ;;
+  esac
+}
+
+# canvas_verify_globs_on_disk ROOT GLOBS — count how many glob-prefix
+# directories exist under ROOT. A zero count means the derived set guards
+# nothing on disk; the caller must not persist such a set (AC-10).
+canvas_verify_globs_on_disk() {
+  local root="$1" globs="$2"
+  local count=0 g prefix
+  local oldifs="$IFS"; IFS='|'
+  for g in $globs; do
+    IFS="$oldifs"
+    [ -n "$g" ] || continue
+    prefix="${g%/\*\*}"    # strip trailing /**
+    prefix="${prefix%/\*}" # strip trailing /*
+    prefix="${prefix%/}"   # strip stray trailing /
+    [ -n "$prefix" ] || continue
+    if [ -d "${root}/${prefix}" ]; then
+      count=$((count + 1))
+    fi
+  done
+  IFS="$oldifs"
+  echo "$count"
+}
+
+# canvas_init_framework_state SLUG FRAMEWORK — derive per-framework
+# guarded_globs (AC-1), run the AC-10 zero-match self-check, and persist a
+# new state file stamped with state_schema_version (AC-9). On zero-match:
+# emit WARNING to stderr + <<NEED_USER_INPUT>> to stdout, do NOT write state,
+# return 1. On success: return the state-file path via stdout.
+canvas_init_framework_state() {
+  local slug="$1" fw="${2:-unknown}"
+  local globs root match_count dir sf now
+
+  globs="$(derive_guarded_globs "$fw")"
+  root="$(repo_root)" || return 1
+
+  # AC-10 / F-1 / F-3: zero-match self-check — FAIL-TO-PROTECTED. The derived
+  # globs match nothing on disk (non-conventional layout, or the dir does not
+  # exist yet). Do NOT leave the gate unarmed (that is a fail-OPEN window) and do
+  # NOT persist a guard-nothing set. Instead arm the fail-SAFE catch-all
+  # (over-guard every native + wrapper root) AND emit <<NEED_USER_INPUT>> so the
+  # user confirms / narrows the real design-system directory.
+  match_count="$(canvas_verify_globs_on_disk "$root" "$globs")"
+  if [ "$match_count" -eq 0 ]; then
+    printf 'WARNING: canvas-init: derived globs for framework "%s" match zero on-disk directories; arming the fail-SAFE catch-all (over-guard) instead.\n' "$fw" >&2
+    printf '  Derived (unused): %s\n' "$globs" >&2
+    printf '<<NEED_USER_INPUT>> canvas-init: the conventional component directory for framework "%s" was not found on disk, so CANVAS armed the fail-SAFE over-guard (%s). Confirm or narrow it: re-run /canvas-init with an explicit glob (e.g. src/ui/**).\n' "$fw" "$CANVAS_FAILSAFE_GUARDED_GLOBS"
+    globs="$CANVAS_FAILSAFE_GUARDED_GLOBS"
+  fi
+
+  dir="$(canvas_dir)" || return 1
+  mkdir -p "$dir" || return 1
+  sf="$dir/state-${slug}.json"
+  now="$(_canvas_now)"
+  # Write state including state_schema_version so upgrade detection works:
+  # pre-RFC-022 state lacks this field (AC-9 stale-state signal).
+  jq -n \
+    --arg globs "$globs" \
+    --arg now   "$now"   \
+    --arg fw    "$fw"    \
+    --arg sv    "$STATE_SCHEMA_VERSION" \
+    '{phase:"design", tokens_rfc:"", tokens_active:false,
+      guarded_globs:$globs, override:false,
+      state_schema_version:$sv, framework:$fw,
+      started_at:$now, phase_entered_at:$now}' \
+    > "$sf" || return 1
+  echo "$sf"
+}
+
+# _canvas_is_stale_state SLUG — return 0 if the persisted state is stale
+# (pre-RFC-022: no state_schema_version AND wrapper-only globs), 1 if current
+# or absent. Internal helper; no stdout output.
+_canvas_is_stale_state() {
+  local slug="$1" sf schema_ver globs
+  sf="$(state_file_for "$slug")" || return 1
+  [ -f "$sf" ] || return 1  # absent — not stale by this definition
+
+  schema_ver="$(jq -r '.state_schema_version // ""' "$sf" 2>/dev/null)" || return 1
+  globs="$(jq -r '.guarded_globs // ""' "$sf" 2>/dev/null)" || return 1
+
+  # Stale when: no schema_version AND globs contain the legacy wrapper prefix.
+  if [ -z "$schema_ver" ] && printf '%s' "$globs" | grep -q "packages/design-system"; then
+    return 0
+  fi
+  return 1
+}
+
+# canvas_migrate_state SLUG FRAMEWORK — detect stale pre-RFC-022 state (AC-9)
+# and, if stale, re-derive guarded_globs for FRAMEWORK + stamp
+# state_schema_version. Preserves phase / tokens_active / override in-place.
+# On zero-match after re-derive: warn + <<NEED_USER_INPUT>>, do NOT update.
+# On already-current state: no-op message.
+canvas_migrate_state() {
+  local slug="$1" fw="${2:-unknown}"
+  local sf globs root match_count now
+
+  sf="$(state_file_for "$slug")" || return 1
+  [ -f "$sf" ] || { echo "error: no state file for $slug" >&2; return 1; }
+
+  if ! _canvas_is_stale_state "$slug"; then
+    echo "INFO: canvas state for '${slug}' is already at schema v${STATE_SCHEMA_VERSION} — no migration needed."
+    return 0
+  fi
+
+  echo "INFO: stale pre-RFC-022 canvas state detected for '${slug}' — migrating to schema v${STATE_SCHEMA_VERSION} (framework: ${fw})"
+
+  globs="$(derive_guarded_globs "$fw")"
+  root="$(repo_root)" || return 1
+  match_count="$(canvas_verify_globs_on_disk "$root" "$globs")"
+
+  if [ "$match_count" -eq 0 ]; then
+    printf 'WARNING: canvas-migrate: derived globs for framework "%s" match zero on-disk directories; migrating to the fail-SAFE catch-all (over-guard) instead of leaving stale globs.\n' "$fw" >&2
+    printf '<<NEED_USER_INPUT>> canvas-migrate: the conventional dir for "%s" was not found; migrated to the fail-SAFE over-guard (%s). Confirm or narrow with an explicit glob.\n' "$fw" "$CANVAS_FAILSAFE_GUARDED_GLOBS"
+    globs="$CANVAS_FAILSAFE_GUARDED_GLOBS"
+  fi
+
+  now="$(_canvas_now)"
+  locked_update_state "$sf" \
+    '.guarded_globs=$g | .state_schema_version=$v | .migrated_at=$n' \
+    --arg g "$globs" --arg v "$STATE_SCHEMA_VERSION" --arg n "$now" || return 1
+
+  echo "INFO: migration complete. New globs: ${globs}"
+}
+
 # canvas_set_phase SLUG PHASE — move to a new phase + stamp phase_entered_at.
 canvas_set_phase() {
   local slug="$1" phase="$2" now sf
@@ -403,10 +618,13 @@ if [ "${BASH_SOURCE[0]:-}" = "${0}" ]; then
     set-phase)     canvas_set_phase "$@" ;;
     set-tokens)    canvas_set_tokens "$@" ;;
     set-override)  canvas_set_override "$@" ;;
-    get)           canvas_get "$@" ;;
-    slug)          branch_slug "$@" ;;
+    get)            canvas_get "$@" ;;
+    slug)           branch_slug "$@" ;;
+    derive-globs)   derive_guarded_globs "$@" ;;          # RFC-022 AC-1
+    init-framework) canvas_init_framework_state "$@" ;;   # RFC-022 AC-1/AC-10/AC-9
+    migrate)        canvas_migrate_state "$@" ;;           # RFC-022 AC-9
     *)
-      echo "usage: canvas-lib.sh {init SLUG [GUARDED_GLOBS] | set-phase SLUG PHASE | set-tokens SLUG RFC true|false | set-override SLUG true|false | get SLUG [FIELD] | slug [BRANCH]}" >&2
+      echo "usage: canvas-lib.sh {init SLUG [GUARDED_GLOBS] | init-framework SLUG FRAMEWORK | set-phase SLUG PHASE | set-tokens SLUG RFC true|false | set-override SLUG true|false | get SLUG [FIELD] | slug [BRANCH] | derive-globs FRAMEWORK | migrate SLUG FRAMEWORK}" >&2
       exit 1
       ;;
   esac

@@ -1,8 +1,7 @@
-# §04 — Tokens & theming (`$--vars`, the Mode axis, the Style-Dictionary seam)
+# §04 — Tokens & theming (`$--vars`, the Mode axis, the token-compile seam)
 
 Tokens are the **single source of truth** for color/spacing/typography. In Pencil they are `variables`
-referenced as `$--var`; downstream they compile through **Style-Dictionary → CSS custom properties** from a
-single `tokens.json` (the CANVAS topology, LOCKED). One source, never forked. **This section is where the
+referenced as `$--var`; downstream they compile from a single `tokens.json` into **CSS custom properties** via the project's token tool (Style-Dictionary is one option; a native stack may use its own). The single-source `tokens.json` → CSS-custom-properties CONTRACT is LOCKED — the tool is not. One source, never forked. **This section is where the
 context7 obligation begins.**
 
 ---
@@ -67,33 +66,32 @@ Define a themed color end-to-end with [`themed-color-var`](../../templates/theme
 theme values balanced for contrast (WCAG AA) — see §07 (Aesthetic-Usability / contrast).
 
 **Theme axes map straight to Storybook globals** in the port: Pencil `Mode:Light/Dark` → a Storybook
-`theme` global toolbar + a Style-Dictionary theme axis. Keep the axis names stable so the port is mechanical
+`theme` global toolbar + a token-tool theme axis. Keep the axis names stable so the port is mechanical
 (`canvas-port` §01).
 
 ---
 
-## The Style-Dictionary → CSS-var seam (context7 MANDATORY here)
+## The token-compile → CSS-var seam (context7 MANDATORY here)
 
-The CANVAS port compiles the Pencil `variables` into a single `tokens.json` that **Style-Dictionary**
-transforms into CSS custom properties consumed by the Web Component shadow DOM (and JS token exports). The
+The CANVAS port compiles the Pencil `variables` into a single `tokens.json` that the project's token tool (Style-Dictionary is one option) transforms into CSS custom properties consumed by the Web Component shadow DOM (and JS token exports). The
 mapping is 1:1 and must never fork values:
 
 ```
 Pencil  $--background           (the design-time source, mirrored into tokens.json)
         →  tokens.json  { "color": { "background": { "value": "#FAF6EF" } } }
-        →  Style-Dictionary build
+        →  token-tool build (Style-Dictionary or the native stack's tool)
         →  CSS  :root { --background: #FAF6EF; }   /* consumed in WC shadow DOM */
 ```
 
-**Before** you author or modify any Style-Dictionary config, the `tokens.json` schema, the transform
+**Before** you author or modify any token-tool config (e.g. Style-Dictionary), the `tokens.json` schema, the transform
 groups, or the theme/platform setup — **consult context7**:
 
 ```
-resolve-library-id  "Style Dictionary"     → query-docs  "<your config / theme / transform question>"
+resolve-library-id  "<your token tool, e.g. Style Dictionary>"   → query-docs  "<your config / theme / transform question>"
 resolve-library-id  "Storybook"            → query-docs  "web-components theme globals from CSS variables"
 ```
 
-And **prompt the user to use context7** on any Style-Dictionary / Storybook / Lit version question. This is
+And **prompt the user to use context7** on any token-tool / Storybook / resolved-framework version question. This is
 a hard obligation for `canvas-design` the moment it touches the token-compile seam, and for
 `canvas-coder` / `canvas-porter-*` always. Design-time Pencil token work needs no context7; the compile
 step does.
@@ -110,7 +108,7 @@ step does.
 - [ ] Every color/spacing/font in a node is a `$--var`, not a raw literal (where a token exists).
 - [ ] Themed colors carry both Light and Dark values; contrast passes AA in both.
 - [ ] Axis names (`Mode`) are stable and mirror what the port expects.
-- [ ] When the token set becomes `tokens.json` / Style-Dictionary config → context7 first, then write.
+- [ ] When the token set becomes `tokens.json` / token-tool config → context7 first, then write.
 
 ## Cross-references
 
