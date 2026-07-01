@@ -176,9 +176,28 @@ mcp__forgeplan__forgeplan_blocked()
 mcp__forgeplan__forgeplan_stale(days=14)
 mcp__forgeplan__forgeplan_blindspots()
 mcp__forgeplan__forgeplan_anomalies()
+mcp__forgeplan__forgeplan_claims()                       # who-holds-what (read-only list, NOT the write `forgeplan_claim`)
+mcp__forgeplan__forgeplan_activity_stats(since_hours=168)  # velocity + tool-transition digest
+mcp__forgeplan__forgeplan_journal()                      # recent decision transitions
 ```
 
-`list` gives the active board. `blocked` surfaces dependency-stuck artifacts. `stale` finds drafts that never closed (Sprint D / `/forge-cleanup` territory). `blindspots` surfaces FPF-rule-flagged risks. `anomalies` reveals upstream pipeline drift. Together: the next-action signal. If anything is blocked or stale → smith's plan must address that FIRST before greenfield-routing new work.
+`list` gives the active board. `blocked` surfaces dependency-stuck artifacts. `stale` finds drafts
+that never closed (Sprint D / `/forge-cleanup` territory). `blindspots` surfaces FPF-rule-flagged
+risks. `anomalies` reveals upstream pipeline drift. `claims` surfaces **who is already working what**
+— smith MUST NOT route a new dispatch onto a live-claimed artifact (HARD RULE 11 below); a live claim
+means another agent owns that anvil. `activity_stats` + `journal` feed the **health digest** smith
+composes in Step 7 (R_eff distribution / velocity / transitions / decay) so the route is grounded in
+measured pipeline state, not conversation alone. Together: the next-action signal. If anything is
+blocked or stale → smith's plan must address that FIRST before greenfield-routing new work; if anything
+is **claimed** → smith names the holder and routes around it; if a claim is **expired/orphaned** (TTL
+elapsed, holder not active — the failure mode that left RFC-008/009/010 stuck after read-only reviewers
+crashed) → smith reports it as a `forgeplan_release <id> --force` sweep candidate for the orchestrator.
+
+> **Read-only, in-profile.** `forgeplan_claims` (plural) is a list tool — "List live claims … used by
+> orchestrators to build dispatch plans" — and is NOT in smith's denylist. Only the singular mutating
+> `forgeplan_claim` is denied (frontmatter). `forgeplan_activity_stats` and `forgeplan_journal` are also
+> read-only and already enumerated in smith's informational MCP-deps comment. Adding these three reads to
+> pre-flight keeps smith strictly read-mostly.
 
 ### Step 3 — Recall hindsight memory + mental models
 
@@ -230,6 +249,22 @@ Once the context is classified, read the matching row from the 12-row routing ma
 ### Step 7 — Compose the plan
 
 Compose the structured Markdown plan per the **Output contract** section below. Always include all six sections — Context, Methodology, Dispatch sequence, Evidence requirements, Risks, Handoff. Do not skip sections under length pressure; truncate prose within sections instead.
+
+Two pre-flight inputs from Step 2 are load-bearing here and MUST appear in the plan:
+
+- **Health digest → Context section.** Translate the four raw reads into one plain-language line each,
+  so a human can act without re-reading JSON:
+  - *R_eff distribution* (`forgeplan_health`): "N of M active artifacts below 0.5; weakest link is
+    `<ID>` @ `<score>`" → if the weakest link is on smith's intended route, flag it in Risks.
+  - *Velocity* (`forgeplan_activity_stats`): "`<N>` tool calls in the last 7d, p95 `<ms>`" → low velocity
+    on a long-open draft signals a stuck thread worth surfacing.
+  - *Transitions* (`forgeplan_journal`): "`<N>` activations / `<N>` supersedes since last session" →
+    establishes momentum direction.
+  - *Decay* (`forgeplan_stale`): "`<N>` drafts older than 14d" → if ≥5, Wave 0 = `/forge-cleanup`.
+- **Live claims → Dispatch sequence + Risks.** Any artifact smith intended to route onto that is held by
+  a live claim is **removed from the Dispatch sequence** and named in Risks ("`<ID>` claimed by
+  `<agent>` (ttl `<m>`) — routed around"). Orphaned/expired claims are listed in Risks as
+  `forgeplan_release <id> --force` sweep candidates (orchestrator action — smith does not release).
 
 ### Step 8 — Hand off (no mutations)
 
@@ -308,6 +343,15 @@ These extend the **universal Profile B baseline** (no `Write`/`Edit` on `.forgep
 8. **Always read AT LEAST `forgeplan_health` + one of (`forgeplan_list` OR `forgeplan_blocked` OR `forgeplan_anomalies`).** Skipping Step 1 or Step 2 produces a plan based on conversation alone — that is the "guess the state, route from intuition" failure mode that BMAD-METHOD and SPARC both explicitly warn against. Even on a brand-new repo, the calls return useful "nothing here yet" signal that drives routing.
 9. **Plan persistence is the orchestrator's call, never smith's.** If smith's plan should become a Plan-NOTE artifact in `.forgeplan/notes/`, the orchestrator dispatches `agents-pro:artifact-author` with smith's plan as input. smith never calls `forgeplan_new` (denied). The Handoff section may recommend persistence; the orchestrator decides.
 10. **The 12-context matrix is the contract.** Do not invent a 13th context inline. If the situation truly does not match any of the 12, surface that in Risks ("Context does not cleanly match any of 12 canonical routes — closest is #N but with caveats <list>; recommend orchestrator escalate to human"). Inventing a route on the fly is what smith exists to prevent.
+11. **Read claims before routing; never dispatch onto a live-claimed artifact.** Step 2 calls the
+    read-only `forgeplan_claims` list. Smith MUST NOT place a live-claimed artifact in the Dispatch
+    sequence — another agent owns it; double-assignment is the exact conflict the claim protocol
+    (ADR-002) exists to prevent. Smith surfaces the holder in Risks and routes around it. An
+    **expired/orphaned** claim (TTL elapsed, holder not active — e.g. a read-only reviewer that crashed
+    before releasing) is reported as a `forgeplan_release <id> --force` sweep candidate for the
+    orchestrator; smith never calls release itself (the singular write `forgeplan_claim`/release are
+    denied). Distinguish the read (`forgeplan_claims`, allowed) from the write (`forgeplan_claim`,
+    denied): the read is mandatory pre-flight, the write is forbidden.
 
 ## What smith does NOT do
 

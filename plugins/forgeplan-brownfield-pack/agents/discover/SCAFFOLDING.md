@@ -37,7 +37,8 @@ Returns:
   "session_id": "disc-<YYYYMMDD>-<HHMMSS>",
   "current_phase": "detect",
   "project_name": "...",
-  "status": "started",
+  "status": "started",           // legacy alias — SESSION state, deprecated (forgeplan#292)
+  "session_status": "started",   // explicit session state (v0.32+)
   "protocol": {
     "version": "1.0",
     "phases": [ /* 7 phases */ ],
@@ -63,9 +64,14 @@ Creates artifact, links to session. Returns:
   "artifact_id": "NOTE-011",
   "phase": "detect",
   "tier": 1,
-  "status": "active",  // ⚠ See Anomaly #14 below
+  "status": "active",            // legacy alias — SESSION state, deprecated (forgeplan#292); see Anomaly #14
+  "session_status": "active",    // explicit session state (v0.32+)
+  "artifact_status": "draft",    // explicit artifact state — always "draft" until activated (v0.32+)
   "session_id": "...",
-  "total_findings": 1
+  "total_findings": 1,
+  "_field_warnings": [
+    { "field": "status", "severity": "deprecation_notice", "message": "use session_status / artifact_status" }
+  ]
 }
 ```
 
@@ -75,7 +81,8 @@ Returns:
 ```jsonc
 {
   "session_id": "...",
-  "status": "completed",
+  "status": "completed",         // legacy alias — SESSION state, deprecated (forgeplan#292)
+  "session_status": "completed", // explicit session state (v0.32+)
   "artifacts_created": ["NOTE-011"],
   "phase_counts": { "detect": 1 },
   "tier_counts": { "1": 1 },
@@ -92,11 +99,13 @@ Returns:
 
 ### Anomaly #14 — `discover_finding` response `status` field is session status, not artifact status
 
+> **Resolved upstream in forgeplan v0.32+ ([forgeplan#292](https://github.com/ForgePlan/forgeplan/issues/292)).** The `discover_finding` (and `discover_start` / `discover_complete`) response now distinguishes session state from artifact state: read **`artifact_status`** for the finding's artifact (always `draft` until activated) and **`session_status`** for the session. The legacy `status` field is retained only as a deprecated alias of `session_status` and carries a `_field_warnings` deprecation notice. The workaround below is **no longer needed when running against forgeplan v0.32+** — it applies only to pre-v0.32 binaries.
+
 **Symptom**: response says `"status": "active"`. Operator assumes artifact is active. Subsequent `deprecate` fails: `Invalid transition: draft → deprecated`.
 
 **Root cause**: `status: active` in the response refers to the **session** (session is open and recording). The created artifact is actually `draft`. Verified via `forgeplan_health` after `discover_complete`: smoke artifact appeared in `orphans` list AND `by_status: draft`.
 
-**Workaround**:
+**Workaround** (pre-v0.32 only):
 1. Treat `discover_finding` return as "draft artifact created, recorded against session".
 2. Profile A or orchestrator MUST call `forgeplan_activate(artifact_id, force=true)` after each finding (or after `discover_complete`) for findings to count toward R_eff.
 3. Alternative: review draft findings post-session, activate only validated ones (synthesize phase output).
@@ -108,7 +117,7 @@ Returns:
 - Auto-activate findings at `discover_complete` time (would be safe — synthesize phase confirms findings).
 - Add `auto_activate: true` parameter to `discover_finding`.
 
-**Tracking**: not yet filed (decide post-v0.32). Documented in CLAUDE.md alongside #12/#13/#290/#291.
+**Tracking**: filed upstream as [forgeplan#292](https://github.com/ForgePlan/forgeplan/issues/292); **resolved in forgeplan v0.32+** — response now exposes `session_status` + `artifact_status`, so the workaround above is obsolete on v0.32+. Documented in CLAUDE.md alongside #12/#13/#290/#291.
 
 ---
 
