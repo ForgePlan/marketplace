@@ -2,38 +2,47 @@
 
 # CANVAS -- Design-System -> Code Methodology Plugin
 
-Drive a **Pencil design system** through to **framework-agnostic Web Component code** with an
-independent quality gate at every handoff. CANVAS is an instance of the AD/AID-PDLC sub-cycle contract
-(ADR-010 / RFC-021): a master (`canvas-coordinator`) conducts a six-phase walk -- **C**apture,
-**A**udit, **N**orm-check, **V**ectorize, **A**ssemble, **S**pread -- dispatching **every phase and
-every verifier via `Task`** so the generator is never the verifier, while a fail-closed PreToolUse hook
-blocks design-system source until the token contract is active (**hook-gate = Yes**).
+Drive a **Pencil design system** through to **code generated natively in the project's resolved
+frontend framework** with an independent quality gate at every handoff. CANVAS is an instance of the
+AD/AID-PDLC sub-cycle contract (ADR-010 / RFC-021): a master (`canvas-coordinator`) conducts a
+five-phase walk -- **C**apture, **A**udit, **N**orm-check, **V**ectorize, **A**ssemble -- dispatching
+**every phase and every verifier via `Task`** so the generator is never the verifier, while a
+fail-closed PreToolUse hook blocks design-system source until the token contract is active
+(**hook-gate = Yes**).
+
+CANVAS keeps its name as a proper noun (Capture-Audit-Norm-check-Vectorize-Assemble-**S**pread): the
+default walk is the five phases above; the trailing **S**pread (porting the native output to
+additional frameworks) is an optional, out-of-default extension -- see "CANVAS pipeline" below.
 
 CANVAS is **brand/style-agnostic**: the visual style is an input the project provides -- read from a
 forgeplan scope artifact (the active PRD/Brief, an ADR design-direction, or a recorded design-tokens
 decision); if none is recorded yet, the Designer first helps you choose one and records it before any
 design work begins.
 
-> `agents-canvas` -- agents `canvas-*` -- entry skill `/canvas`. Topology: framework-agnostic **Web
-> Components** (Lit canonical) + thin React/Vue/Svelte/Angular/Solid wrappers. Tokens:
-> **Style-Dictionary -> CSS custom properties** from a single `tokens.json`, never forked.
+> `agents-canvas` -- agents `canvas-*` -- entry skill `/canvas`. Topology: the **target framework is an
+> input, resolved at Step 0** -- detected from the project's `AGENTS.md` / `CLAUDE.md` / `package.json`
+> (announced to the user, or force-asked if ambiguous) -- and CANVAS generates **natively** in that one
+> framework (Web Components/Lit is one selectable target, used only when the project's declared stack
+> IS Web Components). Tokens: a single `tokens.json` -> CSS-custom-properties **contract**, tool-agnostic
+> -- Style-Dictionary is one supported token tool, never the mandatory one, never forked.
 
 ## Quick Start
 
 ```bash
 /plugin install agents-canvas@ForgePlan-marketplace   # requires the pencil MCP + laws-of-ux plugin
 /canvas-init                                           # arm the tokens-gate on this branch (once)
-/canvas                                                # run the C-A-N-V-A-S walk on a DS slice
+/canvas                                                # run the C-A-N-V-A walk on a DS slice
 ```
 
 `/canvas` refuses to start without a **design source** (a canonical `.pen` path + Pencil MCP reachable)
-and a target framework list. No design intent? Route greenfield -> `/bmad`, a feature -> SPARC, a bug
--> RIPER.
+and a resolved target framework (Step 0). No design intent? Route greenfield -> `/bmad`, a feature ->
+SPARC, a bug -> RIPER.
 
 ## CANVAS pipeline
 
 ```
-[C1 intake: a Pencil design-system -> code task; coordinator refuses without a design source + Pencil reachable]
+[C1 intake: a Pencil design-system -> code task; coordinator refuses without a design source + Pencil
+ reachable + a resolved target framework (Step 0)]
   |
   v  Capture     canvas-designer          Pencil DS -> DS snapshot + Design NOTE (non-freezable)   [Task sub]
        --[C4 Audit:      canvas-guardian  -- DS conventions PASS -> EVID + C6 pin of the snapshot]-->
@@ -41,23 +50,26 @@ and a target framework list. No design intent? Route greenfield -> `/bmad`, a fe
   v  Vectorize   canvas-porter-storybook  DS -> tokens contract (RFC) + story specs + visual oracle + port manifest
        --[Gate V (C4):   agents-core:tester + agents-pro:architect-reviewer -- CERTIFY the tokens RFC ->
                           coordinator activates tokens RFC + sets tokens_active=true -> gate unlocks code]-->
-  v  Assemble    canvas-coder             Web-Components code + stories + visual-regression tests
+  v  Assemble    canvas-coder             native component code (in the resolved framework) + stories +
+                                           visual-regression tests
        --[Gate Storybook (C4): canvas-storybook-validator -> EVID PASS/FAIL vs the Pencil oracle]-->
        --[Gate Code (C4):      agents-core:code-reviewer + agents-core:tester + /laws-of-ux:ux-review -> EVID]-->
-  v  Spread      canvas-porter-framework  (x5 PARALLEL fan-out -- one framework pkg per agent,
-                                           file-disjoint, git-worktree isolated)
-                                          React/Vue/Svelte/Angular/Solid wrappers + parity tests
-       --[Gate Parity (C4):    agents-core:code-reviewer + agents-core:tester -> EVID]-->
   v  Retro       agents-pro:evidence-recorder -> terminal C6 EVIDENCE + Hindsight
 ```
+
+**Optional, out-of-default -- Spread:** `canvas-porter-framework` (x N PARALLEL fan-out -- one
+additional-framework package per agent, file-disjoint, git-worktree isolated) ports the native
+Assemble output to other frameworks + parity tests, gated by `agents-core:code-reviewer` +
+`agents-core:tester` -> EVID. Not part of the default walk; tracked for a future ADR-016.
 
 `canvas-coordinator` dispatches the whole walk via `Task` -- there is no main-session binding (Pencil
 MCP works in dispatched sub-agents). A blocking gate sits at every arrow. On FAIL the coordinator
 returns to the producing phase (3 strikes -> `<<NEED_USER_INPUT>>`). On PASS it emits
 `NEEDS_ACTIVATION` -- the orchestrator (you) activates; the master never activates. The **tokens RFC
 activation is the C5 unlock**: only then does the hook permit design-system source writes. The
-**Spread phase is the one parallel fan-out** -- one agent per framework package, strict file ownership,
-git-worktree isolation, each `blockedBy` the code-gate PASS (FR-9).
+optional **Spread phase, when enabled, is the one parallel fan-out** -- one agent per (additional)
+framework package, strict file ownership, git-worktree isolation, each `blockedBy` the code-gate PASS
+(FR-9).
 
 ## The 8-agent roster (master + 7 roles)
 
@@ -67,10 +79,10 @@ git-worktree isolation, each `blockedBy` the code-gate PASS (FR-9).
 | `canvas-designer` | **C** Capture | creator-contract | Designs/extends the Pencil DS (atomic design + UX laws); exports the DS snapshot + Design NOTE. Ordinary `Task` sub-agent. |
 | `canvas-guardian` | **A** Audit | C read-only reviewer | Audits *how the DS was built* -- refs/slots/tokens/naming/atomic layering/no-clipping. Emits a C4 EVID + C6 pin of the snapshot. |
 | `canvas-tester` | **N** Norm-check | C reviewer + EVID | Validates the DS against the ForgePlan PRD/ADR/EVID truth -- coverage + provenance. C4 EVID. |
-| `canvas-porter-storybook` | **V** Vectorize | creator-contract | Extracts the approved DS into a Style-Dictionary token contract (RFC) + story specs + reference screenshots + port manifest. Ordinary `Task` sub-agent. |
-| `canvas-coder` | **A** Assemble | C-coder | Builds the Storybook (Web Components + `*.stories.ts` + visual-regression tests + token theme). |
+| `canvas-porter-storybook` | **V** Vectorize | creator-contract | Extracts the approved DS into a `tokens.json` -> CSS-custom-properties token contract (RFC, via the project's token tool -- Style-Dictionary is one option) + story specs + reference screenshots + port manifest. Ordinary `Task` sub-agent. |
+| `canvas-coder` | **A** Assemble | C-coder | Builds the Storybook (native components in the resolved framework + story files + visual-regression tests + token theme). |
 | `canvas-storybook-validator` | Gate **Storybook** | C reviewer + EVID | Validates the **built Storybook** against the Pencil source only (generator != verifier vs `canvas-coder`): story coverage, visual parity, play/interaction, structural a11y (axe), token fidelity, coverage thresholds. Owns the `canvas-storybook-test` skill. C4 EVID. |
-| `canvas-porter-framework` | **S** Spread | C-coder | Ports the components to React/Vue/Svelte/Angular/Solid against the shared token + story contract; parity tests. One agent per package in the parallel fan-out. |
+| `canvas-porter-framework` | **S** Spread (optional, out-of-default) | C-coder | When the Spread phase is enabled, ports the native components to additional frameworks against the shared token + story contract; parity tests. One agent per package in the parallel fan-out. |
 
 The C4 gates also dispatch **reused** independent reviewers (`laws-of-ux:ux-reviewer`,
 `agents-core:code-reviewer` / `architect-reviewer`, `agents-core:tester`) -- generator != verifier.
@@ -88,7 +100,7 @@ that map; `/smith` is the master-of-masters above it.
 
 | Component | Description |
 |---|---|
-| `/canvas` | The master playbook -- the C-A-N-V-A-S walk, the ADR-010 C1-C6 table, the mandatory C4 gates, the FR-9 dispatch discipline, the when-to-use-vs-neighbours table. |
+| `/canvas` | The master playbook -- the C-A-N-V-A walk (**S**pread optional, out-of-default; CANVAS keeps its full name), the ADR-010 C1-C6 table, the mandatory C4 gates, the FR-9 dispatch discipline, the when-to-use-vs-neighbours table. |
 | `/canvas-init` | One-time per-branch setup -- arms the tokens-gate (writes `.forgeplan/canvas/state-<branch>.json`). |
 | `/canvas-audit` | One-shot DS-convention audit (Guardian-as-command). |
 | `/canvas-review` | Post-export code + UX gate (wraps `/laws-of-ux:ux-review`). |
@@ -103,18 +115,20 @@ that map; `/smith` is the master-of-masters above it.
   WebFetch: a curated catalog of analyzed production DESIGN.md systems (color/typography/component/
   token patterns, authored machine-readable for AI agents). **Reference-only** -- adapt to your project's
   chosen brand (the one recorded in the scope artifact), never copy 1:1.
-- **context7** -- the code-touching agents (`canvas-coder`, `canvas-porter-storybook`,
-  `canvas-porter-framework`, `canvas-storybook-validator`, and `canvas-design` where it touches
-  Storybook/Style-Dictionary) **must** use the **context7 MCP** (`resolve-library-id` -> `query-docs`)
-  for Storybook / Lit / Style-Dictionary / React / Vue / Svelte / Angular / Solid docs **before writing
-  code**, and prompt the user to use context7 on any library/version question.
+- **context7** -- **mandatory** for the resolved framework. The code-touching agents (`canvas-coder`,
+  `canvas-porter-storybook`, `canvas-porter-framework`, `canvas-storybook-validator`, and
+  `canvas-design` where it touches Storybook/tokens) **must** use the **context7 MCP**
+  (`resolve-library-id` -> `query-docs`) for Storybook / the project's token tool / the resolved
+  framework (Lit, React, Vue, Svelte, Angular, Solid, or another) docs **before writing code**, and
+  prompt the user to use context7 on any library/version question.
 
 ## Requirements
 
 - **MCP:** `pencil` (the `.pen` editor -- the methodology cannot function without it).
+- **MCP:** `context7` -- mandatory for the resolved framework's live library docs
+  (`resolve-library-id` -> `query-docs`) before any code-touching phase writes code.
 - **Plugins:** `laws-of-ux` (the UX-law KB the Designer + Gate Code lean on; load-bearing -- the
   code-gate runs `/laws-of-ux:ux-review`).
-- Optional: the `context7` MCP for live library docs (strongly recommended for the code phases).
 
 ## Status
 
