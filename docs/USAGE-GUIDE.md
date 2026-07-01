@@ -64,7 +64,7 @@ Mirror of root [README.md](../README.md) "Where to Start?" matrix, with cross-li
 | Persona | Stack | Day 0 walkthrough |
 |---|---|---|
 | 🟢 Forgeplan user / solo dev | `fpl-skills` | [Solo developer](DEVELOPER-JOURNEY.md#-solo-developer) |
-| 🎨 Frontend dev | `fpl-skills` + `laws-of-ux` + `agents-domain` | [Frontend developer](DEVELOPER-JOURNEY.md#-frontend-developer) |
+| 🎨 Frontend dev | `fpl-skills` + `laws-of-ux` + `agents-domain` + `agents-canvas` | [Frontend developer](DEVELOPER-JOURNEY.md#-frontend-developer) |
 | 🏛 Architect / tech lead | `fpl-skills` + `fpf` + `agents-sparc` + `agents-pro` | [Architect / tech lead](DEVELOPER-JOURNEY.md#-architect--tech-lead) |
 | 👥 Multi-session / team | `fpl-skills` + `forgeplan-orchestra` | [Team with Orchestra](DEVELOPER-JOURNEY.md#-team-with-orchestra) |
 | 🏚 Brownfield migration | `fpl-skills` + `forgeplan-brownfield-pack` | (Brownfield-pack README has the playbook recipes) |

@@ -76,7 +76,7 @@ Source of truth: [`.claude-plugin/marketplace.json`](../.claude-plugin/marketpla
 | 4 | **RIPER** | (main session) | `plugins/fpl-skills/skills/riper/` | `/riper` | No |
 | 5 | **CANVAS** | `canvas-coordinator` | `plugins/agents-canvas/` | `/canvas` | Yes (`hooks/scripts/canvas-gate.sh`) |
 
-CANVAS agents (`plugins/agents-canvas/agents/`): `canvas-coordinator` (master) · `canvas-designer` (Capture) · `canvas-guardian` (Audit C4) · `canvas-tester` (Norm-check C4) · `canvas-porter-storybook` (Vectorize) · `canvas-coder` (Assemble) · `canvas-storybook-validator` (Gate Storybook C4) · `canvas-porter-framework` (Spread — optional multi-framework wrapper fan-out, out-of-default; default CANVAS pipeline is native single-framework, C-A-N-V-A five phases, target framework resolved via Step 0). Skills: `skills/canvas` (entry), `canvas-design`, `canvas-conventions`, `canvas-port`, `canvas-truth-map`, `canvas-storybook-test`. Hook: `hooks/scripts/canvas-gate.sh` + `canvas-lib.sh`. Tests: `tests/test-canvas-gate.sh`. Spec: `../.forgeplan/rfcs/RFC-021-*` (+ EVID-178..184).
+CANVAS agents (`plugins/agents-canvas/agents/`): `canvas-coordinator` (master) · `canvas-designer` (Capture) · `canvas-guardian` (Audit C4) · `canvas-tester` (Norm-check C4) · `canvas-porter-storybook` (Vectorize) · `canvas-coder` (Assemble) · `canvas-storybook-validator` (Gate Storybook C4) · `canvas-porter-framework` (Spread — optional multi-framework wrapper fan-out, out-of-default; default CANVAS pipeline is native single-framework, C-A-N-V-A five phases, target framework resolved via Step 0). Skills: `skills/canvas` (entry), `canvas-design`, `canvas-conventions`, `canvas-port`, `canvas-truth-map`, `canvas-storybook-test`. Hook: `hooks/scripts/canvas-gate.sh` + `canvas-lib.sh`. Tests: `tests/test-canvas-gate.sh`. Spec: `../.forgeplan/rfcs/RFC-021-*` (+ EVID-178..184); stack-agnostic authority: RFC-022 / ADR-015 (+ ADR-016 for the optional multi-framework path).
 
 ---
 
@@ -120,7 +120,7 @@ The governance graph lives at **`../.forgeplan/`** (workspace root `~/Work/Forge
 
 - `../.forgeplan/{prds,rfcs,adrs,epics,evidence,notes,problems,solutions}/` — the artifacts; `state/` — per-artifact lifecycle.
 - **Architecture reading order** (from AGENTS.md): PRD-024 → PRD-025 → RFC-002 → RFC-003 → ADR-005 → NOTE-004 → NOTE-005.
-- **Methodology contract**: ADR-010 (sub-cycle contract) + ADR-012 (hook-gate realization tier) + ADR-009 (generator≠verifier) + NOTE-027 (program closure + CANVAS amendment); instances RFC-012/013/016/018/021.
+- **Methodology contract**: ADR-010 (sub-cycle contract) + ADR-012 (hook-gate realization tier) + ADR-009 (generator≠verifier) + NOTE-027 (program closure + CANVAS amendment); instances RFC-012/013/016/018/021 + RFC-022 (CANVAS stack-agnostic current model, ADR-015; + ADR-016 for the optional multi-framework path).
 - Access: `mcp__forgeplan__forgeplan_get/list/...` (MCP) or `forgeplan` CLI. Do not assume `.forgeplan/` is inside the git repo.
 
 ---

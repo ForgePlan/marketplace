@@ -9,6 +9,15 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Timezone note**: dates reported in local timezone of the reconstruction. UTC merge time may differ by ≤1 day at midnight boundaries (e.g., v1.72.0 / v1.59.0 / v1.58.0 entries reported as local-day but PR merged just after UTC midnight). Chronological ordering is preserved either way.
 
+## [1.97.0] - 2026-07-01
+
+### agents-canvas v1.0.0 — CANVAS made stack-agnostic (RFC-022/ADR-015)
+
+- **Changed** — CANVAS generates natively in the ONE framework the project declares — `engine`/`framework`/`design-source`/`language` resolved as inputs via a Step 0 stack-detect (announce / force-ask).
+- **Changed** — Lit/Web-Components + the Spread per-framework wrappers demoted to an optional out-of-default multi-framework path (ADR-016); Style-Dictionary is now one token-tool option among others; context7 remains mandatory for the resolved framework.
+- **Changed** — острый tokens-gate hardened for native layouts: per-framework guarded globs + stale-state fail-safe substitution (canvas-gate.sh mechanism unchanged).
+- **Refs**: RFC-021, RFC-022, ADR-015, ADR-016, agents-canvas v1.0.0.
+
 ## [1.73.0] - 2026-05-26
 
 ### Sprint AA — Methodology auto-enforcement gates closure (EPIC-003)

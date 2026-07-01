@@ -166,6 +166,7 @@ Orchestra: Task "OAuth" Status=Review, Phase=Evidence
 | SPARC | agents-sparc | 5 phase agents — `/sprint` activates them when it detects a Deep task. |
 | TDD | agents-tdd | Enforced-TDD methodology pack: tdd-orchestrator + RED/GREEN agents + fail-closed PreToolUse gate. |
 | BMAD | agents-bmad | BMAD greenfield methodology pack: bmad-orchestrator persona-walk (Analyst → PM → Architect → SM → Dev → QA) + no-code-before-plan gate. |
+| CANVAS | agents-canvas | Design-system to code methodology pack (instance #5): canvas-coordinator (Profile B-orchestrator) master + tokens-before-code hook-gate + role agents. v1.0.0 stack-AGNOSTIC — generates natively in the ONE framework the project declares via a Step-0 stack detect (Lit/Web-Components + Spread wrappers = optional out-of-default multi-framework path, ADR-016). Routing = smith Row 14. |
 | UX | laws-of-ux | `ux-reviewer` agent + `/ux-review` + auto-hint hook on frontend file edits. |
 | Agents | agents-core / agents-domain / agents-pro / agents-github | Specialised subagents that `/audit`, `/sprint`, etc. compose when relevant. |
 | Universal toolkit (legacy) | dev-toolkit | Soft-deprecated, superseded by fpl-skills. Use only if forgeplan CLI is unavailable. |
@@ -189,6 +190,6 @@ Install command: `/plugin install <plugin-name>@ForgePlan-marketplace`.
 | 👥 Multi-session / team | `fpl-skills` + `forgeplan-orchestra` |
 | 🏚 Brownfield migration | `fpl-skills` + `forgeplan-brownfield-pack` |
 | 🔧 Any developer (no forgeplan) | `dev-toolkit` + `agents-core` (legacy) |
-| Full stack (all systems) | all 18 plugins |
+| Full stack (all systems) | all 19 plugins |
 
 For per-persona Day 0 walkthroughs see [DEVELOPER-JOURNEY.md](DEVELOPER-JOURNEY.md).

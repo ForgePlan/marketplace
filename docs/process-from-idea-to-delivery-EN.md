@@ -151,7 +151,7 @@ Now, each role in detail.
 
 A special sub-profile. Does not review a specific artifact, does not create an EVID. Reads **broad project state** and returns a plan - which methodology to apply and who to dispatch next.
 
-**Who belongs**: only `smith` (one for the whole ecosystem - that is enough).
+**Who belongs**: `smith` is the sole ecosystem-wide instance (one router for the whole project is enough). Each AD/AID-PDLC sub-cycle instance (§3.0) also mints its own narrow B-orchestrator, scoped to that one methodology's stage-master role (C2) rather than to ecosystem-wide routing - `tdd-orchestrator`, `bmad-orchestrator`, `sparc-orchestrator`, and `canvas-coordinator` (the 4th narrow B-orchestrator). These narrow orchestrators are Profile B-orchestrator too, but they route only within their own methodology - they don't replace smith.
 
 **What characterizes it**:
 - Denylist same as Profile B, plus all forgeplan mutations (`new`, `update`, `link`, ...)
@@ -1620,6 +1620,7 @@ Markdown plan with **8 mandatory sections**:
 - **ADI** (Abduction -> Deduction -> Induction) - Charles Peirce's reasoning cycle. At least 3 hypotheses.
 - **SPARC** (Specification -> Pseudocode -> Architecture -> Refinement -> Completion) - five-phase feature-implementation methodology.
 - **RIPER-5** (Research -> Innovate -> Plan -> Execute -> Review) - five-phase production-bug-fix methodology.
+- **CANVAS** (Capture -> Audit -> Norm-check -> Vectorize -> Assemble) - stack-agnostic design-system-to-code methodology, 5th shipped AD/AID-PDLC sub-cycle instance (ADR-010); master `canvas-coordinator`; hook-gate = Yes (fail-closed tokens-before-code gate).
 - **Strangler Fig** - pattern of gradual legacy code replacement, by analogy with the strangler fig tree.
 - **DDD** (Domain-Driven Design) - methodology of domain modeling with bounded contexts.
 - **ACL** (Anti-Corruption Layer) - protective layer between new and old code.

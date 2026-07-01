@@ -20,6 +20,7 @@ A practical map of "I have this situation → here's the setup, here's the comma
 | Need decision between alternatives | `fpf` plugin | `/fpf-evaluate "A vs B"` |
 | Hard bug | `fpl-skills` | `/diagnose "<bug>"` |
 | Code review before merge | `fpl-skills` | `/audit` |
+| I have a design system / Figma / Pencil and want production UI components | + `agents-canvas` | `/canvas-init` → `canvas-coordinator` (stack-agnostic — native single framework, not Lit-by-default) |
 | Multi-session team work, "where did we leave off" | + `forgeplan-orchestra` | `/smith` (reads `forgeplan_health` + recalls memory + recommends next) or `/session` → `/sync` |
 
 ---
@@ -250,6 +251,29 @@ So you don't always need to invoke `/fpf-reason` directly — if you're using `/
 
 ---
 
+## Use-case — Design system to production code (CANVAS)
+
+**Scenario**: You have a design system, a Figma file, or a Pencil `.pen` project and want production-grade UI components — generated in the ONE framework your project already declares, not a generic multi-framework export.
+
+**Setup**:
+```
+/plugin install agents-canvas@ForgePlan-marketplace
+/reload-plugins
+```
+
+**Workflow**:
+```
+/canvas-init                     # Step 0 — detects the project's declared framework
+                                  # (AGENTS.md / CLAUDE.md / package.json), confirms it,
+                                  # then hands off to canvas-coordinator (master, Profile B-orchestrator)
+```
+
+`canvas-coordinator` runs the default C-A-N-V-A pipeline (Capture → Audit → Norm-check → Vectorize → Assemble) and generates natively in the resolved framework. **Stack-agnostic by default** (RFC-022 / ADR-015) — Lit/Web-Components plus the per-framework "Spread" wrappers are an optional multi-framework path (ADR-016), not the default.
+
+Routed by smith as **Row 14** (`hook-gate=Yes` — a tokens-before-code gate blocks generation until design tokens are captured and verified).
+
+---
+
 ## Use-case — Metric-driven iteration (autoresearch + ForgePlan)
 
 **Scenario**: You have a task with a clear mechanical metric (perf number, test pass rate, bundle size, security findings count) and you want a goal-directed loop that improves the metric until target — with the result captured as proper Evidence.
@@ -337,7 +361,7 @@ Status mapping:
 | Persona | Plugins |
 |---|---|
 | 🟢 Solo developer | `fpl-skills` + `forgeplan-workflow` |
-| 🎨 Frontend developer | + `laws-of-ux` + `agents-domain` |
+| 🎨 Frontend developer | + `laws-of-ux` + `agents-domain` + `agents-canvas` |
 | 🏛 Architect / tech lead | + `fpf` + `agents-sparc` + `agents-pro` |
 | 👥 Team with Orchestra | + `forgeplan-orchestra` |
 | 🏚 Brownfield migration | + `forgeplan-brownfield-pack` + `agents-pro` |
