@@ -1,14 +1,19 @@
-# 01 — Token contract (Style-Dictionary -> CSS custom properties)
+# 01 — Token contract (tokens.json -> CSS custom properties)
 
 The **token contract** is the C5-gated artifact and the single source of truth for the whole DS. It is
-**one** `tokens.json` that **mirrors the Pencil `variables`**, compiled by **Style-Dictionary** into CSS
-custom properties (the primary platform, consumed by the Web Component shadow DOM) plus a JS token export
-(for wrapper authors and tests). One source — **never forked** by any component or wrapper.
+**one** `tokens.json` that **mirrors the Pencil `variables`**, compiled by the **project's token tool**
+(Style-Dictionary is one option; native stacks may use their own — e.g. a Tailwind theme config, a CSS-vars
+generator, or a framework-native theming pipeline) into CSS custom properties (the primary platform,
+consumed by the resolved framework's components) plus a JS token export (for tests and any tooling that
+needs the values). One source — **never forked** by any component. The single-source `tokens.json` -> CSS
+custom-properties contract holds regardless of which tool compiles it.
 
-> **context7 first.** Style-Dictionary v4 changed the JS API (class-based `new StyleDictionary(...)`,
-> `register*` hooks, `style-dictionary/enums`). Before writing the config, run
-> `resolve-library-id("Style Dictionary")` -> `query-docs(<id>, "build CSS custom properties with
-> light/dark themes and outputReferences")`. The shapes below are illustrative; confirm the current API.
+> **context7 first.** Resolve the project's token tool AND framework before writing config. If the project
+> uses **Style-Dictionary**, note v4 changed the JS API (class-based `new StyleDictionary(...)`, `register*`
+> hooks, `style-dictionary/enums`) — run `resolve-library-id("Style Dictionary")` -> `query-docs(<id>,
+> "build CSS custom properties with light/dark themes and outputReferences")`. If the project uses a
+> different token tool, resolve that one instead. Either way also resolve the **resolved framework** for its
+> token-consumption API. The shapes below are illustrative; confirm the current API.
 
 ## Step 1 — extract the Pencil variables (porter-storybook, MAIN)
 
@@ -34,8 +39,8 @@ traceable back to the design (and so the Tester can prove provenance at Gate V):
 ## Step 2 — author `tokens.json` (mirror Pencil, two theme axes)
 
 The locked theme axes are **Light** and **Dark** (`Mode:Light` / `Mode:Dark` in Pencil). Model them with
-the W3C-style design-tokens shape Style-Dictionary understands, splitting mode-varying tokens into
-per-mode source files so one build emits one CSS var set per mode:
+the standard W3C-style design-tokens shape (understood by Style-Dictionary and most token tools), splitting
+mode-varying tokens into per-mode source files so one build emits one CSS var set per mode:
 
 ```
 packages/design-system/.canvas-port/tokens/
@@ -59,10 +64,12 @@ Semantic tokens reference primitives (`"$value": "{color.accent.primary}"`) so a
 primitive and cascades. `outputReferences: true` preserves those as `var(--...)` in the CSS so the
 cascade survives into the shadow DOM.
 
-## Step 3 — the Style-Dictionary build (CSS custom properties primary)
+## Step 3 — the token-tool build (CSS custom properties primary; Style-Dictionary shown as one option)
 
-One config, one `css/variables` file **per mode**, each scoped to a theme selector so the WC shadow DOM
-can switch modes with a single attribute. Confirm the v4 API via context7, then:
+One config, one `css/variables` file **per mode**, each scoped to a theme selector so the resolved
+framework can switch modes with a single attribute/class on a root element. The Style-Dictionary config
+below is one option — if the project uses a different token tool, produce the same per-mode CSS var sets
+with it. Confirm the tool's current API via context7, then:
 
 ```js
 // style-dictionary.config.js  (illustrative — verify v4 API via context7)
@@ -77,7 +84,7 @@ const sd = (mode) => new StyleDictionary({
       files: [{
         destination: `theme.${mode}.css`,
         format: 'css/variables',
-        options: { outputReferences: true, selector: mode === 'light' ? ':root, :host([theme="light"])' : ':host([theme="dark"]), :root[theme="dark"]' },
+        options: { outputReferences: true, selector: mode === 'light' ? ':root, [data-theme="light"]' : '[data-theme="dark"], :root[data-theme="dark"]' },   // light-DOM default; use :host([theme=...]) only for the Web Components target
       }],
     },
     js: {
@@ -96,7 +103,7 @@ Emitted CSS (one custom property per token, references preserved):
 
 ```css
 /* theme.light.css */
-:root, :host([theme="light"]) {
+:root, [data-theme="light"] {
   --color-bg-base: #FBF7F0;
   --color-accent-primary: #C2410C;
   --space-4: 1rem;
@@ -104,31 +111,42 @@ Emitted CSS (one custom property per token, references preserved):
 }
 ```
 
-## Step 4 — consumption by the WC shadow DOM
+## Step 4 — consumption by the resolved framework
 
-The canonical Lit base imports the compiled CSS into its `static styles` (so the vars live inside the
-shadow root) and reads them with `var(--...)`. The theme axis is a host attribute, so a parent flips
-`theme="dark"` once and every nested custom element re-themes — no per-component JS:
+The resolved framework imports the compiled CSS once (globally, or per-component) and reads the tokens with
+`var(--...)`. The theme axis is a single attribute/class on a root element, so flipping `data-theme="dark"`
+once re-themes every descendant — no per-component JS. Example for a **React** target (illustrative — confirm
+the framework's current API via context7):
 
-```ts
-// illustrative Lit usage — confirm Lit 3 API via context7
-import { LitElement, css, html, unsafeCSS } from 'lit';
-import themeLight from './tokens/theme.light.css?inline';
-import themeDark  from './tokens/theme.dark.css?inline';
+```tsx
+// illustrative React usage — confirm the framework API via context7
+import './tokens/theme.light.css';   // :root, [data-theme="light"] { --color-... }
+import './tokens/theme.dark.css';    // [data-theme="dark"] { --color-... }
 
-export class CanvasButton extends LitElement {
-  static styles = css`
-    ${unsafeCSS(themeLight)} ${unsafeCSS(themeDark)}
-    button {
-      background: var(--color-accent-primary);
-      color: var(--color-bg-base);
-      padding: var(--space-4);
-      border-radius: var(--radius-md);
-    }
-  `;
-  render() { return html`<button><slot></slot></button>`; }
+export function CanvasButton({ children }: { children: React.ReactNode }) {
+  return (
+    <button
+      style={{
+        background: 'var(--color-accent-primary)',
+        color: 'var(--color-bg-base)',
+        padding: 'var(--space-4)',
+        borderRadius: 'var(--radius-md)',
+      }}
+    >
+      {children}
+    </button>
+  );
 }
+// a parent sets the axis once: <div data-theme="dark"> ...app... </div>
 ```
+
+The same compiled CSS vars are consumed the same way by any resolved framework (Vue `:style` / scoped CSS,
+Svelte, Angular, etc.) — the component styling API changes, the `var(--...)` contract does not.
+
+> **Web Components target only.** When the project's declared stack *is* Web Components, the Lit base instead
+> imports the compiled CSS into its `static styles` (so the vars live inside the shadow root) and flips the
+> axis via a host attribute (`:host([theme="dark"])`). That is one selectable target, used only when the
+> stack is Web Components — not the default. Confirm the Lit 3 API via context7 when this target applies.
 
 ## What Gate V (tokens) checks — author to pass it
 
@@ -153,9 +171,10 @@ supersede/new-cycle action, not an inline edit.
 
 1. **`tokens.json` mirrors Pencil `variables`** read via `get_variables()` — never invent values, never
    `Read` the `.pen`.
-2. **CSS custom properties are the primary platform**; the JS export is secondary (wrappers/tests). The
-   shadow DOM consumes the vars — do not ship a parallel JS-only theme.
-3. **`outputReferences: true`** so semantic tokens stay `var(--...)` — flattening forks the source.
+2. **CSS custom properties are the primary platform**; the JS export is secondary (tests/tooling). The
+   resolved framework consumes the vars — do not ship a parallel JS-only theme.
+3. **Preserve references** (Style-Dictionary's `outputReferences: true`, or your token tool's equivalent) so semantic tokens stay `var(--...)` — flattening forks the source.
 4. **Two axes only in MVP: Light + Dark.** Adding an axis is a contract change -> new Gate V.
-5. **context7 before the config** — verify the Style-Dictionary v4 API and the Lit `static styles`
-   pattern; prompt the user to use context7 on any version question.
+5. **context7 before the config** — resolve the project's framework (Step 0) first, then verify the token
+   tool's API and the resolved framework's token-consumption pattern; prompt the user to use context7 on any
+   version question.

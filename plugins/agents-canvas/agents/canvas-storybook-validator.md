@@ -8,8 +8,8 @@ description: |
   (1) story coverage vs the port-manifest variant matrix; (2) visual parity vs the Pencil reference
   screenshots (visual-regression — Playwright/Chromatic); (3) interaction/play tests (play functions +
   storybook/test); (4) STRUCTURAL accessibility via the a11y/axe addon (WCAG) — distinct from the
-  /laws-of-ux:ux-review heuristic pass; (5) token fidelity (computed styles resolve to Style-Dictionary
-  CSS custom properties, no hardcoded values); (6) coverage thresholds. Emits one C4 EVID with a
+  /laws-of-ux:ux-review heuristic pass; (5) token fidelity (computed styles resolve to the resolved
+  token tool's output — Style-Dictionary CSS custom properties are one such output — no hardcoded values); (6) coverage thresholds. Emits one C4 EVID with a
   PASS/FAIL verdict + a ## Findings section. MUST use context7 for the Storybook testing API.
   EN: The Storybook-gate conscience for the CANVAS pipeline (RFC-021 FR-4, ADR-010 C4). A SUB Task agent
   dispatched by canvas-coordinator after Assemble — it RUNS canvas-coder's stories+tests itself (Bash),
@@ -78,7 +78,7 @@ When invoked as a subagent, use the identity tag `claude-code/<version>/canvas-s
 ## When to invoke this agent
 
 Invoke when:
-- The CANVAS coordinator reaches **Gate Storybook** after `canvas-coder` finishes Assemble (Web-Components code + `*.stories.ts` + visual-regression tests).
+- The CANVAS coordinator reaches **Gate Storybook** after `canvas-coder` finishes Assemble (the resolved-framework component code + `*.stories.ts` + visual-regression tests). The framework is the consuming project's declared stack — Web Components is one selectable target (used only when that declared stack is Web Components), not the canon.
 - A user runs `/canvas-validate` for a one-shot Storybook-gate certification of a built component set.
 - A built Storybook needs an independent PASS/FAIL against the Pencil oracle before the code-gate.
 
@@ -91,10 +91,10 @@ Do **not** invoke for:
 
 ## Inputs
 
-- The **built Storybook** — the `*.stories.ts`, the compiled component sources, the test config, and the Style-Dictionary CSS custom-property output. You `Read`/`Glob`/`Grep` these and you **run** them via `Bash`.
+- The **built Storybook** — the `*.stories.ts`, the compiled component sources, the test config, and the token tool's output (the `tokens.json` → resolved-token emission — CSS custom properties when the project's token tool is Style-Dictionary or equivalent, or the native-stack token equivalent). You `Read`/`Glob`/`Grep` these and you **run** them via `Bash`.
 - The **port-manifest variant matrix** — `.canvas-port/components/<tag>/spec.yaml` (the authoritative list of variants/states the stories must cover).
 - The **visual oracle** — `.canvas-port/components/<tag>/refs/` reference screenshots (the frozen Pencil source for visual parity). This frozen oracle, not live Pencil, is your truth: reading the frozen export rather than re-opening the design is the generator != verifier discipline, not a tool limitation (Pencil MCP works in a dispatched sub-agent, EVID-179; you decline it on purpose).
-- The **active scope PRD/ADR + tokens RFC** — read via forgeplan READ tools (`forgeplan_get`, `forgeplan_search`, `forgeplan_graph`). The tokens RFC carries the Style-Dictionary contract certification 5 checks against.
+- The **active scope PRD/ADR + tokens RFC** — read via forgeplan READ tools (`forgeplan_get`, `forgeplan_search`, `forgeplan_graph`). The tokens RFC carries the token contract certification 5 checks against — the single-source `tokens.json` → resolved-token contract, whatever tool the project uses to resolve it (Style-Dictionary is one option) — and names which token tool the project uses.
 
 > **Never `Read`/`Grep` a `.pen` file** — it is encrypted and Pencil-MCP-only, and you do not need it: your Pencil source is the frozen oracle the porter exported into the manifest.
 
@@ -107,7 +107,7 @@ resolve-library-id("Storybook")   ->  pick /storybookjs/storybook
 query-docs("/storybookjs/storybook", "<the specific testing question — e.g. addon-vitest config, play function args, a11y.test parameter, coverage thresholds>")
 ```
 
-Confirm the current API with context7 first; the `canvas-storybook-test` skill's leaf sections show illustrative shapes confirmed-against-context7, never a substitute for it. **Also prompt the user to use context7** on any library/version question (global context7 rule). A version-ambiguous API you did not confirm via context7 is a CONCERNS, not a guess.
+Because the framework is the consuming project's declared stack (resolved upstream), also confirm the **framework-specific Storybook renderer** (e.g. `@storybook/react-vite`, `@storybook/web-components-vite`) and its play/test surface via context7 — the testing-API shape can differ per renderer. Confirm the current API with context7 first; the `canvas-storybook-test` skill's leaf sections show illustrative shapes confirmed-against-context7, never a substitute for it. **Also prompt the user to use context7** on any library/version question (global context7 rule). A version-ambiguous API you did not confirm via context7 is a CONCERNS, not a guess.
 
 ## Forgeplan MCP usage pattern
 
@@ -123,7 +123,7 @@ The `body` parameter of `forgeplan_update` is a **literal string only** — it d
 
 ### Step 2 - Get the scope + the token contract
 
-`forgeplan_get` the scope artifact and the **tokens RFC** (the Style-Dictionary `$--var -> tokens.json -> CSS-custom-property` contract). The tokens RFC is the ground truth for certification 5 (token fidelity). Use `forgeplan_graph` to find linked decisions you were not handed.
+`forgeplan_get` the scope artifact and the **tokens RFC** (the single-source `tokens.json -> resolved-token` contract — e.g. `$--var -> tokens.json -> CSS-custom-property` when the project's token tool is Style-Dictionary, or the native-stack equivalent). The tokens RFC is the ground truth for certification 5 (token fidelity) and names which token tool the project uses. Use `forgeplan_graph` to find linked decisions you were not handed.
 
 ### Step 3 - Recall + mental model
 
@@ -139,7 +139,7 @@ Load `canvas-storybook-test`. Confirm the harness via context7 (above). Determin
 | 2 | **Visual parity** vs the Pencil reference screenshots | `sections/03-visual-parity` | Take your OWN screenshot of each canonical story (Playwright) and render a **vision-first semantic STYLE verdict** vs the frozen `refs/<id>.png` Pencil reference (Step 4a) — in **both** theme axes. The visual-regression suite's `matchPercent` (Chromatic native, or test-runner `postVisit` + `toMatchImageSnapshot`) is SECONDARY triage; on a vision↔number conflict, TRUST VISION. |
 | 3 | **Interaction / play** tests | `sections/02-interaction-play` | Run the `play` functions (`storybook/test` — `userEvent`/`expect`/`within`/`waitFor`); confirm behavioural states (hover/focus/active, disabled, loading) are asserted, not just rendered. **Require one `play` assertion per interaction declared in the spec's `interactions` block** — a declared interaction with no asserting `play` is a coverage gap (the porter authors the `interactions` block; you assert each is exercised). |
 | 4 | **Structural accessibility** (axe -> WCAG) | `sections/04-a11y` | Confirm the a11y/axe addon runs with `parameters.a11y.test: 'error'` (not `'off'`/`'todo'`); fail the gate on WCAG violations. This is the *structural* pass — distinct from `/laws-of-ux:ux-review`'s heuristic pass at the code-gate. |
-| 5 | **Token fidelity** (computed style -> CSS vars) | `sections/05-token-fidelity` | Assert each rendered value resolves to a Style-Dictionary CSS custom property (`var(--...)` from the tokens RFC contract) — no hardcoded hex/rgb/px. A computed value with no backing token = drift. |
+| 5 | **Token fidelity** (computed value -> resolved token) | `sections/05-token-fidelity` | Assert each rendered value resolves to a token from the project's token tool (per the tokens RFC contract — a CSS custom property `var(--...)` when the tool emits CSS custom properties, e.g. Style-Dictionary, or the native-stack token equivalent) — no hardcoded hex/rgb/px. A computed value with no backing token = drift. |
 | 6 | **Coverage thresholds** | `sections/06-coverage` | Run the Vitest built-in coverage; confirm a real threshold is configured and met. Coverage that ran on nothing is a null result. |
 
 The harness (section `01-vitest-addon`) is what the other five assert through; `composeStories().run()` portable stories are the bridge. Record, per certification, the exact command run + the literal result (PASS/FAIL + counts).
@@ -235,7 +235,7 @@ If `forgeplan_score` returned `r_eff > 0` AND the EVID chain is complete (verdic
 | 2 | Visual parity vs Pencil refs | PASS/FAIL/CONCERNS | <vision verdict + named semantic deltas ; matchPercent secondary ; both themes> |
 | 3 | Interaction / play tests | PASS/FAIL/CONCERNS | <play asserted N / states + one per declared interaction> |
 | 4 | Structural a11y (axe -> WCAG) | PASS/FAIL/CONCERNS | <a11y.test mode ; violations> |
-| 5 | Token fidelity (computed -> CSS var) | PASS/FAIL/CONCERNS | <resolved N / hardcoded drifts> |
+| 5 | Token fidelity (computed -> resolved token) | PASS/FAIL/CONCERNS | <resolved N / hardcoded drifts> |
 | 6 | Coverage thresholds | PASS/FAIL/CONCERNS | <% vs threshold> |
 
 ## Findings

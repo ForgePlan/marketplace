@@ -1,6 +1,6 @@
 ---
 name: canvas-storybook-test
-description: "CANVAS Storybook-gate validation toolkit (RFC-021 FR-4) — the knowledge base read by canvas-storybook-validator (the C4 Storybook-gate, a SUB Task agent) when it certifies the BUILT Storybook against the Pencil source ONLY. Covers the six certifications: (1) story coverage vs the port-manifest variant matrix, (2) visual parity vs the Pencil reference screenshots (visual-regression — Playwright / Chromatic), (3) interaction/play tests (play functions + storybook/test userEvent + expect), (4) structural accessibility via the a11y/axe addon (WCAG), (5) token fidelity (computed styles resolve to the Style-Dictionary CSS custom properties, no hardcoded values), (6) coverage thresholds. Documents the Vitest addon (primary, Vite) vs the legacy test-runner (Jest+Playwright fallback), composeStories().run() portable stories, and where this gate sits (generator!=verifier vs canvas-coder — a fresh isolated context). Use when running or reviewing Storybook tests, wiring the validator gate, or writing *.stories.ts test code. Triggers on: Storybook test, Vitest addon, addon-vitest, test-runner, composeStories, portable stories, play function, storybook/test, userEvent, interaction test, visual regression, visual parity, Chromatic, toMatchImageSnapshot, postVisit, a11y addon, axe, WCAG, accessibility test, token fidelity, computed style, CSS custom properties, coverage threshold, Storybook gate, canvas-storybook-validator."
+description: "CANVAS Storybook-gate validation toolkit (RFC-021 FR-4) — the knowledge base read by canvas-storybook-validator (the C4 Storybook-gate, a SUB Task agent) when it certifies the BUILT Storybook against the Pencil source ONLY. Covers the six certifications: (1) story coverage vs the port-manifest variant matrix, (2) visual parity vs the Pencil reference screenshots (visual-regression — Playwright / Chromatic), (3) interaction/play tests (play functions + storybook/test userEvent + expect), (4) structural accessibility via the a11y/axe addon (WCAG), (5) token fidelity (computed styles resolve to the token tool's CSS custom properties, no hardcoded values), (6) coverage thresholds. Documents the Vitest addon (primary, Vite) vs the legacy test-runner (Jest+Playwright fallback), composeStories().run() portable stories, and where this gate sits (generator!=verifier vs canvas-coder — a fresh isolated context). Use when running or reviewing Storybook tests, wiring the validator gate, or writing *.stories.ts test code. Triggers on: Storybook test, Vitest addon, addon-vitest, test-runner, composeStories, portable stories, play function, storybook/test, userEvent, interaction test, visual regression, visual parity, Chromatic, toMatchImageSnapshot, postVisit, a11y addon, axe, WCAG, accessibility test, token fidelity, computed style, CSS custom properties, coverage threshold, Storybook gate, canvas-storybook-validator."
 ---
 
 # canvas-storybook-test — the Storybook-gate validation toolkit
@@ -19,7 +19,7 @@ It certifies **six** things, each a section below:
 | 2 | Visual parity vs the Pencil reference screenshots | [03-visual-parity](sections/03-visual-parity/_index.md) |
 | 3 | Interaction / play tests | [02-interaction-play](sections/02-interaction-play/_index.md) |
 | 4 | Structural accessibility (axe → WCAG) | [04-a11y](sections/04-a11y/_index.md) |
-| 5 | Token fidelity (computed style → Style-Dictionary CSS vars) | [05-token-fidelity](sections/05-token-fidelity/_index.md) |
+| 5 | Token fidelity (computed style → the token tool's CSS vars) | [05-token-fidelity](sections/05-token-fidelity/_index.md) |
 | 6 | Coverage thresholds | [06-coverage](sections/06-coverage/_index.md) |
 
 All six run on **one harness** — the Vitest addon (primary) or the test-runner (fallback):
@@ -30,7 +30,7 @@ All six run on **one harness** — the Vitest addon (primary) or the test-runner
 | 02 | [interaction-play](sections/02-interaction-play/_index.md) | `play` functions + the `storybook/test` package (`userEvent`, `expect`, `within`, `waitFor`, `fn`) — behavioural assertions on the rendered story. |
 | 03 | [visual-parity](sections/03-visual-parity/_index.md) | Visual-regression: Chromatic (native) or the test-runner `postVisit` hook + `toMatchImageSnapshot`, asserted against the Pencil reference screenshots (the oracle). |
 | 04 | [a11y](sections/04-a11y/_index.md) | The a11y/axe addon → `parameters.a11y.test: 'error'` fails on WCAG violations. Structural, distinct from the `/laws-of-ux:ux-review` heuristic pass. |
-| 05 | [token-fidelity](sections/05-token-fidelity/_index.md) | Computed-style assertions that the rendered value resolves to a Style-Dictionary CSS custom property — proving no value was hardcoded. |
+| 05 | [token-fidelity](sections/05-token-fidelity/_index.md) | Computed-style assertions that the rendered value resolves to a token-tool CSS custom property — proving no value was hardcoded. |
 | 06 | [coverage](sections/06-coverage/_index.md) | Code-coverage thresholds (Vitest built-in) + story coverage vs the variant matrix. |
 
 ## context7 is MANDATORY for every Storybook API touch

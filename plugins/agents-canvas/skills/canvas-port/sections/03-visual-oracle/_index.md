@@ -36,7 +36,7 @@ Capture **both** `Mode:Light` and `Mode:Dark` — a theme that isn't snapshotted
 
 ## Step 2 — the test target: Storybook + Playwright
 
-On the locked topology (Storybook `web-components`), drive visual-regression two complementary ways:
+On the resolved framework's Storybook renderer, drive visual-regression two complementary ways:
 
 1. **Storybook test-runner `postVisit` hook** — runs in Node after each story renders in a real browser;
    take a Playwright screenshot and diff it. This is the per-story visual gate.
@@ -51,7 +51,7 @@ import { toMatchImageSnapshot } from 'jest-image-snapshot';
 const config: TestRunnerConfig = {
   setup() { expect.extend({ toMatchImageSnapshot }); },
   async postVisit(page, context) {
-    // wait for the custom element to upgrade + fonts to settle before snapshotting
+    // wait for the component to mount (custom-element upgrade on the WC target) + fonts to settle before snapshotting
     await page.locator('canvas-button, [data-canvas-ready]').first().waitFor();
     const image = await page.screenshot();
     expect(image).toMatchImageSnapshot({
@@ -77,9 +77,10 @@ test('button focus-visible matches the design', async ({ page }) => {
 });
 ```
 
-> **Shadow DOM gotcha.** Custom-element internals live in a shadow root. Use Playwright's
-> shadow-piercing locators / `::part()` selectors when targeting internals; a full-frame
-> `page.screenshot()` already includes shadow content, so prefer it for the visual diff.
+> **Shadow DOM gotcha (Web Components target only).** When the resolved framework is Web Components,
+> custom-element internals live in a shadow root: use Playwright's shadow-piercing locators / `::part()`
+> selectors when targeting internals. (Light-DOM frameworks like React/Vue/Svelte do not need this.) Either
+> way, a full-frame `page.screenshot()` already includes the rendered content, so prefer it for the visual diff.
 
 ## Step 3 — establish + review the baseline
 
@@ -108,8 +109,8 @@ input:
 1. **Capture a reference per canonical variant + state, in both theme axes.** No reference -> no oracle.
 2. **The Pencil reference is the intent oracle**; the committed browser baseline is the regression target.
    Never edit the threshold to mask a real visual diff.
-3. **Await readiness before snapshot** — custom-element upgrade + fonts + animation-end — to keep
-   snapshots deterministic.
+3. **Await readiness before snapshot** — component mount (custom-element upgrade on the WC target) + fonts +
+   animation-end — to keep snapshots deterministic.
 4. **Snapshot interaction states via `play`/Playwright**, canonical variants via the test-runner
    `postVisit` hook.
 5. **context7 before wiring** — verify the test-runner hook signature and the screenshot matcher API;

@@ -20,7 +20,7 @@ The one-pager. Read before any `batch_design`. Each line maps to a HARD RULE (HR
 | Use `$--var` tokens for color/spacing/font | single source of truth, re-themes | §04 |
 | Define themed colors with both Light + Dark values | the Mode axis maps to the port | §04 |
 | Consult **getdesign.md** via WebFetch for patterns, then recolor to YOUR chosen brand | reference-only priors; adapt to the brand recorded in the scope artifact | §05 |
-| Consult **context7** before touching Style-Dictionary / Storybook / Lit config | versions drift; don't guess | §04 |
+| Consult **context7** before touching the token tool / Storybook / resolved-framework config | versions drift; don't guess | §04 |
 | Apply UX laws as node constraints at design time (Fitts/Hick/Miller/Doherty/Von Restorff/Gestalt) | the hook can't see `.pen`; design correct first | §07 |
 | `M` (move) content into a new shell during a refactor | preserves content, no loss | HR6, §06 |
 | Produce the DS snapshot (`export_nodes` + screenshots + layout dump) as the final Capture step | the offline audit input for Guardian/Tester | §03 |
@@ -44,7 +44,7 @@ The one-pager. Read before any `batch_design`. Each line maps to a HARD RULE (HR
 | Place an atom in MOLECULES (or a molecule in ATOMS, etc.) | atomic-placement FAIL | §03 |
 | `D` (delete) / refactor before user approval + OLD-vs-NEW screenshots | irreversible content loss | HR6, §06 |
 | Nest beyond ~10 levels | perf + fragile addressing | §06 |
-| Write Style-Dictionary / Storybook config from memory | use context7 first | §04 |
+| Write the token tool / Storybook config from memory | use context7 first | §04 |
 | Invent brand token values | confirm against the tokens RFC / brand ADR | §05 |
 
 ---

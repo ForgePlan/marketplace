@@ -43,11 +43,11 @@ U("<dsFrameId>", { theme:{ Mode:"Dark" }, fill:"$--background" })
 **Rules:**
 - `get_variables` first — reuse an existing token; never redefine under a new name (§04).
 - Every themed color carries **both** Light and Dark values; verify contrast passes **AA** in both (§07).
-- Keep axis names stable (`Mode`) — they map straight to Storybook theme globals + Style-Dictionary in the
+- Keep axis names stable (`Mode`) — they map straight to Storybook theme globals + the token tool in the
   port (`canvas-port` §01).
 
-**context7 obligation:** when these tokens become `tokens.json` / Style-Dictionary config, consult context7
-(`resolve-library-id "Style Dictionary"` → `query-docs`) **before** writing the config, and prompt the user
+**context7 obligation:** when these tokens become `tokens.json` / token-tool config, consult context7
+(`resolve-library-id "<your token tool, e.g. Style Dictionary>"` → `query-docs`) **before** writing the config, and prompt the user
 to use context7 on any version question (§04).
 
 **Verify:** `get_variables` echoes the new token; `get_screenshot` of a frame in each Mode looks right.

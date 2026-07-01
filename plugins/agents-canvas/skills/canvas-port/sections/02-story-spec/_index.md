@@ -1,23 +1,39 @@
-# 02 — Story spec (Storybook `web-components` -> per-component contract)
+# 02 — Story spec (Storybook, resolved-framework renderer -> per-component contract)
 
 For every component in the approved Pencil DS, the porter produces a **story spec**: the name, the
 **variant matrix**, the **slot map**, and the **descendant-override points**. The Coder turns each spec
-into one `*.stories.ts` file on the Storybook **`web-components`** framework. The stories are the
-**behavioural contract** — Gate Code asserts the code against them, and the framework wrappers (Spread)
-achieve parity against them, not against a fresh reading of the design.
+into one `*.stories.ts` file on the Storybook renderer **for the project's resolved framework** (resolved
+in Step 0 — see below). The stories are the **behavioural contract** — Gate Code asserts the code against
+them. (Only if the user makes an explicit multi-framework request do the optional wrappers of section 04
+also achieve parity against these same stories; the default single-framework build has no wrappers.)
 
-> **context7 first.** Storybook's story format (CSF), the `web-components` renderer, and `args`/`argTypes`
-> evolve across majors. Run `resolve-library-id("Storybook")` ->
-> `query-docs(<id>, "web-components framework CSF story with args, argTypes, render with lit html")` and
-> `resolve-library-id("Lit")` -> `query-docs(<id>, "render template, properties, slots")` before writing.
+> **context7 first.** Storybook's story format (CSF), the renderer for the resolved framework, and
+> `args`/`argTypes` evolve across majors. Run `resolve-library-id("Storybook")` ->
+> `query-docs(<id>, "<resolved-framework> renderer CSF story with args, argTypes, render function")` and
+> `resolve-library-id("<resolved framework>")` ->
+> `query-docs(<id>, "component template, props, slots/children")` before writing. (When the resolved
+> framework is Web Components, that renderer is `web-components` and the library is Lit.)
+
+## Step 0 — resolve the target framework (do this before any spec)
+
+The project's **framework is an INPUT**, not a CANVAS default. Before authoring any story spec, resolve it:
+detect the stack from `AGENTS.md` / `CLAUDE.md` / `package.json` (and any DS/coordinator scope artifact).
+**Announce** the detected framework to the user; if nothing is detectable, **force-ask** — never silently
+assume one. CANVAS then generates **natively** in that one resolved framework: the stories, the component
+code, and the visual tests all target it. **Web Components (Lit) is one selectable target** — chosen only
+when the project's declared stack IS Web Components — not the canonical output. Record the resolved
+framework so Gate Code and section 03 assert against the right renderer.
 
 ## Step 1 — walk the DS top-down
 
 Read the approved DS atomic layers in order via Pencil MCP (or the exported snapshot):
 `ATOMS -> MOLECULES -> ORGANISMS -> TEMPLATES`. For each reusable component (`reusable:true`) capture:
 
-- **name** — `Category/Variant` from Pencil maps to a custom element tag `canvas-<category>` (e.g.
-  `Button/Primary` -> `<canvas-button variant="primary">`).
+- **name** — `Category/Variant` from Pencil maps to a component in the resolved framework's idiom, named
+  `Canvas<Category>` (e.g. `Button/Primary` -> a `Canvas Button` with `variant="primary"`). When the
+  resolved framework is Web Components this is the custom-element tag `canvas-<category>`
+  (`<canvas-button variant="primary">`); in a component framework it is the native component
+  (`<CanvasButton variant="primary" />`). The worked examples below use the Web-Components instantiation.
 - **props/variants** — every Pencil component property + every variant/state.
 - **slots** — every named content region.
 - **descendant-override points** — the nodes a Pencil instance customizes via `descendants` (these become
@@ -51,8 +67,8 @@ Three outcomes:
 ## Step 2 — the variant matrix
 
 Enumerate the full cross-product the DS actually uses (not every theoretical combination — the ones the
-design defines). This is the matrix the Coder writes a story per, and the wrappers must render
-equivalently:
+design defines). This is the matrix the Coder writes a story per (and, on the optional multi-framework
+path only, the matrix each wrapper must render equivalently):
 
 ```yaml
 component: canvas-button
@@ -75,10 +91,10 @@ booleans.
 
 ## Step 3 — the slot map + descendant-override points
 
-Distinguish the three composition mechanisms so the Coder implements them correctly and the wrappers
-forward them:
+Distinguish the three composition mechanisms so the Coder implements them correctly in the resolved
+framework (and, on the optional multi-framework path, so any wrappers forward them):
 
-| Pencil concept | Web Component mechanism | In the story |
+| Pencil concept | Resolved-framework mechanism (Web Components shown) | In the story |
 |---|---|---|
 | named content region | named `<slot name="...">` | story passes slotted light-DOM children |
 | instance customizes a descendant's text/icon | default `<slot>` or a `name`d slot | story varies the slotted content |
@@ -157,8 +173,10 @@ a passing component — never silently skip one (HARD RULE 7).
 
 ## Step 4 — the CSF story (illustrative — confirm via context7)
 
-One file per component, `web-components` renderer, Lit `html` render functions, `argTypes` driving the
-variant matrix:
+One file per component, on the **resolved framework's Storybook renderer**, its render function, and
+`argTypes` driving the variant matrix. The example below is the **Web-Components instantiation**
+(`web-components` renderer + Lit `html`); on another resolved framework use that framework's renderer and
+render function (verify the exact CSF shape via context7):
 
 ```ts
 // canvas-button.stories.ts  (Storybook web-components — verify CSF shape via context7)
@@ -190,9 +208,10 @@ export const Disabled:   Story = { args: { variant: 'primary', size: 'md', disab
 export const Loading:    Story = { args: { variant: 'primary', size: 'md', loading: true } };
 ```
 
-> Note the Lit boolean-attribute binding `?disabled=${...}` and property binding `.prop=${...}` — these
-> are the WC-interop seams the framework wrappers must reproduce (section 04). Get them right in the
-> canonical story and the parity tests have a clean target.
+> Note the Lit boolean-attribute binding `?disabled=${...}` and property binding `.prop=${...}` — when the
+> resolved framework is Web Components these are the interop seams; on the optional multi-framework path
+> (section 04) any wrappers must reproduce them. Get the bindings right in the canonical story and the
+> parity tests have a clean target.
 
 ## Step 5 — the port-manifest entry
 
@@ -206,22 +225,25 @@ Each component's spec is one entry in the manifest under `packages/design-system
       refs/              # reference screenshots per canonical variant + state (section 03)
 ```
 
-The Coder reads `spec.yaml` + `refs/` and emits `canvas-button.ts` (Lit) + `canvas-button.stories.ts` +
+The Coder reads `spec.yaml` + `refs/` and emits the component in the resolved framework (e.g.
+`canvas-button.ts` for a Web-Components/Lit target) + its `canvas-button.stories.ts` +
 the visual tests. No spec entry -> no component -> the Tester flags a coverage gap. The `spec.yaml`
 acceptance oracle (variant matrix + `data_states` + `interactions`) is also the Storybook validator's
 spec-derived checklist — an omitted oracle row is a check that never runs.
 
 ## HARD RULES (this section)
 
-1. **One story file per component**, `web-components` framework, named by the Pencil `Category/Variant`.
+1. **One story file per component**, on the resolved framework's Storybook renderer (`web-components` only
+   when the resolved framework IS Web Components), named by the Pencil `Category/Variant`.
 2. **The variant matrix is the DS's actual cross-product**, not every theoretical combination — cover
    what the design defines, one canonical story per variant for the oracle.
 3. **Slots and override points are composition, never detach.** A Pencil instance that re-structures a
    descendant is a detach — flag it as a Guardian finding, do not encode it as a story variant.
 4. **`args`/`argTypes` drive variants** so controls match the design's real props; hidden hardcoded
    variants are untestable.
-5. **context7 before writing CSF** — verify the Storybook `web-components` story shape and the Lit
-   binding syntax; prompt the user to use context7 on any version question.
+5. **context7 before writing CSF** — verify the Storybook story shape for the resolved framework's renderer
+   and that framework's binding syntax (the `web-components`/Lit shape when the resolved framework is Web
+   Components); prompt the user to use context7 on any version question.
 6. **`data_states` is mandatory for ORGANISM/TEMPLATE/PAGES**, one story per state
    (`empty`/`loading`/`error`/`populated`, `success` if defined); data-less atoms/molecules write
    `data_states: n/a` explicitly. Data states are NOT visual states — `hover`/`focus`/`disabled` stay

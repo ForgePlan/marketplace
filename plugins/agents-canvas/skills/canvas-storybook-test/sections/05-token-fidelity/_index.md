@@ -1,6 +1,6 @@
-# 05 — Token fidelity (computed style → Style-Dictionary CSS vars)
+# 05 — Token fidelity (computed style → the token tool's CSS vars)
 
-CANVAS has **one** token source: `tokens.json` → Style-Dictionary → **CSS custom properties** consumed by
+CANVAS has **one** token source: `tokens.json` → the project's token tool (Style-Dictionary is one option) → **CSS custom properties** consumed by
 the Web Component shadow DOM (see `canvas-port` section 01). Token fidelity is the certification that the
 **rendered** component actually resolves its values **from those custom properties** — proving no value
 was hardcoded around the contract. The check is a **computed-style assertion** inside a `play` function:
@@ -20,7 +20,7 @@ export const TokenFidelity = {
   play: async ({ canvasElement }) => {
     const host = within(canvasElement).getByRole('button').closest('canvas-button')!;
 
-    // 1) the custom property is defined (resolves to the Style-Dictionary value, not empty)
+    // 1) the custom property is defined (resolves to the compiled token value, not empty)
     const tokenValue = getComputedStyle(host).getPropertyValue('--canvas-color-primary').trim();
     await expect(tokenValue).not.toBe('');
 
@@ -66,7 +66,7 @@ export const FontLoaded = {
     const host = within(canvasElement).getByRole('button').closest('canvas-button')!;
     const btn = host.shadowRoot!.querySelector('button')!;
 
-    // the contracted typography token's family (from the Style-Dictionary tokens RFC)
+    // the contracted typography token's family (from the tokens RFC)
     const family = getComputedStyle(btn).getPropertyValue('--canvas-font-family-base').trim()
       .split(',')[0].replace(/['"]/g, '');
 

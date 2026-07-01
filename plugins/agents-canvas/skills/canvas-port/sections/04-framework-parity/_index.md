@@ -1,24 +1,34 @@
-# 04 — Framework parity (Lit canonical -> React/Vue/Svelte/Angular/Solid wrappers)
+# 04 — Framework parity (OPTIONAL multi-framework path — out of the default pipeline)
 
-The **Spread** phase (`canvas-porter-framework`, SUB) ports the canonical components to the top-5 target
-frameworks. The topology is locked (spec section 9): **Web Components are canonical (Lit-based)** and each
-framework ships a **thin wrapper** over the **same** custom elements. There is exactly one
-implementation of behaviour (the Lit element) and one token source (`tokens.json`, section 01). Wrappers
+> **This section is OPTIONAL and out of the default pipeline.** The default CANVAS build generates
+> **natively in the project's single resolved framework** (detected in Step 0 — see section 02) and has
+> **no master + no wrappers + no parity step**. Only when the user makes an **explicit multi-framework
+> request** (ship the same design system to more than one framework) does the coordinator dispatch this
+> path. The multi-framework wrapper topology below is **deferred to a future ADR-016** — it is not part of
+> the default single-framework contract.
+
+The optional **multi-target port** (`canvas-porter-framework`, SUB — an OPTIONAL porter, dispatched
+**only** on an explicit multi-framework request) ports the components to the requested target frameworks.
+When this path is taken, the topology is: one **master** implementation (built in whichever stack the user
+picks as the shared base — e.g. Web Components / Lit when the shared base IS Web Components) and each
+additional framework ships a **thin wrapper** over the **same** underlying elements. There is exactly one
+implementation of behaviour (the master element) and one token source (`tokens.json`, section 01). Wrappers
 add framework-idiomatic ergonomics (typed props, events, slots, SSR) — they **never** re-implement the
 component and **never** fork a token value.
 
-> **context7 is MANDATORY here, per framework.** Each framework's WC-interop story differs and changes by
+> **context7 is MANDATORY here, per framework.** Each framework's interop story differs and changes by
 > version. Before writing a wrapper run, for that framework:
-> `resolve-library-id("<React|Vue|Svelte|Angular|Solid>")` ->
-> `query-docs(<id>, "wrap a custom element / web component: properties vs attributes, events, refs, SSR")`,
-> and `resolve-library-id("Lit")` -> `query-docs(<id>, "framework wrappers @lit/react createComponent, SSR
-> declarative shadow DOM")`. Prompt the user to use context7 on any version question.
+> `resolve-library-id("<target framework>")` ->
+> `query-docs(<id>, "wrap the master element: properties vs attributes, events, refs, SSR")`, and — when
+> the shared base is Web Components — `resolve-library-id("Lit")` ->
+> `query-docs(<id>, "framework wrappers @lit/react createComponent, SSR declarative shadow DOM")`. Prompt
+> the user to use context7 on any version question.
 
 ## The parity contract
 
 A wrapper passes parity when, for **every** row of the component's variant matrix (section 02):
 
-1. it renders the **same** custom element with the **same** attributes/properties;
+1. it renders the **same** master element with the **same** attributes/properties;
 2. it reaches **visual** parity against the **same** reference screenshots (section 03);
 3. it forwards **slots**, **events**, and **descendant-override points** idiomatically;
 4. it reads tokens **only** from the compiled CSS vars / JS export — **zero** forked values.
@@ -26,7 +36,7 @@ A wrapper passes parity when, for **every** row of the component's variant matri
 Parity is asserted against the **stories**, not a re-reading of the design. The story is the behavioural
 contract; the screenshot is the visual contract.
 
-## Per-framework WC-interop gotchas (verify each via context7)
+## Per-framework WC-interop gotchas (when the shared base is Web Components — verify each via context7)
 
 | Framework | Props vs attributes | Events | Gotcha to handle in the wrapper |
 |---|---|---|---|
@@ -100,7 +110,7 @@ test('react wrapper reaches visual parity with the canonical Primary story', asy
 
 `code-reviewer` + `tester` (SUB) verify, per framework:
 
-- **Variant coverage** — every matrix row renders equivalently across all 5 wrappers.
+- **Variant coverage** — every matrix row renders equivalently across all requested wrappers.
 - **No forked tokens** — grep the wrapper packages for literal hex/px that should be a token var; any hit
   is a CRITICAL.
 - **No re-implementation** — a wrapper that re-draws the component (instead of wrapping the element) is a
@@ -110,13 +120,18 @@ test('react wrapper reaches visual parity with the canonical Primary story', asy
 
 ## HARD RULES (this section)
 
-1. **One implementation, five wrappers.** Wrappers wrap the canonical Lit element; they never
-   re-implement behaviour or structure.
+0. **This section is OPTIONAL and out of the default pipeline.** It runs **only** on an explicit
+   multi-framework request. The default CANVAS build is single-framework native — no master, no wrappers,
+   no parity step. The multi-framework wrapper topology is deferred to a future ADR-016.
+1. **One master, N wrappers (multi-framework path only).** Wrappers wrap the shared master element; they
+   never re-implement behaviour or structure. The master is built in whichever stack the user picks as the
+   shared base (Web Components / Lit only when that shared base IS Web Components).
 2. **Never fork token values.** Wrappers read the compiled CSS vars / JS export only. Missing value ->
    add to `tokens.json` + recompile (section 01), never inline.
 3. **Parity is against the stories + the shared screenshots**, not a re-reading of the design; reuse the
-   section 03 baselines across frameworks.
-4. **Handle each framework's WC-interop seam explicitly** — props-vs-attributes, CustomEvents,
-   `CUSTOM_ELEMENTS_SCHEMA`/`isCustomElement`/`prop:`, SSR/DSD — per the gotchas table.
-5. **context7 before each wrapper** — resolve + query that framework's custom-element interop and Lit's
-   wrapper utilities; prompt the user to use context7 on any version question.
+   section 03 baselines across the requested frameworks.
+4. **Handle each framework's interop seam explicitly** — props-vs-attributes, events, SSR, and (for a
+   Web-Components shared base) `CUSTOM_ELEMENTS_SCHEMA`/`isCustomElement`/`prop:`, CustomEvents, DSD — per
+   the gotchas table.
+5. **context7 before each wrapper** — resolve + query that framework's interop and (when the shared base
+   is Web Components) Lit's wrapper utilities; prompt the user to use context7 on any version question.
