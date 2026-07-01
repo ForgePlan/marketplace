@@ -20,6 +20,7 @@
 | Нужно выбрать между вариантами | `fpf` | `/fpf-evaluate "А или Б"` |
 | Сложный баг | `fpl-skills` | `/diagnose "<симптом>"` |
 | Перед слиянием — проверить код | `fpl-skills` | `/audit` |
+| Есть дизайн-система / Figma / Pencil, нужны продакшен UI-компоненты | + `agents-canvas` | `/canvas-init` → `canvas-coordinator` (stack-agnostic — нативная генерация в одном фреймворке проекта, не Lit по умолчанию) |
 | Командная работа, «на чём остановились» | + `forgeplan-orchestra` | `/smith` (читает `forgeplan_health` + поднимает память + советует следующий шаг) или `/session` → `/sync` |
 
 ---
@@ -250,6 +251,29 @@ brew install ForgePlan/tap/forgeplan
 
 ---
 
+## Сценарий — Дизайн-система в продакшен-код (CANVAS)
+
+**Что**: есть дизайн-система, файл Figma или проект Pencil (`.pen`), и нужны продакшен UI-компоненты — сгенерированные в ЕДИНСТВЕННОМ фреймворке, который уже объявлен в проекте, а не generic-экспорт под несколько фреймворков сразу.
+
+**Настройка**:
+```
+/plugin install agents-canvas@ForgePlan-marketplace
+/reload-plugins
+```
+
+**Запуск**:
+```
+/canvas-init                     # Шаг 0 — определяет объявленный фреймворк проекта
+                                  # (AGENTS.md / CLAUDE.md / package.json), подтверждает его,
+                                  # затем передаёт управление canvas-coordinator (мастер, Profile B-orchestrator)
+```
+
+`canvas-coordinator` запускает пайплайн C-A-N-V-A по умолчанию (Capture → Audit → Norm-check → Vectorize → Assemble) и генерирует код нативно в выбранном фреймворке. **Stack-agnostic по умолчанию** (RFC-022 / ADR-015) — Lit/Web-Components и обёртки «Spread» под каждый фреймворк — опциональный multi-framework путь (ADR-016), не режим по умолчанию.
+
+В маршрутизации smith — **строка 14** (`hook-gate=Yes` — гейт tokens-before-code блокирует генерацию, пока токены дизайна не захвачены и не проверены).
+
+---
+
 ## Сценарий — Итерации под мерой (autoresearch + ForgePlan)
 
 **Что**: у задачи есть чёткая механическая метрика (число производительности, доля тестов, размер сборки, число security findings), и нужен целенаправленный цикл который улучшает метрику до цели — а результат фиксируется как полноценное Evidence.
@@ -337,7 +361,7 @@ forgeplan link EVID-NNN ADR-MMM --relation informs
 | Роль | Плагины |
 |---|---|
 | 🟢 Соло-разработчик | `fpl-skills` + `forgeplan-workflow` |
-| 🎨 Фронтенд | + `laws-of-ux` + `agents-domain` |
+| 🎨 Фронтенд | + `laws-of-ux` + `agents-domain` + `agents-canvas` |
 | 🏛 Архитектор / тех-лид | + `fpf` + `agents-sparc` + `agents-pro` |
 | 👥 Команда с Orchestra | + `forgeplan-orchestra` |
 | 🏚 Унаследованный проект | + `forgeplan-brownfield-pack` + `agents-pro` |

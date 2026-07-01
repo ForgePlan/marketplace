@@ -218,7 +218,7 @@ Beyond the vocabulary overlay, the contract-conformant path adds a mandatory ind
 
 ### CANVAS — design-system → code
 
-**Status**: ships in the `agents-canvas` plugin (v0.1.0) as the `/canvas` orchestrator command — the **fifth instance** of the AD/AID-PDLC sub-cycle contract (ADR-010 / RFC-021), alongside `/tdd` (RFC-012), `/bmad` (RFC-013), `/sparc` (RFC-016), and `/riper` (RFC-018).
+**Status**: ships in the `agents-canvas` plugin (v1.0.0) as the `/canvas` orchestrator command — the **fifth instance** of the AD/AID-PDLC sub-cycle contract (ADR-010 / RFC-021; stack-agnostic native-single-framework default per RFC-022 / ADR-015), alongside `/tdd` (RFC-012), `/bmad` (RFC-013), `/sparc` (RFC-016), and `/riper` (RFC-018).
 
 **What it does**: turns a design system into code — a Pencil design (Figma is a future seam) ported to a Storybook component library, generated natively in the project's own framework — walking five phases — **Capture → Audit → Norm-check → Vectorize → Assemble** (the initials spell CANVAS — a proper name for the pipeline, not a description of its output format) — each a fresh-context dispatch with a blocking generator≠verifier gate between stages:
 - Capture → `canvas-designer` (Pencil snapshot + Design NOTE; **Step 0** resolves the project's framework as an input — detected from `AGENTS.md` / `CLAUDE.md` / `package.json`, then announced or force-asked when ambiguous — before any code is generated; context7 stays mandatory for whichever framework is resolved)

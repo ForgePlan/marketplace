@@ -65,7 +65,7 @@ The full table — primary methodology + dispatch sequence + evidence requiremen
 | 11 | Tech debt cleanup | Pay-down sprint — A3 + Fishbone + ADR-supersede |
 | 12 | Live incident response | Outage handling — Incident Command + blameless post-mortem |
 | 13 | TDD test-first feature | Test-first discipline — TDD RED→GREEN→REFACTOR + fail-closed test-gate |
-| 14 | Design-system → code | Pencil design → Storybook + framework wrappers — CANVAS + tokens-before-code hook-gate |
+| 14 | Design-system → code | Pencil design → native single-framework code + Storybook — CANVAS + tokens-before-code hook-gate |
 
 Smith **picks exactly one row** per task — methodology cocktails are forbidden. If the situation sits between two rows, smith emits the `<<NEED_USER_INPUT>>` sentinel with ≥3 hypotheses on which row to pick (FPF ADI discipline per Sprint Z7/PRD-059). Only in autonomous-mode incidents where the ambiguity blocks a live response does smith pick the higher-risk row (brownfield > greenfield, audit > feature) and record the deviation in its Plan output. The single-row rule prevents the common failure mode where teams blend BMAD + SPARC + Spec Kit "to cover all bases" and end up with artefacts that match no community pattern — none of the three communities recognise the output as their canonical shape.
 
@@ -98,7 +98,7 @@ Evidence required: PRD + ADI EVID (≥3 hypotheses) + BMAD EVID with ≥1 findin
 
 Twenty-nine methodologies are catalogued in `routing-map.md` with cards covering one-sentence definition, when it shines, when NOT to use, and a primary source link. Grouped:
 
-- **AI-coding workflows**: BMAD-METHOD, SPARC, RIPER-5, GitHub Spec Kit, FPF ADI (Abduction → Deduction → Induction).
+- **AI-coding workflows**: BMAD-METHOD, SPARC, RIPER-5, GitHub Spec Kit, FPF ADI (Abduction → Deduction → Induction), CANVAS (design-system → code, hook-gate=Yes, instance #5).
 - **Architecture lenses**: C4 Model, Domain-Driven Design, Event Storming, Clean Architecture, Hexagonal Architecture (Ports & Adapters), ADR / MADR.
 - **Brownfield patterns**: Strangler Fig, Branch-by-Abstraction, Anti-Corruption Layer.
 - **Root-cause / bug-fix**: 5 Whys, Fishbone (Ishikawa), A3 Problem Solving, Blameless post-mortem.

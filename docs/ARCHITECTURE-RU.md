@@ -166,6 +166,7 @@ Orchestra: Task "OAuth" Status=Review, Phase=Evidence
 | SPARC | agents-sparc | 5 фазных агентов — `/sprint` активирует их при детекции Deep задачи. |
 | TDD | agents-tdd | Pack методологии enforced-TDD: tdd-orchestrator + RED/GREEN агенты + fail-closed PreToolUse gate. |
 | BMAD | agents-bmad | Pack greenfield-методологии BMAD: bmad-orchestrator проводит по аркам персон (Analyst → PM → Architect → SM → Dev → QA) + no-code-before-plan gate. |
+| CANVAS | agents-canvas | Pack методологии design-system→код (инстанс #5): canvas-coordinator (Profile B-orchestrator) мастер + tokens-before-code hook-gate + ролевые агенты. v1.0.0 stack-AGNOSTIC — генерирует нативно в ЕДИНСТВЕННОМ фреймворке, который объявляет проект, через Step-0 stack detect (Lit/Web-Components + Spread-обёртки = опциональный out-of-default multi-framework путь, ADR-016). Роутинг = smith Row 14. |
 | UX | laws-of-ux | `ux-reviewer` агент + `/ux-review` + auto-hint hook при правке frontend-файлов. |
 | Агенты | agents-core / agents-domain / agents-pro / agents-github | Специализированные сабагенты, которые `/audit`, `/sprint` и др. композят при необходимости. |
 | Универсальный тулкит (legacy) | dev-toolkit | Soft-deprecated, superseded by fpl-skills. Используй только если CLI forgeplan недоступен. |
@@ -189,6 +190,6 @@ Orchestra: Task "OAuth" Status=Review, Phase=Evidence
 | 👥 Multi-session / команда | `fpl-skills` + `forgeplan-orchestra` |
 | 🏚 Brownfield миграция | `fpl-skills` + `forgeplan-brownfield-pack` |
 | 🔧 Любой разработчик (без forgeplan) | `dev-toolkit` + `agents-core` (legacy) |
-| Полный стек (все системы) | все 18 плагинов |
+| Полный стек (все системы) | все 19 плагинов |
 
 Per-persona Day 0 walkthroughs — см. [DEVELOPER-JOURNEY-RU.md](DEVELOPER-JOURNEY-RU.md).

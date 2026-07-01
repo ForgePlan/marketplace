@@ -14,7 +14,7 @@ A 30-minute walkthrough that takes you from "I just heard about ForgePlan" to "I
 - One Claude Code plugin (`fpl-skills`) installed, providing 38 skills.
 - A target project wired with `.forgeplan/`, `CLAUDE.md`, `docs/agents/`, `.mcp.json`.
 - A daily routine: morning briefing → pick task → research/refine → sprint → audit → ship.
-- Optional: agent packs (75 specialised agents) added when you need them.
+- Optional: agent packs (83 specialised agents) added when you need them.
 
 ---
 
@@ -35,7 +35,7 @@ The `fpl-skills` plugin is the **glue layer**: 38 skills that compose these syst
 flowchart LR
     you[You] -->|/fpl-init| fpl[fpl-skills plugin]
     fpl -->|delegates artifacts| forgeplan[forgeplan CLI]
-    fpl -->|spawns subagents| packs[agent packs<br/>core/domain/pro/<br/>github/sparc]
+    fpl -->|spawns subagents| packs[agent packs<br/>core/domain/pro/<br/>github/sparc/canvas]
     fpl -->|composes| fpf[fpf plugin<br/>structured thinking]
     fpl -->|composes| ux[laws-of-ux<br/>frontend reviewer]
     forgeplan -->|stores| fp[(.forgeplan/<br/>PRDs · ADRs ·<br/>Evidence · State)]
@@ -54,7 +54,7 @@ Each persona below is a complete starting recipe. Pick one row and follow its Da
 | Persona | Stack | What you optimise for |
 |---|---|---|
 | 🟢 [Solo developer](#-solo-developer) | `fpl-skills` | Single-person ownership end-to-end; minimum ceremony. |
-| 🎨 [Frontend developer](#-frontend-developer) | `fpl-skills` + `laws-of-ux` + `agents-domain` | UI quality, framework specialists, UX laws. |
+| 🎨 [Frontend developer](#-frontend-developer) | `fpl-skills` + `laws-of-ux` + `agents-domain` + `agents-canvas` | UI quality, framework specialists, UX laws. |
 | 🏛 [Architect / tech lead](#-architect--tech-lead) | `fpl-skills` + `fpf` + `agents-sparc` + `agents-pro` | Decisions traced, complex systems decomposed, SPARC quality gates. |
 | 👥 [Team with Orchestra](#-team-with-orchestra) | `fpl-skills` + `forgeplan-orchestra` | Multi-session coordination, Inbox Pattern, task sync. |
 
@@ -370,6 +370,7 @@ Don't install everything upfront. Add as you hit the need:
 | Production / security focus | `agents-pro` |
 | GitHub-heavy workflow (lots of PRs/issues/releases) | `agents-github` |
 | Complex Deep tasks needing rigorous phasing | `agents-sparc` |
+| Design-system to code (tokens to components in your framework) | `agents-canvas` |
 | Inheriting a brownfield codebase with legacy docs | `forgeplan-brownfield-pack` |
 | Tighter forgeplan-only loop than fpl-skills' broader bundle | `forgeplan-workflow` |
 
@@ -385,6 +386,7 @@ You don't manually invoke most agents. They activate based on context:
 |---|---|---|
 | Files changed without tests | `dev-advisor` (suggests tests) | dev-toolkit / fpl-skills |
 | `/sprint` detects Deep task + agents-sparc installed | `sparc-orchestrator` + 4 phase agents | agents-sparc |
+| CANVAS/design-system task detected + agents-canvas installed | `canvas-coordinator` | agents-canvas |
 | `/audit` runs + frontend files in changeset + laws-of-ux installed | `ux-reviewer` | laws-of-ux |
 | Architecture/decision keywords detected | `fpf-advisor` | fpf |
 | `forgeplan new`/`activate` runs + forgeplan-orchestra installed | `orchestra-advisor` (suggests sync) | forgeplan-orchestra |

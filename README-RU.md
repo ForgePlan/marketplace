@@ -280,7 +280,7 @@ Smith — Profile B-orchestrator агент с четырьмя скилами. 
 | [agents-sparc](plugins/agents-sparc/) | 5 | SPARC: spec → pseudo → architecture → refinement | `agents-sparc` |
 | [agents-tdd](plugins/agents-tdd/) | 4 | TDD instance #1 (RFC-012): tdd-orchestrator + RED/GREEN агенты + test-validator | `agents-tdd` |
 | [agents-bmad](plugins/agents-bmad/) | 1 | BMAD instance #2 (RFC-013): bmad-orchestrator persona-walk + no-code-before-plan gate | `agents-bmad` |
-| [agents-canvas](plugins/agents-canvas/) | 8 | CANVAS instance #5 (RFC-021): design-system→code (`/canvas`, hook-gate=Yes) — canvas-coordinator master + tokens-before-code gate + 7 role agents (incl. canvas-storybook-validator) | `agents-canvas` |
+| [agents-canvas](plugins/agents-canvas/) | 8 | CANVAS instance #5 (RFC-021): design-system→code (`/canvas`, hook-gate=Yes) — canvas-coordinator master + tokens-before-code gate + 7 role agents (incl. canvas-storybook-validator). v1.0.0 стек-агностичен (RFC-022 / ADR-015): генерируется нативно в единственном заявленном фреймворке проекта; Lit/Web-Components + Spread/обёртки под конкретный фреймворк — опциональны (ADR-016) | `agents-canvas` |
 
 ---
 

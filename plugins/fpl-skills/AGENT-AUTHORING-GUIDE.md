@@ -12,7 +12,7 @@
 > - PreToolUse hooks on `.forgeplan/` paths
 > - Server-side identity-tag enforcement by forgeplan MCP
 
-Canonical pattern for **forgeplan-aware agents** in ForgePlan marketplace. Required reading before authoring or migrating any agent in `agents-pro`, `agents-core`, `agents-domain`, `agents-sparc`, or `agents-github` packs (and for project-scoped agents in `.claude/agents/`).
+Canonical pattern for **forgeplan-aware agents** in ForgePlan marketplace. Required reading before authoring or migrating any agent in `agents-pro`, `agents-core`, `agents-domain`, `agents-sparc`, `agents-tdd`, `agents-bmad`, `agents-canvas`, or `agents-github` packs (and for project-scoped agents in `.claude/agents/`).
 
 ---
 
@@ -1412,7 +1412,7 @@ The output is a plan, not a verdict. The plan becomes the orchestrator's playboo
 | **What it reads** | ONE artifact + its EVIDENCE chain | The WHOLE board: `forgeplan_health` + active/blocked/stale lists + hindsight + git state |
 | **What it produces** | An EVIDENCE artifact with PASS/CONCERNS/BLOCKER verdict | A Markdown plan with methodology + dispatch sequence |
 | **Scope** | One artifact, one verdict | One project state, one routing decision |
-| **Methodology surface** | Domain-specific (security, code-quality, tests, architecture-fit) | The 12-context methodology routing matrix |
+| **Methodology surface** | Domain-specific (security, code-quality, tests, architecture-fit) | The 14-context methodology routing matrix |
 | **Downstream effect** | Orchestrator reads verdict → activates / re-dispatches fixer / halts | Orchestrator reads plan → dispatches the named Wave 1 agents |
 | **`forgeplan_new`** | ALLOWED (to create the EVID) | DENIED (no artifact creation; orchestrator persists plan via `artifact-author` if needed) |
 | **`forgeplan_link`** | ALLOWED (to link EVID `informs` artifact) | DENIED |
@@ -1459,9 +1459,11 @@ Note: `forgeplan_claim`/`release` are denied because a Profile B-orchestrator do
 
 ### Example
 
-**`smith` (the only B-orchestrator agent as of this guide revision)** — see `plugins/agents-pro/agents/smith.md`.
+**`smith` (the general-purpose Profile B-orchestrator, as of this guide revision)** — see `plugins/agents-pro/agents/smith.md`.
 
-smith reads project state → classifies against a 12-context routing matrix (greenfield / brownfield / new-feature / non-trivial-bug / trivial-hotfix / refactor / architecture-decision / security-audit / perf-audit / product-discovery / tech-debt / live-incident) → picks primary + secondary methodologies (BMAD-METHOD / SPARC / RIPER-5 / GitHub Spec Kit / FPF ADI / DDD / C4 / Event Storming / Strangler Fig / Branch-by-Abstraction / ACL / MADR / OWASP / STRIDE / DORA / SRE / 5 Whys / Fishbone / A3 / blameless post-mortem / JTBD / Lean Startup / Double Diamond / Hexagonal / Clean Architecture) → returns a Markdown plan with Wave 1/2/N dispatch sequence naming real marketplace agents in execution order.
+smith reads project state → classifies against a 14-context routing matrix (greenfield / brownfield / new-feature / non-trivial-bug / trivial-hotfix / refactor / architecture-decision / security-audit / perf-audit / product-discovery / tech-debt / live-incident / TDD-first feature / CANVAS design-system→code) → picks primary + secondary methodologies (BMAD-METHOD / SPARC / TDD / RIPER-5 / GitHub Spec Kit / FPF ADI / DDD / C4 / Event Storming / Strangler Fig / Branch-by-Abstraction / ACL / MADR / OWASP / STRIDE / DORA / SRE / 5 Whys / Fishbone / A3 / blameless post-mortem / JTBD / Lean Startup / Double Diamond / Hexagonal / Clean Architecture / CANVAS) → returns a Markdown plan with Wave 1/2/N dispatch sequence naming real marketplace agents in execution order.
+
+smith is no longer the only Profile B-orchestrator in the marketplace. Four narrow, methodology-specific Profile B-orchestrators are also real shipped instances: `sparc-orchestrator` (SPARC, `plugins/agents-sparc/agents/sparc-orchestrator.md`), `tdd-orchestrator` (TDD, RFC-012, `plugins/agents-tdd/agents/tdd-orchestrator.md`), `bmad-orchestrator` (BMAD, RFC-013, `plugins/agents-bmad/agents/bmad-orchestrator.md`), and `canvas-coordinator` (CANVAS, RFC-021, hook-gate=Yes, `plugins/agents-canvas/agents/canvas-coordinator.md`) — the 4th narrow B-orchestrator. Each covers exactly one methodology, unlike smith's cross-context matrix.
 
 ### When to create another B-orchestrator vs use existing one
 
@@ -1469,12 +1471,12 @@ smith reads project state → classifies against a 12-context routing matrix (gr
 
 Before authoring a new Profile B-orchestrator agent, ask:
 
-1. **Is the routing decision covered by smith's 12-context matrix?** If yes → use smith.
+1. **Is the routing decision covered by smith's 14-context matrix?** If yes → use smith.
 2. **Is the user asking for a single-agent recommendation, not a multi-wave plan?** If yes → use `/agent-advisor` skill, not a Profile B-orchestrator agent.
 3. **Is the user asking for a fully autonomous loop?** If yes → use `/autorun`, which MAY dispatch smith at cold-start.
-4. **Is the orchestration domain-specific in a way the 12-context matrix cannot cover?** (e.g., a hypothetical "ML pipeline orchestrator" that routes ML-specific methodologies — MLflow / DVC / experiment tracking / data versioning — none of which appear in smith's matrix.) Only THEN consider a new B-orchestrator agent.
+4. **Is the orchestration domain-specific in a way the 14-context matrix cannot cover?** (e.g., a hypothetical "ML pipeline orchestrator" that routes ML-specific methodologies — MLflow / DVC / experiment tracking / data versioning — none of which appear in smith's matrix.) Only THEN consider a new B-orchestrator agent.
 
-The intent is: **Profile B-orchestrator should be a small set, ideally one general agent (`smith`) + at most 2-3 narrow-domain orchestrators (e.g., a hypothetical `ml-pipeline-orchestrator` someday)**. More than 3-4 orchestrators across the marketplace is a smell — orchestration logic should live in skills (`/forge-cycle`, `/autorun`, playbooks) or in the routing matrix of `smith`, not in a proliferation of B-orchestrator agents.
+The intent is: **Profile B-orchestrator should be a small set, ideally one general agent (`smith`) + at most 2-3 narrow-domain orchestrators**. As of this guide revision the marketplace already ships 4 real narrow-domain orchestrators — `sparc-orchestrator`, `tdd-orchestrator`, `bmad-orchestrator`, and `canvas-coordinator` — putting the set at the outer edge of the intended range, not at a hypothetical starting point. More than 3-4 orchestrators across the marketplace is a smell — orchestration logic should live in skills (`/forge-cycle`, `/autorun`, playbooks) or in the routing matrix of `smith`, not in a proliferation of B-orchestrator agents. Treat any further narrow-domain proposal (e.g., a hypothetical `ml-pipeline-orchestrator`) with extra scrutiny.
 
 ### How to write the body
 
@@ -1493,7 +1495,7 @@ A Profile B-orchestrator agent body MUST contain, in order:
 
 **Body length budget**: 400-600 lines. Longer than standard Profile A/B (100-200) because the routing matrix dominates. If the matrix has 10+ rows and each methodology has a one-line definition, 400 lines is the floor; 600 is the ceiling. Beyond 600 lines, split the methodology citations into a co-located knowledge file referenced from the body.
 
-**Which Profile A/B/C agents may be recommended**: any agent that exists in `plugins/agents-core/`, `plugins/agents-pro/`, `plugins/agents-sparc/`, `plugins/agents-domain/`, `plugins/agents-github/`, or `plugins/forgeplan-brownfield-pack/`. Verify the agent file exists before naming it; missing-agent fabrication is the worst routing failure mode (HARD RULE 3 in `smith.md`).
+**Which Profile A/B/C agents may be recommended**: any agent that exists in `plugins/agents-core/`, `plugins/agents-pro/`, `plugins/agents-sparc/`, `plugins/agents-tdd/`, `plugins/agents-bmad/`, `plugins/agents-canvas/`, `plugins/agents-domain/`, `plugins/agents-github/`, or `plugins/forgeplan-brownfield-pack/`. Verify the agent file exists before naming it; missing-agent fabrication is the worst routing failure mode (HARD RULE 3 in `smith.md`).
 
 ### Cross-reference
 
@@ -1501,7 +1503,10 @@ A Profile B-orchestrator agent body MUST contain, in order:
 - **`plugins/agents-pro/agents/smith.md`** — reference implementation of Profile B-orchestrator.
 - **`plugins/agents-pro/agents/guardian.md`** — sibling Profile B gate-style agent; same "recommender, not actor" pattern.
 - **`plugins/agents-pro/agents/goal-planner.md`** — sibling Profile A planner; smith dispatches goal-planner as Wave-2 standard for decomposition work.
-- **`plugins/agents-sparc/agents/sparc-orchestrator.md`** — methodology-specific orchestrator (SPARC only); smith is the methodology-agnostic super-set covering 12 contexts.
+- **`plugins/agents-sparc/agents/sparc-orchestrator.md`** — methodology-specific orchestrator (SPARC only); smith is the methodology-agnostic super-set covering 14 contexts.
+- **`plugins/agents-tdd/agents/tdd-orchestrator.md`** — methodology-specific orchestrator (TDD only, RFC-012).
+- **`plugins/agents-bmad/agents/bmad-orchestrator.md`** — methodology-specific orchestrator (BMAD only, RFC-013).
+- **`plugins/agents-canvas/agents/canvas-coordinator.md`** — methodology-specific orchestrator (CANVAS only, RFC-021, hook-gate=Yes).
 
 ---
 

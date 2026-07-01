@@ -140,9 +140,9 @@ Two real examples:
 #   Dispatch: debugger → coder → tester → guardian. Evidence: reproducer + root cause.
 
 # A design system → code port
-/smith-plan "port the Pencil design system to Storybook + React/Vue/Svelte wrappers"
+/smith-plan "generate the Pencil design system natively in our framework + Storybook"
 # → Row 14 (design system to code). Methodology: CANVAS (hook-gate=Yes — tokens before code).
-#   Dispatch: canvas-coordinator → designer → guardian/tester → porter-storybook → coder → porter-framework.
+#   Dispatch: canvas-coordinator → designer → guardian/tester → porter-storybook → coder → porter-framework (optional multi-framework).
 ```
 
 Smith picks **exactly one** of the 14 methodology rows — it doesn't blend them. The output is a structured plan you can read in 30 seconds.

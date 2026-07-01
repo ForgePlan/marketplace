@@ -14,7 +14,7 @@
 - Один Claude Code плагин (`fpl-skills`), 38 скиллов.
 - Проект с `.forgeplan/`, `CLAUDE.md`, `docs/agents/`, `.mcp.json`.
 - Дневной routine: утренний briefing → выбор задачи → research/refine → sprint → audit → ship.
-- Опционально: agent packs (75 специализированных агентов) — добавишь по мере необходимости.
+- Опционально: agent packs (83 специализированных агентов) — добавишь по мере необходимости.
 
 ---
 
@@ -35,7 +35,7 @@ SPARC        — КАК кодить?         (spec → pseudo → arch → refi
 flowchart LR
     you[Ты] -->|/fpl-init| fpl[fpl-skills плагин]
     fpl -->|делегирует артефакты| forgeplan[forgeplan CLI]
-    fpl -->|спавнит сабагентов| packs[agent packs<br/>core/domain/pro/<br/>github/sparc]
+    fpl -->|спавнит сабагентов| packs[agent packs<br/>core/domain/pro/<br/>github/sparc/canvas]
     fpl -->|композит| fpf[fpf плагин<br/>структурное мышление]
     fpl -->|композит| ux[laws-of-ux<br/>frontend ревьюер]
     forgeplan -->|хранит| fp[(.forgeplan/<br/>PRD · ADR ·<br/>Evidence · State)]
@@ -54,7 +54,7 @@ flowchart LR
 | Персона | Стек | Под что оптимизирована |
 |---|---|---|
 | 🟢 [Соло-разработчик](#-соло-разработчик) | `fpl-skills` | Один владелец end-to-end; минимум церемоний. |
-| 🎨 [Frontend-разработчик](#-frontend-разработчик) | `fpl-skills` + `laws-of-ux` + `agents-domain` | UI quality, framework-специалисты, UX-законы. |
+| 🎨 [Frontend-разработчик](#-frontend-разработчик) | `fpl-skills` + `laws-of-ux` + `agents-domain` + `agents-canvas` | UI quality, framework-специалисты, UX-законы. |
 | 🏛 [Архитектор / тех-лид](#-архитектор--тех-лид) | `fpl-skills` + `fpf` + `agents-sparc` + `agents-pro` | Прослеживаемые решения, сложные системы декомпозированы, SPARC quality gates. |
 | 👥 [Команда с Orchestra](#-команда-с-orchestra) | `fpl-skills` + `forgeplan-orchestra` | Многосессионная координация, Inbox Pattern, sync задач. |
 
@@ -370,6 +370,7 @@ Step 8: Activate        → `forgeplan activate` когда R_eff > 0
 | Production / security focus | `agents-pro` |
 | GitHub-heavy workflow (много PR/issues/releases) | `agents-github` |
 | Сложные Deep задачи требующие строгого фазирования | `agents-sparc` |
+| Перевод дизайн-системы в код (токены → компоненты вашего фреймворка) | `agents-canvas` |
 | Унаследовал brownfield-кодовую базу с legacy-доками | `forgeplan-brownfield-pack` |
 | Нужен более узкий forgeplan-only loop чем broader bundle fpl-skills | `forgeplan-workflow` |
 
@@ -385,6 +386,7 @@ Step 8: Activate        → `forgeplan activate` когда R_eff > 0
 |---|---|---|
 | Файлы изменены без тестов | `dev-advisor` (предлагает тесты) | dev-toolkit / fpl-skills |
 | `/sprint` детектит Deep + установлен agents-sparc | `sparc-orchestrator` + 4 фазных агента | agents-sparc |
+| Детектится CANVAS/design-system задача + установлен agents-canvas | `canvas-coordinator` | agents-canvas |
 | `/audit` запущен + frontend файлы в changeset + установлен laws-of-ux | `ux-reviewer` | laws-of-ux |
 | Детектятся ключевые слова architecture/decision | `fpf-advisor` | fpf |
 | `forgeplan new`/`activate` + установлен forgeplan-orchestra | `orchestra-advisor` (предлагает sync) | forgeplan-orchestra |

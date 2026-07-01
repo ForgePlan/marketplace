@@ -64,7 +64,7 @@ End-to-end развёртка: `forgeplan init`, MCP wiring, CLAUDE.md, docs/age
 | Персона | Стек | Day 0 walkthrough |
 |---|---|---|
 | 🟢 Forgeplan user / соло-dev | `fpl-skills` | [Соло-разработчик](DEVELOPER-JOURNEY-RU.md#-соло-разработчик) |
-| 🎨 Frontend dev | `fpl-skills` + `laws-of-ux` + `agents-domain` | [Frontend-разработчик](DEVELOPER-JOURNEY-RU.md#-frontend-разработчик) |
+| 🎨 Frontend dev | `fpl-skills` + `laws-of-ux` + `agents-domain` + `agents-canvas` | [Frontend-разработчик](DEVELOPER-JOURNEY-RU.md#-frontend-разработчик) |
 | 🏛 Архитектор / тех-лид | `fpl-skills` + `fpf` + `agents-sparc` + `agents-pro` | [Архитектор / тех-лид](DEVELOPER-JOURNEY-RU.md#-архитектор--тех-лид) |
 | 👥 Multi-session / команда | `fpl-skills` + `forgeplan-orchestra` | [Команда с Orchestra](DEVELOPER-JOURNEY-RU.md#-команда-с-orchestra) |
 | 🏚 Brownfield миграция | `fpl-skills` + `forgeplan-brownfield-pack` | (См. README brownfield-pack — playbook recipes) |
@@ -125,7 +125,7 @@ End-to-end развёртка: `forgeplan init`, MCP wiring, CLAUDE.md, docs/age
 | `/forge-audit` | forgeplan-workflow | 6-агентный forgeplan-aware аудит. |
 | `/sync` | forgeplan-orchestra | Двунаправленная синхронизация Forgeplan ↔ Orchestra. |
 | `/session` | forgeplan-orchestra | Session Start Protocol с Inbox Pattern. |
-| `/canvas` | agents-canvas | CANVAS-оркестратор — порт дизайн-системы в код: Pencil→Storybook→фреймворки. hook-gate=Yes (токены до кода). Один раз `/canvas-init`, потом `/canvas`. |
+| `/canvas` | agents-canvas | CANVAS-оркестратор — порт дизайн-системы в код: Pencil→Storybook→фреймворк. hook-gate=Yes (токены до кода). Один раз `/canvas-init`, потом `/canvas`. |
 | `/canvas-init` | agents-canvas | Разовая инициализация состояния CANVAS для текущей ветки (детектит раскладку пакетов, прописывает guarded globs, которые читает hook «токены до кода»). |
 
 ### Legacy команды (dev-toolkit, deprecated)
@@ -291,7 +291,7 @@ Worked example (`добавить аутентификацию` end-to-end) — 
 | `agents-sparc` | 5 | SPARC методология — orchestrator + 4 phase specialists |
 | `agents-tdd` | 4 | TDD методология — orchestrator + RED/GREEN агенты + test-validator |
 | `agents-bmad` | 1 | BMAD методология — bmad-orchestrator persona-walk |
-| `agents-canvas` | 8 | CANVAS методология — дизайн-система→код (Pencil→Storybook→фреймворки); мастер canvas-coordinator + 7 ролевых агентов вкл. canvas-storybook-validator |
+| `agents-canvas` | 8 | CANVAS методология — дизайн-система→код (Pencil→Storybook→фреймворк); мастер canvas-coordinator + 7 ролевых агентов вкл. canvas-storybook-validator |
 
 Ставь только то что используешь. `/audit` и `/sprint` автоматически подхватывают любые установленные паки.
 

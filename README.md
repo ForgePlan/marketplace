@@ -31,7 +31,7 @@ Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/
 | 🚚 [Migration: dev-toolkit → fpl-skills](docs/MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS.md) | Switching plugins safely (side-by-side or clean-cut, with rollback plan) |
 | 🗂 [Tracker Integration](docs/TRACKER-INTEGRATION.md) | Recipes for Orchestra · GitHub Issues · Linear · Jira · local TODO |
 | 🌐 [Forgeplan Web](docs/FORGEPLAN-WEB.md) | Browser viewer — time-travel slider + artifact graph + health dashboard |
-| 🔄 [Process Reference (EN)](docs/process-from-idea-to-delivery-EN.md) / [RU](docs/process-from-idea-to-delivery-RU.md) | Full process from idea to commit — 5 agent profiles, 10 artifact kinds, 4-layer pipeline, methodologies (BMAD/FPF/SPARC/RIPER-5) |
+| 🔄 [Process Reference (EN)](docs/process-from-idea-to-delivery-EN.md) / [RU](docs/process-from-idea-to-delivery-RU.md) | Full process from idea to commit — 5 agent profiles, 10 artifact kinds, 4-layer pipeline, methodologies (BMAD/FPF/SPARC/RIPER-5/CANVAS) |
 | 📜 [Changelog](CHANGELOG.md) | Release history |
 | 🤝 [Contributing](CONTRIBUTING.md) | Add a new plugin to the marketplace |
 
@@ -306,7 +306,7 @@ Install any pack: `/plugin install <pack-name>@ForgePlan-marketplace`
 | [agents-sparc](plugins/agents-sparc/) | 5 | SPARC methodology: spec → pseudo → architecture → refinement | `agents-sparc` |
 | [agents-tdd](plugins/agents-tdd/) | 4 | TDD instance #1 (RFC-012): tdd-orchestrator + RED/GREEN agents + test-validator | `agents-tdd` |
 | [agents-bmad](plugins/agents-bmad/) | 1 | BMAD instance #2 (RFC-013): bmad-orchestrator persona-walk + no-code-before-plan gate | `agents-bmad` |
-| [agents-canvas](plugins/agents-canvas/) | 8 | CANVAS instance #5 (RFC-021): design-system→code (`/canvas`, hook-gate=Yes) — canvas-coordinator master + tokens-before-code gate + 7 role agents (incl. canvas-storybook-validator) | `agents-canvas` |
+| [agents-canvas](plugins/agents-canvas/) | 8 | CANVAS instance #5 (RFC-021): design-system→code (`/canvas`, hook-gate=Yes) — canvas-coordinator master + tokens-before-code gate + 7 role agents (incl. canvas-storybook-validator). v1.0.0 is stack-agnostic (RFC-022 / ADR-015): generates natively in the project's single declared framework; Lit/Web-Components + Spread/per-framework wrappers are optional (ADR-016) | `agents-canvas` |
 
 ---
 
