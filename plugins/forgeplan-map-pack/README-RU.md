@@ -19,7 +19,7 @@
 Затем, в любом forgeplan-проекте:
 
 ```bash
-claude -p '/map-build' --add-dir <репо> --allowedTools Read Glob Grep Write
+claude -p '/map-build' --add-dir <репо> --allowedTools Read Glob Grep Write Task
 ```
 
 Это сканирует репозиторий, классифицирует тип проекта, извлекает граф зон/узлов/рёбер и пишет `.forgeplan/map/map.json` со статусом `"proposed"`. Дальше детерминированный guardian-гейт либо переводит его в `"confirmed"`, либо чётко сообщает, что именно блокирует.
