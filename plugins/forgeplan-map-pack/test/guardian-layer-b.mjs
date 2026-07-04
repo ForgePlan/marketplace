@@ -166,5 +166,26 @@ function setup() {
   rmSync(repo, { recursive: true, force: true });
 }
 
+// --- Scenario 5: XC-2 re-grep excludes node_modules (F6 — guardian must not
+//     "find" a pattern that lives ONLY in node_modules; if the exclusion were
+//     missing, grep would match it there and wrongly PASS the stale edge)
+{
+  console.log('Scenario 5: XC-2 re-grep excludes node_modules (F6)');
+  const repo = setup();
+  const mapPath = join(repo, '.forgeplan/map/map.json');
+  const scanPath = join(repo, '.forgeplan/map/.work/.scan.fpl.json');
+  // a marker that exists ONLY inside node_modules/, nowhere in real source
+  mkdirSync(join(repo, 'node_modules/leftpad'), { recursive: true });
+  writeFileSync(join(repo, 'node_modules/leftpad/index.js'), '// NODEMODULES_ONLY_MARKER should be skipped\n');
+  const m = baseMap();
+  // point the code-dep edge's verified_by at the node_modules-only marker
+  m.edges[1].verified_by = 'grep:NODEMODULES_ONLY_MARKER';
+  writeFileSync(mapPath, JSON.stringify(m, null, 2) + '\n');
+  const { code, out } = runGuardian(mapPath, repo, scanPath);
+  check('exit != 0 (edge is stale once node_modules is excluded)', code !== 0, `exit=${code}\n${out}`);
+  check('XC-2 BLOCKER — pattern only in node_modules is NOT matched (exclusion active)', /\[BLOCKER\] XC-2/.test(out), out);
+  rmSync(repo, { recursive: true, force: true });
+}
+
 console.log(`\n${pass} passed, ${failn} failed`);
 process.exit(failn === 0 ? 0 : 1);

@@ -54,6 +54,18 @@ const VALID_RELATIONS = new Set([
 
 const ACCENT_RE = /^--map-accent-(cyan|emerald|violet|amber|rose|orange|slate)$/;
 
+// Directories XC-2's re-grep MUST skip. `grep -rlF -- pattern .` with no
+// exclusions walks the whole repo (node_modules/, .git/, build output) and
+// hangs on any real repo with dependencies -- the first-dogfood F6 blocker.
+// This set MUST stay identical to the edge-verifier's own grep
+// (skills/edge-verifier/SKILL.md Algorithm 3): XC-2 re-runs that search and
+// must produce the SAME match, else a valid edge is spuriously flagged stale.
+// Mirrors code-scanner's module-scan exclusions (agents/code-scanner.md).
+const GREP_EXCLUDE_DIRS = [
+  'node_modules', '.git', 'vendor', 'dist', 'build', 'target',
+  '.svelte-kit', '.next', 'coverage', '.forgeplan',
+];
+
 function isObject(v) {
   return v !== null && typeof v === 'object' && !Array.isArray(v);
 }
@@ -456,6 +468,17 @@ function checkCrossSource(doc, scanFplPath, repoRoot, checks) {
   }
   const before = checks.length;
   let checked = 0;
+  // Scope every re-grep to source only. `grep -rlF -- pattern .` with NO
+  // exclusions walks the ENTIRE repo -- including node_modules/, .git/,
+  // .svelte-kit/, build output -- so on any real repo with dependencies
+  // installed it is O(hundreds of MB) PER edge and the guardian never
+  // finishes (the first forgeplan-web dogfood run: killed after 2 min, F6).
+  // These exclusions MUST stay identical to the edge-verifier's own grep
+  // (skills/edge-verifier/SKILL.md Algorithm 3) -- XC-2 re-runs the verifier's
+  // search and must produce the SAME match, or a genuinely-valid edge is
+  // spuriously flagged stale. This set also mirrors code-scanner's own
+  // module-scan exclusions (agents/code-scanner.md Step 2).
+  const grepExcludes = GREP_EXCLUDE_DIRS.map((d) => `--exclude-dir=${d}`);
   codeDepEdges.forEach((e) => {
     if (typeof e.verified_by !== 'string' || !e.verified_by.startsWith('grep:')) return;
     checked++;
@@ -465,7 +488,7 @@ function checkCrossSource(doc, scanFplPath, repoRoot, checks) {
       // `pattern` (this string comes from the map.json document, which the
       // guardian must never trust) cannot inject shell commands regardless
       // of its content. -F treats it as a literal fixed string, not a regex.
-      execFileSync('grep', ['-rlF', '--', pattern, '.'], { cwd: repoRoot, stdio: ['ignore', 'ignore', 'ignore'] });
+      execFileSync('grep', ['-rlF', ...grepExcludes, '--', pattern, '.'], { cwd: repoRoot, stdio: ['ignore', 'ignore', 'ignore'] });
     } catch {
       fail(checks, 'XC-2', `code-dep edge ${e.from}->${e.to} verified_by pattern is now stale (no re-grep match): ${pattern}`);
     }
