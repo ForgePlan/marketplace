@@ -288,45 +288,76 @@ function checkGC4RelationsAndVerification(doc, checks) {
 }
 
 // ---------------------------------------------------------------------------
-// GC-5 -- single-write, gitignore-aware (SPEC-003 SS C4). map/map.json is
-// itself gitignored, so a bare `git status --porcelain` can never show it as
-// dirty -- this check therefore asserts BOTH that tracked paths under
-// .forgeplan/ are untouched AND that no ignored path outside .forgeplan/map/
-// changed. Layer B -- needs a real repo, skipped in --smoke mode.
+// GC-5 -- single-write (write-SCOPE, not gitignore-status). SPEC-003 SS C4.
+// GC-5's job is "the pipeline wrote ONLY .forgeplan/map/map.json (+ .work/**),
+// nothing else". The v0.2.0 implementation conflated that with "map.json is
+// gitignored" and BLOCKER-ed on any target that COMMITS map.json (forgeplan-web
+// ships it as the tracked P0 render-proof) -- and false-tripped on pre-existing
+// .forgeplan/ dirt (a modified config.yaml, an untracked journal). A single
+// `--ignored` porcelain call surfaces tracked-modified, untracked AND gitignored
+// changes together, so it works for both the committed-map and gitignored-map
+// conventions. Classification per changed path under .forgeplan/:
+//   * map/map.json, map/.work/**, or the map/ dir itself -> SANCTIONED (ok)
+//   * anything else UNDER map/  -> BLOCKER (a stray write into the pipeline's
+//                                  own output dir -- e.g. map/other.json)
+//   * anything else under .forgeplan/ -> WARN, not BLOCKER (pre-existing repo
+//                                  dirt; the PreToolUse hook + the EMITTER
+//                                  denylist STRUCTURALLY prevent a pipeline agent
+//                                  from writing there, so a change here is not a
+//                                  pipeline escape -- surfaced, never silently
+//                                  passed, but not a gate failure).
+// Layer B -- needs a real repo, skipped in --smoke mode.
 // ---------------------------------------------------------------------------
+function gc5Sanctioned(p) {
+  return (
+    p === '.forgeplan/map/map.json' ||
+    p === '.forgeplan/map' || p === '.forgeplan/map/' ||         // whole map/ dir (gitignored-dir case)
+    p === '.forgeplan/map/.work' || p === '.forgeplan/map/.work/' ||
+    p.startsWith('.forgeplan/map/.work/')
+  );
+}
+
 function checkGC5SingleWrite(repoRoot, checks) {
   if (!repoRoot) {
-    warn(checks, 'GC-5', 'skipped -- no --repo-root given (this line is unreachable under --smoke, which never calls this check at all; it fires only on a non-smoke run missing --repo-root)');
+    warn(checks, 'GC-5', 'skipped -- no --repo-root given (non-smoke run missing --repo-root; unreachable under --smoke, which never calls this check)');
     return;
   }
-  let trackedPorcelain;
+  let porcelain;
   try {
-    trackedPorcelain = execFileSync('git', ['status', '--porcelain', '.forgeplan/'], { cwd: repoRoot, encoding: 'utf8' }).trim();
-  } catch (e) {
-    fail(checks, 'GC-5', `git status --porcelain .forgeplan/ failed: ${e.message}`);
-    return;
-  }
-  if (trackedPorcelain.length > 0) {
-    const sample = trackedPorcelain.split('\n').slice(0, 5).join('; ');
-    fail(checks, 'GC-5', `tracked file(s) under .forgeplan/ changed (must be empty -- only gitignored map/ paths may change): ${sample}`);
-    return;
-  }
-  let ignoredPorcelain;
-  try {
-    ignoredPorcelain = execFileSync('git', ['status', '--porcelain', '--ignored', '.forgeplan/'], { cwd: repoRoot, encoding: 'utf8' }).trim();
+    // NOTE: do NOT .trim() the whole blob. Porcelain v1 status is a FIXED-WIDTH
+    // 2-char XY field, and for a modified-not-staged file X is a literal space
+    // (" M path"). Trimming the blob eats the leading space of the FIRST line,
+    // shifting its path parse by one char (".forgeplan" -> "forgeplan") and
+    // mis-binning map.json as outside-map dirt. filter(Boolean) already drops
+    // the trailing empty line, so no blob-level trim is needed.
+    porcelain = execFileSync('git', ['status', '--porcelain', '--ignored', '.forgeplan/'], { cwd: repoRoot, encoding: 'utf8' });
   } catch (e) {
     fail(checks, 'GC-5', `git status --porcelain --ignored .forgeplan/ failed: ${e.message}`);
     return;
   }
-  const badIgnored = ignoredPorcelain
-    .split('\n')
-    .filter(Boolean)
-    .filter((line) => !line.slice(3).trim().startsWith('.forgeplan/map/'));
-  if (badIgnored.length > 0) {
-    fail(checks, 'GC-5', `ignored path(s) outside .forgeplan/map/ changed: ${badIgnored.slice(0, 5).join('; ')}`);
+  const strayInMap = [];
+  const otherDirt = [];
+  for (const line of porcelain.split('\n').filter(Boolean)) {
+    // porcelain line: "XY <path>" (rename: "XY <old> -> <new>" -- take the new
+    // path). The XY status is fixed-width 2 chars + 1 space, so the path starts
+    // at index 3; slice(3) preserves a leading "." (do NOT left-trim the line).
+    let p = line.slice(3).trim();
+    const arrow = p.indexOf(' -> ');
+    if (arrow !== -1) p = p.slice(arrow + 4).trim();
+    p = p.replace(/^"(.*)"$/, '$1'); // unquote paths git quotes for odd chars
+    if (gc5Sanctioned(p)) continue;
+    if (p.startsWith('.forgeplan/map/')) strayInMap.push(p);
+    else otherDirt.push(p);
+  }
+  if (strayInMap.length > 0) {
+    fail(checks, 'GC-5', `stray write inside .forgeplan/map/ (only map.json + .work/** are sanctioned): ${strayInMap.slice(0, 5).join('; ')}`);
     return;
   }
-  pass(checks, 'GC-5', 'single-write holds: no tracked change under .forgeplan/, no ignored change outside .forgeplan/map/');
+  if (otherDirt.length > 0) {
+    warn(checks, 'GC-5', `changes under .forgeplan/ outside map/ (likely pre-existing repo dirt, NOT a pipeline write -- the hook + denylist prevent pipeline writes here): ${otherDirt.slice(0, 5).join('; ')}`);
+    return;
+  }
+  pass(checks, 'GC-5', 'single-write holds: only .forgeplan/map/map.json (+ .work/**) changed');
 }
 
 // ---------------------------------------------------------------------------
@@ -387,12 +418,32 @@ function checkCrossSource(doc, scanFplPath, repoRoot, checks) {
       fail(checks, 'XC-1', `could not parse --scan-fpl ${scanFplPath}: ${e.message}`);
     }
     if (scanFpl) {
-      const scanEdgeKeys = new Set((isArray(scanFpl.edges) ? scanFpl.edges : []).map((e) => `${e.from}|${e.to}|${e.relation}`));
+      // The scan (.scan.fpl.json) is keyed by ARTIFACT id ("PRD-036" -> "RFC-030"),
+      // the raw forgeplan_graph form. The EMITTED map.json typed-link edges are keyed
+      // by CONTENT-HASH node id, because edge-verifier remaps endpoints to the node
+      // ids the extractor minted (required by GC-2b: every edge endpoint in nodes).
+      // Comparing the two id-spaces directly fails EVERY typed-link edge (the v0.2.0
+      // bug this fixes). So first re-derive each scan artifact's content-hash id --
+      // the SAME formula the extractor uses, sha1(kind + ":" + artifact_id)[:12] --
+      // and lift the scan edges into content-hash space before comparing. This keeps
+      // XC-1 a genuine independent cross-check: the guardian re-derives the id itself,
+      // it does not trust the emitter's mapping.
+      const artifacts = isArray(scanFpl.artifacts) ? scanFpl.artifacts : [];
+      const aid2hash = new Map();
+      for (const a of artifacts) {
+        if (isObject(a) && typeof a.artifact_id === 'string' && typeof a.kind === 'string') {
+          aid2hash.set(a.artifact_id, contentHashId(a.kind, a.artifact_id));
+        }
+      }
+      const lift = (endpoint) => aid2hash.get(endpoint) ?? endpoint;
+      const scanEdgeKeys = new Set(
+        (isArray(scanFpl.edges) ? scanFpl.edges : []).map((e) => `${lift(e.from)}|${lift(e.to)}|${e.relation}`),
+      );
       const before = checks.length;
       typedLinkEdges.forEach((e) => {
         const key = `${e.from}|${e.to}|${e.relation}`;
         if (!scanEdgeKeys.has(key)) {
-          fail(checks, 'XC-1', `typed-link edge ${e.from}->${e.to} (${e.relation}) not found in .scan.fpl.json / forgeplan_graph`);
+          fail(checks, 'XC-1', `typed-link edge ${e.from}->${e.to} (${e.relation}) not found in .scan.fpl.json / forgeplan_graph (compared in content-hash id space)`);
         }
       });
       if (checks.length === before) pass(checks, 'XC-1', `all ${typedLinkEdges.length} typed-link edge(s) independently confirmed in the scan`);

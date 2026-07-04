@@ -174,7 +174,7 @@ All three dispatched together. Each writes its **own** scratch file — this is 
 
 ### Stage 2 — TYPE (inline, no dispatch)
 
-Score the composition template from the three scan files' signals against each `compositions/<template>.yaml`'s `detection_signals` (read the 3 MVP composition files via `Read`/`Glob` under `compositions/`). Apply the pure formula (RFC-023 SS5, no LLM, no Task):
+Score the composition template from the three scan files' signals against each `compositions/<template>.yaml`'s `detection` block (`strong`/`weak`/`negative` lists — read the 3 MVP composition files via `Read`/`Glob` under `compositions/`). Apply the pure formula (RFC-023 SS5, no LLM, no Task):
 
 ```
 score = Σ strong·0.40 + Σ weak·0.15 − Σ negative·0.50     (clamp 0..1)
@@ -188,6 +188,8 @@ ALWAYS: .forgeplan/ present in the target repo → append a z.decisions zone to 
 ```
 
 `gap` is the margin between the top-scoring template and the runner-up. Record `(template, confidence, gap)` — this is not a Task dispatch, it is your own reasoning over the scan facts.
+
+**Evaluate each detection signal DEPTH-AGNOSTICALLY.** A signal typed `dir_exists_any_depth` (or a directory-name signal generally) counts as present when the directory appears **at the repo root OR at any nesting depth** — `entities/`, `src/entities/`, `template/src/entities/` (forgeplan-web's own nested app root), or `packages/web/src/entities/` all satisfy an `entities/` signal. code-scanner records FSD-layer markers by basename regardless of depth for exactly this reason, so match the composition signal against those dir-name markers, not against a root-anchored path. A signal that carries an `alt_path` is satisfied by EITHER path (e.g. web-fullstack's third strong signal accepts `pages/` OR `routes/` — SvelteKit-FSD repos route pages under `routes/`). Root-anchoring this check is the v0.2.0 bug that scored forgeplan-web at 0 on the very template written for it and dropped it to the `generic` floor.
 
 ### Stage 3 — SELECT (inline, no dispatch)
 
