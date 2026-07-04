@@ -85,6 +85,10 @@ When merging, attach `description_ru` to a node or zone **only if** `.scan.docs.
 
 `label`/`meta`/zone `sub` stay **English**, verbatim like the underlying code/source identifiers (crate names, file names, artifact titles) — do not translate those.
 
+## Algorithm 7 — `node.meta` is a SHORT card subline, never a sentence
+
+`node.meta` renders as the **subline on a ~190px card** (one line). It MUST be a short tag — a rule of thumb is **≤ ~30 characters**: a bare basename (`init.mjs`), a `kind · <count/tag>` summary (`surface · 76 commands`, `core · routing`, `store · lancedb`), or a one- or two-word role. It MUST NOT carry a full descriptive sentence. The first rendered real map put a 146-char sentence in `node.meta` (e.g. `"bin/commands/init.mjs — init subcommand: scaffolds .forgeplan-web/ from bundled dist image, ..."`) and **29 of 32 cards overflowed** their zone, up to 706px past the card (O-1). The full prose belongs in **`node.description_ru`** (Algorithm 6) — the renderer shows that in the detail panel, off the card. When you have a full sentence for an entity, split it: a terse EN tag → `meta`, the full RU narration (only if a real docs source exists) → `description_ru`. If no short tag is natural, prefer the path basename or `<kind> · <a one-word role>` over truncating a sentence.
+
 ## Output shape
 
 Write exactly one file, `.forgeplan/map/.work/.extract.json`:

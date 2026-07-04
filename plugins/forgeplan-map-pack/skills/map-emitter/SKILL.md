@@ -44,12 +44,22 @@ Build the full `forgeplan.map/v1` document:
   "composition": { /* pass through from the composition, unchanged */ },
   "zones": [ /* from extraction.zones, cols/accent/treatment/rule_edge/layout_rule pinned */ ],
   "nodes": [ /* from extraction.nodes, id/zone/provenance intact, mega-nodes included */ ],
-  "edges": [ /* typedLink + codeDep concatenated, in whatever order is stable */ ]
+  "edges": [ /* typedLink + codeDep concatenated, in whatever order is stable */ ],
+  "flows": [ /* derived from the composition's flow_hints — see below */ ]
   // "layers" and "increments" are Phase-2-only (SPEC-003 D6) — omit both in P1, do not populate
 }
 ```
 
-`flows[]` is optional and not this stage's concern unless the composition explicitly supplies flow data to pass through.
+## Algorithm 1b — derive `flows[]` from the composition's `flow_hints`
+
+Flow chips are the composed-map's **headline feature** (click a chip → dim everything, light the end-to-end path with animated edges + a numbered step caption). The first rendered real map emitted `flows: []`, so the view showed **no chips at all** — the whole flow-navigation experience was dark (O-2). When the selected composition supplies `flow_hints[]`, resolve EACH hint into one `flows[]` entry:
+
+- **`id`** ← the hint's `id`; **`name`** ← the hint's `name` **verbatim** — it is the chip label, kept short (2–3 words) by the composition author; never expand it into a sentence.
+- **`node_ids`** ← walk the hint's `path` (a list of zone ids, in order) and collect a handful of representative nodes whose `zone` is in the path, **in path order** (e.g. the entry/most-connected node per zone, a few per zone — not every node). Every id MUST be a real node in the assembled `nodes[]`.
+- **`edge_ids`** ← the ids of emitted `edges` that connect two consecutive `node_ids` in the flow, when such an edge exists (optional; omit if none).
+- **`steps`** ← the hint's `steps_ru` (RU narration, per SPEC-003 D5) — copy them; do not invent extra steps.
+
+**Skip a hint entirely if its `path` zones contain NO extracted nodes** — never emit an empty flow (a chip that lights nothing). If the composition has no `flow_hints` (e.g. `generic`), write `flows: []` — that is honest, not a defect. A flow whose `node_ids` don't all resolve to real nodes is a self-reject before write (same discipline as the assembly-guard trio).
 
 ## Algorithm 2 — schema validation (E5: one schema, three call sites)
 

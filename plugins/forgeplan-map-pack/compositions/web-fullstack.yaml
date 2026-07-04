@@ -85,7 +85,15 @@ detection:
 arrangement: "stack-ttb"
 
 canvas:
-  grid: { cols: 1, rows: 4 }   # 4 rows = the 4 zones below, 1 each
+  # 2x2 grid (v0.6.0 O-3 fix). A single-column stack-ttb (cols:1, rows:4) laid
+  # the 4 zones out as a tall, narrow ribbon you had to scroll -- the least
+  # comfortable part of the first rendered real map. A 2x2 grid puts the whole
+  # web-fullstack system on one comfortable wide canvas, like the reference
+  # spike's 2D layout. `arrangement` stays the schema-pinned "stack-ttb" label
+  # (the TS union has only that value in P1); the actual geometry is driven by
+  # `canvas.grid` + `placements[].cell` (row/col), which forgeplan-web's
+  # computeComposedLayout already reads for multi-column placement.
+  grid: { cols: 2, rows: 2 }   # 4 zones, one per cell in a 2x2 grid
   gap: { x: 88, y: 70 }        # same spike-tuned constants as
   margin: 40                   # rust-cli-mcp.yaml / SPEC-003 SS D1 / the
   cell:                        # vendored checkpoint fixture -- reused
@@ -100,15 +108,15 @@ composition:
   entry_zone: "z.surfaces"   # routes/API is the entry point -- same
                               # convention as rust-cli-mcp.yaml's CLI
                               # entry zone.
-  placements:
+  placements:                 # 2x2: surfaces|core on top, ui|decisions below
     - zone: "z.surfaces"
       cell: { row: 0, col: 0 }
     - zone: "z.core"
-      cell: { row: 1, col: 0 }
+      cell: { row: 0, col: 1 }
     - zone: "z.ui"
-      cell: { row: 2, col: 0 }
+      cell: { row: 1, col: 0 }
     - zone: "z.decisions"
-      cell: { row: 3, col: 0 }
+      cell: { row: 1, col: 1 }
   zone_connectors:
     - from: "z.surfaces"
       to: "z.core"
@@ -250,3 +258,33 @@ zone_hints:
       Every forgeplan-scanner artifact (PRD/RFC/ADR/EVID/EPIC) is a
       decision-trail node by definition -- no path filter needed, this
       entire source category routes here.
+
+# ----------------------------------------------------------------------------
+# flow_hints[] -- canonical end-to-end paths the emitter turns into `flows[]`
+# (v0.6.0 O-2 fix). The first rendered real map emitted `flows: []`, so the
+# composed-map view showed NO flow chips at all -- the flow-navigation
+# experience (click a chip -> dim everything, light the path with animated
+# clay edges + a numbered step caption) was dark on real data. Each hint is a
+# TEMPLATE: `map-emitter` resolves it against the actually-extracted graph --
+# it collects representative node ids whose `zone` is in `path` (in path
+# order, a few per zone), sets the flow's `node_ids`, derives `edge_ids` from
+# the emitted edges that connect consecutive members, and writes the RU
+# `steps` from `steps_ru`. A hint whose `path` zones contain NO extracted
+# nodes is skipped (never emit an empty flow). `name` is the CHIP LABEL and
+# MUST stay short (2-3 words) -- never a sentence (SPEC-003 D5: flow steps are
+# RU; the chip label is EN and terse, like the spike's "Shape"/"Prove").
+# ----------------------------------------------------------------------------
+flow_hints:
+  - id: "f.request"
+    name: "Request path"
+    path: ["z.surfaces", "z.core", "z.ui"]
+    steps_ru:
+      - "Запрос входит через routes/API — поверхностный слой."
+      - "Обрабатывается доменной логикой и сущностями (entities)."
+      - "Отрисовывается виджетами, компонентами и страницами."
+
+  - id: "f.decisions"
+    name: "Decision trail"
+    path: ["z.decisions"]
+    steps_ru:
+      - "След решений проекта: EPIC → PRD → RFC → ADR, со связями и доказательствами."

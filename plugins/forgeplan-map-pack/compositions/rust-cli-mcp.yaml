@@ -336,3 +336,25 @@ zone_hints:
       Every forgeplan-scanner artifact (PRD/RFC/ADR/EVID/EPIC) is a
       decision-trail node by definition -- no path filter needed, this
       entire source category routes here.
+
+# ----------------------------------------------------------------------------
+# flow_hints[] -- canonical end-to-end paths the emitter turns into `flows[]`
+# (v0.6.0 O-2 fix; see web-fullstack.yaml's flow_hints header for the full
+# resolution rule -- the emitter fills node_ids/edge_ids from the extracted
+# graph and skips any hint whose path zones have no nodes). `name` is the
+# short chip label, never a sentence.
+# ----------------------------------------------------------------------------
+flow_hints:
+  - id: "f.write"
+    name: "Write path"
+    path: ["z.surfaces", "z.write", "z.storage"]
+    steps_ru:
+      - "Команда приходит через CLI/MCP-поверхность."
+      - "Проходит через единственный путь записи (projection/mutation)."
+      - "Сохраняется в LanceDB-хранилище."
+
+  - id: "f.decisions"
+    name: "Decision trail"
+    path: ["z.decisions"]
+    steps_ru:
+      - "След решений проекта: EPIC → PRD → RFC → ADR, со связями и доказательствами."
