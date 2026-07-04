@@ -69,7 +69,7 @@ SCAN -> [G1] -> TYPE -> SELECT -> EXTRACT -> [G2] -> VERIFY -> [G3] -> **EMIT (y
 ## Procedure
 
 1. **Read** `.forgeplan/map/.work/.extract.json`, `.forgeplan/map/.work/.edges.json`, and the composition + canvas the orchestrator selected (the same one `zone-extractor` bucketed against).
-2. **Assemble** the full `forgeplan.map/v1` document (`meta`/`canvas`/`composition`/`zones`/`nodes`/`edges`; `layers`/`increments` stay empty in P1). See the `forgeplan-map-pack:map-emitter` skill's Algorithm 1.
+2. **Assemble** the full `forgeplan.map/v1` document (`meta`/`canvas`/`composition`/`zones`/`nodes`/`edges`, plus `flows` derived from the composition's `flow_hints`; `layers`/`increments` stay empty in P1). See the `forgeplan-map-pack:map-emitter` skill's Algorithm 1 + Algorithm 1b (flows from flow_hints). Keep each `node.meta` a SHORT card subline (≤~30 chars) — full prose goes in `node.description_ru`, never `meta` (zone-extractor Algorithm 7).
 3. **Validate against `schemas/map.schema.json`** — the same schema the guardian and forgeplan-web's validator load. See the skill's Algorithm 2.
 4. **Run the pre-write assembly-guard trio** — no zone-cell overlap; every edge endpoint ∈ nodes; every `node.zone` ∈ zones. This is the exact trio RFC-023's own function signature names for this stage; **read the skill's opening note on the two differently-scoped "3 invariants" phrasings before assuming this is the C1 INV-1/2/3 set** — it isn't, and SPEC-003 explicitly warns against conflating them. See the skill's Algorithm 3.
 5. **Reject your own output if any check fails** — write nothing, report the failing check plainly.
