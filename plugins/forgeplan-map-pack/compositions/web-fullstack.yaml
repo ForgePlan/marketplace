@@ -39,25 +39,41 @@ role: >-
   name), the same convention rust-cli-mcp.yaml follows.
 
 # ----------------------------------------------------------------------------
-# DETECTION -- Feature-Sliced-Design signal: entities/ + widgets/ + pages/
-# all present. 3 strong signals x 0.40 = 1.20, clamped to 1.00 -- the same
-# high-confidence shape as rust-cli-mcp.yaml's 3-strong-signal detection
-# (RFC-023 SS5's scoring formula is template-agnostic, not specific to
-# this file). No negative signals defined at MVP -- see rust-cli-mcp.yaml's
-# identical note; not repeated here as a fresh design decision, only
-# stated as a fact about this file.
+# DETECTION -- Feature-Sliced-Design signal: entities/ + widgets/ +
+# (pages/ OR routes/) all present. 3 strong signals x 0.40 = 1.20, clamped
+# to 1.00 -- the same high-confidence shape as rust-cli-mcp.yaml's
+# 3-strong-signal detection (RFC-023 SS5's scoring formula is
+# template-agnostic, not specific to this file). No negative signals
+# defined at MVP -- see rust-cli-mcp.yaml's identical note.
+#
+# DEPTH-AGNOSTIC (dogfood fix v0.4.0). `type: dir_exists_any_depth` means
+# the layer directory counts as present whether it sits at the repo root
+# (`entities/`), under a single src root (`src/entities/`), under a NESTED
+# app root (`template/src/entities/` -- forgeplan-web's own layout), or in a
+# monorepo package (`packages/web/src/entities/`). The v0.2.0 root-anchored
+# `dir_exists` scored 0 on forgeplan-web -- the very repo this template was
+# written for -- because its FSD layers live under `template/src/`, so the
+# template was never selected and the run fell to the `generic` floor. The
+# any-depth check is matched by the inline TYPE scorer against code-scanner's
+# depth-agnostic dir-name signals (agents/code-scanner.md records an FSD-layer
+# `signals` marker by BASENAME regardless of nesting depth), and the same
+# source-root prefix is what the zone_hints below strip via their `**/`
+# leading glob. `routes/` is accepted as the pages-layer alias for
+# SvelteKit-FSD repos (forgeplan-web is SvelteKit -- its page router is
+# `routes/`, not `pages/`); either satisfies the third strong signal.
 # ----------------------------------------------------------------------------
 detection:
   strong:
     - signal: "entities/"
-      type: "dir_exists"
+      type: "dir_exists_any_depth"
       path: "entities/"
     - signal: "widgets/"
-      type: "dir_exists"
+      type: "dir_exists_any_depth"
       path: "widgets/"
-    - signal: "pages/"
-      type: "dir_exists"
+    - signal: "pages/ or routes/"
+      type: "dir_exists_any_depth"
       path: "pages/"
+      alt_path: "routes/"    # SvelteKit-FSD page router (forgeplan-web)
   weak: []
   negative: []
 
@@ -209,16 +225,23 @@ zone_hints:
 
   - zone: "z.core"
     source: "code.modules"
-    pattern: "entities/**"
-    note: "The FSD entities/ layer -- domain models, use-cases, application services."
+    pattern: "**/entities/**"
+    note: >-
+      The FSD entities/ layer -- domain models, use-cases, application
+      services. The leading `**/` makes this DEPTH-AGNOSTIC (v0.4.0 dogfood
+      fix): it matches `entities/user` at the repo root AND
+      `template/src/entities/user` under a nested app root, so the same
+      composition works whether the FSD tree sits at root, under src/, or
+      under template/src/ (forgeplan-web). A bare `entities/**` was
+      start-anchored and matched only the root-level case.
 
   - zone: "z.ui"
     source: "code.modules"
-    pattern: "widgets/**"
+    pattern: "**/widgets/**"
 
   - zone: "z.ui"
     source: "code.modules"
-    pattern: "pages/**"
+    pattern: "**/pages/**"
 
   - zone: "z.decisions"
     source: "fpl.artifacts"

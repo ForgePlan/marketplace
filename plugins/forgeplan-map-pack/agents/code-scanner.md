@@ -82,9 +82,14 @@ nx.json, turbo.json, lerna.json, pnpm-workspace.yaml
 
 Read each manifest found. Record language(s), framework(s), runtime, and monorepo/workspace structure. This mirrors `forgeplan-brownfield-pack:discover`'s Phase-1 `detect` pattern (RFC-023 FR-1 / PRD-075 FR-1) but writes to this pipeline's own scratch contract, not to a forgeplan artifact.
 
-### Step 2 -- Module map
+### Step 2 -- Source root + module map
 
-Glob source directories to 3 levels deep, excluding `node_modules`, `.git`, `vendor`, `build`, `dist`, `target`. Identify top-level module/crate/package boundaries and record them as `signals` -- this is exactly what the inline `project-typer` (TYPE stage, downstream) scores against (RFC-023 SS5, e.g. `.forgeplan/` + `crates/` + `rmcp` -> `rust-cli-mcp`; `entities/` + `widgets/` + `pages/` -> `web-fullstack`).
+**First, discover the app `source_root`.** Many real repos do NOT put the app at the repo root -- forgeplan-web nests its whole SvelteKit-FSD app under `template/src/`; a monorepo puts it under `packages/web/src/`. Find the directory under which the framework/stack structure actually lives: check the manifest's declared source/entry field (`package.json` `"main"`/`"module"`, a `src`/`app` dir, Cargo `[[bin]]` path), else take the deepest single directory that contains the recognizable layer/module directories (`entities/`, `widgets/`, `routes/`, `pages/`, `lib/`, `components/`, `crates/`, `cmd/`, ...). Common roots to probe: repo root, `src/`, `app/`, `template/src/`, `packages/*/src/`. Record the winner as `source_root` (repo-root-relative, `""` when the app IS at the repo root).
+
+Then glob source directories deep enough to see the layer/module boundaries **beneath that source root** (typically 3-4 levels from the repo root once the nesting prefix is included), excluding `node_modules`, `.git`, `vendor`, `build`, `dist`, `target`. Identify module/crate/package boundaries and record two things per relevant directory:
+
+- **`modules[].path`** -- the **repo-root-relative** path (e.g. `template/src/entities/user`, NOT `entities/user`). Downstream `zone_hints` are depth-agnostic globs (`**/entities/**`) that match this repo-relative form at any nesting depth, so keep the real prefix -- do not strip it here.
+- **`modules[].signals`** -- stack/FSD markers recorded **by BASENAME, regardless of nesting depth**. A layer directory found at `template/src/entities/` still contributes the `entities/` signal, exactly as if it were at the repo root. This is what the inline `project-typer` (TYPE stage, downstream) scores against `detection` (RFC-023 SS5, e.g. `.forgeplan/` + `crates/` + `rmcp` -> `rust-cli-mcp`; `entities/` + `widgets/` + `pages/`-or-`routes/` -> `web-fullstack`). Recording signals by basename is what lets a nested app score the SAME as a root-level one; a root-anchored signal was the v0.2.0 miss that dropped forgeplan-web to the `generic` floor.
 
 ### Step 3 -- Entry points
 
@@ -96,11 +101,14 @@ Write `.forgeplan/map/.work/.scan.code.json`. Do not include an `id` field anywh
 
 ```json
 {
+  "source_root": "template/src",
   "modules":     [ { "path": "...", "kind": "...", "language": "...", "signals": ["..."] } ],
   "entrypoints": [ { "path": "...", "module": "...", "purpose": "..." } ],
   "manifests":   [ { "path": "...", "kind": "...", "declared_deps": ["..."] } ]
 }
 ```
+
+`source_root` is the discovered app root (Step 2), repo-root-relative (`""` when the app is at the repo root). `modules[].path` stays repo-root-relative (keep the `source_root` prefix — the depth-agnostic `**/`-globbed `zone_hints` match it as-is); `modules[].signals` are basename markers used by the TYPE-stage detection scorer.
 
 This matches RFC-023's function-signature contract: `code-scanner.scan(repoRoot) -> writes .work/.scan.code.json { modules[], entrypoints[], manifests[] }`. The exact field set is internal to this scratch file -- SPEC-003 governs only the FINAL `map.json` shape, not scanner-scratch shapes -- but keep it complete enough that `zone-extractor` can bin every module into a zone and mint one node per module/entry point without re-scanning the repo itself.
 

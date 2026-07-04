@@ -46,7 +46,7 @@ A denylist alone is not enough — it still permits `Write`, which could target 
 
 1. **EMITTER denylist** — every worker agent except `map-orchestrator` (writes nothing) and `map-guardian` (its own narrower read-only+Bash profile) is granted exactly `Read, Glob, Grep, Write` (+ read-only MCP where needed; + `Bash` only for `edge-verifier`'s grep pass) and denied `Edit`, `NotebookEdit`, `MultiEdit`, and every `forgeplan_*` mutator.
 2. **PreToolUse hook** (`hooks/scripts/map-emitter-gate.sh`, fail-closed) — denies any `Write`/`Edit`/`MultiEdit` under `.forgeplan/` except exactly `map/map.json` and `map/.work/**`, and denies a `map.json` write from any identity other than `map-emitter` when an identity signal is present.
-3. **Guardian single-write check** (`map-guardian.mjs` GC-5) — after a run, confirms nothing besides `map/map.json` and `map/.work/**` changed. Because `map/map.json` is itself gitignored, this is *not* a bare `git status --porcelain` check — it asserts tracked paths are untouched *and* no ignored path outside `map/` changed.
+3. **Guardian single-write check** (`map-guardian.mjs` GC-5) — after a run, confirms the pipeline wrote **only** `map/map.json` (+ `map/.work/**`). It's a write-**scope** check, not a gitignore-status one: a single `git status --porcelain --ignored .forgeplan/` surfaces tracked-modified, untracked, and ignored changes together, so GC-5 works whether the target **commits** `map.json` (forgeplan-web ships it tracked as the P0 render-proof) or **gitignores** it. A stray write elsewhere under `map/` is a BLOCKER; pre-existing dirt elsewhere under `.forgeplan/` (a modified `config.yaml`, an untracked journal) is a WARN, not a BLOCKER — the hook + denylist structurally prevent a pipeline agent from writing there, so such a change is repo dirt, not a pipeline escape. (v0.2.0 tied this to "map.json is gitignored" and wrongly BLOCKER-ed any repo that commits it.)
 
 The guardian's own `meta.status` flip on `exit 0` is a fourth, narrower, explicitly sanctioned write: it's a plain Node `fs` call from inside a `Bash`-invoked script, not a `Write`/`Edit`/`MultiEdit` tool call, so it is invisible to the hook by construction — bounded instead by GC-5 and a post-flip re-validate. This is documented behavior (ADR-017 Invariants), not a gap.
 
@@ -55,7 +55,7 @@ The guardian's own `meta.status` flip on `exit 0` is a fourth, narrower, explici
 A deterministic, dependency-free Node script — never an LLM call. Two layers:
 
 - **Layer A** (GC-1..GC-4) — structural + cross-reference checks over the document alone. Runs on any `map.json`, including the vendored smoke-test fixture.
-- **Layer B** (GC-5, GC-6, XC-1, XC-2) — pipeline-run-only checks needing real repo/git state (single-write audit, content-hash determinism, cross-source confirmation against the scan). Skipped under `--smoke`.
+- **Layer B** (GC-5, GC-6, XC-1, XC-2) — pipeline-run-only checks needing real repo/git state (single-write audit, content-hash determinism, cross-source confirmation against the scan). Skipped under `--smoke`. Because `--smoke` never exercises them, Layer B is covered by a dedicated non-smoke regression test, `test/guardian-layer-b.mjs` (4 scenarios in a real temp git repo: committed-map PASS+confirm, stray-write BLOCKER, outside-map dirt WARN, fabricated typed-link edge BLOCKER). Run it with `node test/guardian-layer-b.mjs`.
 
 `exit 0` — and only `exit 0` from this script — flips `status: "proposed"` to `"confirmed"`. An advisory LLM semantic pass runs on top (in the `map-guardian` agent, not the script) but never changes the verdict.
 
@@ -75,7 +75,7 @@ ALWAYS: .forgeplan/ present -> append a z.decisions zone, unscored
 
 Three MVP templates:
 - **`rust-cli-mcp`** — dogfood + CI target (`forgeplan` core repo). Detection: `crates/` + `rmcp` manifest dependency. (`.forgeplan/` was deliberately *removed* from this template's scoring signals during P3 review — the playbook's own precondition already requires it on every run, so scoring it too made every repo the pipeline can run on score >= 0.40, making the `generic` floor below unreachable. It still triggers the separate, unscored `z.decisions` append.)
-- **`web-fullstack`** — second dogfood target (`forgeplan-web`). Detection: `entities/` + `widgets/` + `pages/`.
+- **`web-fullstack`** — second dogfood target (`forgeplan-web`). Detection: `entities/` + `widgets/` + (`pages/` or `routes/`), matched **depth-agnostically** — the FSD layers count whether they sit at the repo root or under a nested app root like `template/src/` (forgeplan-web's layout) or `packages/*/src/`. `zone_hints` use `**/`-prefixed globs for the same reason. (v0.2.0 root-anchored this and scored forgeplan-web at 0; v0.4.0 fix.)
 - **`generic`** — the correctness floor. One zone per top-level directory (cap 8, ranked by file count, overflow collapses into `z.other`), plus the unconditional `z.decisions` zone in its own reserved row. Canvas grid is 4x3 (12 cells) specifically to hold up to 8 directory zones *and* `z.decisions` without a placement collision.
 
 ## Plugin layout
