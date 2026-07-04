@@ -19,7 +19,7 @@ A Claude Code marketplace pack that closes the gap between forgeplan-web's alrea
 Then, in any `forgeplan`-enabled repo:
 
 ```bash
-claude -p '/map-build' --add-dir <repo> --allowedTools Read Glob Grep Write
+claude -p '/map-build' --add-dir <repo> --allowedTools Read Glob Grep Write Task
 ```
 
 This scans the repo, classifies its project type, extracts a zone/node/edge graph, and writes `.forgeplan/map/map.json` as `status: "proposed"`. The deterministic guardian gate then either flips it to `"confirmed"` or reports exactly what's blocking that.

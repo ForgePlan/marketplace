@@ -1,7 +1,7 @@
 {
   "name": "forgeplan-map-pack",
-  "version": "0.2.0",
-  "description": "8-agent orchestrated pipeline that scans any forgeplan-enabled project and emits a validated .forgeplan/map/map.json (schema forgeplan.map/v1) for forgeplan-web's composed-map renderer. EMITTER profile throughout: a fail-closed PreToolUse hook + agent denylist + a deterministic map-guardian.mjs gate make it structurally impossible for the pipeline to write anywhere except the one derived, gitignored map file or to mutate any forgeplan artifact. v0.2.0: full P1 implementation shipped -- all 8 agents, 3 skills, 3 MVP composition templates, the map-build playbook, and the guardian/hook pair (unit-verified against a vendored forgeplan-web fixture + 8 synthetic mutations + 10 synthetic hook payloads). Pre-1.0: not yet dogfooded end-to-end against a real repo.",
+  "version": "0.3.0",
+  "description": "8-agent orchestrated pipeline that scans any forgeplan-enabled project and emits a validated .forgeplan/map/map.json (schema forgeplan.map/v1) for forgeplan-web's composed-map renderer. EMITTER profile throughout: a fail-closed PreToolUse hook + agent denylist + a deterministic map-guardian.mjs gate make it structurally impossible for the pipeline to write anywhere except the one derived, gitignored map file or to mutate any forgeplan artifact. v0.3.0: adds the /map-build slash command as the human-facing entry point (dispatches the map-orchestrator agent) -- closes the entry-point gap where the pipeline was previously reachable only via a natural-language trigger phrase. v0.2.0: full P1 implementation -- all 8 agents, 3 skills, 3 MVP composition templates, the map-build playbook, and the guardian/hook pair (unit-verified against a vendored forgeplan-web fixture + 8 synthetic mutations + 10 synthetic hook payloads). Pre-1.0: not yet dogfooded end-to-end against a real repo.",
   "author": {
     "name": "ForgePlan"
   },
@@ -35,7 +35,9 @@
   },
   "supersedes": {},
   "components": {
-    "commands": [],
+    "commands": [
+      "map-build"
+    ],
     "agents": [
       "map-orchestrator",
       "code-scanner",
