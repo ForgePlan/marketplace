@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.100.0"
+    "version": "1.101.0"
   },
   "plugins": [
     {
@@ -533,6 +533,57 @@
           "hooks/hooks.json"
         ]
       }
+    },
+    {
+      "name": "forgeplan-map-pack",
+      "source": "./plugins/forgeplan-map-pack",
+      "cost": "medium",
+      "stability": "beta",
+      "dependencies": [],
+      "targets": [
+        "claude-code"
+      ],
+      "description": "8-agent orchestrated pipeline that scans any forgeplan-enabled project and emits a validated .forgeplan/map/map.json (schema forgeplan.map/v1) for forgeplan-web's composed-map renderer. EMITTER profile throughout: a fail-closed PreToolUse hook + agent denylist + a deterministic map-guardian.mjs gate make it structurally impossible for the pipeline to write anywhere except the one derived, gitignored map file or to mutate any forgeplan artifact. v0.2.0: full P1 implementation -- all 8 agents, 3 skills, 3 MVP composition templates (rust-cli-mcp / web-fullstack / generic), the map-build playbook, and the guardian/hook pair, unit-verified against a vendored forgeplan-web fixture, 8 synthetic mutations, and 10 synthetic hook payloads (P3 adversarial review, 2026-07-04) -- pre-1.0, not yet dogfooded end-to-end against a real repo.",
+      "version": "0.2.0",
+      "author": {
+        "name": "ForgePlan"
+      },
+      "homepage": "https://github.com/ForgePlan/marketplace",
+      "license": "MIT",
+      "category": "workflow",
+      "keywords": [
+        "forgeplan",
+        "map",
+        "composed-map",
+        "onboarding",
+        "agents",
+        "emitter",
+        "guardian",
+        "hook-gate",
+        "determinism",
+        "smith"
+      ],
+      "components": {
+        "commands": [],
+        "agents": [
+          "map-orchestrator",
+          "code-scanner",
+          "forgeplan-scanner",
+          "docs-scanner",
+          "zone-extractor",
+          "edge-verifier",
+          "map-emitter",
+          "map-guardian"
+        ],
+        "skills": [
+          "skills/zone-extractor",
+          "skills/edge-verifier",
+          "skills/map-emitter"
+        ],
+        "hooks": [
+          "hooks/hooks.json"
+        ]
+      }
     }
   ],
   "profiles": {
@@ -587,7 +638,8 @@
       "agents-tdd",
       "agents-bmad",
       "agents-canvas",
-      "cc-best"
+      "cc-best",
+      "forgeplan-map-pack"
     ]
   }
 }

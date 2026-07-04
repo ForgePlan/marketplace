@@ -1,0 +1,229 @@
+# ============================================================================
+# compositions/web-fullstack.yaml -- MVP composition template #2 of 3
+# ============================================================================
+# Cites: RFC-023 SS5 (composition scoring function + 3 MVP templates
+# table, and RFC-023 SS4's own plugin-layout phrase "canvas + zones[] +
+# arrangement + zone_hints" -- 4 separate parts, this file's own
+# top-level shape below), SPEC-003 SS D1 (forgeplan.map/v1 annotated
+# shape), ADR-016 (build the full 8-agent pipeline from the start -- this
+# template feeds the same inline typer/selector + zone-extractor as
+# rust-cli-mcp.yaml), ADR-017 (map-guardian.mjs re-derives independently
+# -- nothing here is trusted uncritically; GC-1/GC-2 re-check whatever
+# zone-extractor produces from this data, regardless of what this file
+# says).
+#
+# ROLE (RFC-023 SS5 table): "Second dogfood -- run on forgeplan-web itself
+# -> a sane web-fullstack map." (SPEC-003 Acceptance pointers AC-2.)
+# Detection signals target Feature-Sliced-Design-shaped repos (entities/ +
+# widgets/ + pages/ directories) -- the shape forgeplan-web's own
+# template/src/ uses (see the vendored fixtures/checkpoint-map.json,
+# whose z.web zone cites exactly "template/src/ . views . widgets . api
+# proxy").
+#
+# THIS FILE IS DATA, NOT CODE -- see rust-cli-mcp.yaml's header for the
+# full explanation of how TYPE/SELECT/EXTRACT consume it, why it is NOT
+# itself validated against schemas/map.schema.json, and why `zones:`
+# (static shape) and `zone_hints:` (pattern-to-zone matchers) are TWO
+# separate lists below rather than one merged list -- cross-checked
+# against the already-shipped agents/zone-extractor.md +
+# skills/zone-extractor/SKILL.md, not just RFC-023/SPEC-003 prose.
+# ============================================================================
+
+template: "web-fullstack"
+role: >-
+  Second dogfood target -- running the pipeline on forgeplan-web itself
+  produces a sane web-fullstack map (RFC-023 SS5; SPEC-003 Acceptance
+  pointers AC-2). RFC-023's own table also names this template
+  "sveltekit-fsd" as a parenthetical alias -- this file uses the primary
+  name "web-fullstack" as its `template:` id (matching this file's own
+  name), the same convention rust-cli-mcp.yaml follows.
+
+# ----------------------------------------------------------------------------
+# DETECTION -- Feature-Sliced-Design signal: entities/ + widgets/ + pages/
+# all present. 3 strong signals x 0.40 = 1.20, clamped to 1.00 -- the same
+# high-confidence shape as rust-cli-mcp.yaml's 3-strong-signal detection
+# (RFC-023 SS5's scoring formula is template-agnostic, not specific to
+# this file). No negative signals defined at MVP -- see rust-cli-mcp.yaml's
+# identical note; not repeated here as a fresh design decision, only
+# stated as a fact about this file.
+# ----------------------------------------------------------------------------
+detection:
+  strong:
+    - signal: "entities/"
+      type: "dir_exists"
+      path: "entities/"
+    - signal: "widgets/"
+      type: "dir_exists"
+      path: "widgets/"
+    - signal: "pages/"
+      type: "dir_exists"
+      path: "pages/"
+  weak: []
+  negative: []
+
+# ----------------------------------------------------------------------------
+# Same pinning rationale as rust-cli-mcp.yaml: composition.arrangement is
+# schema-pinned to "stack-ttb" (single-value enum); canvas is
+# single-column stack-ttb per SPEC-003 SS D1's canvas comment.
+# ----------------------------------------------------------------------------
+arrangement: "stack-ttb"
+
+canvas:
+  grid: { cols: 1, rows: 4 }   # 4 rows = the 4 zones below, 1 each
+  gap: { x: 88, y: 70 }        # same spike-tuned constants as
+  margin: 40                   # rust-cli-mcp.yaml / SPEC-003 SS D1 / the
+  cell:                        # vendored checkpoint fixture -- reused
+    card_w: 190                # verbatim across all P1 templates so the
+    card_h: 60                 # 3 call sites (SPEC-003 "one schema ...
+    card_gap: 36                # no drift") do not also drift on canvas
+    zpad: { top: 50, side: 24, bottom: 24 }   # constants.
+
+composition:
+  template: "web-fullstack"
+  arrangement: "stack-ttb"
+  entry_zone: "z.surfaces"   # routes/API is the entry point -- same
+                              # convention as rust-cli-mcp.yaml's CLI
+                              # entry zone.
+  placements:
+    - zone: "z.surfaces"
+      cell: { row: 0, col: 0 }
+    - zone: "z.core"
+      cell: { row: 1, col: 0 }
+    - zone: "z.ui"
+      cell: { row: 2, col: 0 }
+    - zone: "z.decisions"
+      cell: { row: 3, col: 0 }
+  zone_connectors:
+    - from: "z.surfaces"
+      to: "z.core"
+      label: "queries"
+    - from: "z.core"
+      to: "z.ui"
+      label: "renders"
+
+# ----------------------------------------------------------------------------
+# default_node_home -- resolves zone-extractor's own "falls back to z.core"
+# language (skills/zone-extractor/SKILL.md Algorithm 3). Unlike
+# rust-cli-mcp.yaml, this composition's default/catch-all zone IS
+# literally id'd "z.core" (the business-logic zone below) -- both the
+# literal id and the semantic role line up here, so no aliasing is
+# needed; this field is still declared explicitly, for the same
+# machine-and-human-readable reason rust-cli-mcp.yaml declares its own
+# (see that file's header for the full rationale).
+# ----------------------------------------------------------------------------
+default_node_home:
+  zone: "z.core"
+  note: >-
+    This composition's fallback/catch-all destination for a node that
+    matches no zone_hint pattern below. Here it coincides with the
+    literal zone id "z.core" (business logic), so no id-aliasing is
+    required.
+
+# ----------------------------------------------------------------------------
+# zones[] -- see rust-cli-mcp.yaml's header for the full field-by-field
+# rationale (pinned literals, why description_ru is omitted, why layers
+# is omitted, why this is a SEPARATE list from zone_hints[] below). Not
+# repeated verbatim here to avoid a 2nd copy of that explanation drifting
+# from the first.
+# ----------------------------------------------------------------------------
+zones:
+  - id: "z.surfaces"
+    label: "Routes & API"
+    sub: "routes / API surface"
+    kind: "surface"
+    accent: "--map-accent-cyan"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+
+  - id: "z.core"
+    label: "Business Logic"
+    sub: "entities / domain logic"
+    kind: "core"
+    accent: "--map-accent-emerald"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+    # Same "core" kind and emerald accent convention as rust-cli-mcp.yaml's
+    # z.write, for the same reason: this is the template's single
+    # write/business-logic path.
+
+  - id: "z.ui"
+    label: "Widgets & UI"
+    sub: "widgets / components / pages"
+    kind: "component"
+    accent: "--map-accent-rose"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+
+  # z.decisions is UNCONDITIONAL, not scored -- see rust-cli-mcp.yaml's
+  # own z.decisions comment for the full rationale (RFC-023 SS5 / SPEC-003
+  # / PRD-075 FR-2) and for why this fact is recorded ONLY as a comment,
+  # never as a sibling data key on the zone map (EVID-205 P3 review).
+  # Identical in shape to rust-cli-mcp.yaml's own z.decisions entry by
+  # convention (same id/label/sub/kind/accent/cols); compositions/
+  # generic.yaml does not define a 3rd copy.
+  - id: "z.decisions"
+    label: "Decision Trail"
+    sub: "PRD · RFC · ADR · EVID · EPIC"
+    kind: "truth"
+    accent: "--map-accent-slate"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 4
+    capacity: null
+    overflow: "grow"
+
+# ----------------------------------------------------------------------------
+# zone_hints[] -- SEPARATE from zones[] above. Pattern-to-zone-id matcher
+# rules (skills/zone-extractor/SKILL.md Algorithm 3). See rust-cli-mcp.yaml's
+# header for the full rationale on `source`/`pattern` fields and why this
+# is an intentionally small, tunable P1 starting set, not a frozen
+# contract. A scanned entity matching no rule here falls back to
+# `default_node_home` above, never silently dropped.
+# ----------------------------------------------------------------------------
+zone_hints:
+  - zone: "z.surfaces"
+    source: "code.entrypoints"
+    pattern: "**"
+    note: "Every code-scanner entrypoint is a routes/API surface by definition."
+
+  - zone: "z.surfaces"
+    source: "code.modules"
+    pattern: "**/routes/**"
+
+  - zone: "z.surfaces"
+    source: "code.modules"
+    pattern: "**/api/**"
+
+  - zone: "z.core"
+    source: "code.modules"
+    pattern: "entities/**"
+    note: "The FSD entities/ layer -- domain models, use-cases, application services."
+
+  - zone: "z.ui"
+    source: "code.modules"
+    pattern: "widgets/**"
+
+  - zone: "z.ui"
+    source: "code.modules"
+    pattern: "pages/**"
+
+  - zone: "z.decisions"
+    source: "fpl.artifacts"
+    pattern: "**"
+    note: >-
+      Every forgeplan-scanner artifact (PRD/RFC/ADR/EVID/EPIC) is a
+      decision-trail node by definition -- no path filter needed, this
+      entire source category routes here.

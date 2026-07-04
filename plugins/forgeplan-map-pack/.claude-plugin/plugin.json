@@ -1,0 +1,58 @@
+{
+  "name": "forgeplan-map-pack",
+  "version": "0.2.0",
+  "description": "8-agent orchestrated pipeline that scans any forgeplan-enabled project and emits a validated .forgeplan/map/map.json (schema forgeplan.map/v1) for forgeplan-web's composed-map renderer. EMITTER profile throughout: a fail-closed PreToolUse hook + agent denylist + a deterministic map-guardian.mjs gate make it structurally impossible for the pipeline to write anywhere except the one derived, gitignored map file or to mutate any forgeplan artifact. v0.2.0: full P1 implementation shipped -- all 8 agents, 3 skills, 3 MVP composition templates, the map-build playbook, and the guardian/hook pair (unit-verified against a vendored forgeplan-web fixture + 8 synthetic mutations + 10 synthetic hook payloads). Pre-1.0: not yet dogfooded end-to-end against a real repo.",
+  "author": {
+    "name": "ForgePlan"
+  },
+  "homepage": "https://github.com/ForgePlan/marketplace",
+  "repository": "https://github.com/ForgePlan/marketplace",
+  "license": "MIT",
+  "keywords": [
+    "forgeplan",
+    "map",
+    "composed-map",
+    "onboarding",
+    "agents",
+    "emitter",
+    "guardian",
+    "hook-gate",
+    "determinism",
+    "smith"
+  ],
+  "category": "workflow",
+  "requires": {
+    "cli": [
+      {
+        "name": "forgeplan",
+        "version": ">=0.25.0",
+        "optional": false,
+        "reason": "Requires the playbook runtime for map-build.yaml and read-only forgeplan_graph/list/get MCP surfaces used by forgeplan-scanner (same precedent as forgeplan-brownfield-pack)."
+      }
+    ],
+    "mcp": [],
+    "plugins": []
+  },
+  "supersedes": {},
+  "components": {
+    "commands": [],
+    "agents": [
+      "map-orchestrator",
+      "code-scanner",
+      "forgeplan-scanner",
+      "docs-scanner",
+      "zone-extractor",
+      "edge-verifier",
+      "map-emitter",
+      "map-guardian"
+    ],
+    "skills": [
+      "skills/zone-extractor",
+      "skills/edge-verifier",
+      "skills/map-emitter"
+    ],
+    "hooks": [
+      "hooks/hooks.json"
+    ]
+  }
+}

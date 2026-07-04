@@ -1,0 +1,370 @@
+# ============================================================================
+# playbooks/map-build.yaml -- forgeplan-map-pack orchestrated build flow
+# ============================================================================
+# Cites: RFC-023 SS2 (dispatch order & gates G1-G4 -- this playbook's
+# `steps:` list is a direct transcription of that flow diagram), SS6
+# (headless invocation shape), SS5 (the TYPE-stage scoring formula and
+# SELECT-stage append rule, transcribed verbatim at the `type-stage` /
+# `select-stage` steps below); SPEC-003 SS C3 (gate pass/fail conditions,
+# transcribed verbatim into each `type: gate` step), SS C4 (map-guardian.mjs's
+# 6+2 checks, referenced at the `validate` step), SS D2 (the 11
+# VALID_RELATIONS, transcribed at gate-g3); ADR-016 (the full 8-agent
+# pipeline this playbook dispatches, built from the start, not a thin
+# MVP); ADR-017 (map-guardian.mjs exit 0 is the SOLE proposed->confirmed
+# authority -- referenced at the `validate` step).
+#
+# No forgeplan playbook YAML precedent exists elsewhere in this repo
+# (plugins/forgeplan-brownfield-pack/playbooks/ ships Markdown playbooks,
+# not YAML) -- this file uses a clear, minimal, self-explanatory shape:
+# name + description + requires + an ordered steps: list, where every step
+# is one of 4 kinds (precondition | dispatch | gate | inline), plus a
+# top-level error_handling: block for the shared loop-back / max-3-rounds /
+# <<NEED_USER_INPUT>> rule (SPEC-003 SS C3 / SS E1) that would otherwise
+# need repeating identically on every one of the 4 gates.
+# ============================================================================
+
+name: "map-build"
+description: >-
+  Scans a forgeplan-enabled repo and emits a validated
+  .forgeplan/map/map.json (schema forgeplan.map/v1) via the 8-agent
+  orchestrated pipeline (RFC-023: map-orchestrator, code-scanner,
+  forgeplan-scanner, docs-scanner, zone-extractor, edge-verifier,
+  map-emitter, map-guardian). ADR-016: the full pipeline runs every time,
+  not a thin MVP subset. ADR-017: only scripts/map-guardian.mjs exit 0
+  flips meta.status proposed -> confirmed.
+
+requires:
+  cli:
+    forgeplan: ">=0.25.0"   # matches .claude-plugin/plugin.json
+                            # requires.cli (SPEC-003 OQ-3, resolved)
+
+invocation: >-
+  claude -p '/map-build ...' --add-dir <repo> --allowedTools Read Glob Grep
+  Write   -- RFC-023 SS6: local headless invocation ONLY. forgeplan-web's
+  SvelteKit server structurally cannot spawn `claude` (it only shells the
+  `forgeplan` binary, and only for READ_ONLY_SUBCOMMANDS), so this
+  playbook's shape mirrors the spike's proven run.mjs invocation, just
+  targeting map.json instead of a throwaway HTML file. There is no
+  "run analysis" button inside forgeplan-web; the refresh model is
+  "the user re-runs /map-build, forgeplan-web's poller sees meta.version
+  bump and re-renders."
+
+# ----------------------------------------------------------------------------
+# Path-root convention used throughout `steps:` below -- stated once here
+# instead of re-explained per step, since 2 different roots are in play.
+# ----------------------------------------------------------------------------
+path_conventions:
+  plugin_relative: >-
+    ${CLAUDE_PLUGIN_ROOT}/... -- this plugin's OWN files, e.g.
+    ${CLAUDE_PLUGIN_ROOT}/compositions/*.yaml,
+    ${CLAUDE_PLUGIN_ROOT}/scripts/map-guardian.mjs. Mirrors the
+    ${CLAUDE_PLUGIN_ROOT} convention already used by hooks/hooks.json.
+  repo_relative: >-
+    .forgeplan/map/... -- the TARGET repo being scanned (the one passed
+    to --add-dir above), NOT this plugin. All scratch files
+    (.work/*.json) and the emitted map.json itself live here.
+
+# ----------------------------------------------------------------------------
+# Shared error-handling contract for every `type: gate` step below
+# (SPEC-003 SS C3 loop rule / SS E1). Declared once here instead of
+# repeated 4 times to avoid 4 copies drifting from each other. Each gate
+# step's own `max_rounds` is this gate's OWN independent retry budget
+# (SPEC-003's own worked example is gate-specific: "inject a duplicate id
+# -> G2 FAILs -> loops EXTRACT -> after 3 rounds -> <<NEED_USER_INPUT>>"),
+# not a single budget shared cumulatively across G1-G4.
+# ----------------------------------------------------------------------------
+error_handling:
+  on_gate_fail: "loop back to the gate step's own `on_fail_goto` target step id"
+  max_rounds_per_gate: 3   # independent budget PER gate, not shared across G1-G4
+  on_rounds_exhausted: "<<NEED_USER_INPUT>>"
+  on_rounds_exhausted_action: >-
+    stop -- MUST NOT spin silently (PROB-035/039 silent-failure class;
+    SPEC-003 SS C3 / SS E1). No map.json is confirmed when this fires.
+  gates_never_silently_pass: true
+  note: >-
+    The `validate` step at the end of this pipeline is NOT one of the
+    loop-back gates above -- map-guardian's own exit code IS its gate
+    (SPEC-003 SS E2: PASS / BLOCKER / CONCERNS), and a BLOCKER there does
+    NOT auto-loop the way G1-G4 do; see the `validate` step's own
+    `outcomes` block below.
+
+steps:
+  # --------------------------------------------------------------------
+  # precondition -- hard stop, not a gate loop. A repo with no
+  # .forgeplan/ is not a forgeplan-enabled project at all; there is no
+  # earlier stage to retry into (RFC-023 SS2 flow diagram's own first
+  # box).
+  # --------------------------------------------------------------------
+  - id: "precondition-forgeplan"
+    type: "precondition"
+    description: "Target repo must have a .forgeplan/ directory."
+    check: "dir_exists(.forgeplan/)"
+    on_fail: "abort"
+
+  # --------------------------------------------------------------------
+  # SCAN -- 3 isolated Task dispatches in parallel, each an EMITTER agent
+  # writing its OWN scratch file (RFC-023 SS1 roster / SS3 control #2 --
+  # the PROB-060 parallel-fan-out-race mitigation: never a shared write
+  # target).
+  # --------------------------------------------------------------------
+  - id: "scan"
+    type: "dispatch"
+    description: "SCAN -- 3 parallel, isolated scanners; each owns exactly one scratch file."
+    parallel:
+      - agent: "code-scanner"
+        writes: ".forgeplan/map/.work/.scan.code.json"
+        produces: "modules[], entrypoints[], manifests[]"
+      - agent: "forgeplan-scanner"
+        writes: ".forgeplan/map/.work/.scan.fpl.json"
+        produces: "artifacts[], edges[] (sourced from read-only forgeplan_graph)"
+      - agent: "docs-scanner"
+        writes: ".forgeplan/map/.work/.scan.docs.json"
+        produces: "narrations[] (RU prose from real docs only -- never invented)"
+
+  - id: "gate-g1"
+    type: "gate"
+    gate: "G1"
+    boundary: "scan -> extract"
+    description: >-
+      Facts were actually parsed AND (at least 1 real module found OR the
+      generic floor engaged).
+    on_fail_goto: "scan"
+    cites: "SPEC-003 SS C3 G1"
+
+  # --------------------------------------------------------------------
+  # TYPE -- pure scoring function, no LLM (RFC-023 SS5 / MASTER-SPEC SS6).
+  # --------------------------------------------------------------------
+  - id: "type-stage"
+    type: "inline"
+    description: "TYPE -- pure scoring function, no LLM."
+    logic:
+      formula: >-
+        score = sum(strong * 0.40) + sum(weak * 0.15) -
+        sum(negative * 0.50), clamped to [0, 1]
+      inputs: >-
+        the 3 scan scratch files from the `scan` step, evaluated against
+        each ${CLAUDE_PLUGIN_ROOT}/compositions/*.yaml file's own
+        `detection` block
+      gap_definition: "the score margin between the top-scoring template and the runner-up"
+      thresholds:
+        - band: "score >= 0.70 and gap >= 0.20"
+          result: "SINGLE high-confidence template"
+        - band: "score >= 0.70 and gap < 0.20"
+          result: >-
+            BLEND (host + grafted zones) -- PHASE 2, NOT built in P1. P1
+            treats this band the same as the low-confidence band below: a
+            single template is selected, status NEEDS_CONFIRM.
+        - band: "0.40 <= score < 0.70"
+          result: "SINGLE low-confidence template -- status NEEDS_CONFIRM"
+        - band: "score < 0.40"
+          result: >-
+            generic fallback (${CLAUDE_PLUGIN_ROOT}/compositions/generic.yaml)
+            -- the correctness floor; always renders something.
+    cites: "RFC-023 SS5"
+
+  # --------------------------------------------------------------------
+  # SELECT -- inline; loads the winning composition file.
+  # --------------------------------------------------------------------
+  - id: "select-stage"
+    type: "inline"
+    description: "SELECT -- loads the winning composition file chosen by type-stage."
+    logic:
+      - "load ${CLAUDE_PLUGIN_ROOT}/compositions/<template>.yaml for the template type-stage selected"
+      - >-
+        ALWAYS append a z.decisions zone when .forgeplan/ is present in
+        the target repo -- UNCONDITIONAL, not scored (RFC-023 SS5:
+        "ALWAYS: .forgeplan/ present -> append a z.decisions zone to
+        whatever template won"; SPEC-003 / PRD-075 FR-2). Applies
+        regardless of which template type-stage selected, including
+        ${CLAUDE_PLUGIN_ROOT}/compositions/generic.yaml.
+      - >-
+        compositions/rust-cli-mcp.yaml and compositions/web-fullstack.yaml
+        each define their own z.decisions entry in their zones[] shape
+        list (identical in shape by convention); compositions/generic.yaml
+        does not re-define it -- its own header explains why, and the
+        SELECT stage reuses the rust-cli-mcp.yaml / web-fullstack.yaml
+        definition even when generic wins.
+    cites: "RFC-023 SS5"
+
+  # --------------------------------------------------------------------
+  # EXTRACT -- THE HEART. Merges the 3 scan files against the selected
+  # composition's zones[] shape + zone_hints[] binning-pattern rules
+  # (two SEPARATE lists inside compositions/<template>.yaml -- see
+  # rust-cli-mcp.yaml's own header for why they are not one merged list).
+  # --------------------------------------------------------------------
+  - id: "extract"
+    type: "dispatch"
+    description: >-
+      EXTRACT -- merges the 3 scan files against the selected
+      composition's zones[] (static shape) + zone_hints[] (pattern-to-
+      zone-id matchers) into the emitted zones/layers/nodes/mega-nodes.
+    agent: "zone-extractor"
+    reads:
+      - ".forgeplan/map/.work/.scan.code.json"
+      - ".forgeplan/map/.work/.scan.fpl.json"
+      - ".forgeplan/map/.work/.scan.docs.json"
+      - "${CLAUDE_PLUGIN_ROOT}/compositions/<selected-template>.yaml"
+    writes: ".forgeplan/map/.work/.extract.json"
+    # ^ confirmed against agents/zone-extractor.md's own "Write target"
+    # section (and its skill's "Output shape" section) -- ground truth,
+    # not a guess. RFC-023 SS1 itself only says "its own extraction
+    # scratch under .work/"; the exact filename comes from the sibling
+    # agent deliverable.
+    rules:
+      - "node.id = sha1(kind + ':' + path_or_slug)[:12]  (INV-2)"
+      - >-
+        zone.cols is PINNED from the composition's zones[] shape list --
+        never derived from node count (append-stability)
+      - >-
+        a scanned entity matching no zone_hints[] pattern falls back to
+        the composition's default_node_home -- never silently dropped
+      - "a zone with more than 8 nodes collapses into a mega-node"
+
+  - id: "gate-g2"
+    type: "gate"
+    gate: "G2"
+    boundary: "extract -> verify"
+    description: >-
+      Every node has a valid 12-hex content-hash id + a zone + a
+      provenance; no duplicate ids; every zone's cols is present and
+      non-null (pinned).
+    on_fail_goto: "extract"
+    cites: "SPEC-003 SS C3 G2"
+
+  # --------------------------------------------------------------------
+  # VERIFY -- typed-link vs grep-verified code-dep.
+  # --------------------------------------------------------------------
+  - id: "verify"
+    type: "dispatch"
+    description: >-
+      VERIFY -- splits edges into typed-link (from forgeplan_graph, high
+      trust) vs grep-verified code-dep; an unverified code-dep is
+      DROPPED, never emitted as noise.
+    agent: "edge-verifier"
+    reads: ".forgeplan/map/.work/.extract.json"
+    writes: ".forgeplan/map/.work/.edges.json"
+    # ^ confirmed against agents/edge-verifier.md's own "Write target"
+    # section -- ground truth, not this playbook's guess (both this
+    # filename and `extract`'s ".extract.json" above are pinned exactly
+    # by their respective agents/*.md "Write target" sections).
+    rules:
+      - >-
+        every code-dep edge MUST carry a non-empty verified_by (grep
+        evidence) or it is dropped before this stage's output (SPEC-003
+        SS E3)
+      - "typed-link edges are cross-checked against .scan.fpl.json / forgeplan_graph (XC-1, at the guardian stage)"
+
+  - id: "gate-g3"
+    type: "gate"
+    gate: "G3"
+    boundary: "verify -> emit"
+    description: >-
+      Every code-dep edge carries a non-empty verified_by; every relation
+      is one of the 11 VALID_RELATIONS; every edge endpoint resolves to a
+      node.
+    valid_relations:
+      - "informs"
+      - "based_on"
+      - "supersedes"
+      - "contradicts"
+      - "refines"
+      - "supports"
+      - "demonstrates"
+      - "covers"
+      - "triangulates"
+      - "references"
+      - "belongs_to"
+    valid_relations_note: >-
+      applies to namespace=typed-link edges; namespace=code-dep relations
+      are free-form (e.g. "copies", "spawns" -- see the vendored
+      fixtures/checkpoint-map.json for real examples).
+    on_fail_goto: "verify"
+    cites: "SPEC-003 SS C3 G3 / SS D2"
+
+  # --------------------------------------------------------------------
+  # EMIT -- the SOLE writer of map.json's content.
+  # --------------------------------------------------------------------
+  - id: "emit"
+    type: "dispatch"
+    description: >-
+      EMIT -- the SOLE writer of map.json's content. Assembles the
+      document, runs the 3 invariant guards, atomic tmp-rename write.
+    agent: "map-emitter"
+    reads:
+      - ".forgeplan/map/.work/.extract.json"
+      - ".forgeplan/map/.work/.edges.json"
+      - "${CLAUDE_PLUGIN_ROOT}/compositions/<selected-template>.yaml"
+    writes: ".forgeplan/map/map.json"
+    # ^ the ONLY content-write path in the whole pipeline; gated by
+    # hooks/scripts/map-emitter-gate.sh (CTRL-2), which allows exactly
+    # this path and only from the map-emitter agent identity when that
+    # identity is determinable (SPEC-003 SS C2 CTRL-2).
+    rules:
+      - "assembles meta/canvas/composition/zones/nodes/edges; layers[] and increments[] stay empty/omitted in P1 (SPEC-003 SS D6)"
+      - "runs the 3 invariant guards: no zone-cell overlap; every edge endpoint in nodes; every node.zone in zones"
+      - "rejects its own output and writes NOTHING if any guard fails -- a missing map.json is the honest FAIL gate G4 loops on"
+      - 'writes meta.status: "proposed"'
+      - 'stdout carries <<NEEDS_CONFIRM: N zones, M nodes, K edges (J grep-verified)>>'
+
+  - id: "gate-g4"
+    type: "gate"
+    gate: "G4"
+    boundary: "emit -> validate"
+    description: >-
+      map.json exists, is schema-valid against schemas/map.schema.json,
+      is meta.status "proposed", and carries the <<NEEDS_CONFIRM...>>
+      sentinel.
+    on_fail_goto: "emit"
+    cites: "SPEC-003 SS C3 G4"
+
+  # --------------------------------------------------------------------
+  # VALIDATE -- the deterministic guardian gate (ADR-017). NOT itself a
+  # numbered loop-back gate like G1-G4 -- the script's own exit code IS
+  # the gate (SPEC-003 SS E2).
+  # --------------------------------------------------------------------
+  - id: "validate"
+    type: "dispatch"
+    description: >-
+      VALIDATE -- map-guardian runs the deterministic
+      scripts/map-guardian.mjs via Bash (not a Write/Edit tool call),
+      plus an advisory CONCERNS-only LLM review with no write path at
+      all (ADR-017).
+    agent: "map-guardian"
+    reads:
+      - ".forgeplan/map/map.json"
+      - ".forgeplan/map/.work/.scan.fpl.json"
+    runs: >-
+      node ${CLAUDE_PLUGIN_ROOT}/scripts/map-guardian.mjs
+      .forgeplan/map/map.json --repo-root <repo>
+      --scan-fpl .forgeplan/map/.work/.scan.fpl.json
+    # NOTE: real pipeline runs never pass --smoke -- that flag is
+    # reserved for the guardian's own pre-agent smoke-test against
+    # fixtures/checkpoint-map.json (RFC-023 "Test Strategy Hooks"), which
+    # skips GC-5/GC-6/XC-1/XC-2 (they need real repo/git state).
+    outcomes:
+      exit_0: >-
+        PASS -- the script's OWN fs write flips meta.status
+        proposed -> confirmed (NOT a Write/Edit/MultiEdit tool call, so
+        it is outside hooks/scripts/map-emitter-gate.sh's matcher by
+        construction -- bounded instead by check GC-5 + a post-flip
+        schema re-validate; ADR-017 Decision / SPEC-003 SS C4 "Gate
+        authority"). This is the pipeline's terminal success state.
+      exit_nonzero: >-
+        BLOCKER -- one or more of GC-1..GC-6 / XC-1..XC-2 failed.
+        map.json stays meta.status "proposed"; the failure is surfaced to
+        the human. This is NOT looped back automatically the way G1-G4
+        are (SPEC-003 SS E2) -- a human re-run or fix is expected.
+      llm_concerns: >-
+        Advisory only, non-gating (ADR-017). If the deterministic script
+        already passed, CONCERNS never block the proposed -> confirmed
+        flip -- they are commentary for the human confirm step only.
+    cites: "SPEC-003 SS C4 / SS E2, ADR-017"
+
+# ----------------------------------------------------------------------------
+# P1 scope boundary (RFC-023 Implementation Phases). Out of scope for this
+# playbook: P2 onboarding /onboard + tour, P3 map-chat, P5 refresh daemon
+# (forgeplan map serve) + map-differ append loop, template BLEND mode,
+# layers[] population, and any composition beyond the 3 MVP templates.
+# This playbook covers P1 only: precondition through VALIDATE, once, for
+# a single /map-build invocation.
+# ----------------------------------------------------------------------------

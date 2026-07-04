@@ -1,0 +1,338 @@
+# ============================================================================
+# compositions/rust-cli-mcp.yaml -- MVP composition template #1 of 3
+# ============================================================================
+# Cites: RFC-023 SS5 (composition scoring function + 3 MVP templates table,
+# SS2 dispatch order, and RFC-023 SS4's own plugin-layout phrase for what
+# a compositions/*.yaml file bundles: "canvas + zones[] + arrangement +
+# zone_hints" -- 4 SEPARATE parts, which is exactly this file's own
+# top-level shape below), SPEC-003 SS D1 (forgeplan.map/v1 annotated shape
+# -- this file's zones[] entries follow the SAME per-zone field pattern
+# verbatim), ADR-016 (build the full 8-agent pipeline from the start --
+# this template is consumed by the inline project-typer/composition-
+# selector and by zone-extractor, agents #4/#5 of that roster), ADR-017
+# (the guardian re-derives independently -- nothing in this file is
+# trusted uncritically; map-guardian.mjs GC-1/GC-2 re-check whatever
+# zone-extractor produces from this data, regardless of what this file
+# says).
+#
+# ROLE (RFC-023 SS5 table): "Dogfood + CI fixture -- running on the
+# `forgeplan` core repo reproduces the spike's hand-tuned grid." This is
+# the FIRST dogfood target (PRD-075 OQ-1, resolved) and SPEC-003's
+# Acceptance pointers AC-1 target.
+#
+# THIS FILE IS DATA, NOT CODE. It is read by the inline project-typer
+# (TYPE stage, playbooks/map-build.yaml) for detection scoring, and by
+# composition-selector (SELECT stage) + zone-extractor (EXTRACT stage,
+# see agents/zone-extractor.md + skills/zone-extractor/SKILL.md -- ALREADY
+# SHIPPED by a sibling dispatch; this file's shape was cross-checked
+# against that ground truth, not just against RFC-023/SPEC-003 prose) to
+# build the emitted zones[]/composition{} blocks of
+# .forgeplan/map/map.json. It is NOT itself validated against
+# schemas/map.schema.json -- that schema governs the EMITTED map.json
+# only. zone-extractor is what shapes this data (plus real scanned facts)
+# into schema-conformant zones[] entries; map-guardian.mjs then
+# re-derives/re-checks the result independently (ADR-017).
+#
+# TWO DISTINCT LISTS BELOW -- do not conflate them (a real mismatch this
+# file itself corrected during authoring, see zone-extractor's own SKILL.md
+# Inputs table which names them separately):
+#   `zones:`       -- the STATIC per-zone SHAPE (id/label/accent/cols/...),
+#                     written through into the emitted document mostly
+#                     unchanged.
+#   `zone_hints:`  -- SEPARATE pattern-to-zone-id MATCHER rules
+#                     ("binning patterns", zone-extractor Algorithm 3) that
+#                     tell zone-extractor which scanned facts route into
+#                     which zone id above. Consumed for JUDGMENT, never
+#                     copied into the emitted document.
+# ============================================================================
+
+template: "rust-cli-mcp"
+role: >-
+  Dogfood + CI fixture -- running the pipeline on the forgeplan core repo
+  reproduces the spike's hand-tuned grid (RFC-023 SS5; SPEC-003 Acceptance
+  pointers AC-1).
+
+# ----------------------------------------------------------------------------
+# DETECTION (TYPE stage, inline scorer -- see playbooks/map-build.yaml for
+# the shared formula: score = sum(strong*0.40) + sum(weak*0.15) -
+# sum(negative*0.50), clamp 0..1). RFC-023 SS5's own prose lists 3 signals
+# for this template ("`.forgeplan/` + `crates/` + `rmcp`"), but `.forgeplan/`
+# is DELIBERATELY EXCLUDED from the scored `strong` list below -- a P3
+# adversarial review (EVID-205, 2026-07-04) caught that the map-build
+# playbook's own precondition already REQUIRES .forgeplan/ to exist before
+# TYPE ever runs (playbooks/map-build.yaml precondition-forgeplan: abort
+# without it), so `.forgeplan/` is constant-true at scoring time -- it has
+# ZERO discriminating power, and additively scoring it (0.40, with no
+# offsetting negative) makes every repo the pipeline can ever run on score
+# >= 0.40, which makes the `generic` correctness floor (score < 0.40)
+# structurally UNREACHABLE, breaking SPEC-003 AC-3. `.forgeplan/` still
+# plays its correct, SEPARATE role in this template -- the unconditional
+# z.decisions append below (RFC-023 SS5: "ALWAYS: .forgeplan/ present ->
+# append a z.decisions zone", NOT scored) -- it is simply not also double-
+# counted as a scoring signal. The 2 remaining signals are genuinely
+# discriminating: 2 strong signals x 0.40 = 0.80 (>= 0.70 threshold,
+# comfortably clears a real Rust-CLI-MCP repo; a repo with neither crates/
+# nor an rmcp dependency scores 0.00 on this template and can fall through
+# to `generic` as designed).
+#
+# No negative signals are defined for MVP -- neither RFC-023 nor SPEC-003
+# specifies cross-template negative weighting for the 2 hand-tuned
+# templates; inventing one here would be scope creep beyond what either
+# artifact decided. Left as an explicit empty list, not silently omitted.
+#
+# `type`/`path`/`manifest`/`dependency` below are this file's own
+# reasonable signal-shape choice for the future TYPE-stage scorer
+# implementation to consume -- not a frozen contract pinned by RFC-023/
+# SPEC-003, which describe the signals in prose only.
+# ----------------------------------------------------------------------------
+detection:
+  strong:
+    - signal: "crates/"
+      type: "dir_exists"
+      path: "crates/"
+    - signal: "rmcp"
+      type: "manifest_dependency"
+      manifest: "Cargo.toml"
+      dependency: "rmcp"
+  weak: []
+  negative: []   # none defined at MVP -- see comment above
+
+# ----------------------------------------------------------------------------
+# composition.arrangement is PINNED to "stack-ttb" for P1 -- schemas/
+# map.schema.json's composition.arrangement is a single-value enum
+# (["stack-ttb"]); it is the only value forgeplan-web's current
+# MapComposition TS union accepts (SPEC-003 SS D1 comment, verbatim).
+# The canvas below is "single-column stack-ttb" per SPEC-003 SS D1's own
+# canvas comment ("L1 -- grid POLICY ... MVP: single-column stack-ttb"):
+# canvas.grid.cols = 1, one zone per row, zones stack top-to-bottom.
+# ----------------------------------------------------------------------------
+arrangement: "stack-ttb"
+
+canvas:
+  grid: { cols: 1, rows: 4 }   # 4 rows = the 4 zones below, 1 each
+  gap: { x: 88, y: 70 }        # spike-tuned constants (SPEC-003 SS D1's own
+  margin: 40                   # annotated example AND the vendored
+  cell:                        # fixtures/checkpoint-map.json use the SAME
+    card_w: 190                # numbers) -- reused verbatim, not
+    card_h: 60                 # re-derived, so this 3rd call site does not
+    card_gap: 36                # silently drift from the other two.
+    zpad: { top: 50, side: 24, bottom: 24 }
+
+# ----------------------------------------------------------------------------
+# composition{} -- the literal pre-image of the emitted map.json's
+# composition object (schema-required keys: template, arrangement,
+# entry_zone, placements, zone_connectors). composition.template below
+# MUST equal the top-level `template:` key above -- single source, kept in
+# sync by hand at MVP size (3 files); an automated drift-check is a P2
+# concern, not re-litigated here.
+# ----------------------------------------------------------------------------
+composition:
+  template: "rust-cli-mcp"
+  arrangement: "stack-ttb"
+  entry_zone: "z.surfaces"   # the CLI is the entry point -- matches
+                              # SPEC-003 SS D1's own annotated example
+                              # ("entry_zone": "z.surfaces") verbatim.
+  placements:
+    - zone: "z.surfaces"
+      cell: { row: 0, col: 0 }
+    - zone: "z.write"
+      cell: { row: 1, col: 0 }
+    - zone: "z.storage"
+      cell: { row: 2, col: 0 }
+    - zone: "z.decisions"
+      cell: { row: 3, col: 0 }
+  zone_connectors:
+    - from: "z.surfaces"
+      to: "z.write"
+      label: "commands"   # lifted verbatim from SPEC-003 SS D1's own
+                           # annotated composition.zone_connectors example
+    - from: "z.write"
+      to: "z.storage"
+      label: "persists"
+
+# ----------------------------------------------------------------------------
+# default_node_home -- resolves zone-extractor's own "falls back to z.core"
+# language (skills/zone-extractor/SKILL.md Algorithm 3: "when no zone_hint
+# matches, the node falls back to z.core (the composition's default
+# zone)") for THIS composition specifically. This composition does NOT
+# define a zone literally id'd "z.core" -- its designated default/
+# catch-all zone is "z.write" instead, because z.write already plays
+# exactly that role: it is this composition's "Core" zone, using
+# SPEC-003 SS D1's own verbatim id/label/accent for that exact semantic
+# ("z.write" / "Core" / "the single write path"). zone-extractor's own
+# skill commits it to never inventing a zone id absent from the
+# composition's zones[] ("Do not invent a zone id that isn't in the
+# composition") -- this field is the disambiguating signal that
+# satisfies that constraint: "z.core" in the pipeline's own vocabulary is
+# a ROLE ("the composition's default zone"), not a literal id every
+# composition must define, and this field names which real zone id fills
+# that role here.
+# ----------------------------------------------------------------------------
+default_node_home:
+  zone: "z.write"
+  note: >-
+    This composition's fallback/catch-all destination for a node that
+    matches no zone_hint pattern below. Aliases zone-extractor's generic
+    "z.core" fallback language onto this composition's real "core" zone
+    -- see the comment above.
+
+# ----------------------------------------------------------------------------
+# zones[] -- the STATIC per-zone shape. Each entry carries the SAME
+# pinned-literal fields the emitted zones[] entries require (SPEC-003 SS
+# D1/D6): id, label, kind, accent (FULL --map-accent-* token, never a
+# bare name), treatment ("neutral-dashed"), rule_edge ("off"),
+# layout_rule ("grid"), cols (PINNED integer, never derived from node
+# count -- append-stability). zone-extractor writes these through into
+# the emitted document mostly unchanged (RFC-023 Invariant re: pinned
+# cols; skills/zone-extractor/SKILL.md Algorithm 4).
+#
+# `description_ru` is deliberately OMITTED from every zone here.
+# SPEC-003 SS D5 is explicit: RU narration MUST come from docs-scanner's
+# real prose, NEVER auto-generated from a zone name or template -- "no
+# source => the field is omitted" (SPEC-003 SS E3). Pre-seeding a
+# fabricated RU description here would violate that rule the moment
+# zone-extractor copied it through unchanged.
+#
+# `layers` is omitted -- layers[] is an OPTIONAL Phase-2 drill-down band,
+# carried by the schema but NOT populated in P1 (SPEC-003 SS D6).
+# ----------------------------------------------------------------------------
+zones:
+  - id: "z.surfaces"
+    label: "CLI Surfaces"
+    sub: "commands / entry points"
+    kind: "surface"
+    accent: "--map-accent-cyan"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+
+  - id: "z.write"
+    label: "Core"
+    sub: "the single write path"
+    kind: "core"
+    accent: "--map-accent-emerald"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+    # label/sub/kind/accent reused VERBATIM from SPEC-003 SS D1's own
+    # annotated zone example for z.write -- that example is itself set
+    # in forgeplan core's own map (its node n_projection cites
+    # ".../projection/mod.rs"), i.e. this composition's real dogfood
+    # target. Reused, not re-derived, to avoid a 2nd copy drifting.
+
+  - id: "z.storage"
+    label: "Storage"
+    sub: "persistence layer"
+    kind: "store"
+    accent: "--map-accent-violet"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+
+  # z.decisions is UNCONDITIONAL, not scored -- RFC-023 SS5: "ALWAYS:
+  # .forgeplan/ present -> append a z.decisions zone to whatever template
+  # won" (SPEC-003 / PRD-075 FR-2). The SELECT stage (playbooks/
+  # map-build.yaml) appends this zone whenever the target repo has a
+  # .forgeplan/ directory, regardless of which template the TYPE-stage
+  # scorer picked -- not conditional on this template's own detection
+  # score above. This fact lives ONLY in this comment, never as a sibling
+  # data key on the zone map below (a P3 adversarial review, EVID-205,
+  # flagged that an earlier draft's `always_append`/`append_rule` data
+  # keys sat inside the same map zone-extractor "writes through mostly
+  # unchanged" -- since the schema permits additionalProperties and GC-1
+  # doesn't reject unknown zone fields, a verbatim write-through could
+  # have leaked these EXTRACTOR-INSTRUCTION keys into the emitted zone).
+  # Identical in shape to web-fullstack.yaml's own z.decisions entry by
+  # convention (same id/label/sub/kind/accent/cols) -- both are kept in
+  # sync by hand at MVP size. compositions/generic.yaml does NOT define a
+  # 3rd copy -- see that file's own header for why.
+  - id: "z.decisions"
+    label: "Decision Trail"
+    sub: "PRD · RFC · ADR · EVID · EPIC"
+    kind: "truth"
+    accent: "--map-accent-slate"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 4
+    capacity: null
+    overflow: "grow"
+
+# ----------------------------------------------------------------------------
+# zone_hints[] -- SEPARATE from zones[] above. Pattern-to-zone-id matcher
+# rules (skills/zone-extractor/SKILL.md Algorithm 3: "Each scanned entity
+# is bound to exactly one zone using the selected composition's
+# `zone_hints` (pattern -> zone-id matchers ... they live in
+# `compositions/<template>.yaml`)"). zone-extractor consumes these for
+# JUDGMENT when binning a scanned fact into a zone id from the `zones:`
+# list above -- these rules are NOT copied into the emitted document.
+#
+# `source` names which scan-stage output category a rule applies to
+# (this file's own reasonable vocabulary, matching the 3 scan scratch
+# files' own documented shapes in skills/zone-extractor/SKILL.md's Inputs
+# table: `code.entrypoints` / `code.modules` / `code.manifests` from
+# `.scan.code.json`; `fpl.artifacts` from `.scan.fpl.json`).
+# `pattern` is a glob matched against the entity's path/slug within that
+# source category. Neither RFC-023 nor SPEC-003 pins an exact pattern
+# syntax or rule count -- this is this file's own reasonable, intentionally
+# small P1 starting set; a real dogfood run against the forgeplan core
+# repo is expected to refine it (RFC-023 SS5: "each new [template] must be
+# pulled by a real repo, never pushed speculatively" -- the same spirit
+# applies to a template's own hint rules, not just to new templates).
+# Every rule that doesn't match anything is harmless; a scanned entity
+# that matches NO rule here falls back to `default_node_home` above, never
+# silently dropped (zone-extractor HARD RULE, skills/zone-extractor/
+# SKILL.md Common pitfalls table).
+# ----------------------------------------------------------------------------
+zone_hints:
+  - zone: "z.surfaces"
+    source: "code.entrypoints"
+    pattern: "**"
+    note: "Every code-scanner entrypoint is a CLI surface by definition -- no path filter needed."
+
+  - zone: "z.surfaces"
+    source: "code.modules"
+    pattern: "bin/**"
+
+  - zone: "z.surfaces"
+    source: "code.modules"
+    pattern: "src/bin/**"
+
+  - zone: "z.surfaces"
+    source: "code.modules"
+    pattern: "**/commands/**"
+
+  - zone: "z.write"
+    source: "code.modules"
+    pattern: "**/projection/**"
+    note: "SPEC-003 D1's own worked node example, n_projection, lives here."
+
+  - zone: "z.write"
+    source: "code.modules"
+    pattern: "**/mutation/**"
+
+  - zone: "z.storage"
+    source: "code.modules"
+    pattern: "**/storage/**"
+
+  - zone: "z.storage"
+    source: "code.modules"
+    pattern: "**/lance*/**"
+    note: "LanceDB-backed persistence, per RFC-023's own storage-layer description."
+
+  - zone: "z.decisions"
+    source: "fpl.artifacts"
+    pattern: "**"
+    note: >-
+      Every forgeplan-scanner artifact (PRD/RFC/ADR/EVID/EPIC) is a
+      decision-trail node by definition -- no path filter needed, this
+      entire source category routes here.

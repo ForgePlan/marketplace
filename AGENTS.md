@@ -8,7 +8,7 @@
 
 **Repo**: [ForgePlan/marketplace](https://github.com/ForgePlan/marketplace)
 **Catalog version**: see `.claude-plugin/marketplace.json`
-**Plugins**: 19 (workflow plugins + agent packs)
+**Plugins**: 20 (workflow plugins + agent packs)
 **Project board**: [orgs/ForgePlan/projects/5](https://github.com/orgs/ForgePlan/projects/5)
 
 ForgePlan marketplace is a catalog of plugins for AI coding agents with a central `forgeplan` MCP server that delivers an **artifact-driven SDLC pipeline**.

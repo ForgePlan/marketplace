@@ -1,0 +1,265 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://forgeplan.dev/schemas/forgeplan.map.v1.json",
+  "title": "forgeplan.map/v1",
+  "description": "Structural contract for .forgeplan/map/map.json. This schema covers ONLY what a single JSON document can express in isolation (required keys, types, pinned-literal enums, the no-x/y rule). Cross-reference checks that need to compare multiple parts of the document against each other (every edge endpoint resolves to a node, every node.zone resolves to a zone, zone-cell placement overlap, mega-node child/cycle integrity) are NOT expressible in JSON Schema and are deliberately NOT encoded here -- they live as hand-written checks in scripts/map-guardian.mjs (GC-2/GC-3), mirroring forgeplan-web's entities/map/lib/validate.ts. Content-hash id format (INV-2, 12-hex sha1) is also deliberately NOT enforced here: forgeplan-web's own checkpoint-map.json fixture uses human-readable dot-namespaced ids (e.g. n.init) and must still validate against this same schema for the guardian smoke-test to work (SPEC-003 SS C4 'Layer A' vs 'Layer B' split) -- id-format is a pipeline-run-only guardian check (GC-6/determinism), not a structural document constraint.",
+  "type": "object",
+  "required": ["schema", "meta", "canvas", "composition", "zones", "nodes", "edges"],
+  "additionalProperties": true,
+  "properties": {
+    "schema": {
+      "const": "forgeplan.map/v1"
+    },
+    "meta": {
+      "type": "object",
+      "required": ["map_id", "status", "project_type", "composition_id", "source_fingerprint", "version"],
+      "additionalProperties": true,
+      "properties": {
+        "map_id": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["proposed", "confirmed"] },
+        "project_type": { "type": "string", "minLength": 1 },
+        "composition_id": { "type": "string", "minLength": 1 },
+        "source_fingerprint": { "type": "string", "minLength": 1 },
+        "version": { "type": "integer", "minimum": 0 },
+        "agent_run": { "type": "string" }
+      }
+    },
+    "canvas": {
+      "type": "object",
+      "required": ["grid", "gap", "margin", "cell"],
+      "additionalProperties": true,
+      "properties": {
+        "grid": {
+          "type": "object",
+          "required": ["cols", "rows"],
+          "properties": {
+            "cols": { "type": "integer", "minimum": 1 },
+            "rows": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "col_weights": { "type": "array", "items": { "type": "number" } },
+        "row_weights": { "type": "array", "items": { "type": "number" } },
+        "gap": {
+          "type": "object",
+          "required": ["x", "y"],
+          "properties": {
+            "x": { "type": "number" },
+            "y": { "type": "number" }
+          }
+        },
+        "margin": { "type": "number" },
+        "cell": {
+          "type": "object",
+          "required": ["card_w", "card_h", "card_gap", "zpad"],
+          "properties": {
+            "card_w": { "type": "number" },
+            "card_h": { "type": "number" },
+            "card_gap": { "type": "number" },
+            "zpad": {
+              "type": "object",
+              "required": ["top", "side", "bottom"],
+              "properties": {
+                "top": { "type": "number" },
+                "side": { "type": "number" },
+                "bottom": { "type": "number" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "composition": {
+      "type": "object",
+      "required": ["template", "arrangement", "entry_zone", "placements", "zone_connectors"],
+      "additionalProperties": true,
+      "properties": {
+        "template": { "type": "string", "minLength": 1 },
+        "arrangement": {
+          "enum": ["stack-ttb"],
+          "description": "PINNED literal for P1 -- the only value forgeplan-web's current MapComposition TS union accepts. pipeline-lr/hub/lanes/z-reading are Phase 2."
+        },
+        "entry_zone": { "type": "string", "minLength": 1 },
+        "placements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["zone", "cell"],
+            "properties": {
+              "zone": { "type": "string", "minLength": 1 },
+              "cell": {
+                "type": "object",
+                "required": ["row", "col"],
+                "properties": {
+                  "row": { "type": "integer", "minimum": 0 },
+                  "col": { "type": "integer", "minimum": 0 },
+                  "col_span": { "type": "integer", "minimum": 1 },
+                  "row_span": { "type": "integer", "minimum": 1 }
+                }
+              }
+            }
+          }
+        },
+        "zone_connectors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["from", "to", "label"],
+            "properties": {
+              "from": { "type": "string", "minLength": 1 },
+              "to": { "type": "string", "minLength": 1 },
+              "label": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "zones": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "kind", "accent", "treatment", "rule_edge", "layout_rule", "cols"],
+        "additionalProperties": true,
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "label": { "type": "string", "minLength": 1 },
+          "sub": { "type": "string" },
+          "description_ru": {
+            "type": "string",
+            "description": "RU narration field. NOT 'description' -- verified against forgeplan-web's shipped entities/map/model/types.ts."
+          },
+          "kind": { "type": "string", "minLength": 1 },
+          "accent": {
+            "type": "string",
+            "pattern": "^--map-accent-(cyan|emerald|violet|amber|rose|orange|slate)$",
+            "description": "FULL token string, one of exactly 7. A bare color name (e.g. 'emerald') fails the shipped web validator's Rule 15 accent check."
+          },
+          "altitude": { "type": "string" },
+          "treatment": { "enum": ["neutral-dashed"], "description": "PINNED literal for P1 (SS16 restraint)." },
+          "rule_edge": { "enum": ["off"], "description": "PINNED literal for P1." },
+          "layout_rule": { "enum": ["grid"], "description": "PINNED literal for P1; lanes/radial/dag/force/graph are Phase 2." },
+          "cols": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "PINNED -- must be present and >=1. Never derived from node count (append-stability, SS10 H1)."
+          },
+          "layers": { "type": "array", "items": { "type": "string" } },
+          "capacity": { "type": ["integer", "null"], "minimum": 1 },
+          "overflow": { "enum": ["grow", "spill", "collapse"] }
+        }
+      }
+    },
+    "layers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "zone", "label", "order"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "zone": { "type": "string", "minLength": 1 },
+          "label": { "type": "string" },
+          "order": { "type": "integer" }
+        }
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "type": "object",
+            "required": ["id", "label", "kind", "zone", "found_at"],
+            "additionalProperties": true,
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Content-hash sha1(kind+':'+path_or_slug)[:12] on real pipeline output (INV-2). NOT enforced here as a hex pattern -- the checkpoint fixture uses human-readable ids and must still pass this schema. Format is checked separately, pipeline-run-only, by map-guardian.mjs."
+              },
+              "label": { "type": "string", "minLength": 1 },
+              "kind": { "type": "string", "minLength": 1 },
+              "zone": { "type": "string", "minLength": 1 },
+              "layer": { "type": "string" },
+              "meta": { "type": "string" },
+              "description_ru": {
+                "type": "string",
+                "description": "RU narration field. NOT 'description'."
+              },
+              "status": { "type": "string" },
+              "r_eff": { "type": "number", "minimum": 0, "maximum": 1 },
+              "artifact_id": { "type": "string" },
+              "provenance": {
+                "type": "object",
+                "required": ["source", "ref", "confidence"],
+                "properties": {
+                  "source": { "type": "string" },
+                  "ref": { "type": "string" },
+                  "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+                }
+              },
+              "found_at": { "type": "string", "minLength": 1 },
+              "is_new": { "type": "boolean" },
+              "is_mega": { "type": "boolean" },
+              "children": { "type": "array", "items": { "type": "string" } },
+              "collapsed": { "type": "boolean" }
+            }
+          },
+          {
+            "not": { "required": ["x"] },
+            "description": "INV-3 half 1: nodes carry NO x -- ever. Geometry is layout-owned."
+          },
+          {
+            "not": { "required": ["y"] },
+            "description": "INV-3 half 2: nodes carry NO y -- ever."
+          }
+        ]
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["from", "to", "relation"],
+        "additionalProperties": true,
+        "properties": {
+          "from": { "type": "string", "minLength": 1 },
+          "to": { "type": "string", "minLength": 1 },
+          "relation": {
+            "type": "string",
+            "minLength": 1,
+            "description": "For namespace=typed-link MUST be one of the 11 VALID_RELATIONS (checked by map-guardian.mjs GC-4, not here -- it depends on the sibling namespace field). code-dep relations are free-form."
+          },
+          "namespace": { "enum": ["typed-link", "code-dep"] },
+          "trust": { "enum": ["high", "medium", "low"] },
+          "verified_by": { "type": "string" },
+          "path": { "type": "string" }
+        }
+      }
+    },
+    "flows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "node_ids"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string" },
+          "node_ids": { "type": "array", "items": { "type": "string" } },
+          "edge_ids": { "type": "array", "items": { "type": "string" } },
+          "steps": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "increments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["version", "added_node_ids", "stale_node_ids"],
+        "properties": {
+          "version": { "type": "integer" },
+          "added_node_ids": { "type": "array", "items": { "type": "string" } },
+          "stale_node_ids": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

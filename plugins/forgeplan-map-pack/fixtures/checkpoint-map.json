@@ -1,0 +1,364 @@
+{
+  "schema": "forgeplan.map/v1",
+  "meta": {
+    "map_id": "forgeplan-web-phase1",
+    "status": "confirmed",
+    "project_type": "npm-cli-sveltekit",
+    "composition_id": "comp-forgeplan-web-2x4",
+    "source_fingerprint": "hand-authored-phase1",
+    "version": 1
+  },
+  "canvas": {
+    "grid": { "cols": 4, "rows": 2 },
+    "gap": { "x": 88, "y": 70 },
+    "margin": 40,
+    "cell": {
+      "card_w": 190,
+      "card_h": 60,
+      "card_gap": 36,
+      "zpad": { "top": 50, "side": 24, "bottom": 24 }
+    }
+  },
+  "composition": {
+    "template": "grid-2x4",
+    "arrangement": "stack-ttb",
+    "entry_zone": "z.surfaces",
+    "placements": [
+      { "zone": "z.surfaces", "cell": { "row": 0, "col": 0 } },
+      { "zone": "z.web", "cell": { "row": 0, "col": 1 } },
+      { "zone": "z.core", "cell": { "row": 0, "col": 2 } },
+      { "zone": "z.docs", "cell": { "row": 0, "col": 3 } },
+      { "zone": "z.decisions", "cell": { "row": 1, "col": 0, "col_span": 4 } }
+    ],
+    "zone_connectors": [
+      { "from": "z.surfaces", "to": "z.web", "label": "spawns" },
+      { "from": "z.surfaces", "to": "z.core", "label": "copies dist/" },
+      { "from": "z.core", "to": "z.web", "label": "bundled into" }
+    ]
+  },
+  "zones": [
+    {
+      "id": "z.surfaces",
+      "label": "CLI Surfaces",
+      "sub": "bin/ · npx @forgeplan/web",
+      "description_ru": "Публичные точки входа: CLI-команды init/start/update и npx-поверхность. Именно сюда приходит пользователь и именно здесь принимаются аргументы и опции.",
+      "kind": "surface",
+      "accent": "--map-accent-cyan",
+      "treatment": "neutral-dashed",
+      "rule_edge": "off",
+      "layout_rule": "grid",
+      "cols": 2
+    },
+    {
+      "id": "z.web",
+      "label": "SvelteKit App",
+      "sub": "template/src/ · views · widgets · api proxy",
+      "description_ru": "SvelteKit-приложение: маршруты /api/*, виджеты графа, страницы. Сервер проксирует только read-only forgeplan-команды (правило 22).",
+      "kind": "component",
+      "accent": "--map-accent-emerald",
+      "treatment": "neutral-dashed",
+      "rule_edge": "off",
+      "layout_rule": "grid",
+      "cols": 2
+    },
+    {
+      "id": "z.core",
+      "label": "Build Pipeline",
+      "sub": "scripts/build.mjs · dist/ · dist-nightly/",
+      "description_ru": "Pipeline сборки: esbuild бандлит SvelteKit-вывод в единый ESM-файл без node_modules. Каждый образ (stable / nightly) — изолированный артефакт в dist-*/.",
+      "kind": "store",
+      "accent": "--map-accent-violet",
+      "treatment": "neutral-dashed",
+      "rule_edge": "off",
+      "layout_rule": "grid",
+      "cols": 2
+    },
+    {
+      "id": "z.docs",
+      "label": "Docs & Governance",
+      "sub": "docs/ · .claude/rules/ · guides/",
+      "description_ru": "Документация и управление: PROJECT-MAP-SPEC, правила агентов (.claude/rules/), гиды по процессу. Источник правды для методологии разработки.",
+      "kind": "truth",
+      "accent": "--map-accent-amber",
+      "treatment": "neutral-dashed",
+      "rule_edge": "off",
+      "layout_rule": "grid",
+      "cols": 2
+    },
+    {
+      "id": "z.decisions",
+      "label": "Decision Trail",
+      "sub": "PRD · RFC · ADR · EVID · EPIC",
+      "description_ru": "Полный след решений в .forgeplan/: все PRD, RFC, ADR, EvidencePack-и и эпики. Источник правды для вопроса «почему так устроено».",
+      "kind": "truth",
+      "accent": "--map-accent-slate",
+      "treatment": "neutral-dashed",
+      "rule_edge": "off",
+      "layout_rule": "grid",
+      "cols": 5
+    }
+  ],
+  "nodes": [
+    {
+      "id": "n.init",
+      "label": "init",
+      "meta": "bin/commands/init.mjs",
+      "kind": "gate",
+      "zone": "z.surfaces",
+      "found_at": "2026-07-01T00:00:00Z",
+      "description_ru": "Копирует dist/-образ в .forgeplan-web/ пользователя. Единственная запись в хост-проект — append-only строка в .gitignore."
+    },
+    {
+      "id": "n.start",
+      "label": "start",
+      "meta": "bin/commands/start.mjs",
+      "kind": "gate",
+      "zone": "z.surfaces",
+      "found_at": "2026-07-01T00:00:01Z",
+      "description_ru": "Запускает node .forgeplan-web/index.js с нужными env-переменными. Не знает, какой образ скопирован."
+    },
+    {
+      "id": "n.update",
+      "label": "update",
+      "meta": "bin/commands/update.mjs",
+      "kind": "gate",
+      "zone": "z.surfaces",
+      "found_at": "2026-07-01T00:00:02Z",
+      "description_ru": "Обновляет .forgeplan-web/ до нового образа той же или другой image-метки."
+    },
+    {
+      "id": "n.api-proxy",
+      "label": "API proxy",
+      "meta": "routes/api/* GET-only",
+      "kind": "gate",
+      "zone": "z.web",
+      "found_at": "2026-07-01T00:01:00Z",
+      "artifact_id": "RFC-030",
+      "description_ru": "Thin-прокси: GET /api/* шеллит только read-only subcommands forgeplan (правило 22). Новый /api/map читает map.json без spawn."
+    },
+    {
+      "id": "n.graph-views",
+      "label": "Graph Views",
+      "meta": "9 views: force/tree/…/map",
+      "kind": "component",
+      "zone": "z.web",
+      "found_at": "2026-07-01T00:01:01Z",
+      "description_ru": "8 существующих видов + новый composed-map (9-й). Каждый вид изолирован; entities/map не пересекается с entities/graph."
+    },
+    {
+      "id": "n.pollers",
+      "label": "Pollers",
+      "meta": "createPoller<T> 10s default",
+      "kind": "store",
+      "zone": "z.web",
+      "found_at": "2026-07-01T00:01:02Z",
+      "description_ru": "Shared poller factory (shared/api/poller.svelte.ts). Каждый entity владеет своим экземпляром; mapPoller ref-counted для mosaic-хостинга."
+    },
+    {
+      "id": "n.dist-stable",
+      "label": "dist/ (stable)",
+      "meta": "esbuild single-file bundle",
+      "kind": "store",
+      "zone": "z.core",
+      "found_at": "2026-07-01T00:02:00Z",
+      "description_ru": "Образ stable: единый ESM bundle без node_modules. Копируется в .forgeplan-web/ по умолчанию."
+    },
+    {
+      "id": "n.dist-nightly",
+      "label": "dist-nightly/",
+      "meta": "nightly image",
+      "kind": "store",
+      "zone": "z.core",
+      "found_at": "2026-07-01T00:02:01Z",
+      "description_ru": "Образ nightly: та же форма bundle, другие флаги. Активируется через init --image nightly."
+    },
+    {
+      "id": "n.build-script",
+      "label": "build.mjs",
+      "meta": "scripts/build.mjs",
+      "kind": "component",
+      "zone": "z.core",
+      "found_at": "2026-07-01T00:02:02Z",
+      "description_ru": "Оркестрирует vite build + esbuild bundle + эмиссию forgeplan-web-build.json для каждого образа из config/images.json."
+    },
+    {
+      "id": "n.project-map-spec",
+      "label": "PROJECT-MAP-SPEC",
+      "meta": "docs/PROJECT-MAP-SPEC.md",
+      "kind": "truth",
+      "zone": "z.docs",
+      "found_at": "2026-07-01T00:03:00Z",
+      "description_ru": "Главный дизайн-документ T4-программы. Определяет схему forgeplan.map/v1, spike-константы, правила §15/§16/§19/§22."
+    },
+    {
+      "id": "n.agent-rules",
+      "label": "Agent Rules",
+      "meta": ".claude/rules/ (24 rules)",
+      "kind": "truth",
+      "zone": "z.docs",
+      "found_at": "2026-07-01T00:03:01Z",
+      "description_ru": "Применяемые правила для агентов: изоляция init, чистота template/, read-only proxy, zero-dep bin/, shared/ui ownership."
+    },
+    {
+      "id": "n.epic-001",
+      "label": "EPIC-001",
+      "meta": "T4 Composed Map program",
+      "kind": "epic",
+      "zone": "z.decisions",
+      "artifact_id": "EPIC-001",
+      "found_at": "2026-07-01T00:04:00Z",
+      "description_ru": "Родительский эпик T4-программы: composed-map как 9-й вид + onboarding + chat + append-loop. GATE-C переопределён: сначала render-proof."
+    },
+    {
+      "id": "n.prd-036",
+      "label": "PRD-036",
+      "meta": "Composed-map graft + onboarding",
+      "kind": "prd",
+      "zone": "z.decisions",
+      "artifact_id": "PRD-036",
+      "found_at": "2026-07-01T00:04:01Z",
+      "description_ru": "Phase-1 PRD: render-proof hand-written map.json против нового renderer. FR-001–009; честная деградация; 8 существующих видов нетронуты."
+    },
+    {
+      "id": "n.rfc-030",
+      "label": "RFC-030",
+      "meta": "Composed-map Phase-1 design",
+      "kind": "rfc",
+      "zone": "z.decisions",
+      "artifact_id": "RFC-030",
+      "found_at": "2026-07-01T00:04:02Z",
+      "description_ru": "Дизайн Phase-1: модули entities/map, widgets/composed-map, /api/map. SD-1 (widget-owned poller), SD-2 (layout в widget/lib), SD-3 (fixture в template)."
+    },
+    {
+      "id": "n.spec-006",
+      "label": "SPEC-006",
+      "meta": "Map render contract",
+      "kind": "spec",
+      "zone": "z.decisions",
+      "artifact_id": "SPEC-006",
+      "found_at": "2026-07-01T00:04:03Z",
+      "description_ru": "Замороженный контракт Phase-1: C1 схема, C2 edges-only, C3 pure layout, C4 validator, C5 GET endpoint, C6 view integration. 7 сценариев."
+    },
+    {
+      "id": "n.adr-003",
+      "label": "ADR-003",
+      "meta": "citty as sole bin/ dep",
+      "kind": "adr",
+      "zone": "z.decisions",
+      "artifact_id": "ADR-003",
+      "found_at": "2026-07-01T00:04:04Z",
+      "description_ru": "Решение: citty — единственная разрешённая runtime-зависимость в bin/. Все остальные — node:* built-ins или relative .mjs siblings."
+    }
+  ],
+  "edges": [
+    {
+      "from": "n.init",
+      "to": "n.dist-stable",
+      "relation": "copies",
+      "namespace": "code-dep"
+    },
+    {
+      "from": "n.init",
+      "to": "n.dist-nightly",
+      "relation": "copies",
+      "namespace": "code-dep"
+    },
+    {
+      "from": "n.start",
+      "to": "n.api-proxy",
+      "relation": "spawns",
+      "namespace": "code-dep"
+    },
+    {
+      "from": "n.start",
+      "to": "n.graph-views",
+      "relation": "spawns",
+      "namespace": "code-dep"
+    },
+    {
+      "from": "n.api-proxy",
+      "to": "n.pollers",
+      "relation": "informs",
+      "namespace": "typed-link"
+    },
+    {
+      "from": "n.pollers",
+      "to": "n.graph-views",
+      "relation": "informs",
+      "namespace": "typed-link"
+    },
+    {
+      "from": "n.build-script",
+      "to": "n.dist-stable",
+      "relation": "based_on",
+      "namespace": "typed-link"
+    },
+    {
+      "from": "n.build-script",
+      "to": "n.dist-nightly",
+      "relation": "based_on",
+      "namespace": "typed-link"
+    },
+    {
+      "from": "n.project-map-spec",
+      "to": "n.rfc-030",
+      "relation": "informs",
+      "namespace": "typed-link"
+    },
+    {
+      "from": "n.agent-rules",
+      "to": "n.api-proxy",
+      "relation": "informs",
+      "namespace": "typed-link"
+    },
+    {
+      "from": "n.epic-001",
+      "to": "n.prd-036",
+      "relation": "refines",
+      "namespace": "typed-link"
+    },
+    {
+      "from": "n.prd-036",
+      "to": "n.spec-006",
+      "relation": "based_on",
+      "namespace": "typed-link"
+    },
+    {
+      "from": "n.spec-006",
+      "to": "n.rfc-030",
+      "relation": "based_on",
+      "namespace": "typed-link"
+    },
+    {
+      "from": "n.adr-003",
+      "to": "n.init",
+      "relation": "informs",
+      "namespace": "typed-link",
+      "verified_by": "n.agent-rules"
+    }
+  ],
+  "flows": [
+    {
+      "id": "flow.init",
+      "name": "init scaffolds the web app",
+      "node_ids": ["n.init", "n.dist-stable", "n.api-proxy", "n.graph-views"],
+      "edge_ids": [],
+      "steps": [
+        "1. npx @forgeplan/web init копирует dist/ → .forgeplan-web/",
+        "2. SvelteKit-сервер стартует, /api/* прокси доступен",
+        "3. Браузер загружает граф-виды из workspace"
+      ]
+    },
+    {
+      "id": "flow.build",
+      "name": "build pipeline produces images",
+      "node_ids": ["n.build-script", "n.dist-stable", "n.dist-nightly"],
+      "edge_ids": [],
+      "steps": [
+        "1. vite build → template/build/",
+        "2. esbuild --bundle → dist/index.js (stable)",
+        "3. Тот же pipeline с nightly-флагами → dist-nightly/index.js"
+      ]
+    }
+  ]
+}
