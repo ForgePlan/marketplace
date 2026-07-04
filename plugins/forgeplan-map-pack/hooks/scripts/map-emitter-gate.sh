@@ -108,7 +108,16 @@ MAP_WORK_PREFIX=".forgeplan/map/.work"
 # 6. The one exact file: map.json content writes.
 if [ "$REL" = "$MAP_JSON_REL" ]; then
   # Best-effort identity gate (SHOULD, not MUST -- see header note).
-  if [ -n "$AGENT_IDENTITY" ] && [ "$AGENT_IDENTITY" != "map-emitter" ]; then
+  # A dispatched subagent's identity is PLUGIN-QUALIFIED
+  # ("forgeplan-map-pack:map-emitter"), so strip any leading "<plugin>:" prefix
+  # (${var##*:} keeps the text after the last colon; a bare name with no colon
+  # passes through unchanged) before comparing. An exact `!= "map-emitter"`
+  # test wrongly denied the emitter's OWN write, because its dispatch identity
+  # is never the bare string -- the first-dogfood F4 blocker. Accept the bare
+  # name, its "*:map-emitter" plugin-qualified form, and an undeterminable
+  # (empty) identity; deny any other clearly-non-emitter writer.
+  AGENT_BARE="${AGENT_IDENTITY##*:}"
+  if [ -n "$AGENT_IDENTITY" ] && [ "$AGENT_BARE" != "map-emitter" ]; then
     _deny "map-emitter-gate: map/map.json is single-writer -- only the map-emitter agent may write it (identity seen: ${AGENT_IDENTITY}). SPEC-003 SS C2 CTRL-2."
   fi
   exit 0   # allow (map-emitter, or identity undeterminable -- see triangulation note)
