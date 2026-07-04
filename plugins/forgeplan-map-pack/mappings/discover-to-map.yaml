@@ -1,0 +1,31 @@
+# ============================================================================
+# mappings/discover-to-map.yaml -- Phase-2 STUB ONLY
+# ============================================================================
+# Cites: RFC-023 Options Considered O3 (REJECTED for P1 -- folding into
+# forgeplan-brownfield-pack's `discover` agent would break discover's
+# writer-profile/EMITTER-profile inverse contract; the bridge between the
+# two is deferred to Phase 2 as a data mapping, not built here: "The
+# profiles are inverses; folding them would either weaken the EMITTER
+# guarantee or break discover's writer role."), RFC-023 SS4 plugin file
+# layout ("mappings/discover-to-map.yaml # Phase-2 bridge to
+# forgeplan-brownfield-pack's discover -- STUB ONLY"), PRD-075 non-goals
+# (P2 onboarding and this bridge are explicitly out of scope for P1),
+# SPEC-003 Overview/Scope "Out of scope" section (same deferral).
+#
+# WHAT THIS WILL EVENTUALLY BE (Phase 2, NOT designed here): a data
+# mapping from forgeplan-brownfield-pack's `discover` agent findings
+# (artifacts/mutations produced via its reader-profile forgeplan_new /
+# forgeplan_update / forgeplan_link calls) into forgeplan-map-pack's
+# read-only, EMITTER-profile map.json nodes/zones -- reconciling
+# discover's graph-mutating output contract against map-pack's
+# derived-read-only-view contract.
+#
+# THIS FILE INTENTIONALLY DOES NOT DESIGN THAT BRIDGE. It exists only so
+# the plugin file layout RFC-023 SS4 specifies is present on disk for P1.
+# Do not add real mapping rules here without a Phase-2 RFC/ADR
+# authorizing the bridge design.
+# ============================================================================
+
+phase: 2
+status: "stub"
+mappings: []

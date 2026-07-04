@@ -1,0 +1,235 @@
+# ============================================================================
+# compositions/generic.yaml -- MVP composition template #3 of 3 -- the
+# CORRECTNESS FLOOR (not a hand-tuned template like the other 2)
+# ============================================================================
+# Cites: RFC-023 SS5 (composition scoring function + 3 MVP templates
+# table: "generic (weighted-grid fallback) | score < 0.40 | The
+# correctness floor -- always renders something."), SPEC-003 SS E3
+# ("generic floor -- score < 0.40 => one zone per top-level dir (cap 8).
+# This is the correctness floor: it MUST always render something -- never
+# a crash, never an empty map."), MASTER-SPEC SS6 (source of the cap-8 +
+# default-z.core-home rules this file documents), ADR-016 (this floor is
+# what makes the full-pipeline decision safe to ship even before the
+# template library grows past 3 -- RFC-023's own words: "each new one
+# must be pulled by a real repo, never pushed speculatively"), ADR-017
+# (map-guardian.mjs re-derives independently regardless of which template
+# produced the zones -- generic zones are checked exactly as strictly as
+# hand-tuned ones).
+#
+# STRUCTURAL DIFFERENCE FROM THE OTHER 2 MVP FILES: rust-cli-mcp.yaml and
+# web-fullstack.yaml both declare a FIXED `zones:` shape list PLUS a
+# SEPARATE `zone_hints:` list of pattern-to-zone-id matcher rules
+# (skills/zone-extractor/SKILL.md Algorithm 3), because their detection
+# signals identify a known project shape a human can pre-bin content
+# patterns for. generic.yaml cannot do either -- its zone ids are
+# computed AT SCAN TIME, one per top-level directory of whatever repo
+# triggered the < 0.40 fallback, so there is no fixed `zones:` list to
+# declare and no content PATTERN to pre-write a `zone_hints:` matcher
+# for (the "pattern" IS just "which top-level directory", already fully
+# determined by the scan itself -- see `rules.id_pattern` below, a
+# structural naming rule, not a content-matching one). This file
+# therefore documents RULES (cap-8, default-home, id-naming, exclusions)
+# plus ONE illustrative `zone_shape_template`, instead of `zones:` +
+# `zone_hints:`.
+#
+# THIS FILE IS DATA, NOT CODE -- see rust-cli-mcp.yaml's header for how
+# TYPE/SELECT/EXTRACT consume composition data and why it is not itself
+# validated against schemas/map.schema.json.
+# ============================================================================
+
+template: "generic"
+role: >-
+  The correctness floor (RFC-023 SS5 table). Engages when the TYPE
+  stage's score is < 0.40 for every other template -- see
+  playbooks/map-build.yaml for the full threshold table. MUST always
+  render something: never a crash, never an empty map (SPEC-003 SS E3).
+  This is what SPEC-003 Acceptance pointers AC-3 exercises: "on a
+  no-manifest dir -> a non-empty generic map."
+
+# ----------------------------------------------------------------------------
+# generic has NO detection.strong/weak/negative signals of its own -- it
+# is not scored UP toward, it is fallen back INTO when every other
+# template's score is < 0.40 (RFC-023 SS5 threshold table). Documented
+# here as an explicit empty block, not omitted, so a reader does not
+# mistake the absence for an oversight.
+# ----------------------------------------------------------------------------
+detection:
+  strong: []
+  weak: []
+  negative: []
+  note: >-
+    generic is the ONLY one of the 3 MVP templates with no detection
+    block of its own -- it is the default when nothing else clears 0.40,
+    not a competitor in the scoring race (RFC-023 SS5).
+
+# ----------------------------------------------------------------------------
+# composition.arrangement is STILL "stack-ttb" -- schemas/map.schema.json
+# pins composition.arrangement to the single-value enum ["stack-ttb"];
+# that is the only legal value the emitted document may carry in P1,
+# regardless of which template produced it (map-guardian.mjs GC-1 fails
+# any other value outright). RFC-023 SS5's own table label for this
+# template, "weighted-grid fallback", describes how ZONES are SIZED/
+# PLACED within that pinned top-level arrangement (a small multi-column
+# grid of roughly-equal directory-tiles) -- it is NOT a different literal
+# value for the composition.arrangement field. There is exactly one legal
+# value for that field in P1 and this template carries it exactly like
+# the other two.
+# ----------------------------------------------------------------------------
+arrangement: "stack-ttb"   # schema-pinned; see note above for how this
+                            # reconciles with the table's "weighted-grid" label
+
+canvas:
+  # GRID CAPACITY FIX (EVID-205 Finding 2, P3 adversarial review,
+  # 2026-07-04): the cap-8 rule caps DIRECTORY/misc zones at 8 (`rules.
+  # cap_max_zones` below), but z.decisions is ALSO unconditionally
+  # appended whenever .forgeplan/ is present -- and per the playbook's own
+  # own precondition, .forgeplan/ is present on every run this pipeline
+  # can ever make. Worst case is therefore 8 directory zones + 1
+  # z.decisions = 9 zones, which will not fit an 8-cell (4x2) grid --
+  # map-guardian.mjs GC-2a would BLOCKER the 9th zone's placement (no
+  # available cell / an overlap), silently breaking the "generic floor
+  # always renders something" guarantee (SPEC-003 SS E3, AC-3) for any
+  # repo with >= 8 eligible top-level directories (a monorepo, precisely
+  # the case this floor most needs to cover). Fix: grow to 4 cols x 3
+  # rows (12 cells) -- rows 0-1 (8 cells) hold up to 8 directory/misc
+  # zones row-major; row 2 is reserved for z.decisions alone, using
+  # col_span:4 to span the full row (the SAME pattern the vendored
+  # fixtures/checkpoint-map.json itself uses for its own z.decisions
+  # zone: "cell": { "row": 1, "col": 0, "col_span": 4 } on a 4-col grid --
+  # reused precedent, not a new placement idiom). This preserves RFC-023
+  # SS5's literal "cap 8" wording for directory zones unchanged (the fix
+  # is grid capacity, not the cap number) and gives every generic-floor
+  # map comfortable headroom (9 of 12 cells used) rather than being
+  # exactly full.
+  grid: { cols: 4, rows: 3 }
+  gap: { x: 88, y: 70 }
+  margin: 40
+  cell:
+    card_w: 190
+    card_h: 60
+    card_gap: 36
+    zpad: { top: 50, side: 24, bottom: 24 }
+
+composition:
+  template: "generic"
+  arrangement: "stack-ttb"
+  entry_zone: null   # NOT statically knowable -- see placement_rule
+                      # below; zone-extractor resolves this at extraction
+                      # time from real scanned facts.
+  placement_rule: >-
+    Zones are NOT pre-placed here (unlike rust-cli-mcp.yaml /
+    web-fullstack.yaml) because their ids are computed at scan time, one
+    per top-level directory (see `rules` below). zone-extractor places up
+    to 8 resulting directory/misc zones into canvas.grid rows 0-1 (4 cols
+    x 2 rows = 8 cells) row-major (row 0 filled left-to-right first, then
+    row 1), ranked by descending file count, so the largest parts of the
+    repo are visually first without any directory name being hardcoded
+    here. z.decisions (always appended when .forgeplan/ is present -- see
+    the SELECT stage in playbooks/map-build.yaml) is placed separately at
+    row 2, col 0, col_span 4 -- its own full-width row, reserved
+    unconditionally, never competing with the directory tiles for one of
+    the 8 row-0/row-1 cells. entry_zone is set to whichever directory zone
+    contains a plausible entry-point file (a manifest / bin / main /
+    index candidate) once real facts exist; if none is identifiable,
+    entry_zone defaults to the first-ranked (largest) directory zone --
+    never z.decisions itself.
+  zone_connectors: []   # dynamic; not claimed statically by this
+                         # template. zone-extractor MAY infer connectors
+                         # later from real verified code-dep edges once
+                         # nodes exist, but this floor template makes no
+                         # static claim.
+
+# ----------------------------------------------------------------------------
+# rules -- the cap-8 rule and the default-z.core-home rule (RFC-023 SS5 /
+# SPEC-003 SS E3 / MASTER-SPEC SS6), spelled out precisely. Neither source
+# pins an exact tie-breaking algorithm for the >8-top-level-dirs case, nor
+# an exact exclude-list -- the ranking/collapse/exclusion mechanics below
+# are this file's own reasonable resolution of that gap, explicitly
+# flagged as such rather than presented as settled ground truth.
+# ----------------------------------------------------------------------------
+rules:
+  one_zone_per_top_level_dir: true
+  cap_max_zones: 8
+  id_pattern: "z.<top-level-dir-name>"   # e.g. a top-level docs/ -> "z.docs"
+
+  ranking_when_over_cap: >-
+    If a repo has more than 8 eligible top-level directories (RFC-023
+    SS5 / SPEC-003 SS E3 "cap 8" -- exact tie-break not pinned by either
+    source; this is this template's own reasonable resolution of that
+    gap): rank the eligible directories by descending file count, keep
+    the top 7, and collapse the remainder into one 8th catch-all zone
+    id "z.other" (kind "misc"). This keeps the "cap 8, never crash"
+    guarantee exact and total even on a repo with dozens of top-level
+    directories.
+
+  default_node_home:
+    zone: "z.core"
+    rule: >-
+      "Every node has a default: z.core home so nothing is unplaced"
+      (RFC-023 SS5, verbatim; MASTER-SPEC SS6). If zone-extractor cannot
+      confidently bin a node into one of the dynamically-named
+      per-directory zones, it defaults into a zone literally id'd
+      "z.core". In generic mode this means: the directory judged most
+      likely to hold primary source (src/, lib/, or -- absent either --
+      the largest non-doc, non-test top-level directory) is assigned the
+      id "z.core" instead of its literal directory name, so the
+      default-home guarantee always has a real, addressable target
+      inside the cap-8 budget rather than needing a silent 9th zone.
+
+  excluded_top_level_dirs_note: >-
+    Most entries below (".git", "node_modules", "dist", "build",
+    "target") are excluded for ordinary hygiene: standard build-artifact
+    / vendor / VCS directories are never their own zone (a P1 default
+    list, tunable later -- neither RFC-023 nor SPEC-003 enumerates an
+    exclude-list; this is this template's own minimal, defensible
+    default, not ground truth). ".forgeplan" is excluded for a DIFFERENT
+    reason: it is handled by the separate, pipeline-wide, unconditional
+    z.decisions append rule (RFC-023 SS5: "ALWAYS: .forgeplan/ present ->
+    append a z.decisions zone to whatever template won" -- applies even
+    when generic wins). That zone's shape is defined once, identically,
+    in rust-cli-mcp.yaml and web-fullstack.yaml (see their own headers),
+    and is reused by the SELECT stage (playbooks/map-build.yaml) when
+    generic is selected -- this file does not redefine it a 3rd time, to
+    avoid a 3rd drift-risk copy.
+  excluded_top_level_dirs:
+    - ".git"
+    - "node_modules"
+    - "dist"
+    - "build"
+    - "target"
+    - ".forgeplan"
+
+# ----------------------------------------------------------------------------
+# zone_shape_template -- ILLUSTRATIVE ONLY, not a real zone_hints[] entry
+# (generic has no fixed zone list to hint at -- see STRUCTURAL DIFFERENCE
+# note at the top of this file). Every zone this template generates
+# (whatever its actual id/label end up being) MUST still carry the same
+# pinned-literal fields every zone in the system carries (SPEC-003 SS D1/
+# D6): treatment "neutral-dashed", rule_edge "off", layout_rule "grid",
+# and a PINNED (non-null, never node-count-derived) cols. Documented here
+# so that shared contract is restated once more in this file's own
+# context rather than silently assumed.
+# ----------------------------------------------------------------------------
+zone_shape_template:
+  id: "z.<dirname-or-core-or-other>"
+  label: "<Title-cased directory name>"
+  kind: "component"
+  accent: "--map-accent-amber"   # a single flat default accent for ALL
+                                  # generic zones -- generic has no
+                                  # per-zone semantic to color-
+                                  # differentiate by (unlike the 2
+                                  # hand-tuned templates). Deliberately
+                                  # NOT slate, to stay visually distinct
+                                  # from the separately-appended
+                                  # z.decisions zone when both appear in
+                                  # the same generic-floor map. A human
+                                  # confirming a NEEDS_CONFIRM-status
+                                  # generic map may retint by hand if
+                                  # desired -- that is Phase 2, not P1.
+  treatment: "neutral-dashed"
+  rule_edge: "off"
+  layout_rule: "grid"
+  cols: 2   # a reasonable flat default for a small directory-tile zone;
+            # PINNED once assigned, never recomputed from node count.
+  capacity: null
+  overflow: "grow"
