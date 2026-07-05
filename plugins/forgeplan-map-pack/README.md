@@ -24,6 +24,10 @@ claude -p '/map-build' --add-dir <repo> --allowedTools Read Glob Grep Write Task
 
 This scans the repo, classifies its project type, extracts a zone/node/edge graph, and writes `.forgeplan/map/map.json` as `status: "proposed"`. The deterministic guardian gate then either flips it to `"confirmed"` or reports exactly what's blocking that.
 
+The result is an **architecture-onboarding "understanding map"** (v0.7.0): zones are architectural regions with RU descriptions, nodes are real modules with rich RU explanations grounded in the actual code, over-large zones collapse into legible per-kind groups (not one opaque card), and named flow chips light end-to-end paths.
+
+Drill deeper on demand with **`/map-build-layer "<zone>"`** — it generates one zone's own validated sub-map (`.forgeplan/map/layers/<zone>.json`), an architecture map of the inside of that zone.
+
 ## What's inside
 
 ### 8 agents (`agents/`)
