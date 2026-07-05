@@ -1,6 +1,6 @@
 ---
 name: zone-extractor
-description: "Zone/node/mega-node extraction algorithm for forgeplan-map-pack's EXTRACT stage (RFC-023 Proposed Direction SS1 roster row 5, \"THE HEART\"; PRD-075 FR-3; SPEC-003 SS C1 INV-2, SS D4). Covers: the merge-then-dedup rule across the 3 scan scratch files, the content-hash node-id formula (sha1(kind+\":\"+path_or_slug)[:12], INV-2 -- never a label or counter), zone_hints binning with the z.core default-home fallback, why zone.cols is pinned from the composition and never derived from node count (append-stability), the unconditional >8-node mega-node collapse rule, and RU narration attachment into description_ru from real docs only. Invoked by the zone-extractor agent only -- not a general-purpose codebase-summarization skill. Triggers: \"mint node id\", \"content-hash id formula\", \"zone binning\", \"mega-node collapse\", \"pin zone cols\", \"merge scan scratch files\", \"description_ru narration\"."
+description: "Zone/node/mega-node extraction algorithm for forgeplan-map-pack's EXTRACT stage (RFC-023 Proposed Direction SS1 roster row 5, \"THE HEART\"; PRD-075 FR-3; SPEC-003 SS C1 INV-2, SS D4). Covers: the merge-then-dedup rule across the 3 scan scratch files, the content-hash node-id formula (sha1(kind+\":\"+path_or_slug)[:12], INV-2 -- never a label or counter), zone_hints binning with the z.core default-home fallback, why zone.cols is pinned from the composition and never derived from node count (append-stability), the GROUPED (per-kind) mega-node collapse rule for over-capacity zones (never one opaque zone-wide dump), and RU narration attachment into description_ru from real docs only. Invoked by the zone-extractor agent only -- not a general-purpose codebase-summarization skill. Triggers: \"mint node id\", \"content-hash id formula\", \"zone binning\", \"mega-node collapse\", \"pin zone cols\", \"merge scan scratch files\", \"description_ru narration\"."
 disable-model-invocation: true
 ---
 
@@ -49,39 +49,106 @@ Each scanned entity is bound to exactly one zone using the selected composition'
 
 `zone.cols` is **read from the composition's static zone definition and written through unchanged** — it is never computed from `zone.nodes.length`, never `Math.ceil(n / 3)`, never anything derived from how many nodes actually landed in the zone this run. This is deliberate: a zone that goes from 3 nodes to 5 nodes on the next scan must not silently reflow its column count and shove every node to a new grid position — that would break append-stability (SPEC-003 D1 references this as "PINNED — MUST be present + non-null; NEVER `ceil(n/3)`. Append-stability by construction"). If the composition's zone definition for a given zone id is missing `cols`, that is an upstream compositions-authoring defect, not something this agent may paper over by computing a substitute value — surface it and let gate G2 fail cleanly (`zones[i].cols missing or < 1`) rather than silently inventing a number.
 
-## Algorithm 5 — the unconditional >8-node mega-node collapse
+## Algorithm 5 — GROUPED mega-collapse for over-capacity zones (E1a)
 
-If, after binning, a zone's real member-node count exceeds 8, **all** of that zone's member nodes collapse into exactly one synthetic mega-node in the same zone:
+When a zone has more members than fits comfortably, **do NOT collapse the whole
+zone into one opaque mega** — that is the "artifact dump" the understanding-map
+brief calls out (the decision-trail zone on ForgePlanWeb collapsed **170
+artifacts into a single unreadable card**). Instead, collapse by a **group key**
+so the zone shows a small handful of legible group cards.
+
+**Threshold.** Collapse a zone only when its member count exceeds the zone's own
+`capacity` (from the composition), or **8** when `capacity` is null. A zone at or
+under the threshold stays flat (real nodes, no mega).
+
+**Group key.** When over threshold, partition the zone's members and emit ONE
+mega per group with ≥2 members (a single-member group stays a flat node — never
+wrap one node in a mega):
+
+- **Primary key = `kind`.** The decision-trail zone → one mega per artifact kind:
+  `PRD (32)`, `RFC (18)`, `ADR (12)`, `EVID (95)`, `EPIC (4)`, `NOTE (9)` — a
+  readable ~6-card summary instead of one 170-node blob.
+- **Secondary split for uniform-kind zones.** If all members share one `kind` (a
+  code zone of `component`s) and the single kind-group still exceeds the
+  threshold, sub-split that group by the **top path segment** under the zone
+  (e.g. `entities/user`, `entities/map` → `user (…)`, `map (…)`). If even that
+  doesn't split it, leave the one large group mega — the raw members live one
+  level down once E3 (generated per-zone layers) ships.
+
+**Each group mega:**
 
 ```jsonc
 {
-  "id": "a1b2c3d4e5f6",            // sha1("mega:" + zone-id)[:12] -- a normal
-                                    // content-hash id, minted the SAME way as
-                                    // any other node (see note below). NOT a
-                                    // human-readable "mn_<slug>" placeholder --
-                                    // self-check item 1 requires every node's
-                                    // id to be well-formed 12-hex on a real run,
-                                    // and that applies to the mega-node too.
-  "label": "<zone label>",
+  "id": "a1b2c3d4e5f6",             // sha1("mega:" + zoneId + ":" + groupKey)[:12]
+                                     // -- a normal 12-hex content-hash id, UNIQUE
+                                     // per group (zoneId+groupKey), so multiple
+                                     // megas in one zone never collide (GC-2
+                                     // duplicate-id). NOT a "mn_<slug>" placeholder.
+  "label": "EVID (95)",             // "<Group label> (<N>)" -- legible, counted
   "kind": "mega",
   "zone": "<same zone id>",
   "found_at": "<extraction timestamp, ISO 8601>",
   "is_mega": true,
-  "children": ["<id 1>", "<id 2>", "..."],   // EVERY original member of the zone
+  "children": ["<id 1>", "<id 2>", "..."],   // the group's members only
   "collapsed": true
 }
 ```
 
 Rules:
 
-- This is **unconditional and fixed at 8** in P1 — it does not depend on the zone's own `capacity`/`overflow` fields (those govern a separate, more general per-composition spillover policy, largely a Phase-2 concern; the 8-node ceiling is RFC-023/ADR-016's own fixed threshold and always applies).
-- The original member nodes are **not removed** from `nodes[]` — they stay, each still carrying its own real `zone`, `id`, `provenance`, etc. The mega-node's `children` array is what references them; `map-guardian.mjs` GC-3 checks every `children` id resolves to a real node in `nodes[]` and that there is no nesting cycle. Emitting a mega-node whose children aren't independently present is a guaranteed GC-3 BLOCKER.
-- G2 requires **every** node — including the mega-node itself — to carry a valid id, a `zone`, and a `provenance`. Since a mega-node is synthetic (not directly scanned), give it a synthetic-but-honest provenance, e.g. `{ "source": "zone-extractor", "ref": "<zone-id> overflow collapse (N members)", "confidence": 1.0 }`, rather than omitting the field and hoping G2 doesn't notice.
-- Mint the mega-node's own `id` the same way as any node (`sha1("mega:" + zone-id)[:12]` is a reasonable, stable choice — `kind="mega"`, `path_or_slug=<zone-id>` — since a zone only ever produces at most one mega-node in P1, this is stable across runs as long as the zone id doesn't change).
+- **Group by kind first; one mega per multi-member group; singletons stay flat.**
+  The old "one mega for the whole zone past 8" rule is replaced by this.
+- The original member nodes are **not removed** from `nodes[]` — they stay, each
+  with its own real `zone`/`id`/`provenance`. Each group mega's `children`
+  reference only that group's members; `map-guardian.mjs` GC-3 checks every
+  `children` id resolves to a real node and that there is no nesting cycle
+  (multiple megas per zone is fine — GC-3 validates each independently).
+- G2 requires every node — including each group mega — to carry a valid id, a
+  `zone`, and a `provenance`. Give a group mega a synthetic-but-honest
+  provenance, e.g. `{ "source": "zone-extractor", "ref": "<zone-id> · <groupKey> group (N members)", "confidence": 1.0 }`.
+- Mint each group mega's `id` as `sha1("mega:" + zoneId + ":" + groupKey)[:12]`
+  (`kind="mega"`). Stable run-to-run as long as the zone id and group key don't
+  change (append-stability: adding an EVID grows the `EVID (N)` mega's child list
+  and its label count, but its id — keyed on zone+kind — stays byte-identical).
 
-## Algorithm 6 — RU narration attachment (`description_ru`)
+## Algorithm 6 — rich `description_ru` from grounded understanding (E1c)
 
-When merging, attach `description_ru` to a node or zone **only if** `.scan.docs.json`'s `narrations[]` has a real match for that entity (SPEC-003 D5: "Narration MUST come from real docs... never auto-generated from a zone name; no source ⇒ the field is omitted and the tour skips it — never faked"). If there is no matching narration, **omit the field entirely** — do not write an empty string, do not paraphrase the label into pseudo-Russian, do not invent a plausible-sounding sentence. A missing narration is an honest, renderable state (forgeplan-web's tour simply skips it); a fabricated one is a contract violation that happens to validate against the schema (the schema cannot catch a lie, only a missing field — so this rule is a discipline this skill enforces, not something GC-1 can check for you).
+This is the **understanding-map lever**. The reference bar (`DETAIL` in
+`understanding-map-ru.html`) gives every module a rich RU body like *"Единственный
+путь мутации графа… своей логики нет"* — a 1–3 sentence explanation of **what the
+module is, what's inside, and how it relates to its neighbours**. Bare paths
+binned into generic zones (the "artifact dump") fall far short. Attach
+`description_ru` from a GROUNDED source, in this priority:
+
+1. **Zone `description_ru`** — take it from the **composition** (E1b: the archetype
+   authors an abstract region description — "Входные двери приложения: маршруты,
+   API и UI-оболочка"). This describes the region TYPE, not this repo's specifics,
+   so it is authored, not scanned.
+2. **Node `description_ru`** — synthesize a grounded 1–3 sentence RU explanation
+   from REAL scanned material, in this order of preference:
+   a. `.scan.docs.json` `narrations[]` — a real docs match for this module (README
+      prose, a doc-comment paragraph). Prefer this; it's the author's own words.
+   b. Else, `.scan.code.json` `modules[].facts` — the grounded facts the
+      code-scanner recorded (top-comment, exported symbols, role). Turn them into a
+      neutral RU explanation: what the module does + what it exposes + its place in
+      the flow. Example facts `["role: entities/map FSD layer", "exports:
+      computeComposedLayout", "top-comment: pure layout, no side effects"]` →
+      *"Слой `entities/map`: чистая функция раскладки `computeComposedLayout` —
+      берёт зоны/узлы, возвращает координаты, без побочных эффектов."* Keep EN code
+      identifiers verbatim in `<code>`-style inline (§15).
+
+**The hard rule (§23 narration): grounded or absent — NEVER fabricated from the
+filename.** If a module has NO docs narration AND NO usable `facts` (no comment, no
+readable exports), **omit `description_ru` entirely** — do not paraphrase the path
+into pseudo-Russian, do not invent a plausible sentence. A missing description is
+an honest, renderable state (the tour skips it); a fabricated one validates against
+the schema but is a lie the schema can't catch — so this discipline lives here, not
+in GC-1. Group megas (`EVID (95)`) carry a short factual `description_ru` too:
+*"95 артефактов вида EVIDENCE — раскрой, чтобы увидеть по отдельности."*
+
+Also set a **short structural `node.meta`** from the same facts (Algorithm 7):
+`<zone-role> · <tech> · <count>` (e.g. `поверхность · clap · 76 команд`,
+`entities/map · SPEC-006`), never a sentence.
 
 `label`/`meta`/zone `sub` stay **English**, verbatim like the underlying code/source identifiers (crate names, file names, artifact titles) — do not translate those.
 
@@ -121,7 +188,8 @@ If any of these fail and you cannot resolve it (e.g. the composition itself is m
 |---|---|
 | Minting an id from `label` or an array index | Always `sha1(kind+":"+path_or_slug)[:12]` — label/index are display concerns, not identity |
 | Computing `cols` from the actual node count | `cols` is read from the composition, written through unchanged, always |
-| Leaving a >8-node zone flat (no mega-node) | Check every zone's final member count before finalizing; collapse unconditionally past 8 |
+| Leaving an over-capacity zone flat (no mega) | Check every zone's final member count; past the threshold (`capacity` or 8) collapse GROUPED — one mega per kind-group, singletons flat (Algorithm 5) |
+| Collapsing a whole 170-node zone into ONE mega | The E1a dump bug — group by kind (PRD/RFC/ADR/EVID/…) so the zone shows a legible ~6-card summary, never a single opaque blob |
 | Removing original nodes when creating a mega-node | Keep them in `nodes[]`; the mega-node's `children` references them, it doesn't replace them |
 | Inventing `description_ru` from a label | Omit the field when `.scan.docs.json` has no real match — never fabricate narration |
 | Writing extraction output to `map.json` | Extraction is scratch-only (`.work/.extract.json`); only `map-emitter` writes `map.json` content |

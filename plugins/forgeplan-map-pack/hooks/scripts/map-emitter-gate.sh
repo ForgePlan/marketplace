@@ -104,6 +104,7 @@ _deny() {
 
 MAP_JSON_REL=".forgeplan/map/map.json"
 MAP_WORK_PREFIX=".forgeplan/map/.work"
+MAP_LAYERS_PREFIX=".forgeplan/map/layers"   # E3/E4 per-zone generated layer files
 
 # 6. The one exact file: map.json content writes.
 if [ "$REL" = "$MAP_JSON_REL" ]; then
@@ -130,8 +131,17 @@ if path_is_under "$REL" "$MAP_WORK_PREFIX"; then
            # SS3 "Honest scope on scratch-file isolation")
 fi
 
+# 7b. Per-zone generated layer files (E3/E4): .forgeplan/map/layers/**. Same
+#     append-only, EMITTER-safe treatment as map.json -- a scoped /map-build-layer
+#     run writes one zone's sub-map here. The identity gate is not re-applied
+#     (layers are emitted by the same scoped map-emitter dispatch); the write-scope
+#     restriction (only under map/) is the guarantee, backed by guardian GC-5.
+if path_is_under "$REL" "$MAP_LAYERS_PREFIX"; then
+  exit 0
+fi
+
 # 8. Everything else under .forgeplan/ is DENIED -- this is the whole point
 #    of the hook: a stray Write to .forgeplan/prds/*.md or any other artifact
 #    directory must never reach disk, regardless of which pipeline agent
 #    attempted it (RED-LINE #11 -- LanceDB/markdown desync).
-_deny "map-emitter-gate: writes under .forgeplan/ are restricted to exactly map/map.json and map/.work/** while forgeplan-map-pack is active. Path '${REL}' is outside both. SPEC-003 SS C2 CTRL-2 / RFC-023 SS3."
+_deny "map-emitter-gate: writes under .forgeplan/ are restricted to exactly map/map.json, map/.work/**, and map/layers/** while forgeplan-map-pack is active. Path '${REL}' is outside all three. SPEC-003 SS C2 CTRL-2 / RFC-023 SS3."
