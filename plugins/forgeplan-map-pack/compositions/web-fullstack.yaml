@@ -144,16 +144,17 @@ default_node_home:
     required.
 
 # ----------------------------------------------------------------------------
-# zones[] -- see rust-cli-mcp.yaml's header for the full field-by-field
-# rationale (pinned literals, why description_ru is omitted, why layers
-# is omitted, why this is a SEPARATE list from zone_hints[] below). Not
-# repeated verbatim here to avoid a 2nd copy of that explanation drifting
-# from the first.
+# zones[] -- architectural REGIONS (E1b). Unlike node `description_ru` (which
+# MUST come from real code/docs, never authored), a zone's `description_ru`
+# describes the ARCHETYPE's region ABSTRACTLY -- what kind of thing lives in
+# "Surfaces" for any web-fullstack app -- so it is composition-authored and
+# stable across projects (it says nothing about THIS repo's specific modules).
+# `sub` is a short EN meaning-subtitle; `description_ru` is 1-2 RU sentences.
 # ----------------------------------------------------------------------------
 zones:
   - id: "z.surfaces"
     label: "Routes & API"
-    sub: "routes / API surface"
+    sub: "the app's entry doors"
     kind: "surface"
     accent: "--map-accent-cyan"
     treatment: "neutral-dashed"
@@ -162,10 +163,14 @@ zones:
     cols: 2
     capacity: null
     overflow: "grow"
+    description_ru: >-
+      Входные двери приложения: HTTP-маршруты, API-эндпоинты и оболочка UI —
+      всё, через что запрос или пользователь попадает внутрь. Отсюда вызовы
+      уходят в ядро.
 
   - id: "z.core"
     label: "Business Logic"
-    sub: "entities / domain logic"
+    sub: "the domain core"
     kind: "core"
     accent: "--map-accent-emerald"
     treatment: "neutral-dashed"
@@ -174,13 +179,14 @@ zones:
     cols: 2
     capacity: null
     overflow: "grow"
-    # Same "core" kind and emerald accent convention as rust-cli-mcp.yaml's
-    # z.write, for the same reason: this is the template's single
-    # write/business-logic path.
+    description_ru: >-
+      Ядро приложения: доменные сущности, use-case'ы и бизнес-логика. Сюда
+      сходятся запросы с поверхностей, здесь принимаются решения и готовятся
+      данные для отрисовки.
 
   - id: "z.ui"
     label: "Widgets & UI"
-    sub: "widgets / components / pages"
+    sub: "presentation layer"
     kind: "component"
     accent: "--map-accent-rose"
     treatment: "neutral-dashed"
@@ -189,6 +195,9 @@ zones:
     cols: 2
     capacity: null
     overflow: "grow"
+    description_ru: >-
+      Слой представления: виджеты, компоненты и страницы, из которых собирается
+      интерфейс. Потребляет данные из ядра и отрисовывает их пользователю.
 
   # z.decisions is UNCONDITIONAL, not scored -- see rust-cli-mcp.yaml's
   # own z.decisions comment for the full rationale (RFC-023 SS5 / SPEC-003
@@ -199,15 +208,20 @@ zones:
   # generic.yaml does not define a 3rd copy.
   - id: "z.decisions"
     label: "Decision Trail"
-    sub: "PRD · RFC · ADR · EVID · EPIC"
+    sub: "why the code looks like this"
     kind: "truth"
     accent: "--map-accent-slate"
     treatment: "neutral-dashed"
     rule_edge: "off"
     layout_rule: "grid"
     cols: 4
-    capacity: null
-    overflow: "grow"
+    capacity: 8      # E1a: collapse GROUPED by kind past 8 (PRD/RFC/ADR/EVID/…),
+    overflow: "grow" # never one opaque 170-artifact card
+    description_ru: >-
+      След решений проекта: EPIC → PRD → RFC → ADR → EVID со связями и
+      доказательствами. Отвечает на вопрос «почему код устроен так». При
+      большом числе артефактов схлопывается в группы по типу (PRD, RFC, ADR,
+      EVID…), а не в одну карточку.
 
 # ----------------------------------------------------------------------------
 # zone_hints[] -- SEPARATE from zones[] above. Pattern-to-zone-id matcher
@@ -283,8 +297,29 @@ flow_hints:
       - "Обрабатывается доменной логикой и сущностями (entities)."
       - "Отрисовывается виджетами, компонентами и страницами."
 
+  - id: "f.render"
+    name: "Render"
+    path: ["z.core", "z.ui"]
+    steps_ru:
+      - "Ядро готовит данные и модель представления."
+      - "Виджеты и страницы отрисовывают их в интерфейс."
+
+  - id: "f.entry"
+    name: "Entry points"
+    path: ["z.surfaces"]
+    steps_ru:
+      - "Точки входа приложения: CLI/бинарь, HTTP-маршруты, API-эндпоинты — то, с чего начинается любой сценарий."
+
   - id: "f.decisions"
     name: "Decision trail"
     path: ["z.decisions"]
     steps_ru:
       - "След решений проекта: EPIC → PRD → RFC → ADR, со связями и доказательствами."
+
+# The emitter (map-emitter Algorithm 1b) SHOULD additionally derive up to ~3
+# more flows from the code-scanner's real entrypoints -- one per significant
+# entrypoint, tracing its call path across zones via the emitted edges -- so a
+# repo with distinct entrypoints (init / serve / api) reaches the reference's
+# 6+ named journeys. Those derived flows get a short EN name from the entrypoint
+# (e.g. "Init", "Serve") + RU steps naming the modules on the path. Only emit a
+# derived flow whose node_ids all resolve; never fabricate a path.

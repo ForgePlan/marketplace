@@ -325,7 +325,10 @@ function gc5Sanctioned(p) {
     p === '.forgeplan/map/map.json' ||
     p === '.forgeplan/map' || p === '.forgeplan/map/' ||         // whole map/ dir (gitignored-dir case)
     p === '.forgeplan/map/.work' || p === '.forgeplan/map/.work/' ||
-    p.startsWith('.forgeplan/map/.work/')
+    p.startsWith('.forgeplan/map/.work/') ||
+    // E3/E4 per-zone generated layer files (.forgeplan/map/layers/**)
+    p === '.forgeplan/map/layers' || p === '.forgeplan/map/layers/' ||
+    p.startsWith('.forgeplan/map/layers/')
   );
 }
 

@@ -268,6 +268,36 @@ There is no gate *after* VALIDATE — `map-guardian`'s `exit 0` (via the script'
 - `map-guardian` returns BLOCKER — report it; do not attempt to "fix" the map yourself (you have no `Write`) and do not silently re-run VALIDATE hoping for a different result on unchanged input.
 - The ambiguous `[0.40, 0.70)` scoring band engages (expected on hybrid repos per RFC-023 SS "Known hybrid-repo caveat") — this is **not** a bug; the map still emits, marked for human confirm; do not treat it as a gate failure.
 
+## Scoped layer mode (E3/E4 — per-zone generated layers, PRD-076)
+
+Besides the top-level walk, you can run a **scoped layer build** for ONE zone —
+invoked by `/map-build-layer "<zone-id>"`, or (E3) looped by you over the top
+map's zones after a normal `/map-build` finishes, to give each substantial zone
+its own generated drill-down layer.
+
+- **Seed set.** Read the existing `.forgeplan/map/map.json`; the target zone's
+  member nodes (the real modules/artifacts binned there) are the seed. For a
+  nested target `"<ancestor>/<zone>"`, seed from the ancestor's layer file, not
+  the top map.
+- **Scoped pass.** Run the SAME SCAN→TYPE→SELECT→EXTRACT→VERIFY→EMIT→VALIDATE
+  walk, but restricted to the seed's real subtree (the scanners glob only those
+  members' paths). The result is a sub-map for THIS zone — its own sub-zones,
+  nodes, edges, flows, and `description_ru`, at the same E1/E2 quality bar.
+- **Output = a sibling layer file**, NOT the top map's node set:
+  `.forgeplan/map/layers/<zone-id>.json` (nested:
+  `.forgeplan/map/layers/<ancestor>/<zone>.json`), itself a valid
+  `forgeplan.map/v1` document the guardian validates identically. This is the
+  layer contract forgeplan-web's `deriveSubDocument` seam consumes (prefer a
+  generated layer, fall back to client-derived un-hide) — the one cross-repo
+  decision PRD-076 FR-3 flags; the pipeline ships the sibling-file shape.
+- **Same controls.** The EMITTER denylist + `map-emitter-gate.sh` hook cover
+  `map/layers/**` exactly as `map/map.json` (both under `map/`); append-only,
+  deterministic (content-hash ids, no x/y), recursively. Never mutate the top
+  map or a forgeplan artifact from a scoped run.
+- **Depth budget.** Build a layer only for a zone worth descending into (more
+  than a handful of members). Do not recurse indefinitely — one level per
+  invocation; deeper levels are separate `/map-build-layer "<a>/<b>"` calls.
+
 ## HARD RULES
 
 1. **Never** write a file, call `Bash`, or call any `forgeplan_*` mutator. Your denylist forbids `Write`/`Edit`/`NotebookEdit`/`MultiEdit`/`Bash` and every forgeplan mutation — any attempt is a flaw in this agent. You dispatch; the stage agents produce.

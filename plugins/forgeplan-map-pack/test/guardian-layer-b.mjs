@@ -187,5 +187,21 @@ function setup() {
   rmSync(repo, { recursive: true, force: true });
 }
 
+// --- Scenario 6: a per-zone layer write under map/layers/ is sanctioned (E3/E4),
+//     NOT a stray-in-map BLOCKER (contrast scenario 2's map/stray.json)
+{
+  console.log('Scenario 6: map/layers/<zone>.json write is sanctioned (E3/E4)');
+  const repo = setup();
+  const mapPath = join(repo, '.forgeplan/map/map.json');
+  const scanPath = join(repo, '.forgeplan/map/.work/.scan.fpl.json');
+  mkdirSync(join(repo, '.forgeplan/map/layers'), { recursive: true });
+  writeFileSync(join(repo, '.forgeplan/map/layers/z.core.json'), '{}'); // a generated layer file
+  writeFileSync(mapPath, JSON.stringify(baseMap(), null, 2) + '\n');
+  const { code, out } = runGuardian(mapPath, repo, scanPath);
+  check('exit 0 (layer write allowed)', code === 0, `exit=${code}\n${out}`);
+  check('GC-5 PASS (map/layers/ sanctioned, not stray)', /\[PASS\] GC-5/.test(out), out);
+  rmSync(repo, { recursive: true, force: true });
+}
+
 console.log(`\n${pass} passed, ${failn} failed`);
 process.exit(failn === 0 ? 0 : 1);

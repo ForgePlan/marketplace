@@ -90,6 +90,7 @@ Then glob source directories deep enough to see the layer/module boundaries **be
 
 - **`modules[].path`** -- the **repo-root-relative** path (e.g. `template/src/entities/user`, NOT `entities/user`). Downstream `zone_hints` are depth-agnostic globs (`**/entities/**`) that match this repo-relative form at any nesting depth, so keep the real prefix -- do not strip it here.
 - **`modules[].signals`** -- stack/FSD markers recorded **by BASENAME, regardless of nesting depth**. A layer directory found at `template/src/entities/` still contributes the `entities/` signal, exactly as if it were at the repo root. This is what the inline `project-typer` (TYPE stage, downstream) scores against `detection` (RFC-023 SS5, e.g. `.forgeplan/` + `crates/` + `rmcp` -> `rust-cli-mcp`; `entities/` + `widgets/` + `pages/`-or-`routes/` -> `web-fullstack`). Recording signals by basename is what lets a nested app score the SAME as a root-level one; a root-anchored signal was the v0.2.0 miss that dropped forgeplan-web to the `generic` floor.
+- **`modules[].facts`** (E1c — the understanding-map lever) -- a short list of **grounded facts** the downstream `zone-extractor` turns into the node's rich `description_ru`. For each module, READ enough to actually understand it — the module's entry file's top doc-comment/docstring, a handful of its exported symbol names (functions/classes/types), and the first line of a co-located `README`/`index` doc if present — and record them as plain facts (e.g. `"exports: computeComposedLayout, ComposedMapDoc"`, `"top-comment: pure layout — zones/nodes in, x/y out, no side effects"`, `"role: entities/map FSD layer"`). This is a SCAN, not a full read — a few lines per module, not every file. **Never invent a fact from the filename** — if a module has no readable comment/export/doc, record only what IS there (path + kind) and let the description be omitted downstream (§23 narration rule: grounded or absent, never faked). These facts are what let `zone-extractor` write a description like the reference's `"Единственный путь мутации… своей логики нет"` instead of a bare path.
 
 ### Step 3 -- Entry points
 
@@ -102,7 +103,7 @@ Write `.forgeplan/map/.work/.scan.code.json`. Do not include an `id` field anywh
 ```json
 {
   "source_root": "template/src",
-  "modules":     [ { "path": "...", "kind": "...", "language": "...", "signals": ["..."] } ],
+  "modules":     [ { "path": "...", "kind": "...", "language": "...", "signals": ["..."], "facts": ["exports: ...", "top-comment: ...", "role: ..."] } ],
   "entrypoints": [ { "path": "...", "module": "...", "purpose": "..." } ],
   "manifests":   [ { "path": "...", "kind": "...", "declared_deps": ["..."] } ]
 }
