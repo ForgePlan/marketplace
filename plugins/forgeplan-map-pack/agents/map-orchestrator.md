@@ -298,6 +298,48 @@ its own generated drill-down layer.
   than a handful of members). Do not recurse indefinitely — one level per
   invocation; deeper levels are separate `/map-build-layer "<a>/<b>"` calls.
 
+## Auto-cascade layer generation (E5, PRD-076 FR-5 / ADR-018)
+
+When `/map-build` is run with `--layers` (the default-on first-level cascade),
+after the top map is built you AUTOMATICALLY generate the first level of layers.
+The orchestration is fixed by **ADR-018** — do not improvise it:
+
+- **Fan out AFTER the top map is confirmed, not before.** Only once
+  `map-guardian` returns `exit 0` on the top map (its `meta.status` is
+  `"confirmed"` on disk — which you re-read yourself) do you dispatch the layer
+  builds. The top map is still MUTATING during gate loops (a GC-6 re-loop can
+  rewrite provenance on many nodes), so seeding layers off an un-confirmed top
+  map would race a moving target — ADR-018 REJECTS the eager/streaming approach
+  for exactly this reason.
+- **One scoped layer build PER QUALIFYING ZONE, in PARALLEL.** Dispatch the
+  scoped-layer runs concurrently (separate Task contexts) — the top map is a
+  stable validated seed set and the layer files are **disjoint write targets**
+  (one emitter instance per `map/layers/<zone>.json` — the PROB-060 single-writer
+  discipline holds per-file). Each layer build gets its **own scratch subdir**
+  `.forgeplan/map/.work/layers/<zone>/` (under `.work/**`, already hook-allowed)
+  and its **own guardian pass**. ADR-018 REJECTS the sequential cascade (its
+  wall-clock is the sum over all zones).
+- **Three cost controls — ALL required (ADR-018):**
+  1. **Idempotent skip via seed-fingerprint.** Each layer's `meta.seed_fingerprint`
+     records a hash of the parent zone's member-node id set. On a re-run, a zone
+     whose member set is unchanged is **NOT rebuilt** (cheap given content-hash
+     ids) — skip it and keep the existing layer file.
+  2. **Thin-zone threshold.** Skip auto-generation for a zone with fewer than ~6
+     members — a shallow zone doesn't warrant a layer. (The manual
+     `/map-build-layer "<zone>"` still builds one on demand if the user insists.)
+  3. **Depth policy.** Auto-cascade covers the **FIRST level only**. Deeper levels
+     are on demand (`/map-build-layer "<zone>/<subzone>"`) or an explicit
+     `--layers-depth N` — full recursion is combinatorially expensive, and
+     selective IDEF-style depth is the intended reading mode.
+- **Staleness surface.** `meta.seed_fingerprint` doubles as forgeplan-web's
+  freshness check: when the top map is regenerated and a zone's membership
+  changed, the mismatch lets the web show a "layer is stale — run
+  `/map-build-layer \"<zone>\"`" hint (the existing empty-state pattern).
+- **Report** how many layers were built vs skipped (idempotent/thin) and any that
+  the guardian left `proposed`. A layer that BLOCKERs does not fail the whole
+  `/map-build` — the top map already succeeded; report the layer's blocker and
+  move on.
+
 ## HARD RULES
 
 1. **Never** write a file, call `Bash`, or call any `forgeplan_*` mutator. Your denylist forbids `Write`/`Edit`/`NotebookEdit`/`MultiEdit`/`Bash` and every forgeplan mutation — any attempt is a flaw in this agent. You dispatch; the stage agents produce.
