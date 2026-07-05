@@ -79,7 +79,9 @@ Re-derive these three, from the assembled document itself, before writing anythi
 
 ## Algorithm 4 — status and the sentinel (never write "confirmed")
 
-Always write `meta.status: "proposed"`. **Never** write `"confirmed"` — only `scripts/map-guardian.mjs` exit 0 may perform that flip, and it does so via its own separate `fs` write, not through this agent's `Write` tool call at all (ADR-017; RFC-023 Invariant #1's one sanctioned exception). On a successful write, print to stdout, verbatim:
+Always write `meta.status: "proposed"`. **Never** write `"confirmed"` — only `scripts/map-guardian.mjs` exit 0 may perform that flip, and it does so via its own separate `fs` write, not through this agent's `Write` tool call at all (ADR-017; RFC-023 Invariant #1's one sanctioned exception).
+
+**When emitting a LAYER (E5 scoped build), also write `meta.seed_fingerprint`** — a sha1 of the parent zone's member-node id set (sorted, joined). It is the idempotent-skip key (an unchanged zone is not rebuilt on the next `/map-build`) and forgeplan-web's staleness check (a mismatch surfaces the "layer is stale" hint). `meta.additionalProperties` is `true`, so this extra field validates cleanly; omit it for the top-level `map.json` (only layers carry it). On a successful write, print to stdout, verbatim:
 
 ```
 <<NEEDS_CONFIRM: N zones, M nodes, K edges (J grep-verified)>>

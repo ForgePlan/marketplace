@@ -11,7 +11,7 @@ Architecture and contract: RFC-023, SPEC-003, ADR-016, ADR-017 (in the marketpla
 
 ## What to do
 
-1. **Resolve the target repo root.** If the user passed an argument (`$ARGUMENTS`), use it as the repo root; otherwise use the current working directory. The pipeline runs against **that repo's own files and its `.forgeplan/` graph** — not the marketplace/plugin repo.
+1. **Resolve the target repo root + flags.** If the user passed a path argument (`$ARGUMENTS`), use it as the repo root; otherwise use the current working directory. The pipeline runs against **that repo's own files and its `.forgeplan/` graph** — not the marketplace/plugin repo. Also parse the optional layer flags (E5, ADR-018): **`--layers`** (default-ON — auto-cascade the FIRST level of per-zone layers after the top map confirms), **`--no-layers`** (top map only), **`--layers-depth N`** (cascade N levels, default 1). Deeper levels beyond the auto-cascade are on demand via `/map-build-layer "<zone>"`.
 
 2. **Check the precondition.** Confirm the target repo has a `.forgeplan/` directory (`Glob(pattern=".forgeplan", path=<repoRoot>)`). If it does not exist, stop and tell the user plainly: "map-build precondition unmet — `<repoRoot>` has no `.forgeplan/`. Run `forgeplan init` in the target repo first." Do not dispatch on a repo with no forgeplan graph to scan. (The orchestrator re-checks this itself; checking here gives the user a faster, clearer refusal.)
 
@@ -26,7 +26,12 @@ Architecture and contract: RFC-023, SPEC-003, ADR-016, ADR-017 (in the marketpla
              + "isolated Task dispatch. Enforce gates G1–G4 by re-reading the returned scratch files "
              + "yourself (never a worker's prose). Max 3 rounds per gate, then <<NEED_USER_INPUT>>. "
              + "Return the map.json path, meta.status (re-read from disk after VALIDATE), and any "
-             + "guardian BLOCKER/CONCERNS.")
+             + "guardian BLOCKER/CONCERNS. "
+             + "LAYERS: unless --no-layers was given, after the top map is CONFIRMED (exit 0, re-read), "
+             + "auto-cascade the first level of per-zone layers per your Auto-cascade section (ADR-018): "
+             + "fan out one scoped layer build per qualifying zone IN PARALLEL, honoring the 3 cost "
+             + "controls (seed-fingerprint idempotent skip, thin-zone threshold ~6, depth=<N from "
+             + "--layers-depth, default 1>). Report layers built vs skipped.")
    ```
 
    **Do NOT** run any pipeline stage yourself, **do NOT** write `map.json` yourself, and **do NOT** call the three internal skills directly — the orchestrator owns the entire dispatch and every write goes through the fail-closed `map-emitter-gate.sh` hook (SPEC-003 §C2 CTRL-2).
