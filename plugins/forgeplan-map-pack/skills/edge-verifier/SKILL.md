@@ -75,6 +75,29 @@ edge.id = sha1("edge:" + from + "|" + to + "|" + relation)[:12]
   id already makes duplicates share an id). `map-emitter` carries `edge.id` through
   **verbatim** — it never re-mints it.
 
+## Algorithm 5 — dedupe by `(from, to, relation)` (CM-24)
+
+After minting ids (Algorithm 4), **collapse any edges that share an `id`** — i.e.
+the same `(from, to, relation)` triple — to exactly ONE edge. The v0.7.1 dogfood
+emitted the same relationship two or three times (a typed-link the graph reported
+AND a code-dep grep confirmed for the same pair; or two graph edges parsed from
+duplicated mermaid lines), inflating the edge count and double-lighting flows.
+
+- Dedup **globally**, across BOTH arrays — an edge can surface as a typed-link
+  (from `.scan.fpl.json`) and independently as a code-dep (from a grep) for the
+  same `(from,to,relation)`. Keep ONE.
+- **Tie-break when two share an id:** prefer the **higher-trust** survivor —
+  typed-link (`trust:"high"`, graph-sourced) over code-dep (`trust:"medium"`); if
+  both are code-dep, keep the one carrying a non-empty `verified_by`. Never merge
+  their fields into a franken-edge — pick one whole record.
+- Direction matters for the id (`from`→`to` is ordered in the hash), so `A→B` and
+  `B→A` are DISTINCT edges and both survive — dedup only collapses exact-triple
+  repeats, not a genuine bidirectional pair.
+
+This makes the emitted `edges[]` a clean set: one edge per real relationship, each
+with a unique `id` — which is also what keeps `map-emitter`'s `edgeByPair` flow
+resolution unambiguous.
+
 ## Output shape
 
 Write exactly one file, `.forgeplan/map/.work/.edges.json`:
@@ -106,3 +129,4 @@ If any candidate fails one of these, it should already have been dropped during 
 | Leaving an edge endpoint as a raw artifact id or file path | Remap to the content-hash node id `zone-extractor` minted, or drop the edge |
 | Writing verified edges into `map.json` | Output is scratch-only (`.work/.edges.json`); only `map-emitter` writes `map.json` content |
 | Emitting an edge with no `id` (so flows can never light it) | Mint `sha1("edge:"+from+"|"+to+"|"+relation)[:12]` from the remapped endpoints on every edge — `flow.edge_ids` reference it (Algorithm 4, CM-05) |
+| Emitting the same `(from,to,relation)` twice (graph + grep, or dup mermaid line) | Dedupe globally by id; keep the higher-trust survivor, never a franken-merge (Algorithm 5, CM-24). `A→B` and `B→A` are distinct and both stay |

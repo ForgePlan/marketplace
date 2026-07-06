@@ -72,6 +72,18 @@ a fixed `cell`, and the zone count is variable — so you compute the grid:
    cell. This keeps the GC-2a "no zone-cell overlap" guard satisfied by
    construction (one zone per (row,col)).
 4. Keep every other canvas constant (gap/margin/cell) verbatim.
+5. **Accent de-collision (CM-22).** After placement, no two **grid-neighbour**
+   zones (same row & adjacent column, or same column & adjacent row) may share an
+   `accent` — guardian GC-11 WARNs on that. Overlays add zones with their own
+   authored accents, so a composed map can land two `--map-accent-slate` neighbours.
+   Resolve it **minimally**: keep each zone's authored accent WHERE it doesn't
+   collide; only for a colliding zone, reassign it to the nearest accent from the 7
+   tokens (`cyan/emerald/violet/amber/rose/orange/slate`) that NONE of its
+   already-placed grid-neighbours use. Walk zones in placement order (row-major) so
+   the assignment is deterministic and append-stable. Do not recolour the whole map
+   — preserve authored intent, break only the ties. With ≤7 zones a clash-free
+   assignment always exists; past 7, GC-11 only flags NEIGHBOUR repeats, so a
+   non-adjacent reuse is fine.
 
 `z.decisions` is always the last (decisions) row. The result is a clean 2D grid
 for any base+overlay combination — the same append-stable, overlap-free layout the
@@ -125,6 +137,8 @@ stage **verbatim** in Algorithm 1's `edges[]` concat — never re-minted here.
 ## Algorithm 2 — schema validation (E5: one schema, three call sites)
 
 Before writing, validate the assembled document against `schemas/map.schema.json` — the **same** schema file `map-guardian.mjs` (GC-1) and forgeplan-web's `entities/map/lib/validate.ts` load. This catches required-field gaps, the pinned-literal enums (`treatment: "neutral-dashed"`, `rule_edge: "off"`, `layout_rule: "grid"`, `composition.arrangement: "stack-ttb"`), and the `--map-accent-*` token pattern on `zone.accent` — structural checks that are a different, broader net than Algorithm 3's assembly-guard trio below.
+
+**Field discipline — emit only fields with a named consumer (CM-23).** `schemas/map.schema.json` sets `additionalProperties:true`, so a speculative extra field validates cleanly — which is exactly the trap. A field ships ONLY if it is (a) schema-defined, or (b) an additive field with a NAMED consumer: `meta.title`/`meta.description_ru` (forgeplan-web heading, CM-08), the layer-meta keys (`scope`/`parent_*`/`seed_fingerprint`, GC-9/staleness, CM-07), `edge.id` (flow `edge_ids`, CM-05), `node.description_ru`/`found_at`/`is_mega`/`children` (all schema-defined). Do NOT emit speculative fields with no consumer — the v0.7.1 dogfood shipped a `description_ru_source` on some nodes and a `note` on some edges that nothing reads and that appeared **inconsistently** (some nodes/edges had them, most didn't). Be UNIFORM: either a field is in the contract and every applicable node/edge carries it, or it is not emitted at all. When in doubt, drop it — the schema + this list are the contract; adopting a new field is a deliberate cross-repo change to forgeplan-web's `types.ts`, not something to sprinkle in ad hoc.
 
 ## Algorithm 3 — the pre-write assembly-guard trio (RFC-023's "3 invariant guards"; = SPEC-003 GC-2)
 
@@ -195,3 +209,5 @@ A direct in-place write risks a reader (the guardian, forgeplan-web's `GET /api/
 | A flow `name` that is a sentence/path, or English `steps` | `name` = 2–3-word EN chip label; `steps` = RU sentences; every multi-node flow carries steps (CM-11, GC-8) |
 | Re-minting an edge `id` at EMIT | Carry `edge.id` through verbatim from edge-verifier — re-minting risks divergence from what flows already reference |
 | Synthesizing `meta.title`/`meta.description_ru` from the repo name | Stamp them only from `extraction.project` (real README, via docs-scanner); omit both when absent — never invent a heading (CM-08) |
+| Two grid-neighbour zones sharing an accent (GC-11 WARN) | After tier-row placement, minimally reassign only a colliding zone to a free token; keep authored accents otherwise (Algorithm 1c step 5, CM-22) |
+| Emitting a speculative field with no consumer (`description_ru_source`, edge `note`) | Emit only schema-defined + named-consumer fields; be uniform (all-or-none), drop when in doubt (CM-23) |

@@ -296,6 +296,16 @@ its own generated drill-down layer.
   walk, but restricted to the seed's real subtree (the scanners glob only those
   members' paths). The result is a sub-map for THIS zone — its own sub-zones,
   nodes, edges, flows, and `description_ru`, at the same E1/E2 quality bar.
+- **Scoped composition keyed on the zone's KIND, not the generic floor (CM-21).**
+  At the scoped SELECT step, pick the sub-composition from a catalogue keyed on the
+  TARGET zone's `kind` — a `store`/data zone drills into a data-shaped
+  sub-composition (sources → transforms → sinks), a `surface`/UI zone into a
+  UI-shaped one (routes → widgets → entities), a `truth`/`z.decisions` zone into the
+  decision-arc sub-composition (Shape → Design → Decide → Prove, zone-extractor
+  Algorithm 5 CM-10). The v0.7.1 dogfood floored EVERY layer to `generic`, so every
+  drill-down looked the same regardless of what it was drilling into. Fall to
+  `generic` only when the zone kind matches no catalogue entry — the same
+  correctness floor as the top map, not the default.
 - **Node ids carry across altitudes (CM-02).** A seed node keeps the SAME id in
   the layer it has on the top map, because `zone-extractor` freezes `kind` as an
   altitude-invariant property of the entity (skill Algorithm 2a) — only the
