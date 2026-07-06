@@ -413,6 +413,118 @@ function checkGC6Determinism(doc, checks) {
 }
 
 // ---------------------------------------------------------------------------
+// GC-7..GC-11 -- content-completeness + canonicalization gates (CM-13, v0.11.0).
+// All Layer A (need only the document), so they run in --smoke too. Severity
+// split: STRUCTURAL invariants BLOCK (GC-7/GC-9/GC-10); CONTENT-quality signals
+// WARN (GC-8/GC-11). The vendored fixture satisfies all BLOCKER-level checks
+// (found_at 16/16, no megas, not a layer, distinct accents).
+// ---------------------------------------------------------------------------
+
+// GC-7 -- every node carries a valid ISO found_at (the §19 append-stability sort
+// key). Catches CM-06 (constant/missing found_at, esp. layer leaf nodes).
+function checkGC7FoundAt(doc, checks) {
+  const nodes = isArray(doc.nodes) ? doc.nodes : [];
+  const missing = [];
+  nodes.forEach((n, i) => {
+    if (!isObject(n)) return;
+    if (typeof n.found_at !== 'string' || Number.isNaN(Date.parse(n.found_at))) missing.push(n.id ?? `#${i}`);
+  });
+  if (missing.length > 0) {
+    fail(checks, 'GC-7', `${missing.length} node(s) lack a valid ISO found_at (append-stability sort key): ${missing.slice(0, 5).join(', ')}`);
+    return;
+  }
+  pass(checks, 'GC-7', 'every node carries a valid found_at');
+}
+
+// GC-8 (WARN) -- flow completeness. A multi-node flow that lights no arrow
+// (empty edge_ids) or has no RU steps is a dead chip. Catches CM-05 + CM-11.
+function checkGC8FlowCompleteness(doc, checks) {
+  const flows = isArray(doc.flows) ? doc.flows : [];
+  if (flows.length === 0) { pass(checks, 'GC-8', 'no flows to check'); return; }
+  const edgeIds = new Set((isArray(doc.edges) ? doc.edges : []).map((e) => (isObject(e) ? e.id : undefined)).filter(Boolean));
+  const issues = [];
+  flows.forEach((f) => {
+    if (!isObject(f)) return;
+    const nids = isArray(f.node_ids) ? f.node_ids : [];
+    const eids = isArray(f.edge_ids) ? f.edge_ids : [];
+    const steps = isArray(f.steps) ? f.steps : [];
+    const tag = f.id ?? f.name ?? '?';
+    if (nids.length > 1) {
+      if (eids.length === 0) issues.push(`${tag}: no edge_ids (lights no arrow)`);
+      else if (edgeIds.size > 0 && !eids.every((id) => edgeIds.has(id))) issues.push(`${tag}: edge_ids reference unknown edge(s)`);
+      if (steps.length === 0) issues.push(`${tag}: no RU steps`);
+    }
+  });
+  if (issues.length > 0) { warn(checks, 'GC-8', `flow completeness (CM-05/CM-11): ${issues.slice(0, 5).join('; ')}`); return; }
+  pass(checks, 'GC-8', 'all multi-node flows carry edge_ids + steps');
+}
+
+// GC-9 -- layer-meta canonicalization (only fires when meta.scope === "layer").
+// Frozen keys + "<parent>::<zone>" map_id + no auto-confirm of a needs_confirm
+// floor. Catches CM-07. (Status flip is the guardian's own job, so this does NOT
+// require status==confirmed at check time; it refuses to LET a needs_confirm
+// layer pass the confirm gate.)
+function checkGC9LayerMeta(doc, checks) {
+  const meta = isObject(doc.meta) ? doc.meta : {};
+  if (meta.scope !== 'layer') { pass(checks, 'GC-9', 'not a layer document (meta.scope != "layer")'); return; }
+  const problems = [];
+  for (const k of ['parent_map_id', 'parent_zone']) {
+    if (typeof meta[k] !== 'string' || !meta[k]) problems.push(`missing ${k}`);
+  }
+  if (typeof meta.map_id === 'string' && meta.parent_map_id && meta.parent_zone) {
+    const want = `${meta.parent_map_id}::${meta.parent_zone}`;
+    if (meta.map_id !== want) problems.push(`map_id '${meta.map_id}' != '${want}' (fixed :: separator)`);
+  }
+  if (meta.needs_confirm === true) problems.push('needs_confirm:true -- a floor/low-confidence layer must not auto-confirm (CM-07)');
+  if (problems.length > 0) { fail(checks, 'GC-9', `layer meta not canonical (CM-07): ${problems.slice(0, 5).join('; ')}`); return; }
+  pass(checks, 'GC-9', 'layer meta canonical (parent keys, :: map_id, no needs_confirm floor)');
+}
+
+// GC-10 -- is_mega <=> kind=="mega", and every mega has non-empty children.
+// Catches CM-18 (layer megas mislabeled with the leaf kind -> inflated counts +
+// id-hash misses).
+function checkGC10MegaKind(doc, checks) {
+  const nodes = isArray(doc.nodes) ? doc.nodes : [];
+  const problems = [];
+  nodes.forEach((n, i) => {
+    if (!isObject(n)) return;
+    const isMega = n.is_mega === true;
+    const kindMega = n.kind === 'mega';
+    if (isMega !== kindMega) problems.push(`${n.id ?? `#${i}`}: is_mega=${isMega} but kind='${n.kind}'`);
+    if (isMega && !(isArray(n.children) && n.children.length > 0)) problems.push(`${n.id ?? `#${i}`}: mega with empty children`);
+  });
+  if (problems.length > 0) { fail(checks, 'GC-10', `mega-kind mismatch (CM-18): ${problems.slice(0, 5).join('; ')}`); return; }
+  pass(checks, 'GC-10', 'is_mega <=> kind=="mega"; every mega has children');
+}
+
+// GC-11 (WARN) -- no two grid-NEIGHBOUR zones share an accent. Catches CM-22
+// (8 arc-zones, 7 tokens -> two adjacent zones both slate). Advisory: a
+// non-neighbour repeat is fine when >7 zones are legitimate.
+function checkGC11AccentNeighbours(doc, checks) {
+  const zones = isArray(doc.zones) ? doc.zones : [];
+  const comp = isObject(doc.composition) ? doc.composition : {};
+  const placements = isArray(comp.placements) ? comp.placements : [];
+  const cell = {};
+  placements.forEach((p) => { if (isObject(p) && typeof p.zone === 'string' && isObject(p.cell)) cell[p.zone] = p.cell; });
+  const accent = {};
+  zones.forEach((z) => { if (isObject(z) && typeof z.id === 'string') accent[z.id] = z.accent; });
+  const ids = Object.keys(cell);
+  const clashes = [];
+  for (let a = 0; a < ids.length; a++) {
+    for (let b = a + 1; b < ids.length; b++) {
+      const za = ids[a]; const zb = ids[b];
+      if (!accent[za] || accent[za] !== accent[zb]) continue;
+      const ca = cell[za]; const cb = cell[zb];
+      const adj = (ca.row === cb.row && Math.abs((ca.col ?? 0) - (cb.col ?? 0)) === 1) ||
+                  (ca.col === cb.col && Math.abs((ca.row ?? 0) - (cb.row ?? 0)) === 1);
+      if (adj) clashes.push(`${za} & ${zb} both ${accent[za]}`);
+    }
+  }
+  if (clashes.length > 0) { warn(checks, 'GC-11', `adjacent zones share an accent (CM-22): ${clashes.slice(0, 5).join('; ')}`); return; }
+  pass(checks, 'GC-11', 'no grid-neighbour accent collisions');
+}
+
+// ---------------------------------------------------------------------------
 // XC-1 / XC-2 -- cross-source checks a self-check structurally cannot do
 // alone. Layer B -- skipped in --smoke mode (no scan/repo context).
 // ---------------------------------------------------------------------------
@@ -543,6 +655,11 @@ function main() {
   checkGC2AssemblyGuards(doc, checks);
   checkGC3MegaNodes(doc, checks);
   checkGC4RelationsAndVerification(doc, checks);
+  checkGC7FoundAt(doc, checks);
+  checkGC8FlowCompleteness(doc, checks);
+  checkGC9LayerMeta(doc, checks);
+  checkGC10MegaKind(doc, checks);
+  checkGC11AccentNeighbours(doc, checks);
 
   if (!args.smoke) {
     checkGC5SingleWrite(args.repoRoot, checks);

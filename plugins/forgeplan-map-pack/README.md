@@ -59,7 +59,7 @@ The structural JSON Schema every `map.json` must satisfy — the shared referenc
 
 ### The gate (`scripts/map-guardian.mjs`)
 
-A deterministic, dependency-free Node script — never an LLM call. Six checks plus two cross-source checks, re-derived independently from the emitted document and the real repo state. Only its `exit 0` flips a map to `"confirmed"`.
+A deterministic, dependency-free Node script — never an LLM call. Eleven checks (GC-1..GC-11) plus two cross-source checks (XC-1/XC-2), re-derived independently from the emitted document and the real repo state. GC-7..GC-11 (v0.11.0) add content-completeness + canonicalization gates — `found_at`, flow completeness, layer-meta canon, mega-kind, accent-neighbour collisions. Only its `exit 0` flips a map to `"confirmed"`.
 
 ### The write-path hook (`hooks/`)
 
