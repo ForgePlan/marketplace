@@ -12,15 +12,15 @@
 
 ## Smith — мастер-оркестратор (новое в v1.10.0+)
 
-> Маршрутизирует 12 контекстов к нужной методологии и последовательности дispatch — эквивалент BMAD Master в экосистеме ForgePlan.
+> Маршрутизирует 14 контекстов к нужной методологии и последовательности дispatch — эквивалент BMAD Master в экосистеме ForgePlan.
 
-Smith — это агент **Profile B-orchestrator** (новый подпрофиль, см. AGENT-AUTHORING-GUIDE L1162-1268). Единственный агент в маркетплейсе, который читает состояние проекта, классифицирует задачу в один из 12 контекстов и рекомендует методологию и последовательность dispatch. Тело агента живёт в `agents-pro`; четыре пользовательских скилла (`/smith`, `/smith-bootstrap`, `/smith-plan`, `/smith-routing`) живут в `fpl-skills`.
+Smith — это агент **Profile B-orchestrator** (новый подпрофиль, см. AGENT-AUTHORING-GUIDE L1162-1268). Единственный агент в маркетплейсе, который читает состояние проекта, классифицирует задачу в один из 14 контекстов и рекомендует методологию и последовательность dispatch. Тело агента живёт в `agents-pro`; четыре пользовательских скилла (`/smith`, `/smith-bootstrap`, `/smith-plan`, `/smith-routing`) живут в `fpl-skills`.
 
 | Компонент | Где |
 |---|---|
 | Агент `smith` | `plugins/agents-pro/agents/smith.md` (этот плагин) |
 | 4 скилла `/smith*` | `plugins/fpl-skills/skills/smith*/` (соседний плагин) |
-| Routing-мозг (12 контекстов × 27 методологий) | `plugins/fpl-skills/skills/smith/routing-map.md` |
+| Routing-мозг (14 контекстов × 29 методологий) | `plugins/fpl-skills/skills/smith/routing-map.md` |
 | 5 шаблонов (smith-plan / smith-bootstrap / smith-handoff / post-mortem / routing-decision) | `plugins/fpl-skills/templates/` |
 
 > [!TIP]

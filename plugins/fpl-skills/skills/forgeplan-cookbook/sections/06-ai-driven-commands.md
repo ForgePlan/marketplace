@@ -67,7 +67,7 @@ forgeplan_route(description="add OAuth login to the existing app")
 - Level 1 (LLM) — when API key is configured, full reasoning over the description.
 - Level 0 (rule-based keywords) — fallback when LLM unavailable. Catches obvious keywords like "security", "breaking", "migration" but misses nuance.
 
-**Owner**: `smith` (Profile B-orchestrator) calls this from `/smith-plan` to pick a row in the 12-context routing matrix.
+**Owner**: `smith` (Profile B-orchestrator) calls this from `/smith-plan` to pick a row in the 14-context routing matrix.
 
 ## When to skip these and write the body manually
 

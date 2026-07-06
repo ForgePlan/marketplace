@@ -1,7 +1,7 @@
 ---
 name: smith-routing
 description: |
-  Educational routing skill. Walks the user through smith's methodology routing matrix without committing to a specific task. Use to learn "when do I apply BMAD vs SPARC?", "what methodology for brownfield?", "explain the bug fix workflow". Pulls from routing-map.md (12 contexts + 25 methodology cards) and sections/NN-*.md (detailed playbooks). Output: educational comparison + recommendation when user describes their situation. Does NOT produce a Plan artifact — for that, use /smith-plan.
+  Educational routing skill. Walks the user through smith's methodology routing matrix without committing to a specific task. Use to learn "when do I apply BMAD vs SPARC?", "what methodology for brownfield?", "explain the bug fix workflow". Pulls from routing-map.md (14 contexts + 29 methodology cards) and sections/NN-*.md (detailed playbooks). Output: educational comparison + recommendation when user describes their situation. Does NOT produce a Plan artifact — for that, use /smith-plan.
 
   Triggers: "smith routing", "/smith-routing", "explain methodology", "какая методология", "when do I use", "compare methodologies", "routing walkthrough", "BMAD vs SPARC", "Strangler Fig or rewrite", "show me the routing matrix"
 origin: forgeplan
@@ -11,14 +11,14 @@ origin: forgeplan
 
 This skill is the **teacher** companion to smith. Where `/smith-plan` produces a concrete Plan
 artifact for a specific task, `/smith-routing` explains the routing matrix in the abstract: it
-walks the user through smith's 12 contexts, compares methodologies side-by-side, and answers
+walks the user through smith's 14 contexts, compares methodologies side-by-side, and answers
 "which methodology fits my situation?" without committing to action.
 
 **Read-only contract**: this skill never writes artifacts (no PRD / RFC / ADR / EVID / NOTE),
 never calls `forgeplan_new`, `forgeplan_update`, or any mutating tool. It reads the routing-map
 and section playbooks and renders explanations.
 
-Foundation: `plugins/fpl-skills/skills/smith/routing-map.md` (12 contexts × 25 methodology cards)
+Foundation: `plugins/fpl-skills/skills/smith/routing-map.md` (14 contexts × 29 methodology cards)
 + `plugins/fpl-skills/skills/smith/sections/NN-*.md` (per-context detailed playbooks).
 
 ---
@@ -48,7 +48,7 @@ Foundation: `plugins/fpl-skills/skills/smith/routing-map.md` (12 contexts × 25 
 | Mode | Trigger phrases | Behaviour |
 |---|---|---|
 | **Comparison** | "X vs Y" / "compare A and B" / "BMAD or SPARC?" | Side-by-side pros/cons + when each shines + recommendation for user's context |
-| **Walkthrough** | "walk me through routing" / "show all contexts" / "explain the matrix" | Iterate through 12 contexts with one-line summaries; ask user which to dig into |
+| **Walkthrough** | "walk me through routing" / "show all contexts" / "explain the matrix" | Iterate through 14 contexts with one-line summaries; ask user which to dig into |
 | **Question-Answer** | "what for brownfield?" / "for bug fix?" / "какая методология для аудита?" | Quick answer with citation to routing-map row + load matching section file |
 
 Modes are not mutually exclusive — a user may start in Walkthrough, then ask for a Comparison within it. The skill stays educational across the whole flow.
@@ -67,12 +67,12 @@ Classify the user's input into one of the three modes:
 
 If ambiguous, ask the user one clarifying question before proceeding:
 
-> "Would you like a side-by-side comparison, a full walkthrough of all 12 contexts, or a quick answer for your specific situation?"
+> "Would you like a side-by-side comparison, a full walkthrough of all 14 contexts, or a quick answer for your specific situation?"
 
 ### Step 2 — Read the routing brain
 
-Always read `plugins/fpl-skills/skills/smith/routing-map.md` first. It contains the 12-row routing
-table (one row per context) and the 25 methodology cards. Treat it as the single source of truth —
+Always read `plugins/fpl-skills/skills/smith/routing-map.md` first. It contains the 14-row routing
+table (one row per context) and the 29 methodology cards. Treat it as the single source of truth —
 never invent rows, never blend rows.
 
 ### Step 3 — Comparison mode
@@ -89,16 +89,16 @@ If Comparison mode:
 
 If Walkthrough mode:
 
-1. Render the 12-context table with one-line summaries (use the `sections/_index.md` one-liners).
+1. Render the 14-context table with one-line summaries (use the `sections/_index.md` one-liners for rows 1-12, and the `routing-map.md` row summary for rows 13-14, which do not yet have dedicated section files).
 2. Ask the user to pick a row to dig into.
-3. On pick, load the matching section file (`sections/NN-*.md`) and render its playbook.
+3. On pick, load the matching section file (`sections/NN-*.md`) and render its playbook. Rows 13-14 do not yet have a dedicated section file — fall back to the full row in `routing-map.md`.
 4. After the playbook, offer two follow-ups: "compare with another context?" or "ready to plan? → `/smith-plan <task>`".
 
 ### Step 5 — Question-Answer mode
 
 If Question-Answer mode:
 
-1. Classify the user's described situation into one of the 12 contexts.
+1. Classify the user's described situation into one of the 14 contexts.
 2. Cite the routing-map row number + primary methodology + secondary methodologies.
 3. List the dispatch sequence (agent chain).
 4. Name the evidence artifacts required.
@@ -151,12 +151,12 @@ The Comparison mode never picks for the user without context — it surfaces the
 
 ## Mode 2: Walkthrough — example output
 
-User asks: **"walk me through the routing matrix"** / **"show me all 12 contexts"**
+User asks: **"walk me through the routing matrix"** / **"show me all 14 contexts"**
 
 Skill response shape:
 
 ```markdown
-## Smith handles 12 contexts
+## Smith handles 14 contexts
 
 1. **Greenfield bootstrap** — fresh project with no legacy. Methodology: BMAD + GitHub Spec Kit. Pick if no `.git` history yet.
 2. **Brownfield modernisation** — legacy monolith that needs replacement. Methodology: Strangler Fig + DDD + Anti-Corruption Layer. Pick if existing codebase with running cashflow.
@@ -170,6 +170,8 @@ Skill response shape:
 10. **Product discovery (PDLC)** — "what should we build?". Methodology: JTBD + Lean MVP + Double Diamond. Pick pre-product or pre-feature.
 11. **Tech debt cleanup** — cleanup sprint, debt backlog. Methodology: A3 Problem Solving + Fishbone. Pick when you need to justify the trade-off out loud.
 12. **Live incident** — production down right now. Methodology: Incident Command System + blameless post-mortem + 5 Whys (after). Pick during the fire.
+13. **TDD-first feature** — active SPEC already has `#### Scenario`s ready to drive tests. Methodology: Enforced-TDD sub-cycle (agents-tdd master) + Hexagonal + Ground-truth verification. Pick when the design is already frozen and the work is implementing test-first.
+14. **Design-system → code** — porting Pencil/Figma to Storybook + native framework components. Methodology: CANVAS (agents-canvas master) + token pipeline + visual-regression. Pick when the design IS the spec and the work is token-fidelity, not feature logic.
 
 Which one matches your situation? Tell me a row number or describe what you're doing and I'll dig in.
 ```
@@ -240,7 +242,7 @@ The skill never pushes the user toward action. The user picks the next step.
 
 1. **Read-only** — `/smith-routing` produces explanations only. It never creates NOTE, PRD, RFC, ADR, EVID, or any other artifact. It never calls `forgeplan_new`, `forgeplan_update`, `forgeplan_link`, `forgeplan_activate`, or any mutating tool.
 2. **Always cite the routing-map row and methodology source link** in every response. The user must be able to trace every claim back to `routing-map.md` and the upstream methodology source.
-3. **When the user's question doesn't match any of the 12 contexts** — explain why (e.g. "this sounds like both brownfield and a security audit — which is the primary risk?") and suggest the closest match. Never invent a 13th row. The 12 contexts are the canonical surface; if a situation truly doesn't fit, escalate to the user, don't paper over it.
+3. **When the user's question doesn't match any of the 14 contexts** — explain why (e.g. "this sounds like both brownfield and a security audit — which is the primary risk?") and suggest the closest match. Never invent a 15th row. The 14 contexts are the canonical surface; if a situation truly doesn't fit, escalate to the user, don't paper over it.
 4. **Educational tone, not directive** — `/smith-routing` explains and asks. `/smith-plan` directs and commits. Keep the line clear. The user should leave `/smith-routing` more knowledgeable; `/smith-plan` should leave them with a Plan.
 5. **Never blend methodologies in an explanation** — if the user asks "BMAD + SPARC together?" explain that smith picks one row, never blends, and the same applies to methodologies. Show why blending is an anti-pattern (see `routing-map.md` paragraph 3).
 
@@ -256,9 +258,9 @@ The skill never pushes the user toward action. The user picks the next step.
 
 ### Example 2 — Walkthrough mode
 
-> **User**: "show me all 12 contexts"
+> **User**: "show me all 14 contexts"
 
-→ Walkthrough mode → render 12-row table with one-line summaries (per `sections/_index.md`) → "which row matches your situation?" → on pick, load corresponding `sections/NN-*.md` and render the detailed playbook → end with "/smith-plan to commit, /smith-routing to compare another".
+→ Walkthrough mode → render 14-row table with one-line summaries (per `sections/_index.md` for rows 1-12, `routing-map.md` for rows 13-14) → "which row matches your situation?" → on pick, load corresponding `sections/NN-*.md` and render the detailed playbook → end with "/smith-plan to commit, /smith-routing to compare another".
 
 ### Example 3 — Question-Answer mode (brownfield)
 
@@ -272,8 +274,8 @@ The skill never pushes the user toward action. The user picks the next step.
 
 This skill reads from but never writes to:
 
-- **`plugins/fpl-skills/skills/smith/routing-map.md`** — primary source: 12-row routing table + 25 methodology cards + agent index + evidence quality bar.
-- **`plugins/fpl-skills/skills/smith/sections/_index.md`** — one-line summaries for the Walkthrough mode.
+- **`plugins/fpl-skills/skills/smith/routing-map.md`** — primary source: 14-row routing table + 29 methodology cards + agent index + evidence quality bar.
+- **`plugins/fpl-skills/skills/smith/sections/_index.md`** — one-line summaries for the Walkthrough mode (rows 1-12 only; rows 13-14 do not yet have dedicated section files — fall back to `routing-map.md`).
 - **`plugins/fpl-skills/skills/smith/sections/NN-*.md`** — 12 detailed per-context playbooks (loaded one at a time, never bundled).
 
 ### Sibling skills (when to redirect)

@@ -1,6 +1,6 @@
 # /smith-routing — educational walkthrough
 
-> Teacher companion to smith. Explains the 12-context routing matrix, compares methodologies side-by-side, and answers "which methodology fits my situation?" — without committing to any action.
+> Teacher companion to smith. Explains the 14-context routing matrix, compares methodologies side-by-side, and answers "which methodology fits my situation?" — without committing to any action.
 
 ## When to use
 
@@ -22,7 +22,7 @@
 # Comparison mode — side-by-side methodologies
 /smith-routing BMAD vs SPARC
 
-# Walkthrough mode — all 12 contexts at once
+# Walkthrough mode — all 14 contexts at once
 /smith-routing show me the routing matrix
 
 # Question-Answer mode — quick answer for a domain
@@ -36,7 +36,7 @@ The skill operates in one of three modes, inferred from the user's phrasing:
 | Mode | Triggers | Behaviour |
 |---|---|---|
 | **Comparison** | "X vs Y" / "or" / "compare" / "какой лучше" | Side-by-side table (year/style/best-for/worst-for/source) + one-paragraph recommendation tailored to user's context |
-| **Walkthrough** | "walk me through" / "show all contexts" / "explain the matrix" | Iterate through 12 contexts with one-line summaries; ask user to pick one to dig into; on pick, render the matching `sections/NN-*.md` playbook |
+| **Walkthrough** | "walk me through" / "show all contexts" / "explain the matrix" | Iterate through 14 contexts with one-line summaries; ask user to pick one to dig into; on pick, render the matching `sections/NN-*.md` playbook |
 | **Question-Answer** | Single domain phrase ("for brownfield", "security audit") | Quick classification + routing-map row citation + dispatch sequence + evidence required + section playbook |
 
 Every interaction ends with an explicit hand-off offer: `/smith-plan` (commit to action), `/smith` (general orientation), `/smith-bootstrap` (greenfield scaffold), or another `/smith-routing` (compare more).
@@ -62,9 +62,9 @@ User: /smith-routing BMAD vs SPARC?
 ### Example B — Walkthrough
 
 ```
-User: /smith-routing show me all 12 contexts
+User: /smith-routing show me all 14 contexts
 
-→ Walkthrough mode → 12-row table with one-line summaries.
+→ Walkthrough mode → 14-row table with one-line summaries.
 → "Which row matches your situation? Tell me a row number or describe your task."
 User: row 2
 → Load sections/02-brownfield.md → render Strangler Fig + DDD + ACL playbook.
@@ -97,7 +97,7 @@ User: /smith-routing we have a legacy Rails monolith — what methodology?
 ## References
 
 - [SKILL.md](./SKILL.md) — full procedure, three-mode detection, example output shapes for each mode.
-- [`skills/smith/routing-map.md`](../smith/routing-map.md) — primary source: 12-row table + 25 methodology cards + agent index.
+- [`skills/smith/routing-map.md`](../smith/routing-map.md) — primary source: 14-row table + 29 methodology cards + agent index.
 - [`skills/smith/sections/`](../smith/sections/) — 12 per-context playbooks loaded on demand (one at a time).
 - [`agents-pro/agents/smith.md`](../../../agents-pro/agents/smith.md) — the smith agent (not invoked by this skill; this is read-only education).
 - **Methodology primary sources**: [BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD), [SPARC](https://github.com/ruvnet/sparc), [RIPER-5](https://github.com/johnpeterman72/CursorRIPER), [DDD](https://www.domainlanguage.com/ddd/), [Strangler Fig](https://martinfowler.com/bliki/StranglerFigApplication.html), [C4 Model](https://c4model.com), [OWASP Top 10 2025](https://owasp.org/Top10/), [STRIDE/ASTRIDE](https://arxiv.org/abs/2403.13309), [DORA](https://dora.dev), [JTBD](https://hbr.org/2016/09/know-your-customers-jobs-to-be-done), [A3](https://www.lean.org/lexicon-terms/a3-thinking/), [5 Whys](https://en.wikipedia.org/wiki/Five_whys).

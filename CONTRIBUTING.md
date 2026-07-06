@@ -49,7 +49,7 @@ EPIC-002 introduced a new sub-profile:
 
 When to author a new B-orchestrator vs reuse smith:
 
-- **Reuse smith** if your task fits within the 12 contexts smith routes (greenfield / brownfield / feature / bug-fix / refactor / decision / audit / discovery / tech-debt / incident).
+- **Reuse smith** if your task fits within the 14 contexts smith routes (greenfield / brownfield / feature / bug-fix / refactor / decision / audit / discovery / tech-debt / incident).
 - **Author a new B-orchestrator** only if you have a NEW domain that smith's routing matrix does not cover (e.g., compliance-audit routing, ML-pipeline routing). Then add it to `plugins/agents-pro/agents/` and document per the `AGENT-AUTHORING-GUIDE.md` L1162-1268 pattern.
 
 Keep this set small — ideally one general agent (`smith`) + at most 2-3 narrow-domain orchestrators. More than 3-4 across the marketplace is a smell; orchestration logic belongs in skills (`/forge-cycle`, `/autorun`, playbooks) or in smith's routing matrix.

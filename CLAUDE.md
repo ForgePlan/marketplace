@@ -453,7 +453,7 @@ Foundation: EPIC-002 «smith master-orchestrator» — the ForgePlan equivalent 
 - At **session start** when unsure what to do next — smith reads health + recent journal and proposes the next action.
 - On a **fresh repo** with no artifacts — `/smith-bootstrap` seeds Brief / PRD / first ADR via the greenfield row.
 - For a **specific task** of any depth — `/smith-plan <task>` picks the matching row, names the methodology, lists the dispatch sequence.
-- For **learning the methodology surface** — `/smith-routing` walks the 14 routing rows + 27 methodology cards without committing to a task.
+- For **learning the methodology surface** — `/smith-routing` walks the 14 routing rows + 29 methodology cards without committing to a task.
 - When existing entry points (`/forge-cycle`, `/autorun`) don't fit — cross-context work, ambiguous depth, methodology mismatch.
 
 If you already know which agent to dispatch, call it directly. Smith picks **which**; it doesn't replace any specialist.
@@ -465,7 +465,7 @@ If you already know which agent to dispatch, call it directly. Smith picks **whi
 | `/smith` | Default — status + recommended next step from current state |
 | `/smith-bootstrap` | Greenfield repo onboarding — seeds Brief / PRD / first ADR |
 | `/smith-plan <task>` | Per-task plan — routing-map row + methodology + dispatch sequence + evidence |
-| `/smith-routing` | Educational walkthrough of 14 routing rows + 27 methodology cards |
+| `/smith-routing` | Educational walkthrough of 14 routing rows + 29 methodology cards |
 
 ### 14-context routing matrix (compact reference)
 
