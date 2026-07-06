@@ -52,14 +52,37 @@ For each code-dep candidate:
 3. **Match found** → keep the edge, set `namespace: "code-dep"`, `trust: "medium"`, and `verified_by: "grep:<pattern>"` — record the **exact literal pattern you searched for**, not a paraphrase or summary. `map-guardian.mjs` XC-2 re-runs this exact string later; if what you record doesn't match what you actually grepped, the guardian's re-check and your verification silently diverge. **Also set `relation`** to a short free-form label describing the dependency (e.g. `"copies"`, `"spawns"`, `"imports"` — see the vendored `fixtures/checkpoint-map.json` for real examples). `schemas/map.schema.json` requires `relation` on **every** edge, typed-link or code-dep; unlike typed-link, a code-dep `relation` is NOT restricted to the 11 VALID_RELATIONS (SPEC-003 SS D2/D3), but it must be present and non-empty or `map-emitter`'s schema validation will reject the whole assembled document at EMIT time, forcing an avoidable G4 loop.
 4. **No match found** → **drop the candidate.** Do not emit it with an empty `verified_by` "for visibility" or "in case it's useful downstream." SPEC-003 E3 is explicit: an unverified code-dep is dropped before emit, never emitted as noise. There is no partial-credit state for a code-dep edge.
 
+## Algorithm 4 — mint a stable edge `id` (CM-05)
+
+Give **every** surviving edge — typed-link and code-dep alike — a stable id,
+minted AFTER the endpoints are remapped to content-hash node ids:
+
+```
+edge.id = sha1("edge:" + from + "|" + to + "|" + relation)[:12]
+```
+
+- `from`/`to` are the **remapped content-hash node ids** (Algorithm 2 step 2 /
+  Algorithm 3 — never the raw artifact id or file path), so the edge id is
+  byte-stable run to run the same way node ids are (append-stability).
+- This id is what `map-emitter` resolves each flow's consecutive node pair into,
+  filling `flow.edge_ids` (SPEC-003 flow-completeness). Without it, every flow
+  ships `edge_ids:[]` and lights no arrow — the v0.7.1 dogfood defect CM-05 that
+  `map-guardian.mjs` GC-8 now WARNs on. `schemas/map.schema.json` allows `edge.id`
+  (`additionalProperties:true` on edge items); it is additive, never required.
+- The key is exactly `(from, to, relation)` — the same triple CM-24's dedup keys
+  on — so two identical candidates collapse to ONE id by construction (dedup by id
+  == dedup by `(from,to,relation)`; the explicit dedup pass is CM-24's job, but the
+  id already makes duplicates share an id). `map-emitter` carries `edge.id` through
+  **verbatim** — it never re-mints it.
+
 ## Output shape
 
 Write exactly one file, `.forgeplan/map/.work/.edges.json`:
 
 ```jsonc
 {
-  "typedLink": [ /* namespace:"typed-link", trust:"high", relation ∈ 11 VALID_RELATIONS, endpoints remapped to content-hash ids */ ],
-  "codeDep":   [ /* namespace:"code-dep", trust:"medium", relation:"<free-form, e.g. copies/spawns>", verified_by:"grep:<pattern>", endpoints remapped */ ]
+  "typedLink": [ /* id, namespace:"typed-link", trust:"high", relation ∈ 11 VALID_RELATIONS, endpoints remapped to content-hash ids */ ],
+  "codeDep":   [ /* id, namespace:"code-dep", trust:"medium", relation:"<free-form, e.g. copies/spawns>", verified_by:"grep:<pattern>", endpoints remapped */ ]
 }
 ```
 
@@ -68,6 +91,7 @@ Write exactly one file, `.forgeplan/map/.work/.edges.json`:
 1. Every `codeDep` edge has a non-empty `verified_by` string in the `grep:<pattern>` form.
 2. Every `typedLink` edge's `relation` is one of the 11 VALID_RELATIONS.
 3. Every edge's `from`/`to` (in both arrays) resolves to a real `id` in `.extract.json`'s `nodes`.
+4. Every edge (both arrays) carries a non-empty `id` minted as `sha1("edge:"+from+"|"+to+"|"+relation)[:12]` from the REMAPPED endpoints (Algorithm 4).
 
 If any candidate fails one of these, it should already have been dropped during Algorithms 2/3 above — this self-check is a final sweep, not the primary enforcement point.
 
@@ -81,3 +105,4 @@ If any candidate fails one of these, it should already have been dropped during 
 | Recording `verified_by` as a summary ("found in build.mjs") instead of the pattern | Record the literal `grep:<pattern>` string — the guardian re-runs it verbatim |
 | Leaving an edge endpoint as a raw artifact id or file path | Remap to the content-hash node id `zone-extractor` minted, or drop the edge |
 | Writing verified edges into `map.json` | Output is scratch-only (`.work/.edges.json`); only `map-emitter` writes `map.json` content |
+| Emitting an edge with no `id` (so flows can never light it) | Mint `sha1("edge:"+from+"|"+to+"|"+relation)[:12]` from the remapped endpoints on every edge — `flow.edge_ids` reference it (Algorithm 4, CM-05) |

@@ -37,6 +37,49 @@ node.id = sha1(kind + ":" + path_or_slug)[:12]
 
 The 12-hex format is a **pipeline-run-only** convention — `schemas/map.schema.json` deliberately does NOT enforce a hex pattern on `node.id` (a hand-authored fixture with human-readable ids like `n.init` must still validate structurally). Format correctness on a real run is `map-guardian.mjs` GC-6's job, not a schema rule — but this agent should still mint it correctly the first time; do not rely on the guardian to catch a formula mistake three stages later.
 
+## Algorithm 2a — `kind` is an ALTITUDE-INVARIANT identity property (CM-02)
+
+`kind` is one of the two id inputs, so if `kind` for the **same real-world
+entity** differs between the top map and a drilled-in layer, `sha1(kind:ref)`
+differs, and the entity gets **two different ids at two altitudes** — the
+v0.7.1 dogfood defect CM-02. When forgeplan-web's `deriveSubDocument` (or the
+E5 auto-cascade) tries to carry a node from the top map into its zone's layer,
+the mismatched id means it can't match/hide/expand the same node — the drill-down
+silently shows a *different* graph than the card it opened from.
+
+The root cause is classifying `kind` from **where the node landed this run**
+(its `zone`, which legitimately changes by altitude — a node is in `z.ui` on the
+top map, but a layer IS the inside of `z.ui`, so the node's sub-zone differs).
+**Never derive `kind` from the current scope's zone binning.** Decouple the two:
+
+- **`zone` is a PLACEMENT** — altitude-dependent, re-computed per scope from that
+  scope's `zone_hints` (Algorithm 3). It is allowed to change between the top map
+  and a layer.
+- **`kind` is an IDENTITY** — a frozen, pure function of the entity itself
+  `(source, path_or_slug)`, computed ONCE and applied **byte-identically at every
+  altitude**. It must NOT change between the top map and a layer.
+
+Freeze `kind` with this altitude-invariant classifier (a pure function of the
+entity, never of the zone it's binned into this run):
+
+| Entity | Frozen `kind` |
+|---|---|
+| forgeplan artifact (`.scan.fpl.json`) | its own artifact kind, lowercased — `adr`/`prd`/`rfc`/`evid`/`epic`/`note`/`spec`/`problem`/`solution`. Invariant by nature. |
+| declared entry point (matches `.scan.code.json` `entrypoints[]`) | `entrypoint` |
+| config file (`*.config.*`, `*.yaml`/`*.yml`/`*.toml`, `*rc`) | `config` |
+| data/store (schema/migration/`*.sql`, a vector/db dir like `lance/`) | `store` |
+| test file (`*.test.*`, `*.spec.*`, `__tests__/…`) | `test` |
+| any other code module | `module` |
+| a group mega (Algorithm 5) | `mega` (see GC-10 — `is_mega ⟺ kind==="mega"`) |
+
+The exact taxonomy matters less than the discipline: **the classifier reads only
+the entity, resolves ONCE, and both `/map-build` (top) and `/map-build-layer`
+(scoped) call the SAME function** — so a node's id is byte-identical across
+altitudes. This is precisely what `map-guardian.mjs` GC-6 re-derives (`sha1(kind:ref)`)
+and what layer id-carry depends on; do not "sharpen" a node's kind just because a
+scoped composition would bin it more specifically — that specificity belongs in
+`zone`, never in `kind`.
+
 ## Algorithm 3 — zone binning (zone_hints + the z.core fallback)
 
 Each scanned entity is bound to exactly one zone using the selected composition's `zone_hints` (pattern → zone-id matchers this skill consumes but does not author — they live in `compositions/<template>.yaml`). **Every node gets a home**: when no `zone_hint` matches, the node falls back to `z.core` (the composition's default zone) rather than being dropped. This is the correctness floor at the node level, mirroring the `generic` template's correctness floor at the composition level (SPEC-003 E3).
@@ -194,6 +237,7 @@ If any of these fail and you cannot resolve it (e.g. the composition itself is m
 | Pitfall | Correct behavior |
 |---|---|
 | Minting an id from `label` or an array index | Always `sha1(kind+":"+path_or_slug)[:12]` — label/index are display concerns, not identity |
+| Re-classifying `kind` from the current scope's zone (so the same entity gets 2 ids across altitudes) | `kind` is frozen per entity, altitude-invariant (Algorithm 2a); only `zone` changes by altitude — the id must be byte-identical on the top map and in a layer (CM-02) |
 | Computing `cols` from the actual node count | `cols` is read from the composition, written through unchanged, always |
 | Leaving an over-capacity zone flat (no mega) | Check every zone's final member count; past the threshold (`capacity` or 8) collapse GROUPED — one mega per kind-group, singletons flat (Algorithm 5) |
 | Collapsing a whole 170-node zone into ONE mega | The E1a dump bug — group by kind (PRD/RFC/ADR/EVID/…) so the zone shows a legible ~6-card summary, never a single opaque blob |
