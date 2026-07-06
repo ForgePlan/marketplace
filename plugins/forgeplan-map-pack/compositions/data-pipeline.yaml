@@ -1,0 +1,122 @@
+# compositions/data-pipeline.yaml -- base archetype: ETL / data pipeline
+# Abstract type (batch or stream). Full rationale: COMPOSITIONS-GUIDE.md.
+template: "data-pipeline"
+role: >-
+  A data pipeline: ingest raw data from sources, transform/process it, and land
+  it in a store — orchestrated as batch jobs or a stream.
+
+detection:
+  strong:
+    - { signal: "ingest/ or extract/", type: "dir_exists_any_depth", path: "ingest/", alt_path: "extract/" }
+    - { signal: "transform/ or pipelines/", type: "dir_exists_any_depth", path: "transform/", alt_path: "pipelines/" }
+  weak:
+    - { signal: "dags/ or jobs/", type: "dir_exists_any_depth", path: "dags/", alt_path: "jobs/" }
+  negative:
+    - { signal: "components/ (that's a frontend)", type: "dir_exists_any_depth", path: "components/" }
+
+arrangement: "stack-ttb"
+canvas:
+  grid: { cols: 2, rows: 2 }
+  gap: { x: 88, y: 70 }
+  margin: 40
+  cell: { card_w: 190, card_h: 60, card_gap: 36, zpad: { top: 50, side: 24, bottom: 24 } }
+
+composition:
+  template: "data-pipeline"
+  arrangement: "stack-ttb"
+  entry_zone: "z.ingest"
+  placements:
+    - { zone: "z.ingest",    cell: { row: 0, col: 0 } }
+    - { zone: "z.transform", cell: { row: 0, col: 1 } }
+    - { zone: "z.storage",   cell: { row: 1, col: 0 } }
+    - { zone: "z.decisions", cell: { row: 1, col: 1 } }
+  zone_connectors:
+    - { from: "z.ingest", to: "z.transform", label: "feeds" }
+    - { from: "z.transform", to: "z.storage", label: "lands" }
+
+default_node_home: { zone: "z.transform", note: "unmatched processing modules land in transform" }
+
+zones:
+  - id: "z.ingest"
+    label: "Ingest"
+    sub: "sources & extract"
+    kind: "surface"
+    accent: "--map-accent-cyan"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+    description_ru: >-
+      Приём данных: коннекторы к источникам, экстракторы, приёмники стрима. Точка
+      входа сырых данных в пайплайн.
+  - id: "z.transform"
+    label: "Transform"
+    sub: "clean / enrich / aggregate"
+    kind: "core"
+    accent: "--map-accent-emerald"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 3
+    capacity: 8
+    overflow: "grow"
+    description_ru: >-
+      Ядро обработки: очистка, обогащение, агрегация, бизнес-правила над данными.
+      Здесь сырые данные превращаются в готовые к использованию. Много шагов
+      схлопывается в группы (E1a).
+  - id: "z.storage"
+    label: "Storage & Sinks"
+    sub: "warehouse / outputs"
+    kind: "core"
+    accent: "--map-accent-violet"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+    description_ru: >-
+      Хранилища и приёмники результата: витрины, warehouse, выгрузки. Куда пайплайн
+      кладёт готовые данные для потребителей.
+  - id: "z.decisions"
+    label: "Decision Trail"
+    sub: "why the code looks like this"
+    kind: "truth"
+    accent: "--map-accent-slate"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 4
+    capacity: 8
+    overflow: "grow"
+    description_ru: >-
+      След решений проекта: EPIC → PRD → RFC → ADR → EVID. Группируется по типу.
+
+zone_hints:
+  - { zone: "z.ingest", source: "code.entrypoints", pattern: "**" }
+  - { zone: "z.ingest", source: "code.modules", pattern: "**/ingest/**" }
+  - { zone: "z.ingest", source: "code.modules", pattern: "**/extract/**" }
+  - { zone: "z.ingest", source: "code.modules", pattern: "**/sources/**" }
+  - { zone: "z.transform", source: "code.modules", pattern: "**/transform/**" }
+  - { zone: "z.transform", source: "code.modules", pattern: "**/pipelines/**" }
+  - { zone: "z.transform", source: "code.modules", pattern: "**/dags/**" }
+  - { zone: "z.storage", source: "code.modules", pattern: "**/storage/**" }
+  - { zone: "z.storage", source: "code.modules", pattern: "**/sinks/**" }
+  - { zone: "z.storage", source: "code.modules", pattern: "**/warehouse/**" }
+  - { zone: "z.decisions", source: "fpl.artifacts", pattern: "**" }
+
+flow_hints:
+  - id: "f.etl"
+    name: "ETL"
+    path: ["z.ingest", "z.transform", "z.storage"]
+    steps_ru:
+      - "Данные извлекаются из источников (ingest)."
+      - "Проходят очистку, обогащение и агрегацию (transform)."
+      - "Приземляются в хранилище/витрину для потребителей (storage)."
+  - id: "f.decisions"
+    name: "Decision trail"
+    path: ["z.decisions"]
+    steps_ru:
+      - "След решений проекта: EPIC → PRD → RFC → ADR."

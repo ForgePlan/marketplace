@@ -1,0 +1,121 @@
+# compositions/ml-project.yaml -- base archetype: ML / model project
+# Abstract type. Full rationale: COMPOSITIONS-GUIDE.md.
+template: "ml-project"
+role: >-
+  A machine-learning project: datasets and features feed training/experiments
+  that produce models, which are then served for inference.
+
+detection:
+  strong:
+    - { signal: "models/ or training/", type: "dir_exists_any_depth", path: "models/", alt_path: "training/" }
+    - { signal: "data/ or datasets/", type: "dir_exists_any_depth", path: "data/", alt_path: "datasets/" }
+  weak:
+    - { signal: "notebooks/ or experiments/", type: "dir_exists_any_depth", path: "notebooks/", alt_path: "experiments/" }
+  negative:
+    - { signal: "routes/ (that's a web app)", type: "dir_exists_any_depth", path: "routes/" }
+
+arrangement: "stack-ttb"
+canvas:
+  grid: { cols: 2, rows: 2 }
+  gap: { x: 88, y: 70 }
+  margin: 40
+  cell: { card_w: 190, card_h: 60, card_gap: 36, zpad: { top: 50, side: 24, bottom: 24 } }
+
+composition:
+  template: "ml-project"
+  arrangement: "stack-ttb"
+  entry_zone: "z.data"
+  placements:
+    - { zone: "z.data",      cell: { row: 0, col: 0 } }
+    - { zone: "z.training",  cell: { row: 0, col: 1 } }
+    - { zone: "z.inference", cell: { row: 1, col: 0 } }
+    - { zone: "z.decisions", cell: { row: 1, col: 1 } }
+  zone_connectors:
+    - { from: "z.data", to: "z.training", label: "trains" }
+    - { from: "z.training", to: "z.inference", label: "serves" }
+
+default_node_home: { zone: "z.training", note: "unmatched model/experiment modules land in training" }
+
+zones:
+  - id: "z.data"
+    label: "Data & Features"
+    sub: "datasets / preprocessing"
+    kind: "surface"
+    accent: "--map-accent-cyan"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+    description_ru: >-
+      Данные и признаки: датасеты, предобработка, feature-инжиниринг. Сырьё, на
+      котором учатся модели.
+  - id: "z.training"
+    label: "Models & Training"
+    sub: "train / experiments"
+    kind: "core"
+    accent: "--map-accent-emerald"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 3
+    capacity: 8
+    overflow: "grow"
+    description_ru: >-
+      Определения моделей, обучение, эксперименты и подбор гиперпараметров. Ядро,
+      где данные превращаются в обученную модель. Много экспериментов схлопывается
+      в группы (E1a).
+  - id: "z.inference"
+    label: "Inference & Serving"
+    sub: "predict / deploy"
+    kind: "core"
+    accent: "--map-accent-violet"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+    description_ru: >-
+      Обслуживание модели: предсказание, батч- и онлайн-инференс, деплой. Как
+      обученная модель отдаёт результат потребителям.
+  - id: "z.decisions"
+    label: "Decision Trail"
+    sub: "why the code looks like this"
+    kind: "truth"
+    accent: "--map-accent-slate"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 4
+    capacity: 8
+    overflow: "grow"
+    description_ru: >-
+      След решений проекта: EPIC → PRD → RFC → ADR → EVID. Группируется по типу.
+
+zone_hints:
+  - { zone: "z.data", source: "code.modules", pattern: "**/data/**" }
+  - { zone: "z.data", source: "code.modules", pattern: "**/datasets/**" }
+  - { zone: "z.data", source: "code.modules", pattern: "**/features/**" }
+  - { zone: "z.training", source: "code.entrypoints", pattern: "**" }
+  - { zone: "z.training", source: "code.modules", pattern: "**/models/**" }
+  - { zone: "z.training", source: "code.modules", pattern: "**/training/**" }
+  - { zone: "z.training", source: "code.modules", pattern: "**/experiments/**" }
+  - { zone: "z.inference", source: "code.modules", pattern: "**/inference/**" }
+  - { zone: "z.inference", source: "code.modules", pattern: "**/serving/**" }
+  - { zone: "z.decisions", source: "fpl.artifacts", pattern: "**" }
+
+flow_hints:
+  - id: "f.train"
+    name: "Train → Serve"
+    path: ["z.data", "z.training", "z.inference"]
+    steps_ru:
+      - "Данные готовятся и превращаются в признаки."
+      - "Модель обучается в экспериментах и валидируется."
+      - "Обученная модель разворачивается и отдаёт предсказания."
+  - id: "f.decisions"
+    name: "Decision trail"
+    path: ["z.decisions"]
+    steps_ru:
+      - "След решений проекта: EPIC → PRD → RFC → ADR."

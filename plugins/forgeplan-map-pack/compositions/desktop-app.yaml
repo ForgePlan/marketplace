@@ -1,0 +1,117 @@
+# compositions/desktop-app.yaml -- base archetype: desktop app
+# Abstract type (Electron/Tauri/native). Full rationale: COMPOSITIONS-GUIDE.md.
+template: "desktop-app"
+role: >-
+  A desktop application: a renderer/UI process, a main/core process, and an IPC
+  bridge between them (Electron / Tauri / native).
+
+detection:
+  strong:
+    - { signal: "main/ or main-process", type: "dir_exists_any_depth", path: "main/" }
+    - { signal: "renderer/ or ui/", type: "dir_exists_any_depth", path: "renderer/", alt_path: "ui/" }
+  weak:
+    - { signal: "electron/ or tauri/ or src-tauri/", type: "dir_exists_any_depth", path: "electron/", alt_path: "src-tauri/" }
+  negative: []
+
+arrangement: "stack-ttb"
+canvas:
+  grid: { cols: 2, rows: 2 }
+  gap: { x: 88, y: 70 }
+  margin: 40
+  cell: { card_w: 190, card_h: 60, card_gap: 36, zpad: { top: 50, side: 24, bottom: 24 } }
+
+composition:
+  template: "desktop-app"
+  arrangement: "stack-ttb"
+  entry_zone: "z.ui"
+  placements:
+    - { zone: "z.ui",        cell: { row: 0, col: 0 } }
+    - { zone: "z.main",      cell: { row: 0, col: 1 } }
+    - { zone: "z.ipc",       cell: { row: 1, col: 0 } }
+    - { zone: "z.decisions", cell: { row: 1, col: 1 } }
+  zone_connectors:
+    - { from: "z.ui", to: "z.ipc", label: "invokes" }
+    - { from: "z.ipc", to: "z.main", label: "bridges" }
+
+default_node_home: { zone: "z.main", note: "unmatched core modules land in the main process" }
+
+zones:
+  - id: "z.ui"
+    label: "Renderer / UI"
+    sub: "the window"
+    kind: "surface"
+    accent: "--map-accent-cyan"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+    description_ru: >-
+      Процесс отрисовки: окно, интерфейс, экраны. То, что видит пользователь;
+      работает в песочнице и общается с ядром через мост.
+  - id: "z.main"
+    label: "Main Process"
+    sub: "the core / OS access"
+    kind: "core"
+    accent: "--map-accent-emerald"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+    description_ru: >-
+      Главный процесс: доступ к ОС, файловой системе, окнам, нативным API и
+      бизнес-логика. Привилегированное ядро приложения.
+  - id: "z.ipc"
+    label: "IPC Bridge"
+    sub: "renderer ↔ main"
+    kind: "component"
+    accent: "--map-accent-amber"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+    description_ru: >-
+      Мост IPC: контролируемый канал между песочницей UI и привилегированным
+      ядром. Единственный способ рендереру попросить ядро что-то сделать.
+  - id: "z.decisions"
+    label: "Decision Trail"
+    sub: "why the code looks like this"
+    kind: "truth"
+    accent: "--map-accent-slate"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 4
+    capacity: 8
+    overflow: "grow"
+    description_ru: >-
+      След решений проекта: EPIC → PRD → RFC → ADR → EVID. Группируется по типу.
+
+zone_hints:
+  - { zone: "z.ui", source: "code.modules", pattern: "**/renderer/**" }
+  - { zone: "z.ui", source: "code.modules", pattern: "**/ui/**" }
+  - { zone: "z.main", source: "code.entrypoints", pattern: "**" }
+  - { zone: "z.main", source: "code.modules", pattern: "**/main/**" }
+  - { zone: "z.ipc", source: "code.modules", pattern: "**/ipc/**" }
+  - { zone: "z.ipc", source: "code.modules", pattern: "**/preload/**" }
+  - { zone: "z.ipc", source: "code.modules", pattern: "**/bridge/**" }
+  - { zone: "z.decisions", source: "fpl.artifacts", pattern: "**" }
+
+flow_hints:
+  - id: "f.ipc"
+    name: "IPC call"
+    path: ["z.ui", "z.ipc", "z.main"]
+    steps_ru:
+      - "UI-процесс инициирует действие, требующее доступа к системе."
+      - "Запрос идёт через контролируемый мост IPC."
+      - "Главный процесс выполняет привилегированную операцию и отвечает."
+  - id: "f.decisions"
+    name: "Decision trail"
+    path: ["z.decisions"]
+    steps_ru:
+      - "След решений проекта: EPIC → PRD → RFC → ADR."
