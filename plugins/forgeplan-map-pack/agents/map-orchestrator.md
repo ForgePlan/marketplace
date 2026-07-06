@@ -303,6 +303,15 @@ its own generated drill-down layer.
   `deriveSubDocument` match/hide/expand the same node at both altitudes; a scoped
   pass that re-classifies `kind` (so `sha1(kind:ref)` differs) would silently
   break id-carry.
+- **Narration at FULL budget in a scoped pass (CM-16).** A layer covers ONE zone,
+  so there is budget to narrate its nodes richly — spend it: the docs/code scan for
+  a scoped build reads deeper per node than a top-map pass can afford across the
+  whole repo, so a layer node's `description_ru` should be the FULLER of what's
+  available. When a scoped pass discovers a richer grounded `description_ru` for a
+  node that ALSO exists on the top map (same id, CM-02), that improved narration
+  **propagates up**: the top map's next build (or an in-place description refresh)
+  adopts it, so the top card and its layer agree. Never let the top map carry a
+  thinner description than its own layer produced for the same node.
 - **Output = a sibling layer file**, NOT the top map's node set:
   `.forgeplan/map/layers/<zone-id>.json` (nested:
   `.forgeplan/map/layers/<ancestor>/<zone>.json`), itself a valid

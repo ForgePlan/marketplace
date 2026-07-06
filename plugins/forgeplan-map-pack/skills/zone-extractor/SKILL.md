@@ -201,6 +201,31 @@ Source it from real, per-entity, deterministic data, in this order:
 Whatever the source, `found_at` is a property carried run-to-run for the same
 entity — like `kind` and `id` (Algorithm 2a), never re-derived from wall-clock.
 
+## Algorithm 5c — ONE label policy: short + human, full ref in provenance (CM-17 + CM-20)
+
+`label` is what renders on the card face — it must be **short and human-legible**,
+and there must be **one policy**, not a per-node guess. The full machine
+path/slug always lives in `provenance.ref`, never on the card:
+
+- **Code node** → `label` is the **basename / curated short name** — the module
+  directory's basename or the file's basename without extension
+  (`template/src/entities/user` → `user`; `bin/commands/init.mjs` → `init`). The
+  **full repo-relative path** goes in `provenance.ref` (CM-20). The v0.7.1 dogfood
+  put full paths on cards and they overflowed; the path is still recorded, just not
+  on the face.
+- **forgeplan artifact node** → `label` is **`"<ID> — <title>"`**
+  (`"RFC-023 — Canonical pipeline architecture"`), built from the `artifact_id`
+  + `title` `forgeplan-scanner` recorded. The bare `artifact_id` (e.g. `RFC-023`)
+  is the `path_or_slug` in `provenance.ref` (CM-17). An artifact node labelled with
+  a bare id (`RFC-023`) or a bare title (no id) is the defect — carry BOTH, joined.
+- **group mega** → `label` stays `"<Group label> (<N>)"` (Algorithm 5), the machine
+  preimage in `provenance.ref` (Algorithm 5).
+
+`label` MUST be non-empty (schema `minLength:1`). Keep EN identifiers verbatim in
+labels (crate/file/artifact names) — do not translate them (§15). The one-line
+card subtitle is `node.meta` (Algorithm 7, ≤~30 chars); the full narration is
+`description_ru` (Algorithm 6) — three distinct fields, never conflated.
+
 ## Algorithm 6 — rich `description_ru` from grounded understanding (E1c)
 
 This is the **understanding-map lever**. The reference bar (`DETAIL` in
@@ -226,6 +251,11 @@ binned into generic zones (the "artifact dump") fall far short. Attach
       *"Слой `entities/map`: чистая функция раскладки `computeComposedLayout` —
       берёт зоны/узлы, возвращает координаты, без побочных эффектов."* Keep EN code
       identifiers verbatim in `<code>`-style inline (§15).
+   c. For a **forgeplan ARTIFACT node** (no code facts) — the artifact's `summary`
+      from `.scan.fpl.json` (the Step-2 `forgeplan_get` gist, CM-17): a one-line RU
+      explanation of what the artifact decides/records. Omit when no `summary` was
+      enriched — an artifact node with no summary carries no `description_ru`,
+      honestly (never synthesize one from the title alone).
 
 **The hard rule (§23 narration): grounded or absent — NEVER fabricated from the
 filename.** If a module has NO docs narration AND NO usable `facts` (no comment, no
@@ -287,5 +317,7 @@ If any of these fail and you cannot resolve it (e.g. the composition itself is m
 | Putting a human sentence (`… group (95 members)`) in a mega's `provenance.ref` | `ref` is the machine preimage `mega:<zoneId>:<groupKey>` — recoverable, drift-free; the human count lives in `label` (CM-18) |
 | Inventing `description_ru` from a label | Omit the field when `.scan.docs.json` has no real match — never fabricate narration |
 | Stamping `now()`/a constant into every node's `found_at` | Source a real per-entity first-seen (git `first_seen` / artifact `created` / mega = earliest child); deterministic fallback, never wall-clock `now()` (Algorithm 5b, CM-06) |
+| Putting a full path on a code node's `label` (card overflows) | `label` = basename/curated short name; full path in `provenance.ref` (Algorithm 5c, CM-20) |
+| Labelling an artifact node with a bare id or bare title | `label` = `"<ID> — <title>"` (both, joined); bare id/title is the defect (Algorithm 5c, CM-17) |
 | Writing extraction output to `map.json` | Extraction is scratch-only (`.work/.extract.json`); only `map-emitter` writes `map.json` content |
 | Dropping a node that matched no `zone_hint` | Fall back to `z.core` — every node gets a home, none are silently discarded |
