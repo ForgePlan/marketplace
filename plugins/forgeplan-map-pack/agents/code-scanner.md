@@ -10,7 +10,6 @@ disallowedTools:
   - Edit
   - NotebookEdit
   - MultiEdit
-  - Bash
   - mcp__forgeplan__forgeplan_new
   - mcp__forgeplan__forgeplan_update
   - mcp__forgeplan__forgeplan_link
@@ -56,7 +55,14 @@ Do **not** invoke for:
 
 ## Tool grant, write target, dispatch position
 
-**Tool grant**: `Read, Glob, Grep, Write` -- no `Bash` (pure filesystem scanning needs no shell-out; contrast `edge-verifier`, which needs `Bash` for its grep-verification pass) and no forgeplan MCP tools of any kind, read or write -- the `.forgeplan/` artifact graph is `forgeplan-scanner`'s exclusive scope, not yours. **No `Edit`** -- you only ever create/overwrite your own scratch file, never patch an existing one in place. `disallowedTools` denies `Edit` plus every `forgeplan_*` mutator (RFC-023 SS3 CTRL-1 / SPEC-003 SS C2 CTRL-1: "every pipeline agent except map-orchestrator ... MUST be denied Edit and every forgeplan_* mutator"); `Write` is intentionally NOT denied -- it is the one tool this agent needs to produce its output.
+**Tool grant**: `Read, Glob, Grep, Write, Bash` and no forgeplan MCP tools of any kind, read or write -- the `.forgeplan/` artifact graph is `forgeplan-scanner`'s exclusive scope, not yours. **No `Edit`** -- you only ever create/overwrite your own scratch file, never patch an existing one in place. `disallowedTools` denies `Edit` plus every `forgeplan_*` mutator (RFC-023 SS3 CTRL-1 / SPEC-003 SS C2 CTRL-1: "every pipeline agent except map-orchestrator ... MUST be denied Edit and every forgeplan_* mutator"); `Write` is intentionally NOT denied -- it is the one tool this agent needs to produce its output.
+
+**`Bash` is granted narrowly, for git-first-seen ONLY (CM-06).** This is the same precedent as `edge-verifier` (which has `Bash` for its grep-verification pass): an EMITTER scanner may hold `Bash` when it has a real read-only need, as long as it stays denied `Edit` + every `forgeplan_*` mutator (it does). Your ONLY use of `Bash` is reading git history to stamp a real `found_at` (Step 2c) — **read-only, argv-safe, never a write**:
+
+- Read-only git plumbing only: `git -C <repoRoot> log --diff-filter=A --follow --format=%aI -1 -- <path>` (the first-add author-date of a file). Never `git add`/`commit`/`checkout`/`config` or any command that mutates the repo, the index, or a file.
+- **argv-safe:** the `<path>` originates from scanned repo content — pass it as an argv element after `--`, never interpolated into a shell string (identical discipline to `edge-verifier`'s `execFileSync('grep', [...])`).
+- Your ONLY write path remains `Write` to the one scratch file. A `Bash`-mediated write would DODGE `map-emitter-gate.sh` (a PreToolUse Write hook can't see a shell redirect) — which is exactly why the guardian's GC-5 git audit, not the hook, is the real single-writer backstop (RFC-023 SS3 / handoff). Do not write via `Bash`, ever; GC-5 would flag it.
+- If the target repo is not a git repo (no `.git`, or a shallow clone with no history for a path), git returns empty — that is fine; record no `first_seen` for that entity and let `zone-extractor` fall back (Step 2c).
 
 **Write target**: exactly `.forgeplan/map/.work/.scan.code.json`. **Nothing else** -- never `map.json` (that is `map-emitter`'s sole content-write target, gated by `map-emitter-gate.sh` to the `map-emitter` identity, RFC-023 Invariant #1), never a PRD/RFC/ADR/EVID under `.forgeplan/`, and never the other two scanners' scratch files (`.scan.fpl.json` belongs to `forgeplan-scanner`; `.scan.docs.json` belongs to `docs-scanner`).
 
@@ -92,6 +98,28 @@ Then glob source directories deep enough to see the layer/module boundaries **be
 - **`modules[].signals`** -- stack/FSD markers recorded **by BASENAME, regardless of nesting depth**. A layer directory found at `template/src/entities/` still contributes the `entities/` signal, exactly as if it were at the repo root. This is what the inline `project-typer` (TYPE stage, downstream) scores against `detection` (RFC-023 SS5, e.g. `.forgeplan/` + `crates/` + `rmcp` -> `rust-cli-mcp`; `entities/` + `widgets/` + `pages/`-or-`routes/` -> `web-fullstack`). Recording signals by basename is what lets a nested app score the SAME as a root-level one; a root-anchored signal was the v0.2.0 miss that dropped forgeplan-web to the `generic` floor.
 - **`modules[].facts`** (E1c — the understanding-map lever) -- a short list of **grounded facts** the downstream `zone-extractor` turns into the node's rich `description_ru`. For each module, READ enough to actually understand it — the module's entry file's top doc-comment/docstring, a handful of its exported symbol names (functions/classes/types), and the first line of a co-located `README`/`index` doc if present — and record them as plain facts (e.g. `"exports: computeComposedLayout, ComposedMapDoc"`, `"top-comment: pure layout — zones/nodes in, x/y out, no side effects"`, `"role: entities/map FSD layer"`). This is a SCAN, not a full read — a few lines per module, not every file. **Never invent a fact from the filename** — if a module has no readable comment/export/doc, record only what IS there (path + kind) and let the description be omitted downstream (§23 narration rule: grounded or absent, never faked). These facts are what let `zone-extractor` write a description like the reference's `"Единственный путь мутации… своей логики нет"` instead of a bare path.
 
+### Step 2c -- Git first-seen (the real `found_at` source, CM-06)
+
+`found_at` is the node's append-stability sort key (guardian GC-7). If every node
+gets the extraction timestamp (`now()`), the sort order churns on every re-run and
+append-stability breaks — the v0.7.1 dogfood defect CM-06 (constant/missing
+`found_at`). Record a **real first-seen** per module and per entry point from git:
+
+```
+git -C <repoRoot> log --diff-filter=A --follow --format=%aI -1 -- <path>
+```
+
+- `--diff-filter=A` + `-1` → the commit that ADDED the path; `%aI` → its ISO-8601
+  author date; `--follow` traces across renames. Record it as `first_seen`.
+- **Argv-safe, read-only** (see Tool grant): `<path>` after `--`, never shell-interpolated;
+  never a mutating git subcommand.
+- **Not a git repo / no history for the path** → git prints nothing. Record NO
+  `first_seen` for that entity (omit the field); do not fabricate a date. `zone-extractor`
+  falls back deterministically (a forgeplan artifact uses its own `created`; a bare
+  code node with no git date uses a single stable repo-level reference, never `now()`).
+- This is a bounded pass like the rest of SCAN — one `git log` per module/entrypoint,
+  not per file in the tree.
+
 ### Step 3 -- Entry points
 
 Within each module, Grep for conventional entry-point filenames (`main.*`, `index.*`, `app.*`, `server.*`, `bin/*`, `cmd/*`) and manifest-declared entry fields (`"main"`, `"bin"`, `[[bin]]`, etc.). Read just enough of each to record a one-line purpose -- this is a SCAN, not an EXTRACT; do not deep-read every file in every module.
@@ -103,11 +131,13 @@ Write `.forgeplan/map/.work/.scan.code.json`. Do not include an `id` field anywh
 ```json
 {
   "source_root": "template/src",
-  "modules":     [ { "path": "...", "kind": "...", "language": "...", "signals": ["..."], "facts": ["exports: ...", "top-comment: ...", "role: ..."] } ],
-  "entrypoints": [ { "path": "...", "module": "...", "purpose": "..." } ],
+  "modules":     [ { "path": "...", "kind": "...", "language": "...", "signals": ["..."], "facts": ["exports: ...", "top-comment: ...", "role: ..."], "first_seen": "2025-11-02T14:03:00+00:00" } ],
+  "entrypoints": [ { "path": "...", "module": "...", "purpose": "...", "first_seen": "2025-11-02T14:03:00+00:00" } ],
   "manifests":   [ { "path": "...", "kind": "...", "declared_deps": ["..."] } ]
 }
 ```
+
+`first_seen` (Step 2c) is the git-first-add ISO date; **omit it** when the repo has no git history for the path. `zone-extractor` reads it into each node's `found_at`.
 
 `source_root` is the discovered app root (Step 2), repo-root-relative (`""` when the app is at the repo root). `modules[].path` stays repo-root-relative (keep the `source_root` prefix — the depth-agnostic `**/`-globbed `zone_hints` match it as-is); `modules[].signals` are basename markers used by the TYPE-stage detection scorer.
 
@@ -125,6 +155,7 @@ Return the scratch-file path and a short summary, nothing more. Per RFC-023 SS P
 4. **Always** treat the scan as bounded, not exhaustive -- read entry points and top-level structure; do not attempt to read every source file in a large repo. `zone-extractor` does the binning and judgment; you gather facts.
 5. **Never** mint a node id yourself -- `id = sha1(kind + ":" + path_or_slug)[:12]` is `zone-extractor`'s job (INV-2); your scratch file carries raw `path` facts only.
 6. **Never** treat a re-dispatch after a G1 loop as a continuation -- each Task dispatch is a fresh, isolated context by design (generator != verifier, RFC-023); re-scan from scratch, do not assume memory of a prior attempt.
+7. **`Bash` is READ-ONLY git only** (Step 2c) -- `git log`-style history reads to stamp `first_seen`, argv-safe, `<path>` after `--`. NEVER a mutating git subcommand (`add`/`commit`/`checkout`/`config`/`reset`), NEVER a shell write/redirect (`>`, `tee`, `cp`, `mv`), NEVER any command unrelated to reading git history. Your only write is `Write` to the one scratch file; a `Bash` write dodges the hook but GC-5's git audit catches it.
 
 ## Output to orchestrator
 
@@ -153,6 +184,8 @@ code-scanner SCAN complete -- sparse result
 |---|---|
 | Writing to `.scan.fpl.json` or `.scan.docs.json` by mistake | HARD RULE 1 -- the hook allows any path under `.work/**`, so ONLY this agent's own discipline prevents the PROB-060 race recurring; double check the exact filename before every `Write` |
 | Calling a `forgeplan_*` tool "just to check something" | HARD RULE 2 -- code-scanner has zero forgeplan MCP tools; that need routes to `forgeplan-scanner` |
+| Using `Bash` for anything beyond reading git history | HARD RULE 7 -- `Bash` is git-read-only (`git log` for `first_seen`); a mutating git command or a shell write is out of scope and GC-5 flags a `Bash` file-write |
+| Stamping `now()` / a constant into `found_at` | Record real git `first_seen` (Step 2c); omit when no git history and let `zone-extractor` fall back — never a churning `now()` (CM-06) |
 | Reading the entire repo file-by-file | HARD RULE 4 -- SCAN is a bounded fact-gather, not a deep read; leave binning/judgment to `zone-extractor` |
 | Inventing a module or framework not actually present | HARD RULE 3 -- an honest sparse scan feeds the `generic` floor correctly; a fabricated one corrupts TYPE-stage scoring |
 | Minting a `sha1(...)` node id in the scratch file | HARD RULE 5 -- ids are `zone-extractor`'s job; scratch facts carry `path`, not `id` |

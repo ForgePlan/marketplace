@@ -98,13 +98,15 @@ Write `.forgeplan/map/.work/.scan.fpl.json`. Do not include a map-node `id` fiel
 ```json
 {
   "artifacts": [
-    { "artifact_id": "RFC-023", "kind": "rfc", "status": "active", "title": "...", "r_eff": 0.3 }
+    { "artifact_id": "RFC-023", "kind": "rfc", "status": "active", "title": "...", "r_eff": 0.3, "created": "2026-07-01T09:00:00Z" }
   ],
   "edges": [
     { "from": "PRD-075", "to": "RFC-023", "relation": "based_on" }
   ]
 }
 ```
+
+Record `created` (the artifact's own creation timestamp — present in `forgeplan_list`/`forgeplan_get` responses) on each artifact. `zone-extractor` uses it as the artifact node's real `found_at` (its append-stability sort key, guardian GC-7 / CM-06); an artifact with no readable `created` is left without one and `zone-extractor` falls back deterministically.
 
 This matches RFC-023's function-signature contract: `forgeplan-scanner.scan(repoRoot) -> writes .work/.scan.fpl.json { artifacts[], edges[] } -- edges sourced from forgeplan_graph (read-only MCP)`. The exact field set is internal to this scratch file -- SPEC-003 governs only the FINAL `map.json` shape -- but keep `edges[]` faithful to Step 3's parse; it is what `map-guardian`'s XC-1 check re-reads later.
 

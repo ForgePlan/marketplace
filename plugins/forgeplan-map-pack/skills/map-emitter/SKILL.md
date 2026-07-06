@@ -37,9 +37,13 @@ Build the full `forgeplan.map/v1` document:
     "project_type": "<from composition/typer>",
     "composition_id": "<template id>",
     "source_fingerprint": "<carried through from the SCAN stage, not recomputed here>",
-    "version": 1                          // or prior + 1 if a previous map.json exists; the fuller
-  },                                       // added_node_ids/stale_node_ids differ (`increments[]`) is
-                                            // Phase 2 — do not attempt it here (SPEC-003 D6)
+    "version": 1,                         // or prior + 1 if a previous map.json exists; the fuller
+                                          // added_node_ids/stale_node_ids differ (`increments[]`) is
+                                          // Phase 2 — do not attempt it here (SPEC-003 D6)
+    "title": "<extraction.project.title, if present>",            // CM-08 — the view's human heading.
+    "description_ru": "<extraction.project.description_ru, if present>"  // Both OMITTED when zone-extractor
+  },                                      // carried no `project` (docs-scanner found none) — additive fields,
+                                          // meta.additionalProperties:true; never synthesize a title/tagline.
   "canvas": { /* pass through from the composition; but see tier-row layout below when overlays are active */ },
   "composition": { /* pass through; placements come from cells OR are computed from tiers (below) */ },
   "zones": [ /* from extraction.zones, cols/accent/treatment/rule_edge/layout_rule pinned */ ],
@@ -132,7 +136,24 @@ Re-derive these three, from the assembled document itself, before writing anythi
 
 Always write `meta.status: "proposed"`. **Never** write `"confirmed"` — only `scripts/map-guardian.mjs` exit 0 may perform that flip, and it does so via its own separate `fs` write, not through this agent's `Write` tool call at all (ADR-017; RFC-023 Invariant #1's one sanctioned exception).
 
-**When emitting a LAYER (E5 scoped build), also write `meta.seed_fingerprint`** — a sha1 of the parent zone's member-node id set (sorted, joined). It is the idempotent-skip key (an unchanged zone is not rebuilt on the next `/map-build`) and forgeplan-web's staleness check (a mismatch surfaces the "layer is stale" hint). `meta.additionalProperties` is `true`, so this extra field validates cleanly; omit it for the top-level `map.json` (only layers carry it). On a successful write, print to stdout, verbatim:
+**When emitting a LAYER (E5 scoped build), write the FROZEN canonical layer-meta struct (CM-07).** The v0.7.1 dogfood shipped layer metas that drifted and self-contradicted — so `map-guardian.mjs` GC-9 now BLOCKERs any `meta.scope === "layer"` document that isn't canonical. Write exactly these keys, no variants:
+
+```jsonc
+"meta": {
+  // ...the same base meta fields as the top map (map_id below is special)...
+  "scope": "layer",                       // REQUIRED literal — this is what arms GC-9 at all
+  "parent_map_id": "<the top map's map_id>",   // REQUIRED, non-empty
+  "parent_zone": "<the zone id this layer expands>",  // REQUIRED, non-empty
+  "map_id": "<parent_map_id>::<parent_zone>",  // REQUIRED EXACT shape — the "::" separator is frozen;
+                                               // GC-9 recomputes `${parent_map_id}::${parent_zone}` and
+                                               // BLOCKERs on any mismatch (a "-" or "/" separator fails)
+  "seed_fingerprint": "<sha1 of the parent zone's member-node id set, sorted+joined>"
+  // Do NOT write needs_confirm:true — a low-confidence/floor layer must NOT carry a needs_confirm
+  // flag that would let it auto-confirm; GC-9 BLOCKERs on needs_confirm===true (CM-07).
+}
+```
+
+`seed_fingerprint` is the idempotent-skip key (an unchanged zone is not rebuilt on the next `/map-build`) and forgeplan-web's staleness check (a mismatch surfaces the "layer is stale" hint). `meta.additionalProperties` is `true`, so `scope`/`parent_map_id`/`parent_zone`/`seed_fingerprint` all validate cleanly against the schema; the CANONICALIZATION (the `::` map_id + no-needs_confirm-floor) is GC-9's job, not the schema's. For the **top-level** `map.json` write NONE of these layer keys — no `scope`, no `parent_*`, no `seed_fingerprint` (a top map with `scope:"layer"` would wrongly arm GC-9). On a successful write, print to stdout, verbatim:
 
 ```
 <<NEEDS_CONFIRM: N zones, M nodes, K edges (J grep-verified)>>
@@ -161,7 +182,10 @@ A direct in-place write risks a reader (the guardian, forgeplan-web's `GET /api/
 | In-place write to `map.json` | tmp-write then rename, every time |
 | Omitting or rewording the sentinel | Emit the exact `<<NEEDS_CONFIRM: N zones, M nodes, K edges (J grep-verified)>>` string |
 | Populating `layers[]` or `increments[]` "for completeness" | Both are Phase-2-only (SPEC-003 D6) — leave them out of the P1 document |
+| A layer with a drifted meta (`-`/`/` map_id separator, `needs_confirm:true`, missing `parent_*`) | Write the frozen struct: `scope:"layer"` + `parent_map_id` + `parent_zone` + `map_id==<parent>::<zone>` + no `needs_confirm` floor (GC-9 BLOCKERs, CM-07) |
+| Writing `scope`/`parent_*`/`seed_fingerprint` on the TOP map | Those are layer-only — a top map carrying `scope:"layer"` wrongly arms GC-9 (CM-07) |
 | Recomputing `source_fingerprint` from scratch here | It is a SCAN-stage fact (repo mtimes) carried through, not re-derived at EMIT |
 | A flow pointing at a collapsed-mega child (lights nothing) | Map every flow `node_id` through `visible()` (collapsed child → its mega) + drop consecutive dupes, so the flow lights RENDERED cards (CM-01) |
 | Shipping `flows[].edge_ids: []` (chip lights no arrow) | Resolve each consecutive visible node pair via `edgeByPair` into real edge ids; partial/empty is honest, never fabricate one (CM-05, GC-8 WARN) |
 | Re-minting an edge `id` at EMIT | Carry `edge.id` through verbatim from edge-verifier — re-minting risks divergence from what flows already reference |
+| Synthesizing `meta.title`/`meta.description_ru` from the repo name | Stamp them only from `extraction.project` (real README, via docs-scanner); omit both when absent — never invent a heading (CM-08) |

@@ -94,19 +94,43 @@ For each segment that describes something concrete (a component, a module, a pro
 
 Record each narration with a `ref` key -- a path, module/component name, or heading-derived keyword -- specific enough for `zone-extractor` to later fuzzy-match it against a node's `path_or_slug` or a zone's `kind`/`label` (see the sibling `zone-extractor` agent's Step 7 / Algorithm 6). An narration entry with a `ref` too vague to ever match anything is not useful -- prefer fewer, well-targeted entries over many loosely-keyed ones.
 
+### Step 3b -- Project title + one-line description (CM-08)
+
+Beyond per-concept narrations, extract the **project's own** name and one-line
+purpose for the map's `meta` (the top-of-view heading). Source both from REAL
+prose, same "grounded or absent" discipline as everything else:
+
+- **`title`** ← the README's top `# H1` heading text, or the manifest's declared
+  project name if the README has no H1. A short human name (`ForgePlan Web`), not
+  a path or slug.
+- **`description_ru`** ← the README's first real descriptive paragraph (the tagline
+  under the H1, or a `> blockquote` summary), rendered to RU per Step 3's rules —
+  one or two sentences. If the summary is English, translate the real passage; if
+  there is NO real project-level description anywhere, **omit the field** (the map
+  meta simply carries no `description_ru` — never invent a project tagline).
+
+Emit these once as a `project` object. `meta.title`/`meta.description_ru` are
+additive fields on the map `meta` (`schemas/map.schema.json` `meta.additionalProperties`
+is `true`); `map-emitter` stamps them from here (its Algorithm 1). The v0.7.1
+dogfood shipped a map with no human title/description at all (CM-08) — a bare
+`map_id` is not a heading a person can read.
+
 ### Step 4 -- Write the scratch file
 
 Write `.forgeplan/map/.work/.scan.docs.json`. Do not include a map-node `id` field anywhere -- content-hash node ids are minted downstream by `zone-extractor`, never by this agent:
 
 ```json
 {
+  "project": { "title": "ForgePlan Web", "description_ru": "...", "source_doc": "README.md" },
   "narrations": [
     { "ref": "build pipeline", "ru_text": "...", "source_doc": "docs/ARCHITECTURE.md#build-pipeline" }
   ]
 }
 ```
 
-This matches RFC-023's function-signature contract: `docs-scanner.scan(repoRoot) -> writes .work/.scan.docs.json { narrations[] } -- RU prose from real docs only; no source ⇒ field omitted (never faked)`. The exact field set is internal to this scratch file -- SPEC-003 governs only the FINAL `map.json` shape -- but every `source_doc` must point at a real file (and, where practical, a real section) you actually read.
+Omit the `project` field entirely (or its `description_ru` alone) when no real
+source exists — same rule as a narration with no source. This matches RFC-023's
+function-signature contract: `docs-scanner.scan(repoRoot) -> writes .work/.scan.docs.json { project?, narrations[] } -- RU prose from real docs only; no source ⇒ field omitted (never faked)`. The exact field set is internal to this scratch file -- SPEC-003 governs only the FINAL `map.json` shape -- but every `source_doc` must point at a real file (and, where practical, a real section) you actually read.
 
 ### Step 5 -- Return to orchestrator
 
@@ -127,6 +151,7 @@ Return the scratch-file path and a short summary, nothing more. Per RFC-023 SS P
 ```
 docs-scanner SCAN complete
   wrote:        .forgeplan/map/.work/.scan.docs.json
+  project:      <title, or "(none — no README H1/manifest name)">
   narrations:   <N> extracted (<K> translated from non-RU source, <M> already RU)
   docs_read:    <list of doc paths actually read>
   omitted:      <count of concepts considered but skipped -- no real source found, or none>
