@@ -44,7 +44,7 @@ Build the full `forgeplan.map/v1` document:
   "composition": { /* pass through; placements come from cells OR are computed from tiers (below) */ },
   "zones": [ /* from extraction.zones, cols/accent/treatment/rule_edge/layout_rule pinned */ ],
   "nodes": [ /* from extraction.nodes, id/zone/provenance intact, mega-nodes included */ ],
-  "edges": [ /* typedLink + codeDep concatenated, in whatever order is stable */ ],
+  "edges": [ /* typedLink + codeDep concatenated, in whatever order is stable; each edge's `id` carried through verbatim from edge-verifier — never re-minted (flows reference it) */ ],
   "flows": [ /* derived from the composition's flow_hints — see below */ ]
   // "layers" and "increments" are Phase-2-only (SPEC-003 D6) — omit both in P1, do not populate
 }
@@ -75,16 +75,44 @@ guardian's GC-2a re-checks.
 
 ## Algorithm 1b — derive `flows[]` from the composition's `flow_hints`
 
-Flow chips are the composed-map's **headline feature** (click a chip → dim everything, light the end-to-end path with animated edges + a numbered step caption). The first rendered real map emitted `flows: []`, so the view showed **no chips at all** — the whole flow-navigation experience was dark (O-2). When the selected composition supplies `flow_hints[]`, resolve EACH hint into one `flows[]` entry:
+Flow chips are the composed-map's **headline feature** (click a chip → dim everything, light the end-to-end path with animated edges + a numbered step caption). The first rendered real map emitted `flows: []`, so the view showed **no chips at all** — the whole flow-navigation experience was dark (O-2).
+
+### Build two lookup maps ONCE, before resolving any flow (CM-01 + CM-05)
+
+A flow references nodes and edges — but after `zone-extractor`'s GROUPED
+mega-collapse, some real nodes are `children` of a `collapsed:true` mega and the
+renderer HIDES them. A flow that points at a hidden child lights **nothing** (the
+v0.7.1 dogfood defect CM-01). And every flow shipped `edge_ids:[]`, so even a
+visible path lit no arrows (CM-05, GC-8 WARNs on it). Both are fixed by two maps
+computed once from the assembled document:
+
+```jsonc
+// 1. visible(id): a hidden collapsed-child → its containing mega; else the id itself.
+//    childToMega = { <childId>: <megaId> } for every node where is_mega && collapsed,
+//    over each id in that mega's children[]. Then:
+visible(id) = childToMega[id] ?? id
+
+// 2. edgeByPair: an UNORDERED visible-endpoint pair → edge id(s).
+//    For each emitted edge e with an `id`:
+//      const a = visible(e.from), b = visible(e.to);
+//      if (a === b) continue;                       // both ends collapsed into ONE mega — no cross-card arrow
+//      key = [a, b].sort().join("|");               // undirected: a flow may traverse the edge either way
+//      edgeByPair[key] ||= []; edgeByPair[key].push(e.id);
+```
+
+`edge.id` is minted by `edge-verifier` (Algorithm 4) and carried through this
+stage **verbatim** in Algorithm 1's `edges[]` concat — never re-minted here.
+
+### Resolve each `flow_hint` into one `flows[]` entry
 
 - **`id`** ← the hint's `id`; **`name`** ← the hint's `name` **verbatim** — it is the chip label, kept short (2–3 words) by the composition author; never expand it into a sentence.
-- **`node_ids`** ← walk the hint's `path` (a list of zone ids, in order) and collect a handful of representative nodes whose `zone` is in the path, **in path order** (e.g. the entry/most-connected node per zone, a few per zone — not every node). Every id MUST be a real node in the assembled `nodes[]`.
-- **`edge_ids`** ← the ids of emitted `edges` that connect two consecutive `node_ids` in the flow, when such an edge exists (optional; omit if none).
+- **`node_ids`** ← walk the hint's `path` (a list of zone ids, in order) and collect a handful of representative nodes whose `zone` is in the path, **in path order** (e.g. the entry/most-connected node per zone, a few per zone — not every node). Then **map every collected id through `visible()`** and **drop consecutive duplicates** (two adjacent representatives that collapse into the same mega become one entry). The result is a path of ids that are all actually RENDERED — a collapsed child is replaced by the mega card the user can see and expand (CM-01). Every resulting id MUST be a real node in the assembled `nodes[]` (a mega is a node too).
+- **`edge_ids`** ← for each **consecutive pair** `(node_ids[i], node_ids[i+1])` (already visible ids), look up `edgeByPair[[u,v].sort().join("|")]` and push any matches (dedup). Where a pair has no connecting edge, add nothing — a partial or empty `edge_ids` is honest (GC-8 WARNs, never BLOCKS); **never fabricate an edge id** to silence the WARN.
 - **`steps`** ← the hint's `steps_ru` (RU narration, per SPEC-003 D5) — copy them; do not invent extra steps.
 
 **Skip a hint entirely if its `path` zones contain NO extracted nodes** — never emit an empty flow (a chip that lights nothing). If the composition has no `flow_hints` (e.g. `generic`), write `flows: []` — that is honest, not a defect. A flow whose `node_ids` don't all resolve to real nodes is a self-reject before write (same discipline as the assembly-guard trio).
 
-**Also derive entrypoint flows (E2 — reach the reference's 6+ journeys).** Beyond the composition's `flow_hints`, derive up to ~3 additional flows from the code-scanner's real `entrypoints[]` (`.scan.code.json`). For each SIGNIFICANT entrypoint (an `init`/`main`/`serve`/`api` entry, not every file), trace its call path across zones by walking the emitted `edges` from the entrypoint's node outward (entrypoint → the modules it reaches → their zone), and emit a flow `{ id: "f.<entry>", name: "<short EN, e.g. Init/Serve>", node_ids: [the real path], edge_ids: [connecting edges], steps: [RU steps naming the modules on the path] }`. This is what lifts a real repo with distinct entrypoints (init / serve / api) to 6+ named journeys like the reference (Shape/Prove/Reason/…). **Ground every step in real edges** — only emit a derived flow whose `node_ids` all resolve and whose consecutive members are actually connected by an emitted edge; never fabricate a path to pad the count. If the graph has no traceable entrypoint path, emit only the `flow_hints`-derived flows — fewer honest flows beats invented ones.
+**Also derive entrypoint flows (E2 — reach the reference's 6+ journeys).** Beyond the composition's `flow_hints`, derive up to ~3 additional flows from the code-scanner's real `entrypoints[]` (`.scan.code.json`). For each SIGNIFICANT entrypoint (an `init`/`main`/`serve`/`api` entry, not every file), trace its call path across zones by walking the emitted `edges` from the entrypoint's node outward (entrypoint → the modules it reaches → their zone), and emit a flow `{ id: "f.<entry>", name: "<short EN, e.g. Init/Serve>", node_ids: [the real path], edge_ids: [connecting edges], steps: [RU steps naming the modules on the path] }`. Apply the **same `visible()` + consecutive-dedup to `node_ids`** and the **same `edgeByPair` resolution to `edge_ids`** as above — an entrypoint flow whose path crosses a collapsed zone must light the mega, not a hidden child. This is what lifts a real repo with distinct entrypoints (init / serve / api) to 6+ named journeys like the reference (Shape/Prove/Reason/…). **Ground every step in real edges** — only emit a derived flow whose (post-`visible`) `node_ids` all resolve and whose consecutive members are actually connected by an emitted edge; never fabricate a path to pad the count. If the graph has no traceable entrypoint path, emit only the `flow_hints`-derived flows — fewer honest flows beats invented ones.
 
 ## Algorithm 2 — schema validation (E5: one schema, three call sites)
 
@@ -134,3 +162,6 @@ A direct in-place write risks a reader (the guardian, forgeplan-web's `GET /api/
 | Omitting or rewording the sentinel | Emit the exact `<<NEEDS_CONFIRM: N zones, M nodes, K edges (J grep-verified)>>` string |
 | Populating `layers[]` or `increments[]` "for completeness" | Both are Phase-2-only (SPEC-003 D6) — leave them out of the P1 document |
 | Recomputing `source_fingerprint` from scratch here | It is a SCAN-stage fact (repo mtimes) carried through, not re-derived at EMIT |
+| A flow pointing at a collapsed-mega child (lights nothing) | Map every flow `node_id` through `visible()` (collapsed child → its mega) + drop consecutive dupes, so the flow lights RENDERED cards (CM-01) |
+| Shipping `flows[].edge_ids: []` (chip lights no arrow) | Resolve each consecutive visible node pair via `edgeByPair` into real edge ids; partial/empty is honest, never fabricate one (CM-05, GC-8 WARN) |
+| Re-minting an edge `id` at EMIT | Carry `edge.id` through verbatim from edge-verifier — re-minting risks divergence from what flows already reference |

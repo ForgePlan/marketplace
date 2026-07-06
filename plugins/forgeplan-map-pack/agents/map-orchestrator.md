@@ -296,6 +296,13 @@ its own generated drill-down layer.
   walk, but restricted to the seed's real subtree (the scanners glob only those
   members' paths). The result is a sub-map for THIS zone — its own sub-zones,
   nodes, edges, flows, and `description_ru`, at the same E1/E2 quality bar.
+- **Node ids carry across altitudes (CM-02).** A seed node keeps the SAME id in
+  the layer it has on the top map, because `zone-extractor` freezes `kind` as an
+  altitude-invariant property of the entity (skill Algorithm 2a) — only the
+  node's `zone` (sub-zone) is re-computed for the scoped pass. This is what lets
+  `deriveSubDocument` match/hide/expand the same node at both altitudes; a scoped
+  pass that re-classifies `kind` (so `sha1(kind:ref)` differs) would silently
+  break id-carry.
 - **Output = a sibling layer file**, NOT the top map's node set:
   `.forgeplan/map/layers/<zone-id>.json` (nested:
   `.forgeplan/map/layers/<ancestor>/<zone>.json`), itself a valid
