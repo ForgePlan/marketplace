@@ -74,6 +74,13 @@ wrap one node in a mega):
   (e.g. `entities/user`, `entities/map` → `user (…)`, `map (…)`). If even that
   doesn't split it, leave the one large group mega — the raw members live one
   level down once E3 (generated per-zone layers) ships.
+- **Monorepo overlay override.** If the composed composition carries a
+  `regroup: { by: "package" }` signal (the `monorepo` pattern overlay is active),
+  the group key for CODE zones becomes the node's **top-level package segment**
+  (`packages/<pkg>/…` or `apps/<pkg>/…` → `<pkg>`) instead of `kind`, so a big
+  monorepo reads as `web (12) · api (8) · shared (20)` cards. The decision zone
+  (forgeplan artifacts, no package) still groups by kind. Nodes keep their real
+  paths; only the mega grouping key changes.
 
 **Each group mega:**
 

@@ -1,0 +1,45 @@
+# ============================================================================
+# overlays/monorepo.yaml -- pattern overlay: monorepo (the special one)
+# ============================================================================
+# Applies on top of any base when the repo is a multi-package workspace
+# (packages/* or apps/*). Unlike every other overlay, monorepo adds NO tier and
+# splits NO zone -- it is a GROUPING modifier: it makes the extractor's
+# over-capacity mega-collapse group by TOP-LEVEL PACKAGE instead of by kind, so a
+# 40-package monorepo reads as "web (12) · api (8) · shared (20)" cards rather
+# than one flat blob. Expressed via the `regroup` field (monorepo-only; see the
+# contract note in overlays/README.md). Abstract. See overlays/README.md.
+# ============================================================================
+
+overlay: "monorepo"
+role: >-
+  The monorepo pattern: many packages/apps in one repository under packages/* or
+  apps/*, sharing tooling. Not a tier of its own -- a lens over the base's zones.
+
+detection:
+  strong:
+    - signal: "packages/ or apps/"
+      type: "dir_exists_any_depth"
+      path: "packages/"
+      alt_path: "apps/"
+  weak:
+    - signal: "workspace manifest (pnpm-workspace / turbo / nx / lerna / cargo workspace)"
+      type: "dir_exists_any_depth"
+      path: "libs/"
+  negative: []
+
+# monorepo adds/splits nothing.
+adds_zones: []
+adds_zone_hints: []
+adds_flow_hints: []
+
+# The one monorepo-only operation: regroup over-capacity zones by top package.
+regroup:
+  by: "package"          # the extractor's mega-collapse group key becomes the
+                          # top-level packages/*|apps/* segment of a node's path,
+                          # instead of the node's kind (zone-extractor Algorithm 5).
+  note: >-
+    When monorepo is active, an over-capacity code zone collapses into one mega
+    per top-level package (`web (12)`, `api (8)`, `shared (20)`) rather than per
+    kind. The decision zone (forgeplan artifacts, no package) still groups by
+    kind. Nodes keep their real repo-relative paths; only the mega grouping key
+    changes.

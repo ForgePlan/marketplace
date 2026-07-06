@@ -1,0 +1,121 @@
+# compositions/library-sdk.yaml -- base archetype: library / SDK / package
+# Abstract type (any language). A reusable package: a public API surface over
+# internal modules, with examples + tests. Full rationale: COMPOSITIONS-GUIDE.md.
+template: "library-sdk"
+role: >-
+  A reusable library / SDK / package: a public API (the exported surface) over
+  internal implementation modules, with examples and a test suite.
+
+detection:
+  strong:
+    - { signal: "src/ or lib/ with a package manifest", type: "dir_exists_any_depth", path: "lib/", alt_path: "src/" }
+    - { signal: "examples/ or tests/", type: "dir_exists_any_depth", path: "examples/", alt_path: "tests/" }
+  weak:
+    - { signal: "index/mod entry (public surface)", type: "dir_exists_any_depth", path: "packages/" }
+  negative:
+    - { signal: "routes/ (that's an app, not a lib)", type: "dir_exists_any_depth", path: "routes/" }
+
+arrangement: "stack-ttb"
+canvas:
+  grid: { cols: 2, rows: 2 }
+  gap: { x: 88, y: 70 }
+  margin: 40
+  cell: { card_w: 190, card_h: 60, card_gap: 36, zpad: { top: 50, side: 24, bottom: 24 } }
+
+composition:
+  template: "library-sdk"
+  arrangement: "stack-ttb"
+  entry_zone: "z.api"
+  placements:
+    - { zone: "z.api",       cell: { row: 0, col: 0 } }
+    - { zone: "z.internal",  cell: { row: 0, col: 1 } }
+    - { zone: "z.examples",  cell: { row: 1, col: 0 } }
+    - { zone: "z.decisions", cell: { row: 1, col: 1 } }
+  zone_connectors:
+    - { from: "z.api", to: "z.internal", label: "delegates" }
+    - { from: "z.examples", to: "z.api", label: "uses" }
+
+default_node_home: { zone: "z.internal", note: "unmatched implementation modules land in internal" }
+
+zones:
+  - id: "z.api"
+    label: "Public API"
+    sub: "the exported surface"
+    kind: "surface"
+    accent: "--map-accent-cyan"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+    description_ru: >-
+      Публичная поверхность: то, что экспортирует библиотека и на что опираются
+      потребители. Стабильный контракт; за ним прячется реализация.
+  - id: "z.internal"
+    label: "Internal Modules"
+    sub: "the implementation"
+    kind: "core"
+    accent: "--map-accent-emerald"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 3
+    capacity: 8
+    overflow: "grow"
+    description_ru: >-
+      Внутренние модули реализации, не входящие в публичный контракт. Их можно
+      менять без слома потребителей. Много модулей схлопывается в группы (E1a).
+  - id: "z.examples"
+    label: "Examples & Tests"
+    sub: "how to use it"
+    kind: "component"
+    accent: "--map-accent-rose"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+    description_ru: >-
+      Примеры и тесты: живая документация публичного API и страховка от регрессий.
+      Показывают, как библиотеку применять.
+  - id: "z.decisions"
+    label: "Decision Trail"
+    sub: "why the code looks like this"
+    kind: "truth"
+    accent: "--map-accent-slate"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 4
+    capacity: 8
+    overflow: "grow"
+    description_ru: >-
+      След решений проекта: EPIC → PRD → RFC → ADR → EVID. Группируется по типу
+      при большом числе.
+
+zone_hints:
+  - { zone: "z.api", source: "code.entrypoints", pattern: "**" }
+  - { zone: "z.api", source: "code.modules", pattern: "**/index*/**" }
+  - { zone: "z.api", source: "code.modules", pattern: "**/public/**" }
+  - { zone: "z.internal", source: "code.modules", pattern: "**/internal/**" }
+  - { zone: "z.internal", source: "code.modules", pattern: "**/lib/**" }
+  - { zone: "z.internal", source: "code.modules", pattern: "**/src/**" }
+  - { zone: "z.examples", source: "code.modules", pattern: "**/examples/**" }
+  - { zone: "z.examples", source: "code.modules", pattern: "**/tests/**" }
+  - { zone: "z.decisions", source: "fpl.artifacts", pattern: "**" }
+
+flow_hints:
+  - id: "f.use"
+    name: "Use"
+    path: ["z.examples", "z.api", "z.internal"]
+    steps_ru:
+      - "Потребитель вызывает публичный API (пример показывает как)."
+      - "Публичная поверхность делегирует внутренним модулям."
+      - "Внутренняя реализация выполняет работу и возвращает результат."
+  - id: "f.decisions"
+    name: "Decision trail"
+    path: ["z.decisions"]
+    steps_ru:
+      - "След решений проекта: EPIC → PRD → RFC → ADR."

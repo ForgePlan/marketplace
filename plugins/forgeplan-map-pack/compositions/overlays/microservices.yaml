@@ -1,0 +1,104 @@
+# ============================================================================
+# overlays/microservices.yaml -- pattern overlay #1 (exemplar)
+# ============================================================================
+# Applies ON TOP of any base composition (backend-api, web-fullstack, ...) when
+# the repo is structured as microservices. Adds a Services tier + a Gateway
+# entry zone + a "Service call" flow. Abstract -- describes the microservices
+# PATTERN, never a specific repo. See overlays/README.md for the contract and
+# COMPOSITIONS-GUIDE.md for the base+overlay model.
+# ============================================================================
+
+overlay: "microservices"
+role: >-
+  The microservices pattern: many independently-deployable services behind a
+  gateway, communicating over the network. Detected by a services/ tree (or a
+  per-service directory of manifests) + a gateway/edge.
+
+# ----------------------------------------------------------------------------
+# DETECTION -- independent of the base score. ACTIVE when >=0.40.
+# ----------------------------------------------------------------------------
+detection:
+  strong:
+    - signal: "services/"
+      type: "dir_exists_any_depth"
+      path: "services/"
+    - signal: "gateway/"
+      type: "dir_exists_any_depth"
+      path: "gateway/"
+      alt_path: "api-gateway/"
+  weak:
+    - signal: "docker-compose with many services"
+      type: "dir_exists_any_depth"
+      path: "deploy/"
+    - signal: "k8s manifests"
+      type: "dir_exists_any_depth"
+      path: "k8s/"
+  negative: []
+
+# ----------------------------------------------------------------------------
+# adds_zones -- a Services core-tier zone + a Gateway entry-tier zone.
+# `tier` places the zone in the emitter's tier-row layout; `cols` pinned.
+# ----------------------------------------------------------------------------
+adds_zones:
+  - id: "z.gateway"
+    label: "Gateway"
+    sub: "the single front door"
+    kind: "surface"
+    accent: "--map-accent-orange"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+    tier: "entry"
+    description_ru: >-
+      Единая точка входа в систему микросервисов: маршрутизация, аутентификация,
+      агрегация. Всё внешнее проходит через шлюз, дальше расходится по сервисам.
+
+  - id: "z.services"
+    label: "Services"
+    sub: "independently deployable"
+    kind: "core"
+    accent: "--map-accent-violet"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 3
+    capacity: 8
+    overflow: "grow"
+    tier: "core"
+    description_ru: >-
+      Независимо разворачиваемые сервисы, каждый со своей зоной ответственности.
+      Общаются по сети (HTTP/gRPC/очереди). При большом числе схлопываются в
+      группы (E1a).
+
+# ----------------------------------------------------------------------------
+# adds_zone_hints -- route service/gateway modules into the added zones.
+# Depth-agnostic `**/` globs (COMPOSITIONS-GUIDE).
+# ----------------------------------------------------------------------------
+adds_zone_hints:
+  - zone: "z.services"
+    source: "code.modules"
+    pattern: "**/services/**"
+  - zone: "z.services"
+    source: "code.modules"
+    pattern: "**/svc/**"
+  - zone: "z.gateway"
+    source: "code.modules"
+    pattern: "**/gateway/**"
+  - zone: "z.gateway"
+    source: "code.modules"
+    pattern: "**/api-gateway/**"
+
+# ----------------------------------------------------------------------------
+# adds_flow_hints -- the "Service call" journey the emitter resolves.
+# ----------------------------------------------------------------------------
+adds_flow_hints:
+  - id: "f.service-call"
+    name: "Service call"
+    path: ["z.gateway", "z.services"]
+    steps_ru:
+      - "Запрос приходит на шлюз — единую точку входа."
+      - "Шлюз маршрутизирует его к нужному сервису."
+      - "Сервис обрабатывает запрос в своей зоне ответственности и отвечает."

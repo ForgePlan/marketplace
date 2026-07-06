@@ -1,0 +1,124 @@
+# compositions/cli-tool.yaml -- base archetype: command-line tool
+# Abstract type (any language). The MCP-server / api-gateway overlays layer on
+# top when present; e.g. a Rust CLI that also serves MCP = cli-tool + mcp-server.
+# (rust-cli-mcp.yaml is a legacy high-confidence specialization kept for the
+# forgeplan-core dogfood + CI fixture; conceptually cli-tool + mcp-server.)
+# Full rationale: COMPOSITIONS-GUIDE.md.
+template: "cli-tool"
+role: >-
+  A command-line tool: subcommands parse arguments and dispatch to a core that
+  holds the real logic; config + I/O sit alongside. Any language.
+
+detection:
+  strong:
+    - { signal: "commands/ or cmd/", type: "dir_exists_any_depth", path: "commands/", alt_path: "cmd/" }
+    - { signal: "bin/ or src/bin/", type: "dir_exists_any_depth", path: "bin/" }
+  weak:
+    - { signal: "cli/", type: "dir_exists_any_depth", path: "cli/" }
+  negative:
+    - { signal: "components/ (that's a frontend)", type: "dir_exists_any_depth", path: "components/" }
+
+arrangement: "stack-ttb"
+canvas:
+  grid: { cols: 2, rows: 2 }
+  gap: { x: 88, y: 70 }
+  margin: 40
+  cell: { card_w: 190, card_h: 60, card_gap: 36, zpad: { top: 50, side: 24, bottom: 24 } }
+
+composition:
+  template: "cli-tool"
+  arrangement: "stack-ttb"
+  entry_zone: "z.commands"
+  placements:
+    - { zone: "z.commands",  cell: { row: 0, col: 0 } }
+    - { zone: "z.core",      cell: { row: 0, col: 1 } }
+    - { zone: "z.io",        cell: { row: 1, col: 0 } }
+    - { zone: "z.decisions", cell: { row: 1, col: 1 } }
+  zone_connectors:
+    - { from: "z.commands", to: "z.core", label: "dispatches" }
+    - { from: "z.core", to: "z.io", label: "reads/writes" }
+
+default_node_home: { zone: "z.core", note: "unmatched logic modules land in the core" }
+
+zones:
+  - id: "z.commands"
+    label: "Commands"
+    sub: "the CLI surface"
+    kind: "surface"
+    accent: "--map-accent-cyan"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 3
+    capacity: 8
+    overflow: "grow"
+    description_ru: >-
+      Поверхность инструмента: подкоманды. Парсят аргументы и передают работу в
+      ядро — своей логики почти не несут. Много команд схлопывается в группы (E1a).
+  - id: "z.core"
+    label: "Core Logic"
+    sub: "the real work"
+    kind: "core"
+    accent: "--map-accent-emerald"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+    description_ru: >-
+      Ядро: вся содержательная логика инструмента. Команды — тонкая оболочка над
+      ним; здесь принимаются решения и выполняются операции.
+  - id: "z.io"
+    label: "Config & I/O"
+    sub: "files / env / stdio"
+    kind: "component"
+    accent: "--map-accent-amber"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+    description_ru: >-
+      Конфигурация и ввод/вывод: чтение настроек, переменных окружения, файлов,
+      stdin/stdout. То, чем ядро общается с внешним миром.
+  - id: "z.decisions"
+    label: "Decision Trail"
+    sub: "why the code looks like this"
+    kind: "truth"
+    accent: "--map-accent-slate"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 4
+    capacity: 8
+    overflow: "grow"
+    description_ru: >-
+      След решений проекта: EPIC → PRD → RFC → ADR → EVID. Группируется по типу
+      при большом числе.
+
+zone_hints:
+  - { zone: "z.commands", source: "code.entrypoints", pattern: "**" }
+  - { zone: "z.commands", source: "code.modules", pattern: "**/commands/**" }
+  - { zone: "z.commands", source: "code.modules", pattern: "**/cmd/**" }
+  - { zone: "z.commands", source: "code.modules", pattern: "**/bin/**" }
+  - { zone: "z.core", source: "code.modules", pattern: "**/core/**" }
+  - { zone: "z.core", source: "code.modules", pattern: "**/lib/**" }
+  - { zone: "z.io", source: "code.modules", pattern: "**/config/**" }
+  - { zone: "z.io", source: "code.modules", pattern: "**/io/**" }
+  - { zone: "z.decisions", source: "fpl.artifacts", pattern: "**" }
+
+flow_hints:
+  - id: "f.invoke"
+    name: "Invoke"
+    path: ["z.commands", "z.core", "z.io"]
+    steps_ru:
+      - "Пользователь вызывает подкоманду с аргументами."
+      - "Команда парсит их и передаёт в ядро."
+      - "Ядро выполняет работу, читая конфиг и пиша вывод."
+  - id: "f.decisions"
+    name: "Decision trail"
+    path: ["z.decisions"]
+    steps_ru:
+      - "След решений проекта: EPIC → PRD → RFC → ADR."

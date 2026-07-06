@@ -1,0 +1,121 @@
+# compositions/web-frontend.yaml -- base archetype: SPA / client web app
+# Abstract type (React/Vue/Svelte/Angular/Solid). Full field rationale +
+# shared constants: COMPOSITIONS-GUIDE.md; contract mirrors web-fullstack.yaml.
+template: "web-frontend"
+role: >-
+  A client-side single-page application: routes/pages, UI components, client
+  state, and an API client that talks to some backend. Any framework.
+
+detection:
+  strong:
+    - { signal: "components/", type: "dir_exists_any_depth", path: "components/" }
+    - { signal: "pages/ or routes/", type: "dir_exists_any_depth", path: "pages/", alt_path: "routes/" }
+  weak:
+    - { signal: "store/ or state/", type: "dir_exists_any_depth", path: "store/", alt_path: "state/" }
+  negative:
+    - { signal: "server/ (fullstack, not pure SPA)", type: "dir_exists_any_depth", path: "server/" }
+
+arrangement: "stack-ttb"
+canvas:
+  grid: { cols: 2, rows: 2 }
+  gap: { x: 88, y: 70 }
+  margin: 40
+  cell: { card_w: 190, card_h: 60, card_gap: 36, zpad: { top: 50, side: 24, bottom: 24 } }
+
+composition:
+  template: "web-frontend"
+  arrangement: "stack-ttb"
+  entry_zone: "z.routes"
+  placements:
+    - { zone: "z.routes",     cell: { row: 0, col: 0 } }
+    - { zone: "z.components",  cell: { row: 0, col: 1 } }
+    - { zone: "z.state",       cell: { row: 1, col: 0 } }
+    - { zone: "z.decisions",   cell: { row: 1, col: 1 } }
+  zone_connectors:
+    - { from: "z.routes", to: "z.components", label: "renders" }
+    - { from: "z.components", to: "z.state", label: "reads/writes" }
+
+default_node_home: { zone: "z.components", note: "unmatched UI modules land in the component zone" }
+
+zones:
+  - id: "z.routes"
+    label: "Routes & Pages"
+    sub: "the app's screens"
+    kind: "surface"
+    accent: "--map-accent-cyan"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+    description_ru: >-
+      Экраны приложения: маршруты и страницы. Точка входа пользователя; каждая
+      страница собирает нужные компоненты и подтягивает состояние.
+  - id: "z.components"
+    label: "Components"
+    sub: "the UI building blocks"
+    kind: "component"
+    accent: "--map-accent-rose"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 3
+    capacity: 8
+    overflow: "grow"
+    description_ru: >-
+      Переиспользуемые UI-компоненты и виджеты, из которых собираются страницы.
+      При большом числе схлопываются в группы (E1a).
+  - id: "z.state"
+    label: "State & Data"
+    sub: "stores + API client"
+    kind: "core"
+    accent: "--map-accent-emerald"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+    description_ru: >-
+      Клиентское состояние (сторы) и API-клиент — данные, которыми питаются
+      компоненты, и связь с бэкендом.
+  - id: "z.decisions"
+    label: "Decision Trail"
+    sub: "why the code looks like this"
+    kind: "truth"
+    accent: "--map-accent-slate"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 4
+    capacity: 8
+    overflow: "grow"
+    description_ru: >-
+      След решений проекта: EPIC → PRD → RFC → ADR → EVID. Группируется по типу
+      при большом числе.
+
+zone_hints:
+  - { zone: "z.routes", source: "code.entrypoints", pattern: "**" }
+  - { zone: "z.routes", source: "code.modules", pattern: "**/pages/**" }
+  - { zone: "z.routes", source: "code.modules", pattern: "**/routes/**" }
+  - { zone: "z.components", source: "code.modules", pattern: "**/components/**" }
+  - { zone: "z.components", source: "code.modules", pattern: "**/widgets/**" }
+  - { zone: "z.state", source: "code.modules", pattern: "**/store/**" }
+  - { zone: "z.state", source: "code.modules", pattern: "**/state/**" }
+  - { zone: "z.state", source: "code.modules", pattern: "**/api/**" }
+  - { zone: "z.decisions", source: "fpl.artifacts", pattern: "**" }
+
+flow_hints:
+  - id: "f.render"
+    name: "Render"
+    path: ["z.routes", "z.components", "z.state"]
+    steps_ru:
+      - "Пользователь открывает страницу (маршрут)."
+      - "Страница собирает UI из компонентов."
+      - "Компоненты читают состояние и данные из сторов / API-клиента."
+  - id: "f.decisions"
+    name: "Decision trail"
+    path: ["z.decisions"]
+    steps_ru:
+      - "След решений проекта: EPIC → PRD → RFC → ADR."

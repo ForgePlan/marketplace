@@ -40,8 +40,8 @@ Build the full `forgeplan.map/v1` document:
     "version": 1                          // or prior + 1 if a previous map.json exists; the fuller
   },                                       // added_node_ids/stale_node_ids differ (`increments[]`) is
                                             // Phase 2 — do not attempt it here (SPEC-003 D6)
-  "canvas": { /* pass through from the composition, unchanged */ },
-  "composition": { /* pass through from the composition, unchanged */ },
+  "canvas": { /* pass through from the composition; but see tier-row layout below when overlays are active */ },
+  "composition": { /* pass through; placements come from cells OR are computed from tiers (below) */ },
   "zones": [ /* from extraction.zones, cols/accent/treatment/rule_edge/layout_rule pinned */ ],
   "nodes": [ /* from extraction.nodes, id/zone/provenance intact, mega-nodes included */ ],
   "edges": [ /* typedLink + codeDep concatenated, in whatever order is stable */ ],
@@ -49,6 +49,29 @@ Build the full `forgeplan.map/v1` document:
   // "layers" and "increments" are Phase-2-only (SPEC-003 D6) — omit both in P1, do not populate
 }
 ```
+
+## Algorithm 1c — tier-row layout when overlays are active
+
+A plain base composition ships fixed `placements` (`{zone, cell:{row,col}}`) and a
+matching `canvas.grid` — pass them through unchanged. But when the orchestrator's
+SELECT stage composed base + pattern OVERLAYS (breadth model), the added/split
+zones carry a **`tier`** hint (`entry` | `core` | `data` | `decisions`) instead of
+a fixed `cell`, and the zone count is variable — so you compute the grid:
+
+1. Bucket every zone by `tier` (a base zone with no `tier` maps by its `kind`:
+   `surface`→entry, `core`→core, `store`/data-ish→data, `truth`→decisions).
+2. Order the rows **entry → core → data → decisions**; each non-empty tier is one
+   grid ROW. Set `canvas.grid.rows` = number of non-empty tiers, `canvas.grid.cols`
+   = the widest row's zone count.
+3. Assign each zone a `placements[]` cell: its tier's row index, and its column =
+   its order within that tier (left to right). No `col_span` in P1 — one zone per
+   cell. This keeps the GC-2a "no zone-cell overlap" guard satisfied by
+   construction (one zone per (row,col)).
+4. Keep every other canvas constant (gap/margin/cell) verbatim.
+
+`z.decisions` is always the last (decisions) row. The result is a clean 2D grid
+for any base+overlay combination — the same append-stable, overlap-free layout the
+guardian's GC-2a re-checks.
 
 ## Algorithm 1b — derive `flows[]` from the composition's `flow_hints`
 

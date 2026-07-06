@@ -1,0 +1,63 @@
+# ============================================================================
+# overlays/mcp-server.yaml -- pattern overlay: MCP server surface
+# ============================================================================
+# Applies on top of any base that also exposes a Model Context Protocol server
+# (a tool surface for AI agents). Adds a Tools/MCP zone (entry tier) + a "Tool
+# call" flow. Abstract. See overlays/README.md.
+# ============================================================================
+
+overlay: "mcp-server"
+role: >-
+  The MCP-server pattern: the project exposes a Model Context Protocol server —
+  a catalogue of tools/resources/prompts an AI agent (Claude Code, Cursor, ...)
+  calls over stdio/SSE. A second front door alongside any human-facing surface.
+
+detection:
+  strong:
+    - signal: "mcp/ or tools/ server dir"
+      type: "dir_exists_any_depth"
+      path: "mcp/"
+      alt_path: "mcp-server/"
+  weak:
+    - signal: "rmcp / @modelcontextprotocol dependency"
+      type: "dir_exists_any_depth"
+      path: "tools/"
+  negative: []
+
+adds_zones:
+  - id: "z.mcp"
+    label: "MCP Tools"
+    sub: "the door for AI agents"
+    kind: "surface"
+    accent: "--map-accent-cyan"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 3
+    capacity: 8
+    overflow: "grow"
+    tier: "entry"
+    description_ru: >-
+      Вход для AI-агентов: сервер Model Context Protocol, отдающий инструменты,
+      ресурсы и промпты по stdio/SSE. То же ядро, что у человеко-ориентированных
+      поверхностей, но вызывают его агенты. Много инструментов схлопывается в
+      группы (E1a).
+
+adds_zone_hints:
+  - zone: "z.mcp"
+    source: "code.modules"
+    pattern: "**/mcp/**"
+  - zone: "z.mcp"
+    source: "code.modules"
+    pattern: "**/mcp-server/**"
+  - zone: "z.mcp"
+    source: "code.modules"
+    pattern: "**/tools/**"
+
+adds_flow_hints:
+  - id: "f.tool-call"
+    name: "Tool call"
+    path: ["z.mcp"]
+    steps_ru:
+      - "AI-агент вызывает инструмент MCP-сервера по stdio/SSE."
+      - "Сервер исполняет его через то же ядро и возвращает структурированный ответ."

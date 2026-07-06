@@ -1,0 +1,65 @@
+# ============================================================================
+# overlays/serverless.yaml -- pattern overlay: serverless / FaaS
+# ============================================================================
+# Applies on top of any base when the repo is structured as serverless
+# functions (handlers/lambdas triggered by events). Adds a Functions zone
+# (core tier) + a "Trigger" flow. Abstract. See overlays/README.md.
+# ============================================================================
+
+overlay: "serverless"
+role: >-
+  The serverless / FaaS pattern: many small stateless functions, each triggered
+  by an event (HTTP, queue, schedule, storage). No long-running server.
+
+detection:
+  strong:
+    - signal: "functions/"
+      type: "dir_exists_any_depth"
+      path: "functions/"
+      alt_path: "handlers/"
+    - signal: "serverless config"
+      type: "dir_exists_any_depth"
+      path: "serverless.yml"
+      alt_path: "template.yaml"
+  weak:
+    - signal: "lambdas/"
+      type: "dir_exists_any_depth"
+      path: "lambdas/"
+  negative: []
+
+adds_zones:
+  - id: "z.functions"
+    label: "Functions"
+    sub: "event-triggered handlers"
+    kind: "core"
+    accent: "--map-accent-amber"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 3
+    capacity: 8
+    overflow: "grow"
+    tier: "core"
+    description_ru: >-
+      Небольшие функции без состояния, каждая срабатывает по событию (HTTP,
+      очередь, расписание, изменение в хранилище). Разворачиваются и масштабируются
+      по отдельности; при большом числе схлопываются в группы (E1a).
+
+adds_zone_hints:
+  - zone: "z.functions"
+    source: "code.modules"
+    pattern: "**/functions/**"
+  - zone: "z.functions"
+    source: "code.modules"
+    pattern: "**/handlers/**"
+  - zone: "z.functions"
+    source: "code.modules"
+    pattern: "**/lambdas/**"
+
+adds_flow_hints:
+  - id: "f.trigger"
+    name: "Trigger"
+    path: ["z.functions"]
+    steps_ru:
+      - "Событие (HTTP-запрос, сообщение из очереди, таймер) поднимает функцию."
+      - "Функция отрабатывает без состояния и завершается; платформа гасит инстанс."
