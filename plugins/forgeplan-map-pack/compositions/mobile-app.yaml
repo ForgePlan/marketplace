@@ -1,0 +1,117 @@
+# compositions/mobile-app.yaml -- base archetype: mobile app
+# Abstract type (iOS/Android/React Native/Flutter). Full rationale: COMPOSITIONS-GUIDE.md.
+template: "mobile-app"
+role: >-
+  A mobile application: screens with navigation, reusable UI components, and a
+  services/data layer talking to a backend + device APIs.
+
+detection:
+  strong:
+    - { signal: "screens/ or views/", type: "dir_exists_any_depth", path: "screens/", alt_path: "views/" }
+    - { signal: "navigation/ or components/", type: "dir_exists_any_depth", path: "navigation/", alt_path: "components/" }
+  weak:
+    - { signal: "ios/ or android/ platform dirs", type: "dir_exists_any_depth", path: "ios/", alt_path: "android/" }
+  negative: []
+
+arrangement: "stack-ttb"
+canvas:
+  grid: { cols: 2, rows: 2 }
+  gap: { x: 88, y: 70 }
+  margin: 40
+  cell: { card_w: 190, card_h: 60, card_gap: 36, zpad: { top: 50, side: 24, bottom: 24 } }
+
+composition:
+  template: "mobile-app"
+  arrangement: "stack-ttb"
+  entry_zone: "z.screens"
+  placements:
+    - { zone: "z.screens",    cell: { row: 0, col: 0 } }
+    - { zone: "z.components", cell: { row: 0, col: 1 } }
+    - { zone: "z.services",   cell: { row: 1, col: 0 } }
+    - { zone: "z.decisions",  cell: { row: 1, col: 1 } }
+  zone_connectors:
+    - { from: "z.screens", to: "z.components", label: "composes" }
+    - { from: "z.components", to: "z.services", label: "reads/writes" }
+
+default_node_home: { zone: "z.components", note: "unmatched UI modules land in components" }
+
+zones:
+  - id: "z.screens"
+    label: "Screens"
+    sub: "views + navigation"
+    kind: "surface"
+    accent: "--map-accent-cyan"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+    description_ru: >-
+      Экраны и навигация между ними: то, что видит и по чему ходит пользователь.
+      Точка входа каждого сценария приложения.
+  - id: "z.components"
+    label: "Components"
+    sub: "reusable UI"
+    kind: "component"
+    accent: "--map-accent-rose"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 3
+    capacity: 8
+    overflow: "grow"
+    description_ru: >-
+      Переиспользуемые UI-компоненты, из которых собираются экраны. Много
+      компонентов схлопывается в группы (E1a).
+  - id: "z.services"
+    label: "Services & Data"
+    sub: "API + device"
+    kind: "core"
+    accent: "--map-accent-emerald"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+    description_ru: >-
+      Сервисы и данные: связь с бэкендом, локальное хранилище, доступ к API
+      устройства (камера, геолокация, пуши). Питает экраны данными.
+  - id: "z.decisions"
+    label: "Decision Trail"
+    sub: "why the code looks like this"
+    kind: "truth"
+    accent: "--map-accent-slate"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 4
+    capacity: 8
+    overflow: "grow"
+    description_ru: >-
+      След решений проекта: EPIC → PRD → RFC → ADR → EVID. Группируется по типу.
+
+zone_hints:
+  - { zone: "z.screens", source: "code.entrypoints", pattern: "**" }
+  - { zone: "z.screens", source: "code.modules", pattern: "**/screens/**" }
+  - { zone: "z.screens", source: "code.modules", pattern: "**/views/**" }
+  - { zone: "z.screens", source: "code.modules", pattern: "**/navigation/**" }
+  - { zone: "z.components", source: "code.modules", pattern: "**/components/**" }
+  - { zone: "z.services", source: "code.modules", pattern: "**/services/**" }
+  - { zone: "z.services", source: "code.modules", pattern: "**/api/**" }
+  - { zone: "z.decisions", source: "fpl.artifacts", pattern: "**" }
+
+flow_hints:
+  - id: "f.screen"
+    name: "Screen flow"
+    path: ["z.screens", "z.components", "z.services"]
+    steps_ru:
+      - "Пользователь открывает экран (навигация)."
+      - "Экран собирается из переиспользуемых компонентов."
+      - "Компоненты берут данные из сервисов (бэкенд, устройство)."
+  - id: "f.decisions"
+    name: "Decision trail"
+    path: ["z.decisions"]
+    steps_ru:
+      - "След решений проекта: EPIC → PRD → RFC → ADR."

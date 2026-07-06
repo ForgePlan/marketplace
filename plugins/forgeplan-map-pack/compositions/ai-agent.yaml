@@ -1,0 +1,119 @@
+# compositions/ai-agent.yaml -- base archetype: AI-agent / orchestrator app
+# Abstract type (agentic apps, LLM orchestrators -- e.g. forgeplan-map-pack
+# itself). Pairs with the mcp-server overlay. Full rationale: COMPOSITIONS-GUIDE.md.
+template: "ai-agent"
+role: >-
+  An AI-agent / LLM-orchestrator application: agents (with instructions/prompts)
+  dispatch to tools/skills, coordinated by an orchestration layer, over some
+  memory/context.
+
+detection:
+  strong:
+    - { signal: "agents/", type: "dir_exists_any_depth", path: "agents/" }
+    - { signal: "tools/ or skills/", type: "dir_exists_any_depth", path: "tools/", alt_path: "skills/" }
+  weak:
+    - { signal: "prompts/ or memory/", type: "dir_exists_any_depth", path: "prompts/", alt_path: "memory/" }
+  negative: []
+
+arrangement: "stack-ttb"
+canvas:
+  grid: { cols: 2, rows: 2 }
+  gap: { x: 88, y: 70 }
+  margin: 40
+  cell: { card_w: 190, card_h: 60, card_gap: 36, zpad: { top: 50, side: 24, bottom: 24 } }
+
+composition:
+  template: "ai-agent"
+  arrangement: "stack-ttb"
+  entry_zone: "z.agents"
+  placements:
+    - { zone: "z.agents",       cell: { row: 0, col: 0 } }
+    - { zone: "z.tools",        cell: { row: 0, col: 1 } }
+    - { zone: "z.orchestration", cell: { row: 1, col: 0 } }
+    - { zone: "z.decisions",    cell: { row: 1, col: 1 } }
+  zone_connectors:
+    - { from: "z.agents", to: "z.tools", label: "calls" }
+    - { from: "z.orchestration", to: "z.agents", label: "dispatches" }
+
+default_node_home: { zone: "z.orchestration", note: "unmatched coordination modules land in orchestration" }
+
+zones:
+  - id: "z.agents"
+    label: "Agents"
+    sub: "roles + instructions"
+    kind: "surface"
+    accent: "--map-accent-cyan"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 3
+    capacity: 8
+    overflow: "grow"
+    description_ru: >-
+      Агенты: роли, инструкции, промпты. Каждый решает свой класс задач и вызывает
+      инструменты. Много агентов схлопывается в группы (E1a).
+  - id: "z.tools"
+    label: "Tools & Skills"
+    sub: "what agents can DO"
+    kind: "core"
+    accent: "--map-accent-emerald"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 3
+    capacity: 8
+    overflow: "grow"
+    description_ru: >-
+      Инструменты и навыки, доступные агентам: конкретные действия над миром
+      (файлы, API, вычисления). Ядро реальной работы агентов.
+  - id: "z.orchestration"
+    label: "Orchestration"
+    sub: "dispatch + memory"
+    kind: "component"
+    accent: "--map-accent-amber"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+    description_ru: >-
+      Координация: маршрутизация задач между агентами, гейты, память/контекст.
+      Дирижёр, который решает, кого и когда позвать.
+  - id: "z.decisions"
+    label: "Decision Trail"
+    sub: "why the code looks like this"
+    kind: "truth"
+    accent: "--map-accent-slate"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 4
+    capacity: 8
+    overflow: "grow"
+    description_ru: >-
+      След решений проекта: EPIC → PRD → RFC → ADR → EVID. Группируется по типу.
+
+zone_hints:
+  - { zone: "z.agents", source: "code.modules", pattern: "**/agents/**" }
+  - { zone: "z.tools", source: "code.modules", pattern: "**/tools/**" }
+  - { zone: "z.tools", source: "code.modules", pattern: "**/skills/**" }
+  - { zone: "z.orchestration", source: "code.entrypoints", pattern: "**" }
+  - { zone: "z.orchestration", source: "code.modules", pattern: "**/orchestrat*/**" }
+  - { zone: "z.orchestration", source: "code.modules", pattern: "**/memory/**" }
+  - { zone: "z.orchestration", source: "code.modules", pattern: "**/prompts/**" }
+  - { zone: "z.decisions", source: "fpl.artifacts", pattern: "**" }
+
+flow_hints:
+  - id: "f.dispatch"
+    name: "Dispatch"
+    path: ["z.orchestration", "z.agents", "z.tools"]
+    steps_ru:
+      - "Оркестрация принимает задачу и выбирает подходящего агента."
+      - "Агент по своим инструкциям планирует шаги."
+      - "Агент вызывает инструменты/навыки, которые делают реальную работу."
+  - id: "f.decisions"
+    name: "Decision trail"
+    path: ["z.decisions"]
+    steps_ru:
+      - "След решений проекта: EPIC → PRD → RFC → ADR."

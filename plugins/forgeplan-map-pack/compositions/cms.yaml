@@ -1,0 +1,119 @@
+# compositions/cms.yaml -- base archetype: content management system
+# Abstract type. Full rationale: COMPOSITIONS-GUIDE.md.
+template: "cms"
+role: >-
+  A content management system: an admin surface to author content, content
+  models/types, and templates/themes that render it (+ media).
+
+detection:
+  strong:
+    - { signal: "content/ or entries/", type: "dir_exists_any_depth", path: "content/", alt_path: "entries/" }
+    - { signal: "templates/ or themes/", type: "dir_exists_any_depth", path: "templates/", alt_path: "themes/" }
+  weak:
+    - { signal: "admin/", type: "dir_exists_any_depth", path: "admin/" }
+  negative: []
+
+arrangement: "stack-ttb"
+canvas:
+  grid: { cols: 2, rows: 2 }
+  gap: { x: 88, y: 70 }
+  margin: 40
+  cell: { card_w: 190, card_h: 60, card_gap: 36, zpad: { top: 50, side: 24, bottom: 24 } }
+
+composition:
+  template: "cms"
+  arrangement: "stack-ttb"
+  entry_zone: "z.admin"
+  placements:
+    - { zone: "z.admin",     cell: { row: 0, col: 0 } }
+    - { zone: "z.content",   cell: { row: 0, col: 1 } }
+    - { zone: "z.templates", cell: { row: 1, col: 0 } }
+    - { zone: "z.decisions", cell: { row: 1, col: 1 } }
+  zone_connectors:
+    - { from: "z.admin", to: "z.content", label: "authors" }
+    - { from: "z.content", to: "z.templates", label: "renders" }
+
+default_node_home: { zone: "z.content", note: "unmatched content modules land in the content core" }
+
+zones:
+  - id: "z.admin"
+    label: "Admin"
+    sub: "authoring surface"
+    kind: "surface"
+    accent: "--map-accent-cyan"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+    description_ru: >-
+      Панель управления: где редакторы создают и правят контент. Входная дверь для
+      авторов, а не для конечных читателей.
+  - id: "z.content"
+    label: "Content"
+    sub: "models & entries"
+    kind: "core"
+    accent: "--map-accent-emerald"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 3
+    capacity: 8
+    overflow: "grow"
+    description_ru: >-
+      Ядро контента: модели/типы записей и сами записи. То, чем управляет система;
+      источник, из которого рендерятся страницы. Много типов схлопывается в
+      группы (E1a).
+  - id: "z.templates"
+    label: "Templates & Media"
+    sub: "themes / assets"
+    kind: "component"
+    accent: "--map-accent-rose"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+    description_ru: >-
+      Шаблоны, темы и медиа-ассеты, которыми контент превращается в готовые
+      страницы для читателя.
+  - id: "z.decisions"
+    label: "Decision Trail"
+    sub: "why the code looks like this"
+    kind: "truth"
+    accent: "--map-accent-slate"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 4
+    capacity: 8
+    overflow: "grow"
+    description_ru: >-
+      След решений проекта: EPIC → PRD → RFC → ADR → EVID. Группируется по типу.
+
+zone_hints:
+  - { zone: "z.admin", source: "code.entrypoints", pattern: "**" }
+  - { zone: "z.admin", source: "code.modules", pattern: "**/admin/**" }
+  - { zone: "z.content", source: "code.modules", pattern: "**/content/**" }
+  - { zone: "z.content", source: "code.modules", pattern: "**/entries/**" }
+  - { zone: "z.content", source: "code.modules", pattern: "**/models/**" }
+  - { zone: "z.templates", source: "code.modules", pattern: "**/templates/**" }
+  - { zone: "z.templates", source: "code.modules", pattern: "**/themes/**" }
+  - { zone: "z.templates", source: "code.modules", pattern: "**/media/**" }
+  - { zone: "z.decisions", source: "fpl.artifacts", pattern: "**" }
+
+flow_hints:
+  - id: "f.publish"
+    name: "Publish"
+    path: ["z.admin", "z.content", "z.templates"]
+    steps_ru:
+      - "Редактор создаёт запись в админке."
+      - "Запись сохраняется в модель контента."
+      - "Шаблон рендерит её в готовую страницу для читателя."
+  - id: "f.decisions"
+    name: "Decision trail"
+    path: ["z.decisions"]
+    steps_ru:
+      - "След решений проекта: EPIC → PRD → RFC → ADR."
