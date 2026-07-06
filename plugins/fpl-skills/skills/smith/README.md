@@ -1,8 +1,8 @@
 # Smith — master orchestrator
 
-> Strategic entry-point for the ForgePlan ecosystem: reads project state, classifies the situation against a 12-context routing matrix, and returns a structured Plan naming which specialist agents to dispatch in which order.
+> Strategic entry-point for the ForgePlan ecosystem: reads project state, classifies the situation against a 14-context routing matrix, and returns a structured Plan naming which specialist agents to dispatch in which order.
 
-Smith is the ForgePlan analogue of the **BMAD Master** pattern — adapted to the ForgePlan artefact vocabulary (PRD / RFC / ADR / EVID) and dispatch surface (named subagents instead of personas). The smith family lives in `plugins/fpl-skills/skills/smith*/` and is backed by the `smith` agent (`plugins/agents-pro/agents/smith.md`), the **routing-map.md** brain (12 contexts × 25 methodologies × 25 agents), and five templates in `plugins/fpl-skills/templates/`.
+Smith is the ForgePlan analogue of the **BMAD Master** pattern — adapted to the ForgePlan artefact vocabulary (PRD / RFC / ADR / EVID) and dispatch surface (named subagents instead of personas). The smith family lives in `plugins/fpl-skills/skills/smith*/` and is backed by the `smith` agent (`plugins/agents-pro/agents/smith.md`), the **routing-map.md** brain (14 contexts × 29 methodologies), and five templates in `plugins/fpl-skills/templates/`.
 
 **Foundation**: EPIC-002 «Smith master-orchestrator + routing matrix» — Wave 1 (agent + routing map + sections + templates), Wave 2 (the four entry-point skills below).
 
@@ -33,7 +33,7 @@ Smith is the ForgePlan analogue of the **BMAD Master** pattern — adapted to th
 
 ---
 
-## The 12 contexts smith routes
+## The 14 contexts smith routes
 
 | # | Context | Trigger phrases |
 |---|---|---|
@@ -49,20 +49,22 @@ Smith is the ForgePlan analogue of the **BMAD Master** pattern — adapted to th
 | 10 | Product discovery (PDLC) | "what should we build", "user research" |
 | 11 | Tech debt cleanup | "tech debt", "cleanup sprint", "техдолг" |
 | 12 | Live incident response | "production down", "outage", "лежит прод" |
+| 13 | TDD-first feature (tests frozen before code) | "TDD", "test-first", "тесты сначала" |
+| 14 | Design-system → code (CANVAS) | "design system to code", "Pencil to Storybook", "дизайн-система в код" |
 
-Full row recipes (primary + secondary methodology + dispatch sequence + evidence requirements) live in [`routing-map.md`](./routing-map.md).
+Full row recipes (primary + secondary methodology + dispatch sequence + evidence requirements) live in [`routing-map.md`](./routing-map.md). Rows 13-14 do not yet have a dedicated `sections/NN-*.md` playbook — read the full row directly.
 
 ---
 
-## The 25 methodologies smith knows
+## The 29 methodologies smith knows
 
 Grouped by phase of the SDLC they cover. Every methodology has a one-page card in [`routing-map.md`](./routing-map.md) with definition, when-it-shines, when-NOT, and source link.
 
-**Spec / framing**: BMAD-METHOD, SPARC, GitHub Spec Kit, RIPER-5
+**Spec / framing**: BMAD-METHOD, SPARC, GitHub Spec Kit, RIPER-5, Spec-Driven Development (light path)
 
 **Design / decision**: FPF ADI, ADR/MADR, Domain-Driven Design, Event Storming, C4 Model, Hexagonal Architecture, Clean Architecture
 
-**Refactor / modernisation**: Strangler Fig, Branch-by-Abstraction, Anti-Corruption Layer
+**Refactor / modernisation**: Strangler Fig, Branch-by-Abstraction, Anti-Corruption Layer, Mikado Method
 
 **Quality / audit**: OWASP Top 10 2025, STRIDE/ASTRIDE, DORA Metrics, SRE
 
@@ -71,6 +73,8 @@ Grouped by phase of the SDLC they cover. Every methodology has a one-page card i
 **Discovery / product**: Jobs-To-Be-Done, Lean Startup, Double Diamond
 
 **Incident**: Incident Command System (FEMA-adapted)
+
+**Verification**: Ground-truth verification (generator ≠ verifier)
 
 ---
 
@@ -116,7 +120,7 @@ Grouped by phase of the SDLC they cover. Every methodology has a one-page card i
        ┌─────────────────────┼────────────────────────┐
        ▼                     ▼                        ▼
  routing-map.md       sections/NN-*.md          templates/smith-*.md
- (12 × 25 × 25)       (12 playbooks)            (5 output templates)
+ (14 × 29)            (12 playbooks)            (5 output templates)
        │                     │                        │
        └─────────────────────┴────────────────────────┘
                              │
@@ -145,7 +149,7 @@ Grouped by phase of the SDLC they cover. Every methodology has a one-page card i
 ## References
 
 - **Agent**: [`plugins/agents-pro/agents/smith.md`](../../../agents-pro/agents/smith.md) — Profile B-orchestrator (Wave 1A).
-- **Routing brain**: [`routing-map.md`](./routing-map.md) — 12 contexts × 25 methodologies × 25 agents (Wave 1B).
+- **Routing brain**: [`routing-map.md`](./routing-map.md) — 14 contexts × 29 methodologies (Wave 1B).
 - **Section playbooks**: [`sections/`](./sections/) — `01-greenfield.md` through `12-incident.md` (Wave 1B agentic RAG).
 - **Templates**: [`plugins/fpl-skills/templates/SMITH-TEMPLATES.md`](../../templates/SMITH-TEMPLATES.md) — guide to the 5 smith-related output templates.
 - **Agent authoring**: [`plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md`](../../AGENT-AUTHORING-GUIDE.md) — canonical Profile A/B/C/D patterns.

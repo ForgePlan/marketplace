@@ -10,15 +10,15 @@ Professional specialist agents: security experts, architecture reviewers, creati
 
 ## Smith — master orchestrator (NEW v1.10.0+)
 
-> Routes 12 contexts to the right methodology + dispatch sequence — the "BMAD Master" of the ForgePlan ecosystem.
+> Routes 14 contexts to the right methodology + dispatch sequence — the "BMAD Master" of the ForgePlan ecosystem.
 
-Smith is a **Profile B-orchestrator** (new sub-profile per AGENT-AUTHORING-GUIDE L1162-1268). It is the only agent in the marketplace that reads project state, classifies the task into 1 of 12 contexts, and recommends a methodology + dispatch sequence. The smith agent body lives in `agents-pro`; its 4 user-facing skills (`/smith`, `/smith-bootstrap`, `/smith-plan`, `/smith-routing`) live in `fpl-skills`.
+Smith is a **Profile B-orchestrator** (new sub-profile per AGENT-AUTHORING-GUIDE L1162-1268). It is the only agent in the marketplace that reads project state, classifies the task into 1 of 14 contexts, and recommends a methodology + dispatch sequence. The smith agent body lives in `agents-pro`; its 4 user-facing skills (`/smith`, `/smith-bootstrap`, `/smith-plan`, `/smith-routing`) live in `fpl-skills`.
 
 | Component | Where |
 |---|---|
 | `smith` agent | `plugins/agents-pro/agents/smith.md` (this plugin) |
 | 4 `/smith*` skills | `plugins/fpl-skills/skills/smith*/` (sibling plugin) |
-| Routing brain (12 ctx × 27 methodologies) | `plugins/fpl-skills/skills/smith/routing-map.md` |
+| Routing brain (14 ctx × 29 methodologies) | `plugins/fpl-skills/skills/smith/routing-map.md` |
 | 5 templates (smith-plan / smith-bootstrap / smith-handoff / post-mortem / routing-decision) | `plugins/fpl-skills/templates/` |
 
 > [!TIP]
@@ -38,7 +38,7 @@ Legend: ⚙ = forgeplan-aware (B2 paradigm — `disallowedTools` denylist + cano
 
 | Agent | Profile | Description |
 |-------|:-------:|-------------|
-| `smith` ⚙ | B-orchestrator | **Master orchestrator** — routes 12 contexts to methodology + dispatch sequence; never writes code or activates artifacts (see [Smith section](#smith--master-orchestrator-new-v1100) above) |
+| `smith` ⚙ | B-orchestrator | **Master orchestrator** — routes 14 contexts to methodology + dispatch sequence; never writes code or activates artifacts (see [Smith section](#smith--master-orchestrator-new-v1100) above) |
 | `artifact-author` ⚙ | A (generic) | Generic Profile A creator for any forgeplan artifact kind (primary `forgeplan_generate`, fallback `forgeplan_new` + manual body) |
 | `artifact-maintainer` ⚙ | D (NEW) | In-place metadata maintenance on EXISTING artifacts — congruence_level, evidence_type, broken links, status changes |
 | `artifact-reviewer` ⚙ | B (generic) | Artifact health audit — schema completeness, link graph health, freshness/decay, R_eff trust |

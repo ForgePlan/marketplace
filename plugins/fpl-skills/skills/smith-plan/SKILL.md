@@ -1,7 +1,7 @@
 ---
 name: smith-plan
 description: |
-  Task-planning skill. Takes a SPECIFIC TASK as input (e.g., "refactor auth module", "ship payment service", "audit security of API gateway"), classifies it into one of 12 routing-map contexts, applies the matching methodology, and renders a structured Plan using templates/smith-plan.md. Dispatches the `smith` agent for routing decisions, returns a Plan markdown ready for orchestrator hand-off. Optionally creates a NOTE artifact to persist the Plan via forgeplan.
+  Task-planning skill. Takes a SPECIFIC TASK as input (e.g., "refactor auth module", "ship payment service", "audit security of API gateway"), classifies it into one of 14 routing-map contexts, applies the matching methodology, and renders a structured Plan using templates/smith-plan.md. Dispatches the `smith` agent for routing decisions, returns a Plan markdown ready for orchestrator hand-off. Optionally creates a NOTE artifact to persist the Plan via forgeplan.
 
   Triggers: "smith plan", "/smith-plan", "спланируй задачу", "plan this task", "how should we approach", "как подойти к задаче"
 origin: forgeplan
@@ -9,11 +9,11 @@ origin: forgeplan
 
 # /smith-plan — per-task structured plan
 
-You take ONE specific task from the user, classify it into the canonical 12-context routing map, dispatch the `smith` agent for a routing recommendation, and render an 8-section Plan via `templates/smith-plan.md`. The Plan is a **hand-off artifact** — it names which agents to dispatch in which order, what evidence each must produce, what risks to mitigate, and how to back out.
+You take ONE specific task from the user, classify it into the canonical 14-context routing map, dispatch the `smith` agent for a routing recommendation, and render an 8-section Plan via `templates/smith-plan.md`. The Plan is a **hand-off artifact** — it names which agents to dispatch in which order, what evidence each must produce, what risks to mitigate, and how to back out.
 
 `/smith-plan` is the **per-task entrypoint** of the smith family. Where `/smith` is the default conversational mode and `/smith-bootstrap` is the session-start "where are we" report, `/smith-plan` answers "I know the task — give me the playbook". Read-mostly: the skill produces a markdown Plan and, on user confirmation, may ask the orchestrator to persist it as a NOTE artifact. `/smith-plan` does NOT dispatch the planned agents — it recommends, the orchestrator dispatches.
 
-Foundation: EPIC-002 (smith master-orchestrator) + CLAUDE.md «4-layer pipeline S10→S13». Routing brain: `plugins/fpl-skills/skills/smith/routing-map.md` (12 rows). Output format: `plugins/fpl-skills/templates/smith-plan.md`.
+Foundation: EPIC-002 (smith master-orchestrator) + CLAUDE.md «4-layer pipeline S10→S13». Routing brain: `plugins/fpl-skills/skills/smith/routing-map.md` (14 rows). Output format: `plugins/fpl-skills/templates/smith-plan.md`.
 
 ---
 
@@ -81,9 +81,9 @@ You need three signals from this state:
 - Are there draft artifacts or blocked items that overlap with the task? → may change the dispatch sequence.
 - Does Hindsight remember a previous attempt at the same task? → cite it in the Plan's Context section.
 
-### Step 3 — Classify the task into 1 of 12 contexts
+### Step 3 — Classify the task into 1 of 14 contexts
 
-Apply the verb + state signals against the 12 rows of `routing-map.md`. Use the heuristics table below; pick **exactly one** row (smith's single-row rule from `routing-map.md`).
+Apply the verb + state signals against the 14 rows of `routing-map.md`. Use the heuristics table below; pick **exactly one** row (smith's single-row rule from `routing-map.md`).
 
 If two rows score equally → escalate via routing-decision (see Failure modes), do NOT guess.
 
@@ -95,7 +95,7 @@ Once the context is picked, read the corresponding section file for the full met
 plugins/fpl-skills/skills/smith/sections/NN-<context>.md
 ```
 
-Where NN is the row number (01 greenfield, 02 brownfield, … 12 incident). The section file gives you the dispatch sequence, evidence requirements, and risks in detail.
+Where NN is the row number (01 greenfield, 02 brownfield, … 12 incident). The section file gives you the dispatch sequence, evidence requirements, and risks in detail. Rows 13 (TDD-first feature) and 14 (design-system → code) do not yet have a dedicated section file — read the full row in `routing-map.md` directly instead.
 
 ### Step 5 — Dispatch the `smith` agent
 
@@ -284,7 +284,7 @@ If smith returned a `NEED_USER_INPUT` sentinel instead of a Plan, the skill prop
 ## Integration
 
 - `plugins/agents-pro/agents/smith.md` — the agent invoked for routing decisions (Step 5). Profile B-orchestrator; denies file-write + forgeplan mutations. Returns Plan markdown + optional sentinels.
-- `plugins/fpl-skills/skills/smith/routing-map.md` — classification source (12 rows + 25-row Agent index). The single source of truth for which methodology applies where.
+- `plugins/fpl-skills/skills/smith/routing-map.md` — classification source (14 rows + 26-entry Agent index). The single source of truth for which methodology applies where.
 - `plugins/fpl-skills/skills/smith/sections/NN-*.md` — per-context methodology playbooks. Read in Step 4 for the detailed recipe.
 - `plugins/fpl-skills/templates/smith-plan.md` — output format. 8 sections, ≤500 lines.
 - `plugins/fpl-skills/templates/routing-decision.md` — ambiguity escalation artifact when 2+ contexts apply.
@@ -302,7 +302,7 @@ If smith returned a `NEED_USER_INPUT` sentinel instead of a Plan, the skill prop
 ## References
 
 - **EPIC-002** — smith master-orchestrator initiative. Wave 1 produced the routing-map + sections + smith agent + templates; Wave 2 (this skill is part of Wave 2-B3) produces the four entrypoint skills.
-- **`routing-map.md`** — `plugins/fpl-skills/skills/smith/routing-map.md`. 12 contexts × 25 methodologies × 25 agents.
+- **`routing-map.md`** — `plugins/fpl-skills/skills/smith/routing-map.md`. 14 contexts × 29 methodologies.
 - **CLAUDE.md «4-Layer Pipeline (S10→S13)»** — methodology conveyor: FPF / BMAD / OpenSpec / Forgeplan + C4 architecture extension. Evidence requirements in the Plan derive from these layers.
 - **CLAUDE.md «BMAD adversarial review discipline» + «FPF ADI discipline»** — define the EVID quality bar smith and `/smith-plan` enforce in Step 6.
 - **`templates/smith-plan.md`** — the 8-section template the skill fills.

@@ -1,6 +1,6 @@
 # /smith-plan — per-task structured plan
 
-> Take a specific task ("refactor auth", "audit API gateway", "ship payment service"), classify it into 1 of 12 routing-map contexts, and return an 8-section Plan markdown naming the dispatch sequence, evidence requirements, and rollback path.
+> Take a specific task ("refactor auth", "audit API gateway", "ship payment service"), classify it into 1 of 14 routing-map contexts, and return an 8-section Plan markdown naming the dispatch sequence, evidence requirements, and rollback path.
 
 ## When to use
 
@@ -35,7 +35,7 @@ The skill runs 8 steps:
 
 1. **Parse the task** — extract verb / object / qualifier.
 2. **Read project state** — `forgeplan_health`, recent artifacts, hindsight recall, `git status`.
-3. **Classify into 1 of 12 contexts** — apply the verb + state signals against [`routing-map.md`](../smith/routing-map.md). Pick exactly one row (no blending).
+3. **Classify into 1 of 14 contexts** — apply the verb + state signals against [`routing-map.md`](../smith/routing-map.md). Pick exactly one row (no blending).
 4. **Read the methodology playbook** — load `sections/NN-<context>.md` for the detailed recipe.
 5. **Dispatch the `smith` agent** — pass task + state snapshot + section file reference.
 6. **Receive smith's Plan** — filled [`smith-plan.md` template](../../templates/smith-plan.md) (8 sections, ≤500 lines).
@@ -88,7 +88,7 @@ User: /smith-plan audit our API gateway for security before Q3 release
 - [SKILL.md](./SKILL.md) — full per-step procedure, classification heuristics, tie-breaker rules, output contract.
 - [`templates/smith-plan.md`](../../templates/smith-plan.md) — the 8-section, ≤500-line output template smith fills.
 - [`templates/routing-decision.md`](../../templates/routing-decision.md) — escalation artifact when 2+ contexts genuinely tie.
-- [`skills/smith/routing-map.md`](../smith/routing-map.md) — the 12-row routing matrix (single source of truth).
+- [`skills/smith/routing-map.md`](../smith/routing-map.md) — the 14-row routing matrix (single source of truth).
 - [`skills/smith/sections/`](../smith/sections/) — per-context playbooks (loaded one at a time in Step 4).
 - [`agents-pro/agents/smith.md`](../../../agents-pro/agents/smith.md) — the agent dispatched for routing decisions.
 - CLAUDE.md `4-Layer Pipeline (S10→S13)` — methodology foundation that the Plan's evidence requirements enforce.
