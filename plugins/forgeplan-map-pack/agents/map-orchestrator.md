@@ -191,9 +191,22 @@ ALWAYS: .forgeplan/ present in the target repo → append a z.decisions zone to 
 
 **Evaluate each detection signal DEPTH-AGNOSTICALLY.** A signal typed `dir_exists_any_depth` (or a directory-name signal generally) counts as present when the directory appears **at the repo root OR at any nesting depth** — `entities/`, `src/entities/`, `template/src/entities/` (forgeplan-web's own nested app root), or `packages/web/src/entities/` all satisfy an `entities/` signal. code-scanner records FSD-layer markers by basename regardless of depth for exactly this reason, so match the composition signal against those dir-name markers, not against a root-anchored path. A signal that carries an `alt_path` is satisfied by EITHER path (e.g. web-fullstack's third strong signal accepts `pages/` OR `routes/` — SvelteKit-FSD repos route pages under `routes/`). Root-anchoring this check is the v0.2.0 bug that scored forgeplan-web at 0 on the very template written for it and dropped it to the `generic` floor.
 
-### Stage 3 — SELECT (inline, no dispatch)
+### Stage 3 — SELECT + overlay compose (inline, no dispatch)
 
-Load `compositions/<template>.yaml` (the winner from Stage 2) via `Read`. This gives you the canvas/zones/arrangement/`zone_hints` that Stage 4 (`zone-extractor`) needs. If `.forgeplan/` is present (it always is, per your own precondition), append the `z.decisions` zone to the loaded composition regardless of which template won.
+Load `compositions/<template>.yaml` (the winner from Stage 2) via `Read`. This gives you the base canvas/zones/arrangement/`zone_hints` that Stage 4 (`zone-extractor`) needs. If `.forgeplan/` is present (it always is, per your own precondition), append the `z.decisions` zone regardless of which template won.
+
+**Then apply active pattern overlays (breadth model — COMPOSITIONS-GUIDE "Two axes").** Real repos are hybrids, so a base type is only half the picture:
+
+1. **Detect active overlays.** `Read`/`Glob` every `compositions/overlays/*.yaml` and run EACH one's `detection` block independently, the SAME depth-agnostic way you scored the base (Stage 2 formula, threshold `>=0.40`). Overlays are **not** scored against each other or against the base — each is independently PRESENT or ABSENT. Record the set of active overlays (0..n). `monolith` = zero active overlays.
+2. **Compose ONE effective composition** the extractor + emitter consume, applying active overlays in a **fixed order (alphabetical by `overlay` id)** so a hybrid is byte-stable:
+   - `splits_zone` first — replace the target base zone with its `into:` parts.
+   - `adds_zones` — append the overlay's new zones (each carries a `tier` hint).
+   - `adds_zone_hints` — append to `zone_hints` (they route modules into the added/split zones).
+   - `adds_flow_hints` — append to `flow_hints`.
+   A later overlay never un-does an earlier one's zones. Pin every `cols`; keep the 7-accent + depth-agnostic-hint discipline the overlay files already follow.
+3. **Hand the composed effective composition forward** — Stage 4 (`zone-extractor`) bins against the merged `zone_hints`; Stage 6 (`map-emitter`) lays the merged zones out by TIER ROW (entry → core → data → decisions) since overlay zones carry `tier` not a fixed `cell`, and derives flows from the merged `flow_hints`.
+
+Record `overlays=[...]` (the active set) alongside `(template, confidence, gap)` in your handoff, so the emitted `meta` reflects the hybrid.
 
 ### Stage 4 — EXTRACT (dispatch `zone-extractor`)
 

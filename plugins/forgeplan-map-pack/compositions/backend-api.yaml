@@ -1,0 +1,122 @@
+# compositions/backend-api.yaml -- base archetype: REST/GraphQL/gRPC backend service
+# Abstract type. Pairs naturally with the microservices / serverless / cqrs /
+# api-gateway overlays. Full rationale: COMPOSITIONS-GUIDE.md.
+template: "backend-api"
+role: >-
+  A backend service exposing an API (REST / GraphQL / gRPC): routes/controllers
+  at the edge, domain services in the core, a data/persistence layer behind.
+
+detection:
+  strong:
+    - { signal: "controllers/ or routes/", type: "dir_exists_any_depth", path: "controllers/", alt_path: "routes/" }
+    - { signal: "services/ or domain/", type: "dir_exists_any_depth", path: "services/", alt_path: "domain/" }
+  weak:
+    - { signal: "models/ or repositories/", type: "dir_exists_any_depth", path: "models/", alt_path: "repositories/" }
+  negative:
+    - { signal: "components/ (that's a frontend)", type: "dir_exists_any_depth", path: "components/" }
+
+arrangement: "stack-ttb"
+canvas:
+  grid: { cols: 2, rows: 2 }
+  gap: { x: 88, y: 70 }
+  margin: 40
+  cell: { card_w: 190, card_h: 60, card_gap: 36, zpad: { top: 50, side: 24, bottom: 24 } }
+
+composition:
+  template: "backend-api"
+  arrangement: "stack-ttb"
+  entry_zone: "z.api"
+  placements:
+    - { zone: "z.api",       cell: { row: 0, col: 0 } }
+    - { zone: "z.domain",    cell: { row: 0, col: 1 } }
+    - { zone: "z.data",      cell: { row: 1, col: 0 } }
+    - { zone: "z.decisions", cell: { row: 1, col: 1 } }
+  zone_connectors:
+    - { from: "z.api", to: "z.domain", label: "calls" }
+    - { from: "z.domain", to: "z.data", label: "persists" }
+
+default_node_home: { zone: "z.domain", note: "unmatched business modules land in the domain core" }
+
+zones:
+  - id: "z.api"
+    label: "API Surface"
+    sub: "routes / controllers"
+    kind: "surface"
+    accent: "--map-accent-cyan"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+    description_ru: >-
+      Поверхность API: маршруты, контроллеры, схемы запросов/ответов. Единственная
+      входная дверь для клиентов; валидирует ввод и зовёт домен.
+  - id: "z.domain"
+    label: "Domain / Services"
+    sub: "the business core"
+    kind: "core"
+    accent: "--map-accent-emerald"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+    description_ru: >-
+      Ядро: доменные сущности, use-case'ы и сервисы. Здесь живёт бизнес-логика;
+      не знает о HTTP, только о задаче.
+  - id: "z.data"
+    label: "Data & Persistence"
+    sub: "models / repositories"
+    kind: "core"
+    accent: "--map-accent-violet"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+    description_ru: >-
+      Слой данных: модели, репозитории, доступ к БД и внешним хранилищам. Домен
+      обращается сюда за состоянием, не зная деталей хранения.
+  - id: "z.decisions"
+    label: "Decision Trail"
+    sub: "why the code looks like this"
+    kind: "truth"
+    accent: "--map-accent-slate"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 4
+    capacity: 8
+    overflow: "grow"
+    description_ru: >-
+      След решений проекта: EPIC → PRD → RFC → ADR → EVID. Группируется по типу
+      при большом числе.
+
+zone_hints:
+  - { zone: "z.api", source: "code.entrypoints", pattern: "**" }
+  - { zone: "z.api", source: "code.modules", pattern: "**/controllers/**" }
+  - { zone: "z.api", source: "code.modules", pattern: "**/routes/**" }
+  - { zone: "z.api", source: "code.modules", pattern: "**/api/**" }
+  - { zone: "z.domain", source: "code.modules", pattern: "**/services/**" }
+  - { zone: "z.domain", source: "code.modules", pattern: "**/domain/**" }
+  - { zone: "z.data", source: "code.modules", pattern: "**/models/**" }
+  - { zone: "z.data", source: "code.modules", pattern: "**/repositories/**" }
+  - { zone: "z.data", source: "code.modules", pattern: "**/db/**" }
+  - { zone: "z.decisions", source: "fpl.artifacts", pattern: "**" }
+
+flow_hints:
+  - id: "f.request"
+    name: "Request path"
+    path: ["z.api", "z.domain", "z.data"]
+    steps_ru:
+      - "Запрос приходит на маршрут/контроллер, проходит валидацию."
+      - "Доменный сервис исполняет бизнес-логику."
+      - "Слой данных читает/пишет состояние и возвращает результат."
+  - id: "f.decisions"
+    name: "Decision trail"
+    path: ["z.decisions"]
+    steps_ru:
+      - "След решений проекта: EPIC → PRD → RFC → ADR."

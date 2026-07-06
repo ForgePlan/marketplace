@@ -1,0 +1,68 @@
+# ============================================================================
+# overlays/api-gateway.yaml -- pattern overlay: API gateway / edge
+# ============================================================================
+# Applies on top of any base that fronts its surfaces with a gateway/edge
+# (routing, auth, rate-limiting, aggregation). Adds a Gateway zone (entry
+# tier) + an "Ingress" flow. Abstract. See overlays/README.md.
+#
+# NOTE vs microservices: microservices ALSO adds a gateway, but as part of the
+# services topology. Use api-gateway as a standalone overlay for a monolith or
+# single backend that still sits behind an edge/BFF. When both are active the
+# alphabetical compose order means api-gateway's z.gateway is added first; the
+# emitter dedups by zone id, so a repo that triggers both gets one Gateway zone.
+# ============================================================================
+
+overlay: "api-gateway"
+role: >-
+  The API-gateway / edge pattern: a single edge tier in front of the app's
+  surfaces handling routing, authentication, rate-limiting, and response
+  aggregation (a BFF / reverse proxy / API gateway).
+
+detection:
+  strong:
+    - signal: "gateway/ or edge/"
+      type: "dir_exists_any_depth"
+      path: "gateway/"
+      alt_path: "edge/"
+  weak:
+    - signal: "bff/ or proxy/"
+      type: "dir_exists_any_depth"
+      path: "bff/"
+  negative: []
+
+adds_zones:
+  - id: "z.gateway"
+    label: "Gateway"
+    sub: "the edge / front door"
+    kind: "surface"
+    accent: "--map-accent-orange"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+    tier: "entry"
+    description_ru: >-
+      Краевой слой перед поверхностями приложения: маршрутизация, аутентификация,
+      ограничение частоты запросов, агрегация ответов. Всё внешнее сначала
+      проходит через шлюз.
+
+adds_zone_hints:
+  - zone: "z.gateway"
+    source: "code.modules"
+    pattern: "**/gateway/**"
+  - zone: "z.gateway"
+    source: "code.modules"
+    pattern: "**/edge/**"
+  - zone: "z.gateway"
+    source: "code.modules"
+    pattern: "**/bff/**"
+
+adds_flow_hints:
+  - id: "f.ingress"
+    name: "Ingress"
+    path: ["z.gateway", "z.surfaces"]
+    steps_ru:
+      - "Внешний запрос попадает на шлюз: аутентификация, лимиты, маршрутизация."
+      - "Шлюз проксирует его к нужной поверхности приложения."

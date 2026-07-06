@@ -1,0 +1,104 @@
+# ============================================================================
+# overlays/cqrs-eventsourcing.yaml -- pattern overlay: CQRS + Event Sourcing
+# ============================================================================
+# Applies on top of a backend base. SPLITS the core zone into Command / Query
+# and ADDS an event-store zone (data tier) + a "Command→Event→Read" flow.
+# Abstract. See overlays/README.md.
+# ============================================================================
+
+overlay: "cqrs-eventsourcing"
+role: >-
+  The CQRS + Event Sourcing pattern: writes go through commands that append
+  events; reads come from projections/read-models built from those events. The
+  write side and read side are separate.
+
+detection:
+  strong:
+    - signal: "commands/ + queries/"
+      type: "dir_exists_any_depth"
+      path: "commands/"
+    - signal: "queries/ or read-models/"
+      type: "dir_exists_any_depth"
+      path: "queries/"
+      alt_path: "read-models/"
+  weak:
+    - signal: "events/ or event-store"
+      type: "dir_exists_any_depth"
+      path: "events/"
+  negative: []
+
+# Split the base core zone into the command (write) and query (read) sides.
+splits_zone:
+  target: "z.core"
+  into:
+    - id: "z.command"
+      label: "Command side"
+      sub: "the write path"
+      kind: "core"
+      accent: "--map-accent-emerald"
+      treatment: "neutral-dashed"
+      rule_edge: "off"
+      layout_rule: "grid"
+      cols: 2
+      capacity: null
+      overflow: "grow"
+      tier: "core"
+      description_ru: >-
+        Сторона записи: команды валидируют намерение и порождают события. Не
+        читает проекции — только пишет в поток событий.
+    - id: "z.query"
+      label: "Query side"
+      sub: "the read path"
+      kind: "core"
+      accent: "--map-accent-violet"
+      treatment: "neutral-dashed"
+      rule_edge: "off"
+      layout_rule: "grid"
+      cols: 2
+      capacity: null
+      overflow: "grow"
+      tier: "core"
+      description_ru: >-
+        Сторона чтения: проекции и read-модели, построенные из потока событий.
+        Не мутирует состояние — только отдаёт готовые к чтению представления.
+
+adds_zones:
+  - id: "z.eventstore"
+    label: "Event Store"
+    sub: "the append-only log"
+    kind: "truth"
+    accent: "--map-accent-amber"
+    treatment: "neutral-dashed"
+    rule_edge: "off"
+    layout_rule: "grid"
+    cols: 2
+    capacity: null
+    overflow: "grow"
+    tier: "data"
+    description_ru: >-
+      Журнал событий, только на добавление — единственный источник правды.
+      Команды пишут сюда, проекции читают отсюда; состояние восстанавливается
+      воспроизведением событий.
+
+adds_zone_hints:
+  - zone: "z.command"
+    source: "code.modules"
+    pattern: "**/commands/**"
+  - zone: "z.query"
+    source: "code.modules"
+    pattern: "**/queries/**"
+  - zone: "z.query"
+    source: "code.modules"
+    pattern: "**/read-models/**"
+  - zone: "z.eventstore"
+    source: "code.modules"
+    pattern: "**/events/**"
+
+adds_flow_hints:
+  - id: "f.cqrs"
+    name: "Command → Read"
+    path: ["z.command", "z.eventstore", "z.query"]
+    steps_ru:
+      - "Команда проверяет намерение и порождает событие."
+      - "Событие дописывается в журнал (единственный источник правды)."
+      - "Проекция читает поток и обновляет read-модель для чтения."
