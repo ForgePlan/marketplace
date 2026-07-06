@@ -135,9 +135,13 @@ wrap one node in a mega):
                                      // megas in one zone never collide (GC-2
                                      // duplicate-id). NOT a "mn_<slug>" placeholder.
   "label": "EVID (95)",             // "<Group label> (<N>)" -- legible, counted
-  "kind": "mega",
+  "kind": "mega",                    // ALWAYS the literal "mega" -- NEVER the
+                                     // members' leaf kind ("evidence"). GC-10
+                                     // BLOCKERs on is_mega!==(kind==="mega"); the
+                                     // v0.7.1 dogfood shipped layer megas labelled
+                                     // with the leaf kind, inflating kind counts (CM-18).
   "zone": "<same zone id>",
-  "found_at": "<extraction timestamp, ISO 8601>",
+  "found_at": "<earliest found_at among children — Algorithm 5b, NEVER extraction-now>",
   "is_mega": true,
   "children": ["<id 1>", "<id 2>", "..."],   // the group's members only
   "collapsed": true
@@ -154,12 +158,48 @@ Rules:
   `children` id resolves to a real node and that there is no nesting cycle
   (multiple megas per zone is fine — GC-3 validates each independently).
 - G2 requires every node — including each group mega — to carry a valid id, a
-  `zone`, and a `provenance`. Give a group mega a synthetic-but-honest
-  provenance, e.g. `{ "source": "zone-extractor", "ref": "<zone-id> · <groupKey> group (N members)", "confidence": 1.0 }`.
+  `zone`, and a `provenance`. Give a group mega a synthetic-but-honest provenance
+  whose `ref` is the **machine-recoverable group preimage** — the exact
+  `<zone-id>:<groupKey>` string the id hashes — so a consumer (forgeplan-web's
+  `deriveSubDocument`, or a later layer build) can reconstruct WHICH group this
+  mega stands for without parsing the human label: `{ "source": "zone-extractor",
+  "ref": "mega:<zone-id>:<groupKey>", "confidence": 1.0 }` (CM-18). Keep the human
+  count in the `label` (`EVID (95)`), never in `ref` — a sentence like
+  `"<zone> · EVID group (95 members)"` is not machine-recoverable and drifts as N
+  changes. (GC-6 does NOT re-derive mega ids — it skips `is_mega` nodes — so this
+  `ref` is a traceability contract, not an id-hash input; but keeping it equal to
+  the id preimage means the two never disagree.)
 - Mint each group mega's `id` as `sha1("mega:" + zoneId + ":" + groupKey)[:12]`
   (`kind="mega"`). Stable run-to-run as long as the zone id and group key don't
   change (append-stability: adding an EVID grows the `EVID (N)` mega's child list
   and its label count, but its id — keyed on zone+kind — stays byte-identical).
+
+## Algorithm 5b — `found_at` is a REAL first-seen, never `now()` (CM-06)
+
+Every node MUST carry a valid ISO `found_at` (guardian GC-7 BLOCKERs otherwise) —
+but it must also be **stable run-to-run**, because `found_at` is §19's
+append-stability sort key. Stamping the extraction timestamp (`now()`) makes every
+node's key change on every run, so the sort order churns and append-stability
+breaks — the v0.7.1 dogfood defect CM-06 (constant/`now()`/missing found_at).
+Source it from real, per-entity, deterministic data, in this order:
+
+- **code module / entry-point node** → the `first_seen` the code-scanner recorded
+  (git first-add ISO date, Step 2c). Real "when this file appeared".
+- **forgeplan artifact node** → the artifact's `created` from `.scan.fpl.json`
+  (forgeplan-scanner records it per artifact). Real "when this artifact was created".
+- **group mega node** (Algorithm 5) → the **earliest** `found_at` among its
+  `children` (a group is as old as its oldest member; stable as long as the
+  membership's oldest entry doesn't change).
+- **Deterministic fallback (never `now()`)** → when an entity has no git date and
+  no artifact `created` (e.g. the target isn't a git repo), use ONE stable
+  repo-level reference for all such nodes — the earliest `found_at` available
+  anywhere in this extraction, or a single fixed sentinel date if none exists.
+  A shared constant is honest here: it doesn't claim a fake per-file age, and it
+  keeps the sort stable (ties break on the deterministic node id). What is
+  forbidden is `now()` (churns every run) and a per-node fabricated date.
+
+Whatever the source, `found_at` is a property carried run-to-run for the same
+entity — like `kind` and `id` (Algorithm 2a), never re-derived from wall-clock.
 
 ## Algorithm 6 — rich `description_ru` from grounded understanding (E1c)
 
@@ -212,6 +252,7 @@ Write exactly one file, `.forgeplan/map/.work/.extract.json`:
 
 ```jsonc
 {
+  "project": { /* carried through VERBATIM from .scan.docs.json's `project` (title/description_ru/source_doc) for map-emitter to stamp into meta.title/meta.description_ru (CM-08). OMIT the key entirely when docs-scanner emitted no project — never synthesize a title/tagline from the repo name */ },
   "zones": [ /* from the composition, cols/accent/treatment/rule_edge/layout_rule pinned through unchanged */ ],
   "layers": [],           // NOT populated in P1 (SPEC-003 D6 — Phase 2 only); leave empty
   "nodes": [ /* merged, id-minted, zone-bound, mega-collapsed */ ],
@@ -225,7 +266,7 @@ Write exactly one file, `.forgeplan/map/.work/.extract.json`:
 
 Before handing back to the orchestrator, verify all four, and only claim success if all four hold:
 
-1. Every node's `id` is well-formed (12-hex on a real pipeline run) and every node has a non-empty `zone` and a `provenance` object.
+1. Every node's `id` is well-formed (12-hex on a real pipeline run) and every node has a non-empty `zone`, a `provenance` object, and a valid ISO `found_at` (real first-seen, Algorithm 5b — never `now()`; GC-7 BLOCKERs a missing/invalid one).
 2. No two nodes share an `id`.
 3. Every zone in the output has `cols` present and a positive integer (never null, never omitted).
 4. Every `node.zone` refers to a zone id actually present in this extraction's `zones[]`.
@@ -242,6 +283,9 @@ If any of these fail and you cannot resolve it (e.g. the composition itself is m
 | Leaving an over-capacity zone flat (no mega) | Check every zone's final member count; past the threshold (`capacity` or 8) collapse GROUPED — one mega per kind-group, singletons flat (Algorithm 5) |
 | Collapsing a whole 170-node zone into ONE mega | The E1a dump bug — group by kind (PRD/RFC/ADR/EVID/…) so the zone shows a legible ~6-card summary, never a single opaque blob |
 | Removing original nodes when creating a mega-node | Keep them in `nodes[]`; the mega-node's `children` references them, it doesn't replace them |
+| Setting a group mega's `kind` to the members' leaf kind (`evidence`) | A mega's `kind` is ALWAYS the literal `"mega"` — GC-10 BLOCKERs otherwise, and a leaf-kind mega inflates kind counts (CM-18) |
+| Putting a human sentence (`… group (95 members)`) in a mega's `provenance.ref` | `ref` is the machine preimage `mega:<zoneId>:<groupKey>` — recoverable, drift-free; the human count lives in `label` (CM-18) |
 | Inventing `description_ru` from a label | Omit the field when `.scan.docs.json` has no real match — never fabricate narration |
+| Stamping `now()`/a constant into every node's `found_at` | Source a real per-entity first-seen (git `first_seen` / artifact `created` / mega = earliest child); deterministic fallback, never wall-clock `now()` (Algorithm 5b, CM-06) |
 | Writing extraction output to `map.json` | Extraction is scratch-only (`.work/.extract.json`); only `map-emitter` writes `map.json` content |
 | Dropping a node that matched no `zone_hint` | Fall back to `z.core` — every node gets a home, none are silently discarded |
