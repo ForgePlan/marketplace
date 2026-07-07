@@ -76,7 +76,7 @@ Call `forgeplan_list()` with no `kind`/`status` filter to get the whole graph's 
 
 ### Step 2 -- Selective enrichment via `forgeplan_get`
 
-For a bounded subset of artifacts likely to become zone nodes -- active PRD/RFC/ADR/EPIC/SPEC kinds are the strongest candidates, mirroring the `z.decisions`-style zone in `fixtures/checkpoint-map.json` -- call `forgeplan_get(id)` individually to pull `r_eff_score` (present directly in the response body; there is no separate `forgeplan_score` call needed, and none is granted to this agent regardless) and a short summary. Treat this as selective enrichment, not an exhaustive per-artifact pass -- on a graph of 100+ artifacts, calling `forgeplan_get` on every one wastes turns and adds nothing gate G1 needs.
+For a bounded subset of artifacts likely to become zone nodes -- active PRD/RFC/ADR/EPIC/SPEC kinds are the strongest candidates, mirroring the `z.decisions`-style zone in `fixtures/checkpoint-map.json` -- call `forgeplan_get(id)` individually to pull a short **`summary`** (the field `zone-extractor` turns into the artifact node's `description_ru`, CM-17) and `updated` (its B5 content signature). The response body also carries `r_eff_score` and `status`; record them if handy, but note NO downstream stage currently surfaces `r_eff`/`status` on a node -- `summary`/`updated`/`created`/`title` are the consumed fields, so do not treat pulling `r_eff` as the reason for the call. Treat this as selective enrichment, not an exhaustive per-artifact pass -- on a graph of 100+ artifacts, calling `forgeplan_get` on every one wastes turns and adds nothing gate G1 needs.
 
 ### Step 3 -- Edges via `forgeplan_graph`
 

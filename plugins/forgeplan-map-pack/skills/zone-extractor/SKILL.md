@@ -16,7 +16,7 @@ Three scan scratch files (already written by upstream SCAN-stage agents this ski
 |---|---|---|
 | `.forgeplan/map/.work/.scan.code.json` | `code-scanner` | `{ modules[], entrypoints[], manifests[] }` — source tree facts |
 | `.forgeplan/map/.work/.scan.fpl.json` | `forgeplan-scanner` | `{ artifacts[], edges[] }` — the `.forgeplan/` graph, via `forgeplan_graph` |
-| `.forgeplan/map/.work/.scan.docs.json` | `docs-scanner` | `{ narrations[] }` — RU prose pulled from real docs, never invented |
+| `.forgeplan/map/.work/.scan.docs.json` | `docs-scanner` | `{ project?, narrations[] }` — `project` = CM-08 title/description_ru (→ `extraction.project`, Algorithm 5c/CM-08); `narrations[]` = RU prose from real docs, never invented |
 | composition object | orchestrator (inline `composition-selector`) | loaded from `compositions/<template>.yaml` (a sibling P1 deliverable this skill does not author) — bundles `canvas` + `zones[]` (static per-template zone shapes: id/label/kind/accent/cols/placement) + `arrangement` + `zone_hints` (binning patterns) |
 
 ## Algorithm 1 — merge before you mint (dedup rule)
@@ -185,7 +185,7 @@ Rules:
 - G2 requires every node — including each group mega — to carry a valid id, a
   `zone`, and a `provenance`. Give a group mega a synthetic-but-honest provenance
   whose `ref` is the **machine-recoverable group preimage** — the exact
-  `<zone-id>:<groupKey>` string the id hashes — so a consumer (forgeplan-web's
+  `mega:<zone-id>:<groupKey>` string the id hashes (`sha1("mega:"+zoneId+":"+groupKey)`) — so a consumer (forgeplan-web's
   `deriveSubDocument`, or a later layer build) can reconstruct WHICH group this
   mega stands for without parsing the human label: `{ "source": "zone-extractor",
   "ref": "mega:<zone-id>:<groupKey>", "confidence": 1.0 }` (CM-18). Keep the human
@@ -264,8 +264,10 @@ never shipping it on the node — CM-23 field discipline):
   `code-scanner` recorded for that path.
 - **forgeplan artifact node** → `_content_sig` = the artifact's `updated` stamp
   (fallback `created`) from `.scan.fpl.json`.
-- **doc-narrated node** → additionally fold the narrating doc's signature when the
-  docs-scanner surfaced one, so a doc edit re-narrates.
+- **doc-narrated node** → its `_content_sig` is still just the code/artifact
+  signature above. `docs-scanner` has no `Bash` and produces no per-doc signature,
+  so a doc-ONLY edit is NOT reflected in the fingerprint (a known limitation — a
+  full `/map-build` re-narrates; do not claim the fingerprint tracks doc edits).
 - **no signature available** → omit `_content_sig`; the fingerprint degrades to
   membership-only for that node (honest, not faked).
 
@@ -332,6 +334,7 @@ Write exactly one file, `.forgeplan/map/.work/.extract.json`:
 {
   "project": { /* carried through VERBATIM from .scan.docs.json's `project` (title/description_ru/source_doc) for map-emitter to stamp into meta.title/meta.description_ru (CM-08). OMIT the key entirely when docs-scanner emitted no project — never synthesize a title/tagline from the repo name */ },
   "repo_head": "<git HEAD SHA from .scan.code.json, threaded through for map-emitter's meta.source_fingerprint='git:<sha>' (B5); '' when not a git repo>",
+  "manifests": [ /* passed through VERBATIM from .scan.code.json's manifests[] ({path,kind,declared_deps}) — this is edge-verifier's code-dep candidate source ("code-relationship signal carried in the extraction"); the extractor does not itself derive edges from it, only threads it so VERIFY has candidates. Empty [] when none */ ],
   "zones": [ /* from the composition, cols/accent/treatment/rule_edge/layout_rule pinned through unchanged */ ],
   "layers": [],           // NOT populated in P1 (SPEC-003 D6 — Phase 2 only); leave empty
   "nodes": [ /* merged, id-minted, zone-bound, mega-collapsed; each MAY carry a scratch-only `_content_sig` (Algorithm 5d) map-emitter folds into seed_fingerprint then DROPS — never shipped */ ],

@@ -619,13 +619,14 @@ function checkCrossSource(doc, scanFplPath, repoRoot, checks) {
 // CLI
 // ---------------------------------------------------------------------------
 function parseArgs(argv) {
-  const args = { mapPath: null, repoRoot: null, scanFpl: null, smoke: false };
+  const args = { mapPath: null, repoRoot: null, scanFpl: null, smoke: false, checkOnly: false };
   const rest = [];
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--repo-root') args.repoRoot = argv[++i];
     else if (a === '--scan-fpl') args.scanFpl = argv[++i];
     else if (a === '--smoke') args.smoke = true;
+    else if (a === '--check-only') args.checkOnly = true;
     else rest.push(a);
   }
   args.mapPath = rest[0] ?? null;
@@ -635,7 +636,7 @@ function parseArgs(argv) {
 function main() {
   const args = parseArgs(process.argv.slice(2));
   if (!args.mapPath) {
-    console.error('usage: map-guardian.mjs <map.json path> [--repo-root <dir>] [--scan-fpl <path>] [--smoke]');
+    console.error('usage: map-guardian.mjs <map.json path> [--repo-root <dir>] [--scan-fpl <path>] [--smoke] [--check-only]');
     process.exit(2);
   }
   if (!existsSync(args.mapPath)) {
@@ -682,6 +683,16 @@ function main() {
 
   if (args.smoke) {
     console.log(`\nmap-guardian: PASS (${warnings.length} warning(s)) [smoke mode -- GC-5/GC-6/XC-1/XC-2 skipped, no write performed]`);
+    process.exit(0);
+  }
+
+  // --check-only: full Layer A+B ran (same as a normal non-smoke pass), but
+  // NO write is performed -- the status flip is deliberately skipped. This is
+  // the read-only deep pass /map-doctor uses so it can exercise GC-5/GC-6/
+  // XC-1/XC-2 without ever mutating map.json (the confirm write below is the
+  // ONLY write path, and doctor must never trigger it).
+  if (args.checkOnly) {
+    console.log(`\nmap-guardian: PASS (${warnings.length} warning(s)) [check-only -- full Layer A+B, no write performed]`);
     process.exit(0);
   }
 

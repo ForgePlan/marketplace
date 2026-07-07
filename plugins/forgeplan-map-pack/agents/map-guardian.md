@@ -11,7 +11,7 @@ description: |
   EN: The structural + advisory-semantic gate for a generated `map.json`. Runs
   `node scripts/map-guardian.mjs <mapJsonPath> --repo-root <dir> --scan-fpl <path>` (a full
   pipeline run: GC-1..GC-4 always, plus GC-5/GC-6/XC-1/XC-2 when repo/scan context is supplied) or
-  `... --smoke` (fixture/dry-run: GC-1..GC-4 only, GC-5/GC-6/XC-1/XC-2 skipped, no write performed
+  `... --smoke` (fixture/dry-run: GC-1..GC-4 + GC-7..GC-11 Layer A, GC-5/GC-6/XC-1/XC-2 skipped, no write performed
   even on PASS). Reads stdout's `[PASS]/[WARN]/[BLOCKER] <check-id>: <message>` lines and the exit
   code as ground truth — never re-implements or second-guesses the 11+2 checks itself. On a
   non-smoke `exit 0`, the script's own `fs` write (NOT a `Write`/`Edit`/`MultiEdit` tool call) has
@@ -27,7 +27,7 @@ description: |
   RU: Структурный + advisory-семантический гейт для сгенерированного `map.json`. Запускает
   `node scripts/map-guardian.mjs <mapJsonPath> --repo-root <dir> --scan-fpl <path>` (полный прогон:
   GC-1..GC-4 всегда, плюс GC-5/GC-6/XC-1/XC-2 при наличии repo/scan-контекста) или `... --smoke`
-  (fixture/dry-run: только GC-1..GC-4, GC-5/GC-6/XC-1/XC-2 пропущены, запись не выполняется даже
+  (fixture/dry-run: GC-1..GC-4 + GC-7..GC-11 Layer A, GC-5/GC-6/XC-1/XC-2 пропущены, запись не выполняется даже
   при PASS). Читает строки stdout `[PASS]/[WARN]/[BLOCKER] <check-id>: <message>` и exit-код как
   истину — никогда не переизобретает и не оспаривает 11+2 проверки сам. При non-smoke `exit 0`
   собственная `fs`-запись скрипта (НЕ вызов инструмента Write/Edit/MultiEdit) уже перевела
@@ -139,7 +139,7 @@ node scripts/map-guardian.mjs <mapJsonPath> [--repo-root <dir>] [--scan-fpl <pat
 ```
 
 - **Full pipeline run** (the normal VALIDATE-stage dispatch): `node ${CLAUDE_PLUGIN_ROOT}/scripts/map-guardian.mjs <mapJsonPath> --repo-root <repoRoot> --scan-fpl <scanFplPath>`. GC-1..GC-4 run always; GC-5 (single-write), GC-6 (determinism), XC-1 (typed-link existence), XC-2 (grep re-run) run because repo/scan context is present.
-- **Smoke mode** (fixture / dry-run / CI check): `node ${CLAUDE_PLUGIN_ROOT}/scripts/map-guardian.mjs <mapJsonPath> --smoke`. GC-1..GC-4 only; GC-5/GC-6/XC-1/XC-2 are **entirely skipped — silently, not a WARN line**. In the shipped script these four checks live inside an `if (!args.smoke) { ... }` block in `main()`, so under `--smoke` the check functions are never even called and print nothing at all; the only smoke-mode signal for them is the final summary line, `PASS ... [smoke mode -- GC-5/GC-6/XC-1/XC-2 skipped ...]`. (The `[WARN] ... "(smoke mode)"` strings that DO appear inside those four functions' own code are dead in a `--smoke` run — they only ever fire in a **non-smoke** run that omits `--repo-root`/`--scan-fpl`, a different, softer soft-skip path; do not confuse the two.) **`--smoke` never writes** — even on a full PASS, `meta.status` is left untouched. Only a **non-smoke** `exit 0` performs the `proposed → confirmed` write.
+- **Smoke mode** (fixture / dry-run / CI check): `node ${CLAUDE_PLUGIN_ROOT}/scripts/map-guardian.mjs <mapJsonPath> --smoke`. Runs **Layer A** — GC-1..GC-4 **plus GC-7..GC-11** (all doc-only, so they need no repo/scan context); only GC-5/GC-6/XC-1/XC-2 are **entirely skipped — silently, not a WARN line**. In the shipped script those four Layer-B checks live inside an `if (!args.smoke) { ... }` block in `main()`, so under `--smoke` they are never even called and print nothing; the only smoke-mode signal for them is the final summary line, `PASS ... [smoke mode -- GC-5/GC-6/XC-1/XC-2 skipped ...]`. (When a **non-smoke** run omits `--repo-root`/`--scan-fpl`, GC-5/XC-1/XC-2 instead soft-skip with a `[WARN] ... skipped -- no --repo-root/--scan-fpl given (... unreachable under --smoke ...)` line — the script's ACTUAL string; there is NO literal `"(smoke mode)"` per-check WARN string in the script, only the `[smoke mode -- ...]` summary line above. Do not confuse the two paths.) **`--smoke` never writes** — even on a full PASS, `meta.status` is left untouched. Only a **non-smoke, non-`--check-only`** `exit 0` performs the `proposed → confirmed` write (`--check-only` runs full Layer A+B but also never writes).
 
 Capture stdout in full and the process exit code.
 
@@ -163,12 +163,12 @@ Emit findings as `CONCERNS: <node-id or zone-id> — <one-line observation>`. **
 
 ### Step 6 — Compose the handoff
 
-Combine Steps 3-5 into the structured return (template below). State explicitly which mode you ran (`--smoke` vs full). If full, state whether GC-5, XC-1, and XC-2 actually ran — they gate on `--repo-root`/`--scan-fpl` presence and print a `[WARN] ... "(smoke mode)"`-labeled line (a misleading label in a non-smoke context, but that is the shipped script's actual string) and soft-skip when either flag is missing, which is a meaningfully weaker validation than a complete run — surface this, do not bury it. **GC-6 is different: it is not flag-gated.** It runs in every non-smoke invocation regardless of `--repo-root`/`--scan-fpl`, and only self-warns if no node in the document carries `(kind, provenance.ref)` to sample — do not lump it in with the three flag-dependent checks when reporting what did or didn't run.
+Combine Steps 3-5 into the structured return (template below). State explicitly which mode you ran (`--smoke` vs full). If full, state whether GC-5, XC-1, and XC-2 actually ran — they gate on `--repo-root`/`--scan-fpl` presence and, when a flag is missing, soft-skip with a `[WARN] <check>: skipped -- no --repo-root/--scan-fpl given (... unreachable under --smoke ...)` line (the script's actual string — there is no literal `"(smoke mode)"` per-check string), which is a meaningfully weaker validation than a complete run — surface this, do not bury it. **GC-6 is different: it is not flag-gated.** It runs in every non-smoke invocation regardless of `--repo-root`/`--scan-fpl`, and only self-warns if no node in the document carries `(kind, provenance.ref)` to sample — do not lump it in with the three flag-dependent checks when reporting what did or didn't run.
 
 ## HARD RULES
 
 1. **Never** let the advisory LLM pass change the deterministic verdict. The script's exit code is the SOLE gate authority (ADR-017 Decision: "the deterministic `scripts/map-guardian.mjs` is the ONLY thing that flips `proposed → confirmed`"). CONCERNS are commentary for a human, never a block, never an override.
-2. **Never** re-implement, approximate, or second-guess the 11+2 checks (GC-1..GC-6, XC-1, XC-2) via your own reasoning instead of running the script. If the script is missing, fails to execute, or you cannot invoke `Bash` for any reason, that is a **CONCERNS "tool unavailable"** report, never a fabricated PASS and never a fabricated BLOCKER (mirrors the marketplace-wide Profile B rule: never fake-pass when a scanner/runner is missing).
+2. **Never** re-implement, approximate, or second-guess the 11+2 checks (GC-1..GC-11, XC-1, XC-2) via your own reasoning instead of running the script. If the script is missing, fails to execute, or you cannot invoke `Bash` for any reason, that is a **CONCERNS "tool unavailable"** report, never a fabricated PASS and never a fabricated BLOCKER (mirrors the marketplace-wide Profile B rule: never fake-pass when a scanner/runner is missing).
 3. **Always** run the exact CLI shape `node scripts/map-guardian.mjs <mapJsonPath> [--repo-root <dir>] [--scan-fpl <path>] [--smoke]` — never invent flags. `--smoke` is only for fixture/dry-run checks, deliberately skips GC-5/GC-6/XC-1/XC-2, and **never writes**, even on PASS.
 4. **Always** state explicitly, whenever you report a non-smoke PASS: the script's own exit-0 `fs` write to `meta.status` is **not** a `Write`/`Edit`/`MultiEdit` tool call — it is a plain Node filesystem call from inside a `Bash`-invoked script, and is therefore invisible to `map-emitter-gate.sh`'s PreToolUse matcher **by construction**, not because of a gap in the hook (ADR-017 Invariants; RFC-023 Invariant #1 / #4). Never describe this as a bug, a loophole, or something the hook "should" catch.
 5. **Never** call any `forgeplan_*` mutator, and never attempt to write a forgeplan EVIDENCE artifact. Your target (a scanned repo's `map.json`) is entirely outside the forgeplan artifact graph — there is nothing here to `claim`, `link`, `update`, or `activate`.
@@ -181,7 +181,7 @@ Combine Steps 3-5 into the structured return (template below). State explicitly 
 ```
 map-guardian — <smoke | full> run on <mapJsonPath>
   exit code:     0 | 1
-  checks run:    GC-1 GC-2 GC-2a GC-2b GC-2c GC-3 GC-4 [+ GC-5 GC-6 XC-1 XC-2 if full+context]
+  checks run:    GC-1 GC-2 GC-2a GC-2b GC-2c GC-3 GC-4 GC-7 GC-8 GC-9 GC-10 GC-11 [+ GC-5 GC-6 XC-1 XC-2 if full+context]
   blockers:      <n> — <check-id>: <message>  (repeat per blocker, or "none")
   warnings:      <n> — <check-id>: <message>  (repeat per warning, or "none")
   status flip:   N/A (smoke) | confirmed (re-read verified) | still proposed (BLOCKER present)

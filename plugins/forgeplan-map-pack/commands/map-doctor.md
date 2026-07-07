@@ -30,19 +30,28 @@ a couple of git reads, so it is fast.
    guards, mega integrity, relations, found_at, flow completeness, layer-meta canon,
    mega-kind, accent neighbours) — doc-only, no repo scan, so it is quick and needs
    no scan context. Parse the `[PASS]/[WARN]/[BLOCKER] <check-id>: <message>` lines
-   and the exit code. With **`--deep`**, additionally run the full check on the TOP
-   map (`--repo-root <repoRoot> --scan-fpl <path>`) to exercise Layer B
+   and the exit code. With **`--deep`**, additionally run the TOP map with
+   `--check-only --repo-root <repoRoot> --scan-fpl <path>` to exercise Layer B
    (GC-5/GC-6/XC-1/XC-2) — slower (re-greps + re-derives), off by default.
-   **`--smoke` never writes** — doctor is strictly read-only even on a clean PASS.
+   **Both `--smoke` and `--check-only` are read-only** — they run the checks and
+   print the verdict but perform NO write. Doctor MUST NOT invoke the guardian in
+   plain non-smoke mode (neither `--smoke` nor `--check-only`): that path flips a
+   clean `proposed` top map to `confirmed` via a real write (the ADR-017 confirm
+   authority) — a mutation, not a diagnosis. `--check-only` exists precisely so
+   `--deep` reaches Layer B while keeping doctor strictly read-only, even on a clean PASS.
 
 4. **Freshness — flag stale layers (git, one diff).** Read the top map's
    `meta.source_fingerprint`. If it is `"git:<anchor>"`, run
    `git -C <repoRoot> diff --name-only <anchor>..HEAD` UNION `git status --porcelain`
-   to get the changed-file set since build. A layer is **stale** when a changed file
-   maps to its zone (a zone node's `provenance.ref` matches/contains the path, or a
-   changed doc narrates one of its nodes). Report stale layers → they need
-   `/map-refresh`. (If the anchor is not a git anchor, say freshness can't be checked
-   — suggest a full `/map-build`.)
+   to get the changed-file set since build. A layer is **stale** when a changed
+   **code/artifact** file maps to its zone — a zone node's `provenance.ref`
+   matches/contains the changed path. (Doctor is read-only and the shipped map
+   carries no doc→node link — by CM-23 the `description_ru_source` field is NOT
+   emitted — so a changed **doc** cannot be attributed to a specific zone from the
+   map alone; report the doc-change COUNT in the digest but defer doc-driven
+   staleness to `/map-refresh`, which re-scans docs and can attribute them.) Report
+   stale layers → they need `/map-refresh`. (If the anchor is not a git anchor, say
+   freshness can't be checked — suggest a full `/map-build`.)
 
 5. **Orphans — layer whose zone is gone.** For each layer, read its `meta.parent_zone`
    and confirm that zone id still exists in the top map's `zones[]`. A layer whose

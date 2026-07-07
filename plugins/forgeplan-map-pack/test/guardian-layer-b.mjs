@@ -24,7 +24,7 @@
 // behave, so none of the three defects can regress silently again. Zero deps,
 // runs under plain `node test/guardian-layer-b.mjs` from the plugin root.
 // ============================================================================
-import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readFileSync, mkdirSync, rmSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
@@ -200,6 +200,28 @@ function setup() {
   const { code, out } = runGuardian(mapPath, repo, scanPath);
   check('exit 0 (layer write allowed)', code === 0, `exit=${code}\n${out}`);
   check('GC-5 PASS (map/layers/ sanctioned, not stray)', /\[PASS\] GC-5/.test(out), out);
+  rmSync(repo, { recursive: true, force: true });
+}
+
+// --- Scenario 7: --check-only runs full Layer A+B but performs NO write. This is
+//     the read-only deep pass /map-doctor --deep uses (audit H2): the plain
+//     non-smoke path flips proposed->confirmed (Scenario 1), which would break
+//     doctor's read-only contract; --check-only must reach Layer B yet never write.
+{
+  console.log('Scenario 7: --check-only -> full Layer B, NO status flip (read-only deep pass, H2)');
+  const repo = setup();
+  const mapPath = join(repo, '.forgeplan/map/map.json');
+  const scanPath = join(repo, '.forgeplan/map/.work/.scan.fpl.json');
+  writeFileSync(mapPath, JSON.stringify(baseMap(), null, 2) + '\n');
+  let out, code;
+  try { out = execFileSync('node', [GUARDIAN, mapPath, '--check-only', '--repo-root', repo, '--scan-fpl', scanPath], { cwd: repo, encoding: 'utf8' }); code = 0; }
+  catch (e) { out = (e.stdout || '') + (e.stderr || ''); code = e.status ?? 1; }
+  check('exit 0 (checks pass)', code === 0, `exit=${code}\n${out}`);
+  check('XC-1 ran under --check-only (Layer B reached, not smoke-skipped)', /\[PASS\] XC-1/.test(out), out);
+  check('GC-6 ran under --check-only', /\[PASS\] GC-6/.test(out), out);
+  check('--check-only did NOT flip status + says no write performed', !/proposed -> confirmed/.test(out) && /no write performed/.test(out), out);
+  const onDisk = JSON.parse(readFileSync(mapPath, 'utf8'));
+  check('map.json status still "proposed" on disk (read-only)', onDisk.meta.status === 'proposed', `status=${onDisk.meta.status}`);
   rmSync(repo, { recursive: true, force: true });
 }
 

@@ -164,7 +164,7 @@ Task(subagent_type="forgeplan-map-pack:forgeplan-scanner",
           + "{ artifacts[], edges[] }. Return the path.")
 Task(subagent_type="forgeplan-map-pack:docs-scanner",
      prompt="task-id: <id>. Methodology: forgeplan-map-pack SCAN (RFC-023 SS2). Target repo: <repoRoot>. "
-          + "Scan README/docs. Write ONLY .forgeplan/map/.work/.scan.docs.json { narrations[] }. RU narration "
+          + "Scan README/docs. Write ONLY .forgeplan/map/.work/.scan.docs.json { project?, narrations[] } (project = the CM-08 title/description_ru from the real README, omitted if none). RU narration "
           + "from REAL prose only — never invented; omit the field when no source (SPEC-003 SS D5). Return the path.")
 ```
 
@@ -360,9 +360,14 @@ The orchestration is fixed by **ADR-018** — do not improvise it:
   wall-clock is the sum over all zones).
 - **Three cost controls — ALL required (ADR-018):**
   1. **Idempotent skip via seed-fingerprint.** Each layer's `meta.seed_fingerprint`
-     records a hash of the parent zone's member-node id set. On a re-run, a zone
-     whose member set is unchanged is **NOT rebuilt** (cheap given content-hash
-     ids) — skip it and keep the existing layer file.
+     is a **CONTENT** fingerprint — `sha1` over each member's id + its content
+     signature (git blob hash for code, `updated` stamp for artifacts), per
+     `map-emitter` Algorithm 4 (B5). On a re-run, a zone whose fingerprint is
+     unchanged — meaning **neither its membership NOR any member's content moved** —
+     is **NOT rebuilt**; skip it and keep the existing layer file. (Do NOT skip on
+     the old id-set-only basis — a same-membership zone with an edited file has a
+     DIFFERENT content fingerprint and MUST rebuild; that membership-only skip was
+     the pre-B5 staleness blindness.)
   2. **Thin-zone threshold.** Skip auto-generation for a zone with fewer than ~6
      members — a shallow zone doesn't warrant a layer. (The manual
      `/map-build-layer "<zone>"` still builds one on demand if the user insists.)
@@ -370,10 +375,11 @@ The orchestration is fixed by **ADR-018** — do not improvise it:
      are on demand (`/map-build-layer "<zone>/<subzone>"`) or an explicit
      `--layers-depth N` — full recursion is combinatorially expensive, and
      selective IDEF-style depth is the intended reading mode.
-- **Staleness surface.** `meta.seed_fingerprint` doubles as forgeplan-web's
-  freshness check: when the top map is regenerated and a zone's membership
-  changed, the mismatch lets the web show a "layer is stale — run
-  `/map-build-layer \"<zone>\"`" hint (the existing empty-state pattern).
+- **Staleness surface.** `meta.seed_fingerprint` (the CONTENT fingerprint) doubles
+  as forgeplan-web's freshness check: when a zone's membership OR any member's
+  content changes, its recomputed fingerprint no longer matches the stored one, and
+  the web shows a "layer is stale — run `/map-refresh` (or `/map-build-layer
+  \"<zone>\"`)" hint (the existing empty-state pattern).
 - **Report** how many layers were built vs skipped (idempotent/thin) and any that
   the guardian left `proposed`. A layer that BLOCKERs does not fail the whole
   `/map-build` — the top map already succeeded; report the layer's blocker and
@@ -399,14 +405,19 @@ work is done by a `code-scanner`-style probe, which owns the read-only git Bash)
    working-tree edits). Split out the **docs subset** (`*.md`, `README*`, `docs/**`)
    — a doc change re-narrates, a code change re-facts. Empty set ⇒ nothing to do;
    report "map is fresh" and stop (the fast common case).
-3. **Map changed files → stale zones.** A changed file makes a zone content-stale
-   when: (a) a top-map node in that zone has a `provenance.ref` equal to (or under)
-   the changed path; or (b) the changed file is a doc that narrates a node in that
-   zone. Collect the set of stale zone ids. Cross-check by recomputing each existing
-   layer's CONTENT `seed_fingerprint` from current state (only the members whose
-   `content_sig` moved need re-hashing — the changed-file set tells you which) and
-   comparing to the stored value; a mismatch confirms staleness, a match means skip
-   even if a file under the zone changed in a way that didn't move a member.
+3. **Map changed files → stale zones.** A changed file makes a zone stale when:
+   (a) a top-map node in that zone has a `provenance.ref` equal to (or under) the
+   changed **code/artifact** path; or (b) a changed **doc** re-narrates a node in
+   that zone — determined by RE-SCANNING docs (the scoped rebuild re-runs
+   `docs-scanner`, matching `narrations[].ref` to the zone's nodes), NOT by the
+   fingerprint. Collect the stale zone ids. For the CODE/ARTIFACT case (a), cross-check
+   by recomputing each layer's CONTENT `seed_fingerprint` from current state (only
+   members whose `content_sig` moved need re-hashing) and comparing to the stored
+   value; a mismatch confirms staleness, a match means skip. The DOC case (b) is
+   NOT covered by the fingerprint (it folds only code/artifact signatures, per
+   `map-emitter` Algorithm 4) — a doc-only edit is caught solely by the git-diff→re-scan
+   attribution above, so do NOT let a fingerprint "match" skip a zone whose narrating
+   doc changed.
 4. **Rebuild ONLY the stale layers** — dispatch one SCOPED layer build per stale
    zone IN PARALLEL (same disjoint-write, own-scratch, own-guardian discipline as
    the auto-cascade; the fresh layers are left untouched on disk). A layer whose
