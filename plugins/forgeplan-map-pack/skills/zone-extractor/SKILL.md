@@ -117,6 +117,20 @@ wrap one node in a mega):
   (e.g. `entities/user`, `entities/map` → `user (…)`, `map (…)`). If even that
   doesn't split it, leave the one large group mega — the raw members live one
   level down once E3 (generated per-zone layers) ships.
+- **Decision-arc grouping for `z.decisions` (CM-10).** When the composition
+  provides a `decision_grouping: "arc"` hint with a `kind_to_arc` map (data, not
+  code — the composition author owns the SDLC vocabulary), group the decision zone
+  by **narrative arc** instead of by raw kind: map each artifact's kind (and, when
+  present, its lifecycle phase) to its arc — e.g. Shape (brief/prd) · Design
+  (rfc/spec) · Decide (adr) · Plan (epic) · Prove/Audit (evid) · Problem/Solution —
+  so the top-map decision zone reads as a legible ~6–8-card **story of how the
+  project was reasoned**, not a `PRD (32) · EVID (95)` bag-of-kinds. This is the
+  SAME arc derivation the extractor already applies one level down (in a
+  `z.decisions` layer); CM-10 promotes it to the TOP map when the composition asks.
+  Without the hint, fall back to the `kind` primary key above — never invent an arc
+  mapping the composition didn't provide. The mega's machine preimage
+  (`provenance.ref`) then keys on the arc (`mega:z.decisions:arc.decide`) so the
+  group is still recoverable (Algorithm 5's `provenance.ref` rule).
 - **Monorepo overlay override.** If the composed composition carries a
   `regroup: { by: "package" }` signal (the `monorepo` pattern overlay is active),
   the group key for CODE zones becomes the node's **top-level package segment**
@@ -124,6 +138,17 @@ wrap one node in a mega):
   monorepo reads as `web (12) · api (8) · shared (20)` cards. The decision zone
   (forgeplan artifacts, no package) still groups by kind. Nodes keep their real
   paths; only the mega grouping key changes.
+
+**Even density — no one giant card next to slivers (CM-15).** Aim for a BALANCED
+set of group cards: neither one mega swallowing most members (the 170→1 dump) nor
+fifty single-member slivers. As a rule of thumb, target a group **count around
+`ceil(sqrt(N))`** so the collapsed cards form a roughly square block within the
+zone's pinned `cols` (a 100-member zone → ~10 legible groups, not 1 or 60), and
+prefer a grouping whose groups are **comparable in size**. When the natural key
+(`kind` / package) yields one lopsided giant group still far over threshold,
+sub-split THAT group (by top path segment, Algorithm 5's secondary split) so the
+big card breaks into peers rather than dominating. Never pad the other direction
+either — a group with only 1 real member stays a flat node, never a wrapped mega.
 
 **Each group mega:**
 
@@ -312,6 +337,8 @@ If any of these fail and you cannot resolve it (e.g. the composition itself is m
 | Computing `cols` from the actual node count | `cols` is read from the composition, written through unchanged, always |
 | Leaving an over-capacity zone flat (no mega) | Check every zone's final member count; past the threshold (`capacity` or 8) collapse GROUPED — one mega per kind-group, singletons flat (Algorithm 5) |
 | Collapsing a whole 170-node zone into ONE mega | The E1a dump bug — group by kind (PRD/RFC/ADR/EVID/…) so the zone shows a legible ~6-card summary, never a single opaque blob |
+| One giant group card next to single-member slivers | Target ~`ceil(sqrt(N))` comparably-sized groups (even density); sub-split a lopsided giant, keep singletons flat (CM-15) |
+| Grouping `z.decisions` by raw kind when the composition asked for arcs | Honor `decision_grouping:"arc"` + `kind_to_arc` — group by narrative arc (Shape/Design/Decide/Prove) on the top map (CM-10); fall to kind only without the hint |
 | Removing original nodes when creating a mega-node | Keep them in `nodes[]`; the mega-node's `children` references them, it doesn't replace them |
 | Setting a group mega's `kind` to the members' leaf kind (`evidence`) | A mega's `kind` is ALWAYS the literal `"mega"` — GC-10 BLOCKERs otherwise, and a leaf-kind mega inflates kind counts (CM-18) |
 | Putting a human sentence (`… group (95 members)`) in a mega's `provenance.ref` | `ref` is the machine preimage `mega:<zoneId>:<groupKey>` — recoverable, drift-free; the human count lives in `label` (CM-18) |
