@@ -13,7 +13,7 @@ Reusable algorithm knowledge for the `map-emitter` agent's EMIT stage (forgeplan
 SPEC-003 itself warns: *"GC-2 (3 assembly guards re-derived independently — a DIFFERENT trio from the C1 INV-1/2/3 set despite the numeric collision; do not conflate the two 'three invariants' phrasings)."* This skill takes that warning seriously, because RFC-023's own function-signature line for `map-emitter.emit(...)` names the **assembly-guard trio** (no cell-overlap; every edge endpoint ∈ nodes; every node.zone ∈ zones) — the same trio SPEC-003 calls **GC-2** — as what this stage actively self-checks before writing. The **C1 trio** (INV-1 edge-superset, INV-2 content-hash ids, INV-3 no-x/y) is "the core bet" the whole system depends on, but this stage satisfies it by **disciplined construction**, not by an active re-derivation:
 
 - **INV-1** (edge superset) holds because this stage only ever copies through the edges `edge-verifier` already produced, never inventing extra keys beyond the sanctioned set.
-- **INV-2** (content-hash ids) holds because this stage never re-mints or renames an id — it uses `zone-extractor`'s ids verbatim. (Active re-derivation, comparing across *runs*, is `map-guardian.mjs` GC-6's job — it needs a prior `source_fingerprint` to compare against, which this stage doesn't have reason to compute itself.)
+- **INV-2** (content-hash ids) holds because this stage never re-mints or renames an id — it uses `zone-extractor`'s ids verbatim. (Active re-derivation is `map-guardian.mjs` GC-6's job — it re-computes `sha1(node.kind + ":" + node.provenance.ref)[:12]` for each non-mega node **within the single emitted document** and BLOCKERs on a mismatch with the stored `node.id`; it reads no prior artifact and no `source_fingerprint`, so it is a within-document identity check, not a cross-run diff.)
 - **INV-3** (no x/y) holds trivially because none of this stage's inputs (extraction, edges, composition, canvas) carry geometry — never add an `x`/`y` field, full stop.
 
 So: **two guard mechanisms, applied at the same moment, for different reasons.** Get both right; don't let one substitute for the other.
@@ -36,7 +36,7 @@ Build the full `forgeplan.map/v1` document:
     "status": "proposed",                 // ALWAYS — see Algorithm 4
     "project_type": "<from composition/typer>",
     "composition_id": "<template id>",
-    "source_fingerprint": "<carried through from the SCAN stage, not recomputed here>",
+    "source_fingerprint": "<git build anchor 'git:<repo_head>' from extraction.repo_head — see Algorithm 4; carried through, not recomputed here>",
     "version": 1,                         // or prior + 1 if a previous map.json exists; the fuller
                                           // added_node_ids/stale_node_ids differ (`increments[]`) is
                                           // Phase 2 — do not attempt it here (SPEC-003 D6)
@@ -130,7 +130,7 @@ stage **verbatim** in Algorithm 1's `edges[]` concat — never re-minted here.
 
 **Skip a hint entirely if its `path` zones contain NO extracted nodes** — never emit an empty flow (a chip that lights nothing). If the composition has no `flow_hints` (e.g. `generic`), write `flows: []` — that is honest, not a defect. A flow whose `node_ids` don't all resolve to real nodes is a self-reject before write (same discipline as the assembly-guard trio).
 
-**Also derive entrypoint flows (E2 — reach the reference's 6+ journeys).** Beyond the composition's `flow_hints`, derive up to ~3 additional flows from the code-scanner's real `entrypoints[]` (`.scan.code.json`). For each SIGNIFICANT entrypoint (an `init`/`main`/`serve`/`api` entry, not every file), trace its call path across zones by walking the emitted `edges` from the entrypoint's node outward (entrypoint → the modules it reaches → their zone), and emit a flow `{ id: "f.<entry>", name: "<short EN, e.g. Init/Serve>", node_ids: [the real path], edge_ids: [connecting edges], steps: [RU steps naming the modules on the path] }`. Apply the **same `visible()` + consecutive-dedup to `node_ids`** and the **same `edgeByPair` resolution to `edge_ids`** as above — an entrypoint flow whose path crosses a collapsed zone must light the mega, not a hidden child. This is what lifts a real repo with distinct entrypoints (init / serve / api) to 6+ named journeys like the reference (Shape/Prove/Reason/…). **Ground every step in real edges** — only emit a derived flow whose (post-`visible`) `node_ids` all resolve and whose consecutive members are actually connected by an emitted edge; never fabricate a path to pad the count. If the graph has no traceable entrypoint path, emit only the `flow_hints`-derived flows — fewer honest flows beats invented ones.
+**Also derive entrypoint flows (E2 — reach the reference's 6+ journeys).** Beyond the composition's `flow_hints`, derive up to ~3 additional flows from the **entry-point nodes already in the assembled `nodes[]`** — the ones `zone-extractor` minted with `kind === "entrypoint"` (Algorithm 2a) from `code-scanner`'s `entrypoints[]`. Work from those nodes + the emitted `edges[]` (both are this stage's declared inputs via `.extract.json`); do NOT reach back into `.scan.code.json` — it is not an EMIT-stage input. For each SIGNIFICANT entrypoint node (an `init`/`main`/`serve`/`api` entry, not every file), trace its call path across zones by walking the emitted `edges` from that node outward (entrypoint → the modules it reaches → their zone), and emit a flow `{ id: "f.<entry>", name: "<short EN, e.g. Init/Serve>", node_ids: [the real path], edge_ids: [connecting edges], steps: [RU steps naming the modules on the path] }`. Apply the **same `visible()` + consecutive-dedup to `node_ids`** and the **same `edgeByPair` resolution to `edge_ids`** as above — an entrypoint flow whose path crosses a collapsed zone must light the mega, not a hidden child. This is what lifts a real repo with distinct entrypoints (init / serve / api) to 6+ named journeys like the reference (Shape/Prove/Reason/…). **Ground every step in real edges** — only emit a derived flow whose (post-`visible`) `node_ids` all resolve and whose consecutive members are actually connected by an emitted edge; never fabricate a path to pad the count. If the graph has no traceable entrypoint path, emit only the `flow_hints`-derived flows — fewer honest flows beats invented ones.
 
 **Naming + steps discipline for EVERY flow (hint-derived and entrypoint-derived, CM-11).** `name` is a **short EN chip label** — 2–3 words (`Init`, `Serve`, `Shape → Ship`), never a sentence and never a full path. `steps` are **RU** narration sentences (SPEC-003 D5), one per hop, naming the modules on the path — a multi-node flow with no `steps` is a dead chip (GC-8 WARNs). Do not mix: EN name, RU steps, always. A derived entrypoint flow's `name` comes from the entrypoint's role (`Init`/`Serve`/`API`), not its filename.
 
@@ -165,13 +165,33 @@ Always write `meta.status: "proposed"`. **Never** write `"confirmed"` — only `
   "map_id": "<parent_map_id>::<parent_zone>",  // REQUIRED EXACT shape — the "::" separator is frozen;
                                                // GC-9 recomputes `${parent_map_id}::${parent_zone}` and
                                                // BLOCKERs on any mismatch (a "-" or "/" separator fails)
-  "seed_fingerprint": "<sha1 of the parent zone's member-node id set, sorted+joined>"
+  "seed_fingerprint": "<CONTENT fingerprint of the parent zone — see below>"
   // Do NOT write needs_confirm:true — a low-confidence/floor layer must NOT carry a needs_confirm
   // flag that would let it auto-confirm; GC-9 BLOCKERs on needs_confirm===true (CM-07).
 }
 ```
 
-`seed_fingerprint` is the idempotent-skip key (an unchanged zone is not rebuilt on the next `/map-build`) and forgeplan-web's staleness check (a mismatch surfaces the "layer is stale" hint). `meta.additionalProperties` is `true`, so `scope`/`parent_map_id`/`parent_zone`/`seed_fingerprint` all validate cleanly against the schema; the CANONICALIZATION (the `::` map_id + no-needs_confirm-floor) is GC-9's job, not the schema's. For the **top-level** `map.json` write NONE of these layer keys — no `scope`, no `parent_*`, no `seed_fingerprint` (a top map with `scope:"layer"` would wrongly arm GC-9). On a successful write, print to stdout, verbatim:
+### `seed_fingerprint` is a CONTENT fingerprint, not a membership fingerprint (B5)
+
+```
+seed_fingerprint = "sha1:" + sha1( sorted over members of ( nodeId + ":" + contentSig ) )
+```
+
+`seed_fingerprint` is BOTH the idempotent-skip key (an unchanged zone is not rebuilt) and forgeplan-web's staleness hint — so it must flip when the zone is **actually stale**. The v0.8.0 version hashed only the member-node **id set**, which catches a node ADDED or REMOVED but is **blind to a node whose file was edited** (same id, same set) — so a `git`-edited file or an updated doc left the layer wrongly "fresh". The fix: fold each member's **content signature** into the hash, so editing a member's underlying content moves the fingerprint:
+
+- **`nodeId`** — the member's content-hash id (identity).
+- **`contentSig`** — a per-member signature of its CURRENT content, read from the node's **`_content_sig`** scratch field that `zone-extractor` threads through `.extract.json` (Algorithm 5d; the leading `_` marks it transient — `map-emitter` uses it here then DROPS it, never shipping it on the node, per CM-23 field discipline). By source:
+  - **code node** → the git blob hash of its file (`code-scanner` records `content_sig`, B5).
+  - **forgeplan artifact node** → the artifact's `updated` stamp (fallback `created`) from `forgeplan-scanner`.
+  - **mega / no signature available** → its members' `_content_sig`s (a mega is as fresh as its freshest child) or, absent any, the nodeId alone (degrades to membership-only for that node — honest).
+- **Known limitation — doc-only edits are NOT tracked by the layer fingerprint.** `docs-scanner` has no `Bash` and produces no per-doc signature, so a doc-narrated node's `contentSig` is just its code/artifact signature above. Editing ONLY a narrating doc (without touching the code it describes) will NOT move the layer's `seed_fingerprint`, so `/map-refresh` won't rebuild that layer for a doc-only change — a full `/map-build` re-narrates from scratch. Do NOT claim "a doc edit re-narrates" via the fingerprint; it doesn't.
+- Sort the `(nodeId + ":" + _content_sig)` pairs before hashing so the result is order-independent + append-stable.
+
+`/map-refresh` and `/map-doctor` recompute this SAME fingerprint from current repo state and compare it to the stored one — a mismatch means the zone's content moved, so its layer is rebuilt (refresh) or flagged (doctor). `meta.additionalProperties` is `true`, so `scope`/`parent_map_id`/`parent_zone`/`seed_fingerprint` all validate cleanly; the CANONICALIZATION (the `::` map_id + no-needs_confirm-floor) is GC-9's job, not the schema's. For the **top-level** `map.json` write NONE of these layer keys — no `scope`, no `parent_*`, no `seed_fingerprint` (a top map with `scope:"layer"` would wrongly arm GC-9).
+
+### `meta.source_fingerprint` on the TOP map is the git build anchor (B5)
+
+Write the top map's required `meta.source_fingerprint` as **`"git:<HEAD SHA at build>"`** (the repo's `git rev-parse HEAD`, recorded by `code-scanner`, threaded through, never recomputed here). A git commit SHA is a robust build anchor — unlike file mtimes it survives clone/checkout and is exactly what `/map-refresh` diffs against (`git diff <that SHA>..HEAD`) to find what changed since the map was built. If the target is not a git repo, fall back to the prior mtime-digest form (still a valid non-empty string; refresh then degrades to a full re-scan). On a successful write, print to stdout, verbatim:
 
 ```
 <<NEEDS_CONFIRM: N zones, M nodes, K edges (J grep-verified)>>
@@ -202,7 +222,7 @@ A direct in-place write risks a reader (the guardian, forgeplan-web's `GET /api/
 | Populating `layers[]` or `increments[]` "for completeness" | Both are Phase-2-only (SPEC-003 D6) — leave them out of the P1 document |
 | A layer with a drifted meta (`-`/`/` map_id separator, `needs_confirm:true`, missing `parent_*`) | Write the frozen struct: `scope:"layer"` + `parent_map_id` + `parent_zone` + `map_id==<parent>::<zone>` + no `needs_confirm` floor (GC-9 BLOCKERs, CM-07) |
 | Writing `scope`/`parent_*`/`seed_fingerprint` on the TOP map | Those are layer-only — a top map carrying `scope:"layer"` wrongly arms GC-9 (CM-07) |
-| Recomputing `source_fingerprint` from scratch here | It is a SCAN-stage fact (repo mtimes) carried through, not re-derived at EMIT |
+| Recomputing `source_fingerprint` from scratch here | It is a SCAN-stage fact (the git build anchor `git:<repo_head>`; mtime-digest only as the non-git fallback) carried through, not re-derived at EMIT |
 | A flow pointing at a collapsed-mega child (lights nothing) | Map every flow `node_id` through `visible()` (collapsed child → its mega) + drop consecutive dupes, so the flow lights RENDERED cards (CM-01) |
 | Shipping `flows[].edge_ids: []` (chip lights no arrow) | Resolve each consecutive visible node pair via `edgeByPair` into real edge ids; partial/empty is honest, never fabricate one (CM-05, GC-8 WARN) |
 | Splicing a flow from two edge-disconnected arcs (dead gap in the path) | A flow is a CONNECTED edge-path; a hint yielding 2 disconnected components → 2 separate flows, not one spliced (CM-19) |

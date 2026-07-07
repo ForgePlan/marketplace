@@ -28,6 +28,8 @@ The result is an **architecture-onboarding "understanding map"** (v0.7.0): zones
 
 Drill deeper on demand with **`/map-build-layer "<zone>"`** — it generates one zone's own validated sub-map (`.forgeplan/map/layers/<zone>.json`), an architecture map of the inside of that zone.
 
+Keep it current cheaply: **`/map-doctor`** is a fast, read-only triage (runs the deterministic guardian over the map + every layer, flags stale layers and orphans, prints the fix command for each) and **`/map-refresh`** rebuilds ONLY the layers whose content actually changed since the build — detected by git + docs (each layer's fingerprint folds in its members' git blob signatures, so a file edit, not just a card add/remove, marks it stale). Doctor diagnoses, refresh fixes.
+
 ## What's inside
 
 ### 8 agents (`agents/`)
