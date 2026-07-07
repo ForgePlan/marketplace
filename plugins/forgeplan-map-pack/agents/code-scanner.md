@@ -120,6 +120,27 @@ git -C <repoRoot> log --diff-filter=A --follow --format=%aI -1 -- <path>
 - This is a bounded pass like the rest of SCAN — one `git log` per module/entrypoint,
   not per file in the tree.
 
+### Step 2d -- Content signature + build anchor (staleness detection, B5)
+
+For `/map-refresh` and `/map-doctor` to detect that a file's CONTENT changed (not
+just that a node was added/removed), each node needs a **content signature** and
+the map needs a **build anchor**. Record both from git (read-only, argv-safe):
+
+- **`modules[].content_sig` / `entrypoints[].content_sig`** — the git blob hash of
+  the file's CURRENT working-tree content: `git -C <repoRoot> hash-object -- <path>`
+  (for a module dir, hash its entry file, or a stable join of its files' hashes).
+  `hash-object` reflects the file ON DISK, so it catches **uncommitted** edits too,
+  not only committed ones. This feeds `zone-extractor`'s per-node `contentSig` that
+  `map-emitter` folds into the layer `seed_fingerprint` (B5). Omit when not a git
+  repo — the fingerprint degrades to membership-only for that node, honestly.
+- **`repo_head`** (one per scan) — the build anchor: `git -C <repoRoot> rev-parse HEAD`.
+  `map-emitter` writes it as the top map's `meta.source_fingerprint = "git:<sha>"`,
+  and `/map-refresh` diffs `git diff <that sha>..HEAD` to find what changed since the
+  build. Omit (record `""`) when not a git repo.
+
+Still bounded: `hash-object` is one cheap call per module/entrypoint, `rev-parse`
+one call total. Same READ-ONLY git discipline as Step 2c (HARD RULE 7).
+
 ### Step 3 -- Entry points
 
 Within each module, Grep for conventional entry-point filenames (`main.*`, `index.*`, `app.*`, `server.*`, `bin/*`, `cmd/*`) and manifest-declared entry fields (`"main"`, `"bin"`, `[[bin]]`, etc.). Read just enough of each to record a one-line purpose -- this is a SCAN, not an EXTRACT; do not deep-read every file in every module.
@@ -131,13 +152,14 @@ Write `.forgeplan/map/.work/.scan.code.json`. Do not include an `id` field anywh
 ```json
 {
   "source_root": "template/src",
-  "modules":     [ { "path": "...", "kind": "...", "language": "...", "signals": ["..."], "facts": ["exports: ...", "top-comment: ...", "role: ..."], "first_seen": "2025-11-02T14:03:00+00:00" } ],
-  "entrypoints": [ { "path": "...", "module": "...", "purpose": "...", "first_seen": "2025-11-02T14:03:00+00:00" } ],
+  "repo_head":   "a1b2c3d4e5f6...",
+  "modules":     [ { "path": "...", "kind": "...", "language": "...", "signals": ["..."], "facts": ["exports: ...", "top-comment: ...", "role: ..."], "first_seen": "2025-11-02T14:03:00+00:00", "content_sig": "9f8e7d..." } ],
+  "entrypoints": [ { "path": "...", "module": "...", "purpose": "...", "first_seen": "2025-11-02T14:03:00+00:00", "content_sig": "9f8e7d..." } ],
   "manifests":   [ { "path": "...", "kind": "...", "declared_deps": ["..."] } ]
 }
 ```
 
-`first_seen` (Step 2c) is the git-first-add ISO date; **omit it** when the repo has no git history for the path. `zone-extractor` reads it into each node's `found_at`.
+`first_seen` (Step 2c) is the git-first-add ISO date; **omit it** when the repo has no git history for the path — `zone-extractor` reads it into each node's `found_at`. `content_sig` (Step 2d) is the git blob hash of the file's current content — `zone-extractor` threads it as the node's staleness signature into the layer `seed_fingerprint`. `repo_head` (Step 2d) is the build anchor → the top map's `meta.source_fingerprint`. Omit `content_sig`/`repo_head` (or `""`) when not a git repo.
 
 `source_root` is the discovered app root (Step 2), repo-root-relative (`""` when the app is at the repo root). `modules[].path` stays repo-root-relative (keep the `source_root` prefix — the depth-agnostic `**/`-globbed `zone_hints` match it as-is); `modules[].signals` are basename markers used by the TYPE-stage detection scorer.
 

@@ -98,7 +98,7 @@ Write `.forgeplan/map/.work/.scan.fpl.json`. Do not include a map-node `id` fiel
 ```json
 {
   "artifacts": [
-    { "artifact_id": "RFC-023", "kind": "rfc", "status": "active", "title": "...", "r_eff": 0.3, "created": "2026-07-01T09:00:00Z", "summary": "one-line RU/EN gist from the artifact body" }
+    { "artifact_id": "RFC-023", "kind": "rfc", "status": "active", "title": "...", "r_eff": 0.3, "created": "2026-07-01T09:00:00Z", "updated": "2026-07-04T10:00:00Z", "summary": "one-line RU/EN gist from the artifact body" }
   ],
   "edges": [
     { "from": "PRD-075", "to": "RFC-023", "relation": "based_on" }
@@ -109,6 +109,8 @@ Write `.forgeplan/map/.work/.scan.fpl.json`. Do not include a map-node `id` fiel
 Record `created` (the artifact's own creation timestamp — present in `forgeplan_list`/`forgeplan_get` responses) on each artifact. `zone-extractor` uses it as the artifact node's real `found_at` (its append-stability sort key, guardian GC-7 / CM-06); an artifact with no readable `created` is left without one and `zone-extractor` falls back deterministically.
 
 Also carry `title` (the real artifact title, from `forgeplan_list`) and `summary` (a one-line gist from the body, from the Step-2 `forgeplan_get` enrichment). `zone-extractor` builds the artifact node's `label` as `"<artifact_id> — <title>"` (CM-17) and its `description_ru` from `summary`; omit `summary` (not a faked one) for artifacts you did not enrich — the node then carries no `description_ru`, which is honest.
+
+Carry `updated` (the artifact's last-modified stamp, from `forgeplan_list`/`forgeplan_get`) as the artifact node's **content signature** (B5): `zone-extractor` threads it into the layer `seed_fingerprint`, so a decision layer re-builds when one of its artifacts is edited/re-scored, not only when an artifact is added/removed. Fall back to `created` when `updated` is absent.
 
 This matches RFC-023's function-signature contract: `forgeplan-scanner.scan(repoRoot) -> writes .work/.scan.fpl.json { artifacts[], edges[] } -- edges sourced from forgeplan_graph (read-only MCP)`. The exact field set is internal to this scratch file -- SPEC-003 governs only the FINAL `map.json` shape -- but keep `edges[]` faithful to Step 3's parse; it is what `map-guardian`'s XC-1 check re-reads later.
 

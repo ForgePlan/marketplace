@@ -379,6 +379,50 @@ The orchestration is fixed by **ADR-018** — do not improvise it:
   `/map-build` — the top map already succeeded; report the layer's blocker and
   move on.
 
+## Refresh mode — rebuild ONLY what changed by git + docs (B5, /map-refresh)
+
+`/map-refresh` is the incremental counterpart to `/map-build`: instead of
+regenerating every layer, it finds **what actually changed since the map was
+built** and rebuilds only the affected layers. Driven by the two B5 fingerprints
+(`map-emitter` Algorithm 4): the top map's `meta.source_fingerprint = "git:<sha>"`
+build anchor, and each layer's CONTENT `meta.seed_fingerprint`.
+
+Walk it like this (you dispatch the scanners/scoped-builds; the cheap git + diff
+work is done by a `code-scanner`-style probe, which owns the read-only git Bash):
+
+1. **Precondition.** `.forgeplan/map/map.json` exists. Read its
+   `meta.source_fingerprint`. If it is `"git:<sha>"`, that `<sha>` is the build
+   anchor. If it is not a git anchor (old map, or non-git repo), there is nothing
+   to diff — fall back to a full `/map-build --layers` and say so.
+2. **Find the changed file set.** `git diff --name-only <anchor>..HEAD` (committed
+   changes since the build) UNION `git status --porcelain` paths (uncommitted
+   working-tree edits). Split out the **docs subset** (`*.md`, `README*`, `docs/**`)
+   — a doc change re-narrates, a code change re-facts. Empty set ⇒ nothing to do;
+   report "map is fresh" and stop (the fast common case).
+3. **Map changed files → stale zones.** A changed file makes a zone content-stale
+   when: (a) a top-map node in that zone has a `provenance.ref` equal to (or under)
+   the changed path; or (b) the changed file is a doc that narrates a node in that
+   zone. Collect the set of stale zone ids. Cross-check by recomputing each existing
+   layer's CONTENT `seed_fingerprint` from current state (only the members whose
+   `content_sig` moved need re-hashing — the changed-file set tells you which) and
+   comparing to the stored value; a mismatch confirms staleness, a match means skip
+   even if a file under the zone changed in a way that didn't move a member.
+4. **Rebuild ONLY the stale layers** — dispatch one SCOPED layer build per stale
+   zone IN PARALLEL (same disjoint-write, own-scratch, own-guardian discipline as
+   the auto-cascade; the fresh layers are left untouched on disk). A layer whose
+   zone is unchanged is NOT rebuilt — that is the whole point.
+5. **Rebuild the top map only if it is itself stale** — a top-level node's
+   `content_sig` moved, or membership changed (a node added/removed). If only
+   deep-zone contents changed but the top-map node set + their sigs are unchanged,
+   the top map stays as-is; just its layers refresh. When the top map IS rebuilt,
+   re-cascade its stale layers per the changed set (not all of them).
+6. **Report** the changed-file count, which zones were stale, which layers rebuilt
+   vs skipped-fresh, and the new build anchor. Never rebuild a fresh layer "to be
+   safe" — refreshing everything is `/map-build`; refresh is surgical.
+
+This is the same EMITTER-safe, append-only, deterministic pipeline — refresh adds
+no new write target, only a narrower selection of which scoped builds to run.
+
 ## HARD RULES
 
 1. **Never** write a file, call `Bash`, or call any `forgeplan_*` mutator. Your denylist forbids `Write`/`Edit`/`NotebookEdit`/`MultiEdit`/`Bash` and every forgeplan mutation — any attempt is a flaw in this agent. You dispatch; the stage agents produce.

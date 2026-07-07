@@ -36,7 +36,7 @@ Build the full `forgeplan.map/v1` document:
     "status": "proposed",                 // ALWAYS — see Algorithm 4
     "project_type": "<from composition/typer>",
     "composition_id": "<template id>",
-    "source_fingerprint": "<carried through from the SCAN stage, not recomputed here>",
+    "source_fingerprint": "<git build anchor 'git:<repo_head>' from extraction.repo_head — see Algorithm 4; carried through, not recomputed here>",
     "version": 1,                         // or prior + 1 if a previous map.json exists; the fuller
                                           // added_node_ids/stale_node_ids differ (`increments[]`) is
                                           // Phase 2 — do not attempt it here (SPEC-003 D6)
@@ -165,13 +165,33 @@ Always write `meta.status: "proposed"`. **Never** write `"confirmed"` — only `
   "map_id": "<parent_map_id>::<parent_zone>",  // REQUIRED EXACT shape — the "::" separator is frozen;
                                                // GC-9 recomputes `${parent_map_id}::${parent_zone}` and
                                                // BLOCKERs on any mismatch (a "-" or "/" separator fails)
-  "seed_fingerprint": "<sha1 of the parent zone's member-node id set, sorted+joined>"
+  "seed_fingerprint": "<CONTENT fingerprint of the parent zone — see below>"
   // Do NOT write needs_confirm:true — a low-confidence/floor layer must NOT carry a needs_confirm
   // flag that would let it auto-confirm; GC-9 BLOCKERs on needs_confirm===true (CM-07).
 }
 ```
 
-`seed_fingerprint` is the idempotent-skip key (an unchanged zone is not rebuilt on the next `/map-build`) and forgeplan-web's staleness check (a mismatch surfaces the "layer is stale" hint). `meta.additionalProperties` is `true`, so `scope`/`parent_map_id`/`parent_zone`/`seed_fingerprint` all validate cleanly against the schema; the CANONICALIZATION (the `::` map_id + no-needs_confirm-floor) is GC-9's job, not the schema's. For the **top-level** `map.json` write NONE of these layer keys — no `scope`, no `parent_*`, no `seed_fingerprint` (a top map with `scope:"layer"` would wrongly arm GC-9). On a successful write, print to stdout, verbatim:
+### `seed_fingerprint` is a CONTENT fingerprint, not a membership fingerprint (B5)
+
+```
+seed_fingerprint = "sha1:" + sha1( sorted over members of ( nodeId + ":" + contentSig ) )
+```
+
+`seed_fingerprint` is BOTH the idempotent-skip key (an unchanged zone is not rebuilt) and forgeplan-web's staleness hint — so it must flip when the zone is **actually stale**. The v0.8.0 version hashed only the member-node **id set**, which catches a node ADDED or REMOVED but is **blind to a node whose file was edited** (same id, same set) — so a `git`-edited file or an updated doc left the layer wrongly "fresh". The fix: fold each member's **content signature** into the hash, so editing a member's underlying content moves the fingerprint:
+
+- **`nodeId`** — the member's content-hash id (identity).
+- **`contentSig`** — a per-member signature of its CURRENT content, threaded in from the scanners via `.extract.json` (scratch-only — NOT shipped on the node, per CM-23 field discipline):
+  - **code node** → the git blob SHA of its file (`code-scanner` records it, B5).
+  - **doc-narrated node** → also fold the narrating doc's blob SHA (so a doc edit re-narrates).
+  - **forgeplan artifact node** → the artifact's `updated` stamp (or body hash) from `forgeplan-scanner`.
+  - **mega / no signature available** → its members' contentSigs (a mega is as fresh as its freshest child) or, absent any, the nodeId alone (degrades to membership-only for that node — honest).
+- Sort the `(nodeId:contentSig)` pairs before hashing so the result is order-independent + append-stable.
+
+`/map-refresh` and `/map-doctor` recompute this SAME fingerprint from current repo state and compare it to the stored one — a mismatch means the zone's content moved, so its layer is rebuilt (refresh) or flagged (doctor). `meta.additionalProperties` is `true`, so `scope`/`parent_map_id`/`parent_zone`/`seed_fingerprint` all validate cleanly; the CANONICALIZATION (the `::` map_id + no-needs_confirm-floor) is GC-9's job, not the schema's. For the **top-level** `map.json` write NONE of these layer keys — no `scope`, no `parent_*`, no `seed_fingerprint` (a top map with `scope:"layer"` would wrongly arm GC-9).
+
+### `meta.source_fingerprint` on the TOP map is the git build anchor (B5)
+
+Write the top map's required `meta.source_fingerprint` as **`"git:<HEAD SHA at build>"`** (the repo's `git rev-parse HEAD`, recorded by `code-scanner`, threaded through, never recomputed here). A git commit SHA is a robust build anchor — unlike file mtimes it survives clone/checkout and is exactly what `/map-refresh` diffs against (`git diff <that SHA>..HEAD`) to find what changed since the map was built. If the target is not a git repo, fall back to the prior mtime-digest form (still a valid non-empty string; refresh then degrades to a full re-scan). On a successful write, print to stdout, verbatim:
 
 ```
 <<NEEDS_CONFIRM: N zones, M nodes, K edges (J grep-verified)>>

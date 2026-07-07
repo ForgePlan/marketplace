@@ -251,6 +251,29 @@ labels (crate/file/artifact names) — do not translate them (§15). The one-lin
 card subtitle is `node.meta` (Algorithm 7, ≤~30 chars); the full narration is
 `description_ru` (Algorithm 6) — three distinct fields, never conflated.
 
+## Algorithm 5d — thread each node's content signature for staleness (B5)
+
+For `/map-refresh` + `/map-doctor` to detect that a member's CONTENT changed
+(not just that a node was added/removed), `map-emitter` folds a per-node **content
+signature** into the layer `seed_fingerprint`. This stage threads that signature —
+**as a scratch-only field `_content_sig`** in `.extract.json` (the leading `_` marks
+it transient; `map-emitter` uses it to compute the fingerprint and then DROPS it,
+never shipping it on the node — CM-23 field discipline):
+
+- **code / entrypoint node** → `_content_sig` = the `content_sig` (git blob hash)
+  `code-scanner` recorded for that path.
+- **forgeplan artifact node** → `_content_sig` = the artifact's `updated` stamp
+  (fallback `created`) from `.scan.fpl.json`.
+- **doc-narrated node** → additionally fold the narrating doc's signature when the
+  docs-scanner surfaced one, so a doc edit re-narrates.
+- **no signature available** → omit `_content_sig`; the fingerprint degrades to
+  membership-only for that node (honest, not faked).
+
+Also carry the top-level **`repo_head`** (the git HEAD SHA from `.scan.code.json`)
+straight through into `.extract.json` — `map-emitter` writes it as the top map's
+`meta.source_fingerprint = "git:<repo_head>"`, the build anchor `/map-refresh`
+diffs against.
+
 ## Algorithm 6 — rich `description_ru` from grounded understanding (E1c)
 
 This is the **understanding-map lever**. The reference bar (`DETAIL` in
@@ -308,9 +331,10 @@ Write exactly one file, `.forgeplan/map/.work/.extract.json`:
 ```jsonc
 {
   "project": { /* carried through VERBATIM from .scan.docs.json's `project` (title/description_ru/source_doc) for map-emitter to stamp into meta.title/meta.description_ru (CM-08). OMIT the key entirely when docs-scanner emitted no project — never synthesize a title/tagline from the repo name */ },
+  "repo_head": "<git HEAD SHA from .scan.code.json, threaded through for map-emitter's meta.source_fingerprint='git:<sha>' (B5); '' when not a git repo>",
   "zones": [ /* from the composition, cols/accent/treatment/rule_edge/layout_rule pinned through unchanged */ ],
   "layers": [],           // NOT populated in P1 (SPEC-003 D6 — Phase 2 only); leave empty
-  "nodes": [ /* merged, id-minted, zone-bound, mega-collapsed */ ],
+  "nodes": [ /* merged, id-minted, zone-bound, mega-collapsed; each MAY carry a scratch-only `_content_sig` (Algorithm 5d) map-emitter folds into seed_fingerprint then DROPS — never shipped */ ],
   "megaNodes": [ /* the subset of nodes[] where is_mega === true, for the orchestrator's own bookkeeping convenience */ ]
 }
 ```
