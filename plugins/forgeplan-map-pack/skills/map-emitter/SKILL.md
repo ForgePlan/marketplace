@@ -4,9 +4,31 @@ description: "Document-assembly, pre-write invariant-guard, and atomic-write alg
 disable-model-invocation: true
 ---
 
-# Skill: map-emitter — the EMIT-stage assembly, guard, and atomic-write algorithm
+# Skill: map-emitter — the EMIT-stage contract (agent decides flows; a script writes the map)
 
-Reusable algorithm knowledge for the `map-emitter` agent's EMIT stage (forgeplan-map-pack pipeline) — the **sole writer of `.forgeplan/map/map.json`'s content** (RFC-023 Invariant #1). Grounded in RFC-023 Proposed Direction SS1/SS4/Invariants, ADR-016 (roster decision), ADR-017 (the guardian, not this agent, owns the `proposed→confirmed` flip), and SPEC-003 SS C0/C1/C3/C4/D1/D6/E3.
+Reusable algorithm knowledge for the `map-emitter` agent's EMIT stage (forgeplan-map-pack pipeline). Grounded in RFC-023 Proposed Direction SS1/SS4/Invariants, ADR-016 (roster decision), ADR-017 (the guardian, not this agent, owns the `proposed→confirmed` flip), and SPEC-003 SS C0/C1/C3/C4/D1/D6/E3.
+
+## READ FIRST — who does what (the emit split)
+
+**The agent does NOT type the map document. `scripts/map-emit.mjs` — a deterministic, dependency-free Node script — assembles and writes it.**
+
+The 2026-07-15 forgeplan-web dogfood settled this empirically: the LLM-typed emit hit the **64,000-token output cap on a real repo** (274 nodes / 316 edges ≈ 4,000 lines) and died **3 runs out of 3** — round 3 with prose suppressed to five lines *still* died, proving the **document** is the cap-breaker, not the agent's commentary. Round 1 only "barely fit" (553k tokens, 56 min), so even the first write was at the edge. Every content DECISION is already made upstream, so the clerical work moved to a script with no cap.
+
+| Concern | Owner |
+|---|---|
+| **Flows** — which real nodes tell each story, chip name, RU steps | **the agent** (judgment) → writes `.work/.emit-plan.json` |
+| meta (map_id / version / project_type / title / description_ru) | the **script** |
+| `source_fingerprint` git build anchor | the **script** |
+| tier-row layout + accent de-collision (CM-22) | the **script** |
+| layer meta + CONTENT `seed_fingerprint` (CM-07 / B5) | the **script** |
+| `visible()` collapsed-child rewrite (CM-01) + `edge_ids` resolution (CM-05) | the **script** |
+| dropping the scratch `_content_sig` (CM-23), hoisting `found_at` | the **script** |
+| the assembly-guard trio + reject-before-write | the **script** |
+| atomic tmp-rename write + `status:"proposed"` + the sentinel | the **script** |
+
+**The algorithms below are therefore the SCRIPT'S SPEC** — read them to understand what the emitter produces and why, and to change the script correctly. Only **Algorithm 1b (flows)** is work the agent performs; everything else the script already does for you. Never re-implement a script-owned algorithm by hand — that is the cap-breaking failure this split exists to remove.
+
+**Write path + safety.** The agent writes exactly one tiny file (`.work/.emit-plan.json`); the script writes `map.json` with a plain `fs` call, invisible to `hooks/scripts/map-emitter-gate.sh` **by construction** — the same sanctioned shape ADR-017 already blesses for `map-guardian.mjs`'s status flip. RFC-023 Invariant #1 holds: the map still has exactly one writer, and it is now a deterministic one. The guardian's **GC-5 git audit** remains the backstop that cannot be dodged.
 
 ## A note on two differently-scoped "3 invariants" — read this before the rest
 

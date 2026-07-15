@@ -204,7 +204,8 @@ Load `compositions/<template>.yaml` (the winner from Stage 2) via `Read`. This g
    - `adds_zone_hints` — append to `zone_hints` (they route modules into the added/split zones).
    - `adds_flow_hints` — append to `flow_hints`.
    A later overlay never un-does an earlier one's zones. Pin every `cols`; keep the 7-accent + depth-agnostic-hint discipline the overlay files already follow.
-3. **Hand the composed effective composition forward** — Stage 4 (`zone-extractor`) bins against the merged `zone_hints`; Stage 6 (`map-emitter`) lays the merged zones out by TIER ROW (entry → core → data → decisions) since overlay zones carry `tier` not a fixed `cell`, and derives flows from the merged `flow_hints`.
+3. **Hand the composed effective composition forward** — Stage 4 (`zone-extractor`) bins against the merged `zone_hints`; Stage 6's deterministic emitter lays the merged zones out by TIER ROW (entry → core → data → decisions) since overlay zones carry `tier` not a fixed `cell`, and `map-emitter` derives flows from the merged `flow_hints`.
+4. **Persist the composed composition as JSON — REQUIRED.** The compositions are authored in YAML, but `scripts/map-emit.mjs` is dependency-free and parses **no YAML**. So the SELECT stage's output must land on disk as `.forgeplan/map/.work/.composition.json`: the COMPOSED (base + active overlays, already merged) object, with at least `{ template, project_type?, entry_zone, canvas, zones?, placements?, zone_connectors, flow_hints? }`. You do not write files yourself — instruct the EXTRACT-stage dispatch to persist it (it already reads the composition), or hand it to `map-emitter` in the EMIT prompt to write alongside its plan. Without this file the emitter script cannot run.
 
 Record `overlays=[...]` (the active set) alongside `(template, confidence, gap)` in your handoff, so the emitted `meta` reflects the hybrid.
 
@@ -242,14 +243,18 @@ Task(subagent_type="forgeplan-map-pack:edge-verifier",
 ```
 Task(subagent_type="forgeplan-map-pack:map-emitter",
      prompt="task-id: <id>. Methodology: forgeplan-map-pack EMIT (RFC-023 SS2/SS4). "
-          + "Extraction: <path>. Verified edges: <path>. Composition: <template>. Canvas: <from compositions/*.yaml>. "
-          + "Assemble the forgeplan.map/v1 document. Run the 3 invariant guards before writing (no zone-cell "
-          + "overlap; every edge endpoint ∈ nodes; every node.zone ∈ zones). Write ONLY "
-          + ".forgeplan/map/map.json content, atomic tmp-rename, status:\"proposed\". Emit stdout "
-          + "<<NEEDS_CONFIRM: N zones, M nodes, K edges (J grep-verified)>>. You are the SOLE writer of this "
-          + "file's content — triangulated by the EMITTER denylist, my own dispatch discipline (only you run "
-          + "during EMIT), and the map-emitter-gate.sh hook's best-effort identity check together, not the hook "
-          + "alone (SPEC-003 SS C2 CTRL-2). Return the map.json path.")
+          + "Extraction: <path/.extract.json>. Verified edges: <path/.edges.json>. "
+          + "Composed composition JSON: <path/.composition.json> (base+overlays already merged; write it "
+          + "first if it does not exist yet — the emitter script parses no YAML). "
+          + "Do NOT hand-write the document: DECIDE THE FLOWS ONLY (connected edge-paths per the merged "
+          + "flow_hints + entrypoint nodes; short EN chip name + RU steps), write the tiny "
+          + ".work/.emit-plan.json, then run the deterministic emitter: "
+          + "node ${CLAUDE_PLUGIN_ROOT}/scripts/map-emit.mjs --extract <..> --edges <..> --composition <..> "
+          + "--plan <..> --out .forgeplan/map/map.json  (resolve from CLAUDE_PLUGIN_ROOT, never the newest "
+          + "cached version). The script owns meta + git anchor + tier-row layout + accent de-collision + "
+          + "the assembly guards + status:\"proposed\" + the atomic write, and prints the sentinel. "
+          + "Pass its <<NEEDS_CONFIRM: ...>> line back VERBATIM; on non-zero exit it wrote NOTHING — report "
+          + "the named guard failure, never fall back to typing the document. Return the map.json path.")
 ```
 
 **[G4] check:** `Read` `map.json`. Confirm: it exists, validates against `schemas/map.schema.json` (structurally — you are not re-implementing `map-guardian.mjs`'s full check set, just the presence/shape/status/sentinel gate), `meta.status === "proposed"`, and stdout (or the file, if the sentinel is echoed there) carries the `<<NEEDS_CONFIRM: …>>` pattern. FAIL → loop to Stage 6 (max 3 rounds, then `<<NEED_USER_INPUT>>`).
