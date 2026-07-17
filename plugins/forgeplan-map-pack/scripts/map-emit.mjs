@@ -66,6 +66,45 @@ function die(msg) {
 }
 
 // ---------------------------------------------------------------------------
+// input pre-flight -- REFUSE a wrong-shape scratch, never silently degrade
+// ---------------------------------------------------------------------------
+// The 2026-07-17 forgeplan-web re-run (finding A) resumed a PRE-v0.18 scratch
+// under the v0.18 script: repo_head/project were nested under `meta.` (not top
+// level) and edges were a flat { edges:[] } (no `id`/`namespace`, no
+// typedLink/codeDep split). Fed raw, the script SILENTLY degraded -- emitted a
+// "nogit:" fingerprint, dropped title/description_ru, and would have shipped 0
+// edges. That contradicts the pack's honest-failure discipline (a missing/refused
+// map is a clean G4 FAIL; a written-but-wrong one is the silent-pass risk the
+// whole pipeline exists to avoid). This pre-flight makes the mismatch loud.
+//
+// THE INPUT CONTRACT this script requires (what the v0.18 upstream stages emit):
+//   .extract.json     -> top-level { zones[], nodes[], repo_head?, project? }
+//                        (repo_head/project are TOP-level, NOT under meta)
+//   .edges.json       -> { typedLink[], codeDep[] }, each edge carrying id + namespace
+//   .composition.json -> the composed base+overlays object (no YAML)
+function preflightInputs(extract, edgesIn) {
+  const problems = [];
+  if (!isArray(extract.nodes)) problems.push('extract has no top-level `nodes[]` array');
+  if (!isArray(extract.zones)) problems.push('extract has no top-level `zones[]` array');
+  if (extract.repo_head === undefined && isObject(extract.meta) && extract.meta.repo_head !== undefined) {
+    problems.push('extract.repo_head is nested under `meta.` -- a PRE-v0.18 scratch shape; the script reads repo_head at the TOP level. Re-run EXTRACT on this pipeline version (do not resume old scratch under a newer script).');
+  }
+  if (extract.project === undefined && isObject(extract.meta) && extract.meta.project !== undefined) {
+    problems.push('extract.project is nested under `meta.` -- a PRE-v0.18 scratch shape; re-run EXTRACT.');
+  }
+  const hasTL = isArray(edgesIn.typedLink);
+  const hasCD = isArray(edgesIn.codeDep);
+  if (!hasTL && !hasCD) {
+    if (isArray(edgesIn.edges)) {
+      problems.push('edges scratch is a flat `{ edges:[] }` -- a PRE-v0.18 shape; the script needs `{ typedLink[], codeDep[] }` (each edge with `id` + `namespace`). Re-run VERIFY on this pipeline version.');
+    } else {
+      problems.push('edges scratch has neither `typedLink[]` nor `codeDep[]` -- not the shape edge-verifier emits.');
+    }
+  }
+  return problems;
+}
+
+// ---------------------------------------------------------------------------
 // meta
 // ---------------------------------------------------------------------------
 function buildMeta(args, extract, composition, prior) {
@@ -269,6 +308,16 @@ function assemble(args) {
   const composition = readJson(args.composition, 'composition');
   const plan = args.plan ? readJson(args.plan, 'emit-plan') : null;
   const prior = existsSync(args.out) ? (() => { try { return JSON.parse(readFileSync(args.out, 'utf8')); } catch { return null; } })() : null;
+
+  // REFUSE a wrong-shape scratch BEFORE assembling anything (finding A). A
+  // pre-v0.18 extract/edges would otherwise silently degrade the fingerprint,
+  // drop the title, and ship 0 edges -- fail loud instead.
+  const shape = preflightInputs(extract, edgesIn);
+  if (shape.length > 0) {
+    console.error('map-emit: input pre-flight FAILED -- nothing written:');
+    for (const p of shape.slice(0, 10)) console.error(`  - ${p}`);
+    process.exit(1);
+  }
 
   const zones = (isArray(extract.zones) ? extract.zones : []).filter(isObject);
   if (zones.length === 0) die('extract carries no zones -- refusing to emit an empty map');

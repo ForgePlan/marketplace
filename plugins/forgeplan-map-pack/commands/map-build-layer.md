@@ -38,6 +38,11 @@ mutates a forgeplan artifact.
              + "real paths/subtree) -> EXTRACT -> VERIFY -> EMIT -> VALIDATE producing a "
              + "sub-map for THIS zone only: its own zones (the sub-regions inside it), nodes, "
              + "edges, flows, and description_ru, at the same E1/E2 quality bar as the top map. "
+             + "ROLE DECOMPOSITION IS MANDATORY (see the orchestrator's Scoped-pass rules, findings B+C): "
+             + "zone-extractor writes the scoped .extract.json (repo_head + project at TOP level) AND "
+             + "persists the scoped .composition.json; edge-verifier writes the scoped .edges.json "
+             + "({typedLink,codeDep} with id+namespace); map-emitter decides ONLY the flows and runs "
+             + "map-emit.mjs --layer. map-emitter MUST NOT self-author the scoped extract/edges/composition. "
              + "Write it as the zone's layer (see the layer contract below), NOT into the top "
              + "map.json's node set. Enforce gates G1-G4 on the scoped scratch. Deeper recursion: "
              + "if the target was '<ancestor>/<zone>', seed from the ancestor layer, not the top map.")
