@@ -223,5 +223,31 @@ function emit(p, extraArgs = []) {
   rmSync(p.dir, { recursive: true, force: true });
 }
 
+// --- Scenario 7: pre-flight REFUSES a pre-v0.18 flat { edges:[] } scratch -----
+//     (finding A: silent degradation to 0 edges must become a loud failure)
+{
+  console.log('Scenario 7: pre-flight rejects a pre-v0.18 flat {edges:[]} shape (finding A)');
+  const p = setup({ edges: { edges: [{ from: nFoo, to: nBar, relation: 'imports' }] } }); // no typedLink/codeDep, no id/namespace
+  const { code, out } = emit(p);
+  check('exit != 0 on flat edges shape', code !== 0, `exit=${code}`);
+  check('names the pre-v0.18 edges shape + Re-run VERIFY', /pre-v0.18 shape/i.test(out) && /Re-run VERIFY/.test(out), out);
+  check('nothing written', !existsSync(p.out), 'a degraded map was written');
+  rmSync(p.dir, { recursive: true, force: true });
+}
+
+// --- Scenario 8: pre-flight REFUSES an extract with repo_head/project nested ---
+{
+  console.log('Scenario 8: pre-flight rejects repo_head nested under meta (finding A)');
+  const ex = extract();
+  const rh = ex.repo_head; delete ex.repo_head; delete ex.project;
+  ex.meta = { repo_head: rh, project: { title: 'X' } }; // the pre-v0.18 nested location
+  const p = setup({ extract: ex });
+  const { code, out } = emit(p);
+  check('exit != 0 on nested repo_head', code !== 0, `exit=${code}`);
+  check('names the nested repo_head + Re-run EXTRACT', /nested under `meta/.test(out) && /Re-run EXTRACT/.test(out), out);
+  check('nothing written', !existsSync(p.out), 'a degraded map was written');
+  rmSync(p.dir, { recursive: true, force: true });
+}
+
 console.log(`\n${pass} passed, ${failn} failed`);
 process.exit(failn === 0 ? 0 : 1);

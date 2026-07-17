@@ -301,6 +301,19 @@ its own generated drill-down layer.
   walk, but restricted to the seed's real subtree (the scanners glob only those
   members' paths). The result is a sub-map for THIS zone — its own sub-zones,
   nodes, edges, flows, and `description_ru`, at the same E1/E2 quality bar.
+- **Role decomposition is MANDATORY for the scoped pass (findings B+C).** The same
+  stage boundaries hold for a layer as for the top map — `map-emitter` does NOT
+  self-author the scoped inputs. Dispatch, in order: (1) **`zone-extractor`** —
+  scoped EXTRACT that writes the scoped `.work/<zone>/.extract.json` (with
+  `repo_head` + `project` at the TOP level) AND persists the scoped
+  `.work/<zone>/.composition.json`; (2) **`edge-verifier`** — filters/verifies the
+  edges within the seed subtree into `.work/<zone>/.edges.json`; (3) **`map-emitter`**
+  — decides ONLY the layer's flows and runs `map-emit.mjs --layer`. The live dogfood
+  (finding B) showed that when a `map-emitter` instance is asked to author its own
+  scoped extract/edges/composition it does so unreliably — 3/5 overstepped, and one
+  self-authored layer forgot the top-level `repo_head` → a `nogit:` fingerprint on
+  that one layer (finding C). Route input-prep through the extractor + verifier every
+  time; `map-emitter`'s job is flows + the script call, layer or top map alike.
 - **Scoped composition keyed on the zone's KIND, not the generic floor (CM-21).**
   At the scoped SELECT step, pick the sub-composition from a catalogue keyed on the
   TARGET zone's `kind` — a `store`/data zone drills into a data-shaped
