@@ -74,8 +74,20 @@ forgeplan_activate(id)          ← draft → active
 |---|---|---|:---:|
 | Fix typo, update config, trivial refactor | **Tactical** | Nothing or Note | — |
 | Feature 1-3 days, has a choice | **Standard** | PRD → RFC | recommended |
-| Irreversible, 1-2 weeks | **Deep** | PRD → Spec → RFC → ADR | **required** |
-| Cross-team, strategic | **Critical** | Epic → PRD[] → Spec[] → RFC[] → ADR[] | **required + review** |
+| Irreversible, 1-2 weeks | **Deep** | PRD → SOL → Spec → RFC → ADR | **required** |
+| Cross-team, strategic | **Critical** | Epic → PRD[] → SOL[] → Spec[] → RFC[] → ADR[] | **required + review** |
+
+**SOLUTION (SOL) — the depth-gated "which approach" stage.** At **Deep/Critical** the
+"compare candidate approaches → recommend one" work is materialized as its own **SOLUTION**
+artifact, sitting between PRD (what's required) and the design layer (Spec/RFC/ADR = how it's
+structured). SOL `based_on` the PRD; the ADR is then the architectural decision **for** the
+chosen SOL. Body shape: `## Options` (≥2 genuinely-distinct approaches) → `## Comparison` →
+`## Recommendation` → `## Risks & trade-offs`. Create it via the generic `artifact-author`
+(Profile A — SOLUTION has no kind-specialist by design). If a Deep task genuinely has only one
+viable approach, say so in the SOL `## Recommendation` — do **not** manufacture a fake fork
+(the same anti-manufacturing rule as BMAD `## Findings`). At **Standard/Tactical** SOL stays
+**folded**: the approach-comparison already lives in the FPF-ADI EVID (≥3 hypotheses) + the
+ADR's `## Considered Options` — a standalone SOL there is bloat.
 
 Automatic escalation triggers (in `forgeplan_route`):
 - `security`, `auth`, `compliance` → Deep+

@@ -277,6 +277,7 @@ disallowedTools: mcp__forgeplan__forgeplan_new, mcp__forgeplan__forgeplan_update
 - Creating standard artifacts (PRD, RFC, ADR, EPIC, SPEC, PROBLEM, SOLUTION, EVIDENCE)
 - Bulk creation across kinds
 - When kind-specialist doesn't exist (e.g., PROBLEM, SOLUTION, REFRESH have no dedicated agent)
+  - **SOLUTION is depth-gated**: it is a real pipeline stage between PRD and the design layer (Spec/RFC/ADR) **only at Deep/Critical** — the "compare ≥2 approaches → recommend one" node (`## Options` / `## Comparison` / `## Recommendation` / `## Risks & trade-offs`), created here via `artifact-author`. At Standard/Tactical the approach-comparison folds into the FPF-ADI EVID + the ADR's `## Considered Options`, so **no SOL is created**. See the forge-cycle depth table + routing-map "SOLUTION artifact (depth-gated)" card. Do not manufacture a fake fork if only one approach is viable — record that in `## Recommendation`.
 
 **When to fall back to `forgeplan_new` + manual fill**:
 

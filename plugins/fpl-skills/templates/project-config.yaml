@@ -44,8 +44,8 @@ schema_version: 1
 # Allowed values (per PRD-024):
 #   tactical  — minimal ceremony; just-do-it (typos, one-file fixes, notes)
 #   standard  — PRD → build → audit → evidence (new feature, 1–3 days)
-#   deep      — PRD → RFC → build → 2-round audit (architectural change)
-#   critical  — Epic → PRD → RFC → ADR (strategy, foundation, blast-radius high)
+#   deep      — PRD → SOL → RFC → build → 2-round audit (architectural change; SOL = compare approaches → recommend)
+#   critical  — Epic → PRD → SOL → RFC → ADR (strategy, foundation, blast-radius high)
 # These are *defaults*; `forgeplan route` and `/forge-cycle` may still
 # escalate based on detected risk signals (security, breaking changes, etc).
 depth_defaults:

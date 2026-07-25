@@ -164,6 +164,13 @@ Each methodology referenced in the table above. Five lines per card: one-sentenc
 - When NOT to use: Easily-reversible decisions (don't ADR the colour of a button); decisions already captured in a PRD's Non-Goals section.
 - Source: Michael Nygard 2011, https://github.com/joelparkerhenderson/architecture-decision-record; MADR: https://adr.github.io/madr/
 
+### SOLUTION artifact (depth-gated)
+
+- One sentence: the canonical forgeplan **SOLUTION (SOL)** artifact — "compare ≥2 genuinely-distinct approaches → recommend one" — sitting between the PRD (what's required) and the design layer (Spec/RFC/ADR = how it's structured); SOL `based_on` PRD, ADR is the architectural decision **for** the chosen SOL.
+- When it shines: **Deep/Critical** depth where the "which approach" fork is real and worth a first-class, linkable node distinct from the eventual ADR (brownfield strangler-vs-rewrite, refactor-now-vs-later, build-vs-buy). Body: `## Options` → `## Comparison` → `## Recommendation` → `## Risks & trade-offs`. Created via generic `artifact-author` (Profile A — no kind-specialist by design).
+- When NOT to use: **Standard/Tactical** — there the approach-comparison already lives in the FPF-ADI EVID (≥3 hypotheses) + the ADR's `## Considered Options`; a standalone SOL is bloat. Also skip (even at Deep) a *fake* fork — if only one approach is viable, say so in `## Recommendation` rather than manufacture alternatives (same anti-manufacturing rule as BMAD `## Findings`).
+- Relationship to FPF ADI: ADI is the *reasoning* (hypotheses → evidence → pick); SOL is the *materialized artifact* of that pick at Deep/Critical. At Standard the ADI EVID carries it; at Deep/Critical it graduates to its own SOL node so the approach choice is traceable independently of the architecture decision that realizes it.
+
 ### OWASP Top 10 2025
 
 - One sentence: Industry-standard checklist of the ten most common web application security risks, refreshed annually.
