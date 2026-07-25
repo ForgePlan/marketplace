@@ -59,13 +59,16 @@ Cross-CLI context shim. Source of truth: `CLAUDE.md`.
 - forgeplan (project artifacts)
 - hindsight (cross-session memory, if installed)
 
+## Task discipline
+The task list is the only durable record of work in flight — a unit of work becomes a task **before** code is touched. Every task has an owner; `in_progress` is set on start; a blocked task stays `in_progress` with a note; `completed` means verification was **re-run**, not self-reported. Findings mid-task become new tasks; deferred work gets an explicit trigger. A task **references** an artifact by ID, never copies its body. Full rules + the forgeplan layer table live in `CLAUDE.md`.
+
 ## Conventions
 See `CLAUDE.md` for full project conventions.
 ```
 
 Verify:
 
-- [ ] `AGENTS.md` written at repo root
+- [ ] `AGENTS.md` written at repo root, contains the `## Task discipline` block
 
 ## Step 3: CLAUDE.md scaffold
 
@@ -92,6 +95,26 @@ Write `CLAUDE.md` with at minimum:
 This project uses forgeplan for structured artifacts (PRD/RFC/ADR/Evidence).
 Run `forgeplan health` to see current state.
 
+## Task discipline
+The task list is the only durable record of work in flight — a unit of work becomes a task **before** code is touched.
+
+- Every task carries an **owner**; `in_progress` is set **on start**, not at planning time.
+- A blocked task **stays** `in_progress` with a blocker note — never silently back to `pending`.
+- `completed` means **verification was re-run**, not that an agent reported success.
+- A finding mid-task becomes a **new task**; deferred work gets an **explicit trigger** ("later" is not one).
+- Parallel agents declare strict file ownership; in a shared file make **line-matched edits only, never whole-file rewrites**.
+
+**Layer separation** — each fact lives in one layer; a task references an artifact by ID, never copies its body:
+
+| Layer | Where |
+|---|---|
+| Work in flight | task list |
+| Decisions | `.forgeplan/{epics,prds,rfcs,adrs,specs}/` |
+| Defects found | `.forgeplan/problems/` |
+| Evidence | `.forgeplan/evidence/` |
+| Conversational knowledge | Hindsight (if `fpl-hsmem` installed) |
+| Process rules | `CLAUDE.md`, `AGENTS.md` |
+
 ## Plugin recommendations
 See "Plugin install recommendations" below.
 ```
@@ -100,6 +123,7 @@ Verify:
 
 - [ ] `CLAUDE.md` written at repo root
 - [ ] First line is `# <Project Name> — Claude Code Configuration`
+- [ ] `## Task discipline` section present with the owner / re-verify / nothing-lost rules + forgeplan layer table
 
 ## Step 4: Plugin install recommendations
 
