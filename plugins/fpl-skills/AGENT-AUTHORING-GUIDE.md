@@ -20,6 +20,8 @@ Canonical pattern for **forgeplan-aware agents** in ForgePlan marketplace. Requi
 
 Every forgeplan artifact (PRD/RFC/ADR/EPIC/SPEC/PROBLEM/SOLUTION/EVIDENCE/NOTE/REFRESH) has a five-operation lifecycle. Each operation has a designated agent profile:
 
+> **`memory` is NOT one of these 10 kinds — it is a separate facility.** `forgeplan remember "<fact>"` / `forgeplan recall "<query>"` (with `--list` / `--forget`) store non-expiring facts, conventions, and procedures under `.forgeplan/memory/` — not artifact-graph nodes, absent from the `forgeplan_new` kind enum, always tactical depth, no CRUD-R-A lifecycle. Use it for "this is how it's done here" (`API prefix is /v1`, `Postgres not SQLite for concurrent writes`), distinct from a NOTE (a micro-decision that expires ~90 days). Don't reach for `artifact-author` to record a convention — use `remember`.
+
 | Operation | Profile | Generic agent (any kind) | Kind specialists (preferred when available) |
 |---|---|---|---|
 | **CREATE** | A | `artifact-author` (uses forgeplan_generate primary, forgeplan_new fallback) | adr-architect, specification, architecture, goal-planner, brief-intake, evidence-recorder |
