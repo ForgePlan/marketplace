@@ -20,7 +20,13 @@ Canonical pattern for **forgeplan-aware agents** in ForgePlan marketplace. Requi
 
 Every forgeplan artifact (PRD/RFC/ADR/EPIC/SPEC/PROBLEM/SOLUTION/EVIDENCE/NOTE/REFRESH) has a five-operation lifecycle. Each operation has a designated agent profile:
 
-> **`memory` is NOT one of these 10 kinds — it is a separate facility.** `forgeplan remember "<fact>"` / `forgeplan recall "<query>"` (with `--list` / `--forget`) store non-expiring facts, conventions, and procedures under `.forgeplan/memory/` — not artifact-graph nodes, absent from the `forgeplan_new` kind enum, always tactical depth, no CRUD-R-A lifecycle. Use it for "this is how it's done here" (`API prefix is /v1`, `Postgres not SQLite for concurrent writes`), distinct from a NOTE (a micro-decision that expires ~90 days). Don't reach for `artifact-author` to record a convention — use `remember`.
+> **`memory` is NOT one of these 10 kinds — it is a separate facility.** `forgeplan remember "<fact>"` / `forgeplan recall "<query>"` (categories: fact / convention / procedure / **insight**; `--list` / `--forget`) store **non-expiring** notes under `.forgeplan/memory/` — committed and shared, but a **flat store, NOT a decision-graph node**: a memory **cannot be linked** (`informs` / `based_on`) into an ADR/decision, its author is recorded only as `cli` (no per-user attribution), and it surfaces **only via explicit `recall`**, never automatically when someone reads a decision.
+>
+> **Choose by whether the fact must inform a future decision:**
+> - **Decision-relevant, attributable, must be visible when the next person reads the decision** → a **NOTE artifact** (a real graph node — linkable, provenanced, appears in `forgeplan_graph`). Accept that a NOTE carries a ~90-day freshness/decay signal — refresh it to keep it current. Do NOT bury a decision-relevant insight in the flat `memory` store where the decision graph can't see it.
+> - **Lightweight, non-expiring personal recall** not tied to a decision (`API prefix is /v1`, `Postgres not SQLite`) → `memory` (`remember`).
+>
+> **Known gap (tracked forgeplan#410 + being added upstream):** no kind is *both* non-expiring *and* graph-linkable/attributed — `memory` is non-expiring but not linkable and author-less; NOTE is linkable + attributed but decays. Until the core adds a linkable/attributed non-expiring fact node, prefer NOTE when in doubt (traceability beats permanence).
 
 | Operation | Profile | Generic agent (any kind) | Kind specialists (preferred when available) |
 |---|---|---|---|
