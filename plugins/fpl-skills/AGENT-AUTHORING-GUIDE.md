@@ -277,6 +277,8 @@ disallowedTools: mcp__forgeplan__forgeplan_new, mcp__forgeplan__forgeplan_update
 - Creating standard artifacts (PRD, RFC, ADR, EPIC, SPEC, PROBLEM, SOLUTION, EVIDENCE)
 - Bulk creation across kinds
 - When kind-specialist doesn't exist (e.g., PROBLEM, SOLUTION, REFRESH have no dedicated agent)
+  - **SOLUTION is depth-gated**: it is a real pipeline stage between PRD and the design layer (Spec/RFC/ADR) **only at Deep/Critical** — the "compare ≥2 approaches → recommend one" node (`## Options` / `## Comparison` / `## Recommendation` / `## Risks & trade-offs`), created here via `artifact-author`. At Standard/Tactical the approach-comparison folds into the FPF-ADI EVID + the ADR's `## Considered Options`, so **no SOL is created**. See the forge-cycle depth table + routing-map "SOLUTION artifact (depth-gated)" card. Do not manufacture a fake fork if only one approach is viable — record that in `## Recommendation`.
+  - **REFRESH is depth-gated (cycle-close)**: at **Deep/Critical** the cycle ends with a REFRESH node — the reconciliation record (`## Synced` / `## Gaps closed` / `## Links updated` / `## Ready verdict`), `based_on` the cycle's EVID, created here via `artifact-author`. **Anti-false-green**: the body MUST paste the *actual output* of `forgeplan_drift` + `forgeplan_stale` + `/forge-heal` + a link audit — never a self-reported "all good"; a rubber-stamp REFRESH is worse than none. At Standard/Tactical reconciliation stays skill-only (`/decay-watch` + `/forge-heal` + the journal), so **no REFRESH is created**. See the forge-cycle depth table + routing-map "REFRESH artifact (depth-gated cycle-close)" card.
 
 **When to fall back to `forgeplan_new` + manual fill**:
 
