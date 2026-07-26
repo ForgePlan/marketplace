@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.120.0"
+    "version": "1.121.0"
   },
   "plugins": [
     {
@@ -329,7 +329,7 @@
         "claude-code"
       ],
       "description": "Professional specialist agents: security experts, architecture reviewers, creative tools, research analysts, infrastructure engineers, plus pipeline-canonical roles. v1.14.0: marketplace#165/#166/#167 agent hardening - architect-reviewer + guardian get a StructuredOutput-precedence HARD RULE (under a Workflow schema the terminal StructuredOutput call wins over the EVIDENCE-writing default) + a mandatory finally-release on every exit path (a crashed reviewer never leaks its claim) + an orchestrator pre-dispatch/sweep note; smith pre-flight reads forgeplan_claims + activity_stats + journal for a health digest and never routes onto a live-claimed artifact (HARD RULE 11). v1.11.0: EPIC-003 / Sprint AA \u2014 guardian Step 5 +2 rows: C4 CONCERNS (Sprint Z9 PRD-060 gate) + OpenSpec BLOCKER (Sprint Z8 PRD-058 activation gate). Closes G2+G4. v1.10.1: EPIC-002 niceties patch. v1.10.0: EPIC-002 PRD-062 \u2014 new `smith` master-orchestrator agent (Profile B-orchestrator).",
-      "version": "1.14.0",
+      "version": "1.15.0",
       "author": {
         "name": "ForgePlan"
       },
