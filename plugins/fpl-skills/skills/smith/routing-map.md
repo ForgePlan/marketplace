@@ -171,6 +171,13 @@ Each methodology referenced in the table above. Five lines per card: one-sentenc
 - When NOT to use: **Standard/Tactical** — there the approach-comparison already lives in the FPF-ADI EVID (≥3 hypotheses) + the ADR's `## Considered Options`; a standalone SOL is bloat. Also skip (even at Deep) a *fake* fork — if only one approach is viable, say so in `## Recommendation` rather than manufacture alternatives (same anti-manufacturing rule as BMAD `## Findings`).
 - Relationship to FPF ADI: ADI is the *reasoning* (hypotheses → evidence → pick); SOL is the *materialized artifact* of that pick at Deep/Critical. At Standard the ADI EVID carries it; at Deep/Critical it graduates to its own SOL node so the approach choice is traceable independently of the architecture decision that realizes it.
 
+### REFRESH artifact (depth-gated cycle-close)
+
+- One sentence: the canonical forgeplan **REFRESH** artifact — the **cycle-close reconciliation node** that closes the loop at the end of a Deep/Critical cycle (sync artifacts, close drift/stale gaps, update stale links, verdict "ready for the next cycle"), `based_on` the cycle's EVID.
+- When it shines: **Deep/Critical** cycle-close, where multiple artifacts + gaps accumulate and "close the loop" is otherwise easy to skip. Materializing it makes reconciliation a **non-skippable, auditable step** with a single anchor per cycle — the scattered skills (`/decay-watch`, `/forge-heal`, the journal) *do* the work but don't guarantee the cycle was closed. Body: `## Synced` → `## Gaps closed` → `## Links updated` → `## Ready verdict`. Created via generic `artifact-author` (no kind-specialist by design).
+- Anti-false-green rule: the REFRESH body MUST record the *actual output* of running `forgeplan_drift` + `forgeplan_stale` + `/forge-heal` + a link audit — pasted, not a self-reported "all good." A rubber-stamp REFRESH is worse than none (same ground-truth discipline as `completed` = you re-ran verification yourself). If a gap can't be closed this cycle, the `## Ready verdict` says NO + names the blocker (which becomes the next task).
+- When NOT to use: **Standard/Tactical** — reconciliation stays skill-only (`/decay-watch` + `/forge-heal` + the journal); a REFRESH node there is ceremony that duplicates the journal.
+
 ### OWASP Top 10 2025
 
 - One sentence: Industry-standard checklist of the ten most common web application security risks, refreshed annually.

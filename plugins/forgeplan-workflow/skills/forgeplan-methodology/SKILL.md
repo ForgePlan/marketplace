@@ -74,8 +74,8 @@ forgeplan_activate(id)          ← draft → active
 |---|---|---|:---:|
 | Fix typo, update config, trivial refactor | **Tactical** | Nothing or Note | — |
 | Feature 1-3 days, has a choice | **Standard** | PRD → RFC | recommended |
-| Irreversible, 1-2 weeks | **Deep** | PRD → SOL → Spec → RFC → ADR | **required** |
-| Cross-team, strategic | **Critical** | Epic → PRD[] → SOL[] → Spec[] → RFC[] → ADR[] | **required + review** |
+| Irreversible, 1-2 weeks | **Deep** | PRD → SOL → Spec → RFC → ADR → REFRESH | **required** |
+| Cross-team, strategic | **Critical** | Epic → PRD[] → SOL[] → Spec[] → RFC[] → ADR[] → REFRESH | **required + review** |
 
 **SOLUTION (SOL) — the depth-gated "which approach" stage.** At **Deep/Critical** the
 "compare candidate approaches → recommend one" work is materialized as its own **SOLUTION**
@@ -88,6 +88,19 @@ viable approach, say so in the SOL `## Recommendation` — do **not** manufactur
 (the same anti-manufacturing rule as BMAD `## Findings`). At **Standard/Tactical** SOL stays
 **folded**: the approach-comparison already lives in the FPF-ADI EVID (≥3 hypotheses) + the
 ADR's `## Considered Options` — a standalone SOL there is bloat.
+
+**REFRESH — the depth-gated cycle-close stage.** At **Deep/Critical** the cycle ends with a
+**REFRESH** artifact: the mandatory, non-skippable "close the loop" node that makes reconciliation
+an auditable step instead of an easily-forgotten afterthought. REFRESH `based_on` the cycle's
+EVID; body shape: `## Synced` (artifacts brought current) → `## Gaps closed` (drift/stale
+resolved) → `## Links updated` → `## Ready verdict` (is the graph ready for the next cycle — yes/no
++ what blocks). **Critical rule (anti-false-green):** the REFRESH body MUST record the *actual
+output* of running the reconciliation — `forgeplan_drift` + `forgeplan_stale` + `/forge-heal` +
+a link audit — pasted, not a self-reported "all good." A REFRESH that rubber-stamps without the
+real reconciliation output is worse than none (same ground-truth discipline as `completed` = you
+re-ran verification yourself). Create via generic `artifact-author` (no kind-specialist by design).
+At **Standard/Tactical** reconciliation stays skill-only (`/decay-watch` + `/forge-heal` + the
+journal) — no REFRESH node.
 
 Automatic escalation triggers (in `forgeplan_route`):
 - `security`, `auth`, `compliance` → Deep+

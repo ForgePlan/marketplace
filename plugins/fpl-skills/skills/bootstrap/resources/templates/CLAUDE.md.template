@@ -89,7 +89,7 @@ OBSERVE → ROUTE → SHAPE → BUILD → PROVE → SHIP
 | Prove | evidence + R_eff | `forgeplan new evidence "<desc>"`; `forgeplan link`; `forgeplan score` |
 | Ship | activate + PR + merge | `forgeplan activate <id>`; `gh pr create` |
 
-**Depth**: Tactical (no artifact) / Standard (PRD+RFC) / Deep (PRD+SOL+Spec+RFC+ADR) / Critical (Epic + adversarial review). SOLUTION (compare approaches → recommend) participates only at Deep/Critical; at Standard it folds into the FPF-ADI EVID + the ADR's Considered Options.
+**Depth**: Tactical (no artifact) / Standard (PRD+RFC) / Deep (PRD+SOL+Spec+RFC+ADR+REFRESH) / Critical (Epic + adversarial review). SOLUTION (compare approaches → recommend) and REFRESH (cycle-close reconciliation record) participate only at Deep/Critical; at Standard the approach choice folds into the FPF-ADI EVID + the ADR's Considered Options, and reconciliation stays skill-only (`/decay-watch` + `/forge-heal`).
 
 **Hint protocol** — every `forgeplan` output ends with one marker. Execute verbatim, don't paraphrase:
 
@@ -111,10 +111,10 @@ JSON consumers read `_next_action`. List/tree `--json` puts the hint on stderr (
 |---|---|---|:---:|
 | Trivial, reversible within a day | Tactical | nothing or Note | — |
 | Feature 1–3 days, has a choice | Standard | PRD → RFC | recommended |
-| Irreversible, 1–2 weeks | Deep | PRD → SOL → Spec → RFC → ADR | **yes** |
-| Cross-team, strategy | Critical | Epic → PRD[] → SOL[] → Spec[] → RFC[] → ADR[] | **yes + adversarial review** |
+| Irreversible, 1–2 weeks | Deep | PRD → SOL → Spec → RFC → ADR → REFRESH | **yes** |
+| Cross-team, strategy | Critical | Epic → PRD[] → SOL[] → Spec[] → RFC[] → ADR[] → REFRESH | **yes + adversarial review** |
 
-SOL = SOLUTION (compare ≥2 approaches → recommend one), between PRD and the design layer; Deep/Critical only. At Standard the approach choice folds into the FPF-ADI EVID + the ADR's Considered Options.
+SOL = SOLUTION (compare ≥2 approaches → recommend one), between PRD and the design layer; Deep/Critical only. At Standard the approach choice folds into the FPF-ADI EVID + the ADR's Considered Options. REFRESH = the Deep/Critical cycle-close node — the recorded output of running reconciliation (`forgeplan_drift`/`forgeplan_stale`/`/forge-heal` + link audit): what synced, gaps closed, links updated, ready-verdict. Not a rubber stamp — paste the real reconciliation result. At Standard/Tactical reconciliation stays skill-only.
 
 Pipeline is a guideline, not bureaucracy — don't create all 5 artifact kinds for every task. The "5 questions" filter:
 
