@@ -432,14 +432,18 @@ Smith reads CLAUDE.md, picks the right depth (tactical / standard / deep / criti
 - `forgeplan` — project artifacts (PRD/RFC/ADR/Evidence)
 - `hindsight` — cross-session memory (installed when `fpl-hsmem` plugin added)
 
+## Task discipline
+The task list is the only durable record of work in flight — a unit of work becomes a task **before** code is touched. Every task has an owner; `in_progress` is set on start; a blocked task stays `in_progress` with a note; `completed` means verification was **re-run**, not self-reported. Findings mid-task become new tasks; deferred work gets an explicit trigger. A task **references** an artifact by ID, never copies its body. Full rules + the forgeplan layer table live in `CLAUDE.md`.
+
 ## Conventions
 See `CLAUDE.md` for full project conventions, commit format, branch protection, and security rules.
 ```
 
 Verify:
 - File written at repo root, ≥30 lines.
-- All five sections present (mission, stack, build/test/lint, smith pointer, MCP servers, conventions reference).
+- All sections present (mission, stack, build/test/lint, smith pointer, MCP servers, task discipline, conventions reference).
 - Smith pointer paragraph cites `/smith` and `plugins/agents-pro/agents/smith.md`.
+- Task discipline section carries the compact rules + a pointer to `CLAUDE.md` for the full version.
 
 ---
 
@@ -495,6 +499,50 @@ forgeplan activate PRD-NNN             # after evidence linked
 For any task: `/smith <description>` — figures out depth, dispatches the canonical pipeline.
 
 See `AGENTS.md` for cross-CLI context.
+
+## Task discipline
+
+The task list is the only durable record of work in flight. Chat scrolls away,
+agents go idle, context is compacted — anything that lives only in prose is lost.
+A unit of work becomes a task **before** anyone touches code, not after.
+
+- Every task carries an **owner** — an agent name or the main session. An
+  `in_progress` task with no owner is orphaned work.
+- `in_progress` is set **on start**, not at planning time.
+- A blocked task **stays** `in_progress` and gets a blocker note — it does not
+  silently fall back to `pending`, or the blocker vanishes with the status.
+- `completed` means **you re-ran verification yourself**, not that an agent
+  reported success. Re-running the project's checks is cheap; a false green is not.
+
+**Nothing is lost.** A finding discovered mid-task becomes a new task, not a
+comment in a report. Deferred work gets a task with an **explicit trigger** — what
+must become true for it to be picked up; "later" is not a trigger. The task keeps
+**what was decided and why**, including corrections.
+
+**Reopen without hesitation.** An agent marking its own task done makes a **claim,
+not a verdict**. No proof — a check never ran, a report never arrived → return it to
+`in_progress` and name the missing evidence.
+
+**Parallel agents.** Declare strict file ownership per task (explicit globs). In a
+file another agent may touch, make **line-matched edits only, never whole-file
+rewrites** — line edits in disjoint spots coexist; a whole-file write silently eats
+the other change. Check the tree state yourself rather than re-asking an idle agent.
+
+### Layer separation (forgeplan)
+
+Each fact lives in exactly one layer — a task **references** an artifact by ID
+(`PROB-001`), never copies its body. The artifact outlives the session; the task
+does not. A finding that must survive to next week becomes an artifact — even after
+its task is closed.
+
+| Layer | Where | What |
+|---|---|---|
+| Work in flight | task list | what's being done now, by whom, in what status |
+| Decisions | `.forgeplan/{epics,prds,rfcs,adrs,specs}/` | EPIC / PRD / RFC / ADR / SPEC |
+| Defects found | `.forgeplan/problems/` | finding + proof + direction, surviving the session |
+| Evidence | `.forgeplan/evidence/` | a run's verdict, not a retelling of an agent's report |
+| Conversational knowledge | Hindsight (if `fpl-hsmem` installed) | discussed in chat, not yet in any file |
+| Process rules | `CLAUDE.md`, `AGENTS.md` | how we work |
 ```
 
 Verify:
@@ -503,6 +551,7 @@ Verify:
 - Methodology section names the 4-layer pipeline (FPF/BMAD/OpenSpec/Forgeplan).
 - Hard rules section has ≥5 bullets.
 - Smith pointer section names `/smith`.
+- Task discipline section present with the owner / re-verify / nothing-lost rules + the forgeplan layer table.
 
 ---
 
@@ -625,8 +674,8 @@ Bootstrap is complete when ALL the following hold:
 - [ ] Step 0e verification via ToolSearch confirms `mcp__forgeplan__*` reachable
 - [ ] `forgeplan health` returns "healthy" (exit 0)
 - [ ] Step 1b LLM provider check printed ✓ or informational [~] (not a hard gate, but visible to the user)
-- [ ] `CLAUDE.md` present at repo root, ≥40 lines, first line is `# <Project Name> — Claude Code Configuration`
-- [ ] `AGENTS.md` present at repo root, ≥30 lines, contains smith pointer + MCP servers section
+- [ ] `CLAUDE.md` present at repo root, ≥40 lines, first line is `# <Project Name> — Claude Code Configuration`, and carries a `## Task discipline` section (owner / re-verify / nothing-lost rules + forgeplan layer table)
+- [ ] `AGENTS.md` present at repo root, ≥30 lines, contains smith pointer + MCP servers section + the compact `## Task discipline` block pointing to `CLAUDE.md`
 - [ ] `.mcp.json` present at repo root with at least the `forgeplan` MCP server registered (already verified at Step 0b)
 - [ ] At least one Brief NOTE artifact in forgeplan (`forgeplan list --type note` shows ≥1)
 - [ ] At least one PRD in draft (`forgeplan list --type prd --status draft` shows ≥1); `forgeplan validate PRD-NNN` returns `Result: PASS`
