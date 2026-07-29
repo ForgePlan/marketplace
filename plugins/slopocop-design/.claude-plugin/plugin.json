@@ -1,0 +1,34 @@
+{
+  "name": "slopocop-design",
+  "version": "1.0.0",
+  "description": "Slop cop for design — stops UI from looking AI-generated. The design counterpart to slopocop (text). Ships hallmark (anti-AI-slop design engine: 58-gate slop-test, 21 macrostructures, 50 components, audit/redesign/study) plus two taste skills (frontend-design by Anthropic, design-taste-frontend), two commands (/design-audit ranked slop findings with no edits, /design-redesign a fresh visual take that preserves routes/copy/logic), and an on-demand design-cop reviewer agent. No hook by design — laws-of-ux already nudges on frontend edits. Use when building or redesigning a page, or auditing UI for templated slop. Text slop lives in slopocop.",
+  "author": {
+    "name": "ForgePlan"
+  },
+  "homepage": "https://github.com/ForgePlan/marketplace",
+  "repository": "https://github.com/ForgePlan/marketplace",
+  "license": "MIT",
+  "keywords": [
+    "design-slop",
+    "anti-slop",
+    "frontend",
+    "landing-page",
+    "design-review",
+    "redesign",
+    "aesthetics",
+    "hallmark"
+  ],
+  "category": "quality",
+  "requires": {
+    "cli": [],
+    "mcp": [],
+    "plugins": []
+  },
+  "supersedes": {},
+  "components": {
+    "commands": ["design-audit", "design-redesign"],
+    "agents": ["design-cop"],
+    "skills": ["hallmark", "frontend-design", "design-taste-frontend"],
+    "hooks": []
+  }
+}
