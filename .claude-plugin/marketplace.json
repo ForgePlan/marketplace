@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.123.0"
+    "version": "1.124.0"
   },
   "plugins": [
     {
@@ -586,6 +586,33 @@
           "hooks/hooks.json"
         ]
       }
+    },
+    {
+      "name": "slopocop",
+      "source": "./plugins/slopocop",
+      "cost": "light",
+      "stability": "stable",
+      "dependencies": [],
+      "targets": [
+        "claude-code"
+      ],
+      "description": "Slop cop for text \u2014 detects AI slop and humanizes it in Russian and English. Skills humanizer-ru (54 patterns + HARD BANS + fact-lock + a deterministic 0-100 scanner) and slop-humanizer (EN de-slop), commands /slop-audit (read-only detection) and /slop-humanize (rewrite with language auto-routing), a hook-triggered slop-cop reviewer agent, and a PostToolUse prose hint. Use when humanizing text, removing AI tells, or auditing prose before publishing. Design/animation slop is out of scope by design (split from antislop).",
+      "version": "1.0.0",
+      "author": {
+        "name": "ForgePlan"
+      },
+      "homepage": "https://github.com/ForgePlan/marketplace",
+      "license": "MIT",
+      "keywords": [
+        "ai-slop",
+        "humanizer",
+        "anti-slop",
+        "text-review",
+        "russian",
+        "english",
+        "detection",
+        "writing"
+      ]
     }
   ],
   "profiles": {
@@ -641,7 +668,8 @@
       "agents-bmad",
       "agents-canvas",
       "cc-best",
-      "forgeplan-map-pack"
+      "forgeplan-map-pack",
+      "slopocop"
     ]
   }
 }
