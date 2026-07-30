@@ -12,7 +12,7 @@
 
 New here, or need to find where something lives? **[`docs/INDEX.md`](docs/INDEX.md)** is the single repository map / file-RAG — it locates every plugin, agent (by pack), skill, hook, script, doc, and the forgeplan artifacts, plus a "how to find X" lookup.
 
-- **Plugins + versions** → `.claude-plugin/marketplace.json` (19: 10 workflow + 8 agent packs + 1 memory)
+- **Plugins + versions** → `.claude-plugin/marketplace.json` (22: 13 workflow + 8 agent packs + 1 memory)
 - **Agents** → `plugins/<pack>/agents/`; **skills** → `plugins/<plugin>/skills/<skill>/SKILL.md`; **agent authoring** → `plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md`
 - **Methodology routing (smith)** → `plugins/fpl-skills/skills/smith/routing-map.md` (14 rows)
 - **Guides** → `docs/` (indexed in `docs/INDEX.md`); **validation** → `scripts/validate-all-plugins.sh` + `scripts/ci/`
@@ -694,12 +694,12 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # rulesets
 
 | Plugin | Version |
 |--------|:-------:|
-| **fpl-skills** | **1.50.2** (v1.50.2 marketplace docs CANVAS-completeness sync — AGENT-AUTHORING-GUIDE 12→14 context + canvas-coordinator listed as a Profile B-orchestrator + CANVAS added to all methodology/plugin/onboarding lists; v1.50.1 CANVAS smith routing-map Row 14 + docs/SMITH reframed to native single-framework, RFC-022; v1.50.0 CANVAS smith routing row + 'Parallel dispatch & orchestration discipline' note in routing-map + AGENT-AUTHORING-GUIDE pointer, RFC-021; v1.49.1 scanner patch — /decay-watch + decay-reminder.sh treat NOTE-013 `Kind: finding` as a separate machine track (excluded from human-deferral counts/triggers), RFC-019 R-8; v1.49.0 self-aware integrity brick 2 — /forge-heal skill: Layer 4 heal-or-task, propose-not-silent 3-tier (AUTO/ADI/USER), AUTO fixes 2 reversible kinds only, USER→NOTE-013 task, PRD-074/RFC-020; v1.48.0 brick 1 — /forge-insight + insight-watchdog + accurate session counts + decay-reminder flag fix, PRD-074/RFC-019; v1.46.0 /conformance-vectors SDD enrichment, DEFER-012; v1.45.0 /autorun RIPER Plan→Execute human gate, DEFER-016; v1.44.1 /riper FR-5 pin-hash basis, DEFER-018; AD/AID-PDLC instances #1-#4 smith routing + /methodology-check Step 10; EPIC-002 smith 4-skill cluster) |
+| **fpl-skills** | **1.54.2** (v1.50.2 marketplace docs CANVAS-completeness sync — AGENT-AUTHORING-GUIDE 12→14 context + canvas-coordinator listed as a Profile B-orchestrator + CANVAS added to all methodology/plugin/onboarding lists; v1.50.1 CANVAS smith routing-map Row 14 + docs/SMITH reframed to native single-framework, RFC-022; v1.50.0 CANVAS smith routing row + 'Parallel dispatch & orchestration discipline' note in routing-map + AGENT-AUTHORING-GUIDE pointer, RFC-021; v1.49.1 scanner patch — /decay-watch + decay-reminder.sh treat NOTE-013 `Kind: finding` as a separate machine track (excluded from human-deferral counts/triggers), RFC-019 R-8; v1.49.0 self-aware integrity brick 2 — /forge-heal skill: Layer 4 heal-or-task, propose-not-silent 3-tier (AUTO/ADI/USER), AUTO fixes 2 reversible kinds only, USER→NOTE-013 task, PRD-074/RFC-020; v1.48.0 brick 1 — /forge-insight + insight-watchdog + accurate session counts + decay-reminder flag fix, PRD-074/RFC-019; v1.46.0 /conformance-vectors SDD enrichment, DEFER-012; v1.45.0 /autorun RIPER Plan→Execute human gate, DEFER-016; v1.44.1 /riper FR-5 pin-hash basis, DEFER-018; AD/AID-PDLC instances #1-#4 smith routing + /methodology-check Step 10; EPIC-002 smith 4-skill cluster) |
 | **cc-best** | **1.1.0** (all 6 sections authored: claude-md + plugins + agents + hooks + mcp + anti-patterns — RFC-005..009 / DEFER-005..009 closed) |
 | **fpl-hsmem** | 2.1.0 |
-| **forgeplan-workflow** | **1.12.0** (Sprint Z7: Step 4.5 FPF ADI mandatory for Standard+; Sprint Z6: Step 6.5 BMAD adversarial review mandatory for Standard+) |
+| **forgeplan-workflow** | **1.14.0** (Sprint Z7: Step 4.5 FPF ADI mandatory for Standard+; Sprint Z6: Step 6.5 BMAD adversarial review mandatory for Standard+) |
 | **forgeplan-orchestra** | 1.4.1 |
-| **forgeplan-brownfield-pack** | 1.4.0 (Sprint V: Discover Agent migrated) |
+| **forgeplan-brownfield-pack** | 1.5.1 (Sprint V: Discover Agent migrated) |
 | **fpf** | 1.4.1 |
 | **agentic-rag** | 1.1.0 |
 | **fp-cookbook** | 1.2.1 |
@@ -713,13 +713,13 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # rulesets
 
 | Plugin | Version | Last sprint |
 |--------|:-------:|---|
-| **agents-core** | 1.4.1 | RFC-012 — coder GREEN-phase discipline (FR-4) |
+| **agents-core** | 1.5.0 | RFC-012 — coder GREEN-phase discipline (FR-4) |
 | **agents-domain** | 1.1.0 | — |
-| **agents-pro** | 1.12.0 | EPIC-003 guardian Step 5 rows + EPIC-002 smith B-orchestrator |
+| **agents-pro** | 1.15.0 | EPIC-003 guardian Step 5 rows + EPIC-002 smith B-orchestrator |
 | **agents-github** | 1.1.0 | — |
-| **agents-sparc** | 1.3.2 | SPARC instance #3 (RFC-016) — sparc-orchestrator → B-orchestrator + /sparc skill |
-| **agents-tdd** | 0.2.1 | TDD instance #1 (RFC-012) — tdd-orchestrator + RED/GREEN agents + tdd-test-validator + fail-closed gate |
-| **agents-bmad** | 0.2.0 | BMAD instance #2 (RFC-013) — bmad-orchestrator persona-walk + no-code-before-plan gate |
+| **agents-sparc** | 1.4.0 | SPARC instance #3 (RFC-016) — sparc-orchestrator → B-orchestrator + /sparc skill |
+| **agents-tdd** | 0.3.0 | TDD instance #1 (RFC-012) — tdd-orchestrator + RED/GREEN agents + tdd-test-validator + fail-closed gate |
+| **agents-bmad** | 0.3.0 | BMAD instance #2 (RFC-013) — bmad-orchestrator persona-walk + no-code-before-plan gate |
 | **agents-canvas** | **1.0.0** | CANVAS instance #5 (RFC-021 + RFC-022/ADR-015) — canvas-coordinator design→code master + tokens-before-code hook-gate + 7 role agents (incl. canvas-storybook-validator). **v1.0.0 STACK-AGNOSTIC (breaking)** — native single-framework generation; engine/framework/design-source/language = inputs resolved via Step 0 (detect → announce / force-ask); Lit/Web-Components + Spread/wrappers demoted to an optional out-of-default multi-framework path (ADR-016); Style-Dictionary one token-tool option; context7 mandatory; острый gate hardened for native layouts (per-framework guarded globs + state-schema migration + fail-safe stale-state substitution, canvas-gate.sh mechanism unchanged). **brand/style-agnostic** (designer Step 0 chooses + records the brand); v0.3.0 gate hardening — vision-first visual verdict, console-error gate, font-load assertion, data-state/interaction oracles, missing-master PROBLEM loop, master-anatomy completeness, coordinator-verified (optional-path) framework-porter ownership |
 
 > Source of truth: `.claude-plugin/marketplace.json` and `plugins/*/.claude-plugin/plugin.json`. Always verify before PR.
