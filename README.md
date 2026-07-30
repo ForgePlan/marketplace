@@ -8,7 +8,7 @@
 
 Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/ForgePlan) — UX, workflow, engineering, and developer tools.
 
-**21 plugins** | **41 marketplace-aware agents (92 total)** | **38+ skills** | **9+ knowledge bases**
+**22 plugins** | **41 marketplace-aware agents (93 total)** | **38+ skills** | **9+ knowledge bases**
 
 > **ForgePlan ecosystem**: this marketplace + [`forgeplan` CLI](https://github.com/ForgePlan/forgeplan) (artifact lifecycle) + [`@forgeplan/web`](https://github.com/ForgePlan/forgeplan-web) (browser viewer with time-travel + graph). Three siblings; install what you need.
 
