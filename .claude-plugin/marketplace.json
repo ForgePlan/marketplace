@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.123.0"
+    "version": "1.125.0"
   },
   "plugins": [
     {
@@ -586,6 +586,60 @@
           "hooks/hooks.json"
         ]
       }
+    },
+    {
+      "name": "slopocop",
+      "source": "./plugins/slopocop",
+      "cost": "light",
+      "stability": "stable",
+      "dependencies": [],
+      "targets": [
+        "claude-code"
+      ],
+      "description": "Slop cop for text \u2014 detects AI slop and humanizes it in Russian and English. Skills humanizer-ru (54 patterns + HARD BANS + fact-lock + a deterministic 0-100 scanner) and slop-humanizer (EN de-slop), commands /slop-audit (read-only detection) and /slop-humanize (rewrite with language auto-routing), a hook-triggered slop-cop reviewer agent, and a PostToolUse prose hint. Use when humanizing text, removing AI tells, or auditing prose before publishing. Design/animation slop is out of scope by design (split from antislop).",
+      "version": "1.0.0",
+      "author": {
+        "name": "ForgePlan"
+      },
+      "homepage": "https://github.com/ForgePlan/marketplace",
+      "license": "MIT",
+      "keywords": [
+        "ai-slop",
+        "humanizer",
+        "anti-slop",
+        "text-review",
+        "russian",
+        "english",
+        "detection",
+        "writing"
+      ]
+    },
+    {
+      "name": "slopocop-design",
+      "source": "./plugins/slopocop-design",
+      "cost": "medium",
+      "stability": "stable",
+      "dependencies": [],
+      "targets": [
+        "claude-code"
+      ],
+      "description": "Slop cop for design — stops UI from looking AI-generated. The design counterpart to slopocop (text). Ships hallmark (anti-AI-slop design engine: 58-gate slop-test, 21 macrostructures, 50 components, audit/redesign/study) plus two taste skills (frontend-design by Anthropic, design-taste-frontend), commands /design-audit (ranked slop findings, no edits) and /design-redesign (fresh visual take preserving routes/copy/logic), and an on-demand design-cop reviewer agent. No hook by design — laws-of-ux already nudges on frontend edits. Use when building or redesigning a page, or auditing UI for templated slop.",
+      "version": "1.0.0",
+      "author": {
+        "name": "ForgePlan"
+      },
+      "homepage": "https://github.com/ForgePlan/marketplace",
+      "license": "MIT",
+      "keywords": [
+        "design-slop",
+        "anti-slop",
+        "frontend",
+        "landing-page",
+        "design-review",
+        "redesign",
+        "aesthetics",
+        "hallmark"
+      ]
     }
   ],
   "profiles": {
@@ -641,7 +695,9 @@
       "agents-bmad",
       "agents-canvas",
       "cc-best",
-      "forgeplan-map-pack"
+      "forgeplan-map-pack",
+      "slopocop",
+      "slopocop-design"
     ]
   }
 }

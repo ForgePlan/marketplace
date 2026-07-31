@@ -1,0 +1,3 @@
+# The humanizer-ru scanner is Python — never commit bytecode caches.
+__pycache__/
+*.pyc
