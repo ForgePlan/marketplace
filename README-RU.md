@@ -8,7 +8,7 @@
 
 Официальный маркетплейс плагинов Claude Code от [ForgePlan](https://github.com/ForgePlan) — UX, воркфлоу, инженерные и dev-инструменты.
 
-**22 плагинов** | **41 marketplace-aware агентов (93 всего)** | **38+ скиллов** | **9+ баз знаний**
+**22 плагинов** | **41 marketplace-aware агентов (93 всего)** | **80+ скиллов** | **9+ баз знаний**
 
 > **Экосистема ForgePlan**: этот маркетплейс + [CLI `forgeplan`](https://github.com/ForgePlan/forgeplan) (lifecycle артефактов) + [`@forgeplan/web`](https://github.com/ForgePlan/forgeplan-web) (браузерный viewer с time-travel + графом). Три sibling-продукта; ставь что нужно.
 
@@ -62,7 +62,7 @@
 | Архитектор | fpl-skills + fpf + agents-pro + agents-sparc | Мышление + SPARC |
 | Многосессионная работа / команда | fpl-skills + forgeplan-orchestra | Координация + Inbox Pattern |
 | Brownfield миграция | fpl-skills + forgeplan-brownfield-pack | Ингест legacy-доков + C4/DDD/research analyses |
-| Всё сразу | Все 18 плагинов | Полная экосистема |
+| Всё сразу | Все 22 плагинов | Полная экосистема |
 
 ## Доступные плагины
 
@@ -261,6 +261,26 @@ Smith — Profile B-orchestrator агент с четырьмя скилами. 
 
 ```bash
 /plugin install agentic-rag@ForgePlan-marketplace
+```
+
+---
+
+### [slopocop](plugins/slopocop/)
+
+> Слоп-полицейский для **текста**. Ловит нейрослоп и очеловечивает по-русски и по-английски — `humanizer-ru` (54 паттерна + HARD BANS + факт-замок + детерминированный сканер 0–100) и `slop-humanizer` (EN). Команды `/slop-audit` (только детект) и `/slop-humanize` (рерайт с авто-роутингом языка), плюс агент-ревьюер `slop-cop` по хуку.
+
+```bash
+/plugin install slopocop@ForgePlan-marketplace
+```
+
+---
+
+### [slopocop-design](plugins/slopocop-design/)
+
+> Слоп-полицейский для **дизайна** — пара к slopocop. Не даёт интерфейсу выглядеть сгенерированным: `hallmark` (slop-test на 58 гейтов, 21 макроструктура, 50 компонентов) + `frontend-design` (Anthropic) + `design-taste-frontend`. Команды `/design-audit` (ранжированные находки, без правок) и `/design-redesign` (свежая подача с сохранением роутов/копи/логики), плюс агент-ревьюер `design-cop`. Дополняет `laws-of-ux` (эстетика против юзабилити).
+
+```bash
+/plugin install slopocop-design@ForgePlan-marketplace
 ```
 
 ---

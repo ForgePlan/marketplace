@@ -8,7 +8,7 @@
 
 Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/ForgePlan) — UX, workflow, engineering, and developer tools.
 
-**22 plugins** | **41 marketplace-aware agents (93 total)** | **38+ skills** | **9+ knowledge bases**
+**22 plugins** | **41 marketplace-aware agents (93 total)** | **80+ skills** | **9+ knowledge bases**
 
 > **ForgePlan ecosystem**: this marketplace + [`forgeplan` CLI](https://github.com/ForgePlan/forgeplan) (artifact lifecycle) + [`@forgeplan/web`](https://github.com/ForgePlan/forgeplan-web) (browser viewer with time-travel + graph). Three siblings; install what you need.
 
@@ -64,7 +64,7 @@ Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/
 | Architect | fpl-skills + fpf + agents-pro + agents-sparc | Thinking + SPARC |
 | Multi-session / team | fpl-skills + forgeplan-orchestra | Coordination + Inbox Pattern |
 | Brownfield migration | fpl-skills + forgeplan-brownfield-pack | Ingest legacy docs + C4/DDD/research analyses |
-| Everything | All 18 plugins | Complete ecosystem |
+| Everything | All 22 plugins | Complete ecosystem |
 
 ## Available Plugins
 
@@ -287,6 +287,26 @@ All 6 sections authored: `claude-md`, `plugins`, `agents`, `hooks`, `mcp`, `anti
 
 ```bash
 /plugin install agentic-rag@ForgePlan-marketplace
+```
+
+---
+
+### [slopocop](plugins/slopocop/)
+
+> Slop cop for **text**. Detects AI slop and humanizes it in Russian and English — `humanizer-ru` (54 patterns + HARD BANS + fact-lock + a deterministic 0–100 scanner) and `slop-humanizer` (EN). Commands `/slop-audit` (read-only detection) and `/slop-humanize` (rewrite with language auto-routing), plus a hook-triggered `slop-cop` reviewer agent.
+
+```bash
+/plugin install slopocop@ForgePlan-marketplace
+```
+
+---
+
+### [slopocop-design](plugins/slopocop-design/)
+
+> Slop cop for **design** — the counterpart to slopocop. Stops UI from looking AI-generated: `hallmark` (58-gate slop-test, 21 macrostructures, 50 components) + `frontend-design` (Anthropic) + `design-taste-frontend`. Commands `/design-audit` (ranked slop findings, no edits) and `/design-redesign` (fresh visual take preserving routes/copy/logic), plus a `design-cop` reviewer agent. Complements `laws-of-ux` (aesthetics vs usability).
+
+```bash
+/plugin install slopocop-design@ForgePlan-marketplace
 ```
 
 ---

@@ -190,6 +190,6 @@ Install command: `/plugin install <plugin-name>@ForgePlan-marketplace`.
 | 👥 Multi-session / team | `fpl-skills` + `forgeplan-orchestra` |
 | 🏚 Brownfield migration | `fpl-skills` + `forgeplan-brownfield-pack` |
 | 🔧 Any developer (no forgeplan) | `dev-toolkit` + `agents-core` (legacy) |
-| Full stack (all systems) | all 19 plugins |
+| Full stack (all systems) | all 22 plugins |
 
 For per-persona Day 0 walkthroughs see [DEVELOPER-JOURNEY.md](DEVELOPER-JOURNEY.md).

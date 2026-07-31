@@ -190,6 +190,6 @@ Orchestra: Task "OAuth" Status=Review, Phase=Evidence
 | 👥 Multi-session / команда | `fpl-skills` + `forgeplan-orchestra` |
 | 🏚 Brownfield миграция | `fpl-skills` + `forgeplan-brownfield-pack` |
 | 🔧 Любой разработчик (без forgeplan) | `dev-toolkit` + `agents-core` (legacy) |
-| Полный стек (все системы) | все 19 плагинов |
+| Полный стек (все системы) | все 22 плагинов |
 
 Per-persona Day 0 walkthroughs — см. [DEVELOPER-JOURNEY-RU.md](DEVELOPER-JOURNEY-RU.md).

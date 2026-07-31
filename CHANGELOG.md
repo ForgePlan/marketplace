@@ -9,6 +9,17 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Timezone note**: dates reported in local timezone of the reconstruction. UTC merge time may differ by ≤1 day at midnight boundaries (e.g., v1.72.0 / v1.59.0 / v1.58.0 entries reported as local-day but PR merged just after UTC midnight). Chronological ordering is preserved either way.
 
+## [1.125.0] - 2026-07-30
+
+### slopocop v1.0.0 + slopocop-design v1.0.0 — anti-slop plugin pair (new)
+
+Split the anti-slop toolkit into two focused plugins:
+
+- **slopocop** (text) — `humanizer-ru` (54 patterns, HARD BANS, fact-lock, deterministic 0–100 `scan.py`) + `slop-humanizer` (EN); commands `/slop-audit` (read-only detection, RU/EN auto-routing) and `/slop-humanize` (rewrite); hook-triggered `slop-cop` reviewer agent + a PostToolUse prose hint. Upstream MIT (ilyautov/humanizer-ru, humanizer-tools/slop-humanizer).
+- **slopocop-design** (design) — `hallmark` (58-gate slop-test, 21 macrostructures, 50 components) + `frontend-design` (Anthropic, Apache-2.0) + `design-taste-frontend`; commands `/design-audit` and `/design-redesign`; on-demand `design-cop` reviewer agent. No hook by design — complements `laws-of-ux` (aesthetics vs usability).
+
+Catalog 20 → 22 plugins (v1.123.0 → v1.125.0). Both added to the `full` install profile; counts synced across CLAUDE.md / README / README-RU / AGENTS.md / docs/INDEX.md.
+
 ## [1.97.0] - 2026-07-01
 
 ### agents-canvas v1.0.0 — CANVAS made stack-agnostic (RFC-022/ADR-015)
