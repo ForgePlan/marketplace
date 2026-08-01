@@ -38,14 +38,28 @@ def _nesting_brace(lines):
 
 
 def _nesting_indent(lines):
-    widths = []
+    # True block depth via an indentation-level stack, not indent/unit division
+    # (a single misaligned line poisons a fixed unit and inflates every depth).
+    # Continuation lines entered while brackets are open — multi-line calls, dicts,
+    # lists aligned far right — are skipped, the classic flat-code-looks-nested tell.
+    levels = [0]
+    peak = 0
+    bracket = 0
     for raw in lines:
-        if not raw.strip():
-            continue
-        expanded = raw.replace("\t", "    ")
-        widths.append(len(expanded) - len(expanded.lstrip(" ")))
-    unit = min((w for w in widths if w > 0), default=4) or 4
-    return max((w // unit for w in widths), default=0)
+        stripped = raw.strip()
+        if bracket <= 0 and stripped and not stripped.startswith("#"):
+            expanded = raw.replace("\t", "    ")
+            width = len(expanded) - len(expanded.lstrip(" "))
+            if width > levels[-1]:
+                levels.append(width)
+            else:
+                while len(levels) > 1 and width < levels[-1]:
+                    levels.pop()
+            peak = max(peak, len(levels) - 1)
+        code = _TRAILING_LINE_COMMENT.sub("", _STRING.sub('""', raw))
+        bracket += code.count("(") + code.count("[") + code.count("{")
+        bracket -= code.count(")") + code.count("]") + code.count("}")
+    return peak
 
 
 def scan(lines, lang: Lang):
