@@ -9,6 +9,16 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Timezone note**: dates reported in local timezone of the reconstruction. UTC merge time may differ by ≤1 day at midnight boundaries (e.g., v1.72.0 / v1.59.0 / v1.58.0 entries reported as local-day but PR merged just after UTC midnight). Chronological ordering is preserved either way.
 
+## [1.128.0] - 2026-08-01
+
+### slopocop-code v1.2.0 — dogfood false-positive fix (duplicate_block)
+
+Continued the dogfood onto real JS (the marketplace's own `scripts/ci/*.js`) and fixed a third false positive:
+
+- **`duplicate_block`** no longer counts runs of pure structural scaffolding — bare braces, `} catch {`, `return false;`, `continue;`, closing `});` — which repeat naturally in any non-trivial code (a validator's error handlers are not copy-paste slop). It now counts a 3-line run only when it carries real identifier content beyond control keywords and literals. Verified: real content copy-paste still scores `duplicate_block>=1`, structural scaffolding scores 0. Our clean CI scripts rose (e.g. validate-no-personal-paths.js 92 → 100, validate-install-manifests.js 85 → 97).
+
+Regression added to `tests/test_scan.py` locking both directions (real copy-paste caught, scaffolding ignored). The 4-language slop<clean check still passes.
+
 ## [1.127.0] - 2026-08-01
 
 ### slopocop-code v1.1.0 — dogfood false-positive fixes
