@@ -12,11 +12,19 @@ from .langs import IDENT, Lang
 
 _STRING = re.compile(r"""("([^"\\]|\\.)*"|'([^'\\]|\\.)*'|`([^`\\]|\\.)*`)""")
 _BANNER = re.compile(r"(.)\1{3,}")           # 4+ repeats of one char: ==== ---- ####
-_TODO = re.compile(
-    r"\b(todo|fixme)\b\s*:?\s*(implement|add|fill|finish|your code|here)?"
-    r"|your\s+code\s+here|implement\s+me|\bstub\b|\bplaceholder\b",
+# A placeholder tell is a task MARKER at the start of the comment, or a distinctive
+# stub phrase — not the mere mention of the words "todo"/"stub"/"placeholder", which
+# legitimately appear in prose (linters, meta-code, docs describing these concepts).
+_TODO_MARKER = re.compile(r"^(todo|fixme|xxx|hack)\b", re.IGNORECASE)
+_TODO_PHRASE = re.compile(
+    r"your\s+code\s+here|implement\s+me|not\s+implemented|unimplemented|fill\s+me\s+in",
     re.IGNORECASE,
 )
+
+
+def _is_todo(text: str) -> bool:
+    t = text.strip()
+    return bool(_TODO_MARKER.match(t) or _TODO_PHRASE.search(t))
 _EMOJI = re.compile(
     "["
     "\U0001F300-\U0001FAFF"
@@ -80,7 +88,7 @@ def scan(lines, lang: Lang):
             body = stripped[len(lc):] if stripped.startswith(lc) else stripped.strip('"')
             if _BANNER.search(body.strip()) and len(_words(body)) <= 1:
                 banner.append(i)
-            if _TODO.search(body):
+            if _is_todo(body):
                 todo.append(i)
             prev_comment_text = body
             prev_comment_line = i
@@ -92,7 +100,7 @@ def scan(lines, lang: Lang):
         # Trailing comment on a code line.
         idx = code.find(lc)
         trailing = code[idx + len(lc):] if idx != -1 else ""
-        if trailing and _TODO.search(trailing):
+        if trailing and _is_todo(trailing):
             todo.append(i)
 
         code_words = _words(code[:idx] if idx != -1 else code)

@@ -25,6 +25,22 @@ def _score(name):
     return analyze(p.read_text(encoding="utf-8"), str(p))["score"]
 
 
+def _false_positive_checks(failures):
+    # Regression for two false positives caught by dogfooding the scanner on its
+    # own clean source: prose mentioning "TODO"/"stub" is not a placeholder tell,
+    # and aligned multi-line continuations are not block nesting.
+    doc = '"""Metrics: banners, TODO stubs, placeholders, emoji."""\ndef f(x):\n    return x\n'
+    todo = analyze(doc, "fp_todo.py")["metrics"]["todo_placeholder"]
+    if todo:
+        failures.append("prose 'TODO stubs' wrongly flagged as todo_placeholder %s" % todo)
+    cont = "def f():\n    return call(a, b,\n               c, d,\n               e, g)\n"
+    depth = analyze(cont, "fp_nest.py")["metrics"]["max_nesting_depth"]
+    if depth > 2:
+        failures.append("aligned continuation wrongly counted as nesting depth %d" % depth)
+    print("fp   todo=%s  cont-nesting=%d (both must be empty/low)"
+          % (todo or "[]", depth))
+
+
 def main() -> int:
     failures = []
     for ext in LANGS:
@@ -39,6 +55,7 @@ def main() -> int:
                             % (ext, slop.score, ext, clean.score))
         print("%-4s slop=%3d [%-8s]  clean=%3d [%s]"
               % (ext, slop.score, slop.band, clean.score, clean.band))
+    _false_positive_checks(failures)
     if failures:
         print("\nFAIL:")
         for f in failures:

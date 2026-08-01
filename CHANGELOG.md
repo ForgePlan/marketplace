@@ -9,6 +9,17 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Timezone note**: dates reported in local timezone of the reconstruction. UTC merge time may differ by ≤1 day at midnight boundaries (e.g., v1.72.0 / v1.59.0 / v1.58.0 entries reported as local-day but PR merged just after UTC midnight). Chronological ordering is preserved either way.
 
+## [1.127.0] - 2026-08-01
+
+### slopocop-code v1.1.0 — dogfood false-positive fixes
+
+Ran the freshly-shipped scanner on its own source (dogfood) and fixed two real false positives it surfaced:
+
+- **`todo_placeholder`** no longer fires on prose that merely mentions "TODO"/"stub"/"placeholder" (a docstring describing the metric was flagged). It now requires an actual task marker at the start of a comment (`# TODO:`), or a distinctive stub phrase ("your code here", "implement me", "not implemented").
+- **`max_nesting_depth`** (Python) no longer counts aligned multi-line continuations (calls/dicts/lists) as block nesting — the scanner reported depth 10-13 on flat code. Replaced the fragile indent/unit division with an indentation-level stack that skips bracket-continuation lines. `scan_code.py` self-score 80 → 96.
+
+Committed regression added to `tests/test_scan.py` locking both fixes; the 4-language slop<clean fixture check still passes.
+
 ## [1.126.0] - 2026-08-01
 
 ### slopocop-code v1.0.0 — code anti-slop (new)
