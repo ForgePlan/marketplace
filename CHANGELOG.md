@@ -9,6 +9,19 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Timezone note**: dates reported in local timezone of the reconstruction. UTC merge time may differ by ≤1 day at midnight boundaries (e.g., v1.72.0 / v1.59.0 / v1.58.0 entries reported as local-day but PR merged just after UTC midnight). Chronological ordering is preserved either way.
 
+## [1.126.0] - 2026-08-01
+
+### slopocop-code v1.0.0 — code anti-slop (new)
+
+The third sibling in the anti-slop family (after slopocop text + slopocop-design design). Detects and strips the AI-authorship fingerprint in **source code** without changing behavior.
+
+- **Deterministic scanner** `scripts/scan_code.py` — a 0-100 "human-code" score over 10 metrics (comment_ratio, redundant_comment, banner_comment, emoji_in_source, todo_placeholder, max_nesting_depth, long_identifier, generic_name_density, single_impl_abstraction, duplicate_block). tree-sitter when grammars are present, a pure-python regex fallback otherwise (no pip needed). Exits non-zero below score 60 → CI-gateable. Bands: ≥85 clean / 60-84 spot-fix / <60 rewrite.
+- **Per-language idiom baselines** (JS/TS, Python, Go, Rust) — the correctness backbone: idiomatic Go `if err != nil` and Rust `Result`/`match`/`?` are never flagged as slop. Verified by a committed fixture regression (`tests/test_scan.py`): every slop fixture scores <60 and below its clean counterpart across all 4 languages; clean Go 100, clean Rust 97.
+- **Skill `code-slop`** — catalog of ~35 tells (groups A-F) + language-idioms + behavior-preserving rule. **Commands** `/code-audit` (read-only detection) + `/code-deslop` (behavior-preserving rewrite, requires running tests after). **Agent** `code-slop-cop` (on-demand reviewer). No hook (dev-advisor/code-reviewer already fire on edits).
+- Original authorship (not a repackage), MIT. Distinct from `code-reviewer` (bugs) and `simplify` (general quality).
+
+Catalog 22 → 23 plugins (v1.125.0 → v1.126.0). Added to the `full` install profile; counts synced across CLAUDE.md / README / README-RU / AGENTS.md / docs/INDEX.md.
+
 ## [1.125.0] - 2026-07-30
 
 ### slopocop v1.0.0 + slopocop-design v1.0.0 — anti-slop plugin pair (new)

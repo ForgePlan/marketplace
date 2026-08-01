@@ -2,7 +2,7 @@
 
 **Purpose**: the single navigation map for this repo. An agent (or human) reading `CLAUDE.md` or `AGENTS.md` lands here to find *what lives where* and jump straight to it. Paths are repo-relative unless marked otherwise. When a count or path matters, **verify against disk** — this index is re-derived from `marketplace.json` + the tree, but the source of truth is always the file system + `.claude-plugin/marketplace.json`.
 
-This is **ForgePlan/marketplace** — the Claude Code plugin marketplace for the ForgePlan engineering ecosystem (22 plugins: 13 workflow + 8 agent packs + 1 memory plugin). Install: `/plugin marketplace add ForgePlan/marketplace` → `/plugin install <plugin>@ForgePlan-marketplace`.
+This is **ForgePlan/marketplace** — the Claude Code plugin marketplace for the ForgePlan engineering ecosystem (23 plugins: 14 workflow + 8 agent packs + 1 memory plugin). Install: `/plugin marketplace add ForgePlan/marketplace` → `/plugin install <plugin>@ForgePlan-marketplace`.
 
 ---
 
@@ -23,7 +23,7 @@ This is **ForgePlan/marketplace** — the Claude Code plugin marketplace for the
 forgeplan-marketplace/
 ├── .claude-plugin/marketplace.json   # the catalog — single source of truth for plugins + versions + profiles
 ├── CLAUDE.md  AGENTS.md  README.md  README-RU.md  CHANGELOG.md  CONTRIBUTING.md
-├── plugins/            # the 22 plugins (workflow + agent packs + memory) — §3
+├── plugins/            # the 23 plugins (workflow + agent packs + memory) — §3
 ├── docs/               # all guides + this index — §6
 ├── scripts/            # validate-all-plugins.sh + scripts/ci/ gates — §5
 └── .github/workflows/  # CI (validate-plugins.yml), auto-add-to-project, sync-standalone-skills
@@ -37,7 +37,7 @@ forgeplan-marketplace/
 
 Source of truth: [`.claude-plugin/marketplace.json`](../.claude-plugin/marketplace.json). Each plugin: `.claude-plugin/plugin.json` (manifest) + `commands/` `agents/` `skills/` `hooks/` as applicable.
 
-### Workflow plugins (13) + memory (1)
+### Workflow plugins (14) + memory (1)
 | Plugin | Path | One-line |
 |---|---|---|
 | **fpl-skills** | `plugins/fpl-skills/` | flagship — 40 engineering skills + dev-advisor agent + hooks; hosts **smith** routing brain (`skills/smith/`) |
@@ -53,6 +53,7 @@ Source of truth: [`.claude-plugin/marketplace.json`](../.claude-plugin/marketpla
 | **forgeplan-map-pack** | `plugins/forgeplan-map-pack/` | `/map-build` — generate a validated `.forgeplan/map/map.json` via the 8-agent SCAN→…→VALIDATE pipeline |
 | **slopocop** | `plugins/slopocop/` | text anti-slop — humanizer-ru + slop-humanizer + `/slop-audit` + `/slop-humanize` + slop-cop agent |
 | **slopocop-design** | `plugins/slopocop-design/` | design anti-slop — hallmark + frontend-design + design-taste + `/design-audit` + `/design-redesign` + design-cop agent |
+| **slopocop-code** | `plugins/slopocop-code/` | code anti-slop — deterministic 0-100 scanner (JS/TS/Py/Go/Rust) + `/code-audit` + `/code-deslop` + code-slop-cop agent |
 | **dev-toolkit** | `plugins/dev-toolkit/` | ⚠️ soft-deprecated (ADR-003) — migrate to fpl-skills |
 
 ### Agent packs (8) — see §4 for the agents inside
