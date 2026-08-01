@@ -37,8 +37,23 @@ def _false_positive_checks(failures):
     depth = analyze(cont, "fp_nest.py")["metrics"]["max_nesting_depth"]
     if depth > 2:
         failures.append("aligned continuation wrongly counted as nesting depth %d" % depth)
-    print("fp   todo=%s  cont-nesting=%d (both must be empty/low)"
-          % (todo or "[]", depth))
+
+    # duplicate_block must catch real content copy-paste but ignore structural
+    # scaffolding (`try/except/return False` runs repeat naturally, not slop).
+    real = ("def a(u):\n    total = compute_score(u)\n    save_score(u, total)\n"
+            "    notify_user(u, total)\ndef b(u):\n    total = compute_score(u)\n"
+            "    save_score(u, total)\n    notify_user(u, total)\n")
+    scaf = ("def a(x):\n    try:\n        go(x)\n    except Exception:\n        return False\n"
+            "def b(x):\n    try:\n        go2(x)\n    except Exception:\n        return False\n")
+    real_dup = analyze(real, "fp_real.py")["metrics"]["duplicate_block"]
+    scaf_dup = analyze(scaf, "fp_scaf.py")["metrics"]["duplicate_block"]
+    if real_dup < 1:
+        failures.append("real content copy-paste not caught (duplicate_block=%d)" % real_dup)
+    if scaf_dup != 0:
+        failures.append("structural scaffolding wrongly counted as duplicate_block=%d" % scaf_dup)
+
+    print("fp   todo=%s  cont-nesting=%d  real-dup=%d  scaffolding-dup=%d"
+          % (todo or "[]", depth, real_dup, scaf_dup))
 
 
 def main() -> int:

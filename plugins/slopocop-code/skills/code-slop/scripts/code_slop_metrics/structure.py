@@ -8,7 +8,17 @@ from __future__ import annotations
 
 import re
 
-from .langs import Lang, is_idiom
+from .langs import IDENT, Lang, is_idiom
+
+# A line that carries no identifier beyond structural scaffolding — a bare brace,
+# a control-transfer, a catch/else header — is not "content". Runs of these repeat
+# naturally in any non-trivial code (`} catch { / return false; / }`), so counting
+# them as copy-paste is a false positive. duplicate_block ignores them.
+_STRUCT_TOKENS = frozenset({
+    "return", "continue", "break", "catch", "else", "finally", "try", "do",
+    "if", "for", "while", "case", "default", "switch", "match",
+    "true", "false", "null", "nil", "none", "undefined",
+})
 
 _STRING = re.compile(r"""("([^"\\]|\\.)*"|'([^'\\]|\\.)*'|`([^`\\]|\\.)*`)""")
 _TRAILING_LINE_COMMENT = re.compile(r"\s*//.*$|\s*#.*$")
@@ -25,6 +35,10 @@ _ABSTRACTION = {
 
 def _clean(line: str) -> str:
     return _TRAILING_LINE_COMMENT.sub("", _STRING.sub('""', line)).strip()
+
+
+def _scaffolding(cleaned: str) -> bool:
+    return not [t for t in IDENT.findall(cleaned) if t.lower() not in _STRUCT_TOKENS]
 
 
 def _nesting_brace(lines):
@@ -74,7 +88,7 @@ def scan(lines, lang: Lang):
             norm.append(None)
             continue
         c = _clean(raw)
-        norm.append(c if c else None)
+        norm.append(c if c and not _scaffolding(c) else None)
     seen = {}
     dup_blocks = 0
     for i in range(len(norm) - 2):
