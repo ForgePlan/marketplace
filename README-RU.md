@@ -8,7 +8,7 @@
 
 Официальный маркетплейс плагинов Claude Code от [ForgePlan](https://github.com/ForgePlan) — UX, воркфлоу, инженерные и dev-инструменты.
 
-**22 плагинов** | **41 marketplace-aware агентов (93 всего)** | **80+ скиллов** | **9+ баз знаний**
+**23 плагинов** | **41 marketplace-aware агентов (94 всего)** | **80+ скиллов** | **9+ баз знаний**
 
 > **Экосистема ForgePlan**: этот маркетплейс + [CLI `forgeplan`](https://github.com/ForgePlan/forgeplan) (lifecycle артефактов) + [`@forgeplan/web`](https://github.com/ForgePlan/forgeplan-web) (браузерный viewer с time-travel + графом). Три sibling-продукта; ставь что нужно.
 
@@ -62,7 +62,7 @@
 | Архитектор | fpl-skills + fpf + agents-pro + agents-sparc | Мышление + SPARC |
 | Многосессионная работа / команда | fpl-skills + forgeplan-orchestra | Координация + Inbox Pattern |
 | Brownfield миграция | fpl-skills + forgeplan-brownfield-pack | Ингест legacy-доков + C4/DDD/research analyses |
-| Всё сразу | Все 22 плагинов | Полная экосистема |
+| Всё сразу | Все 23 плагинов | Полная экосистема |
 
 ## Доступные плагины
 
@@ -281,6 +281,16 @@ Smith — Profile B-orchestrator агент с четырьмя скилами. 
 
 ```bash
 /plugin install slopocop-design@ForgePlan-marketplace
+```
+
+---
+
+### [slopocop-code](plugins/slopocop-code/)
+
+> Слоп-полицейский для **кода** — третий брат. Находит и снимает отпечаток ИИ-авторства в исходниках (комментарии-пересказы, защитная обвязка на пустом месте, абстракции с одной реализацией, generic-имена, баннер-комментарии, эмодзи, копипаст-блоки) **без изменения поведения** — для JS/TS, Python, Go и Rust. Даёт детерминированный сканер human-code 0-100 (`scan_code.py`, tree-sitter с regex-fallback, вешается на CI) с **идиом-базлайнами на язык**, чтобы идиоматичный Go `if err != nil` и Rust `Result`/`match` не считались слопом. Команды `/code-audit` (только детект) и `/code-deslop` (рерайт с сохранением поведения), плюс агент-ревьюер `code-slop-cop`. Отличается от `code-reviewer` (баги) и `simplify` (общее качество) — бьёт по машинному отпечатку и даёт счёт для CI.
+
+```bash
+/plugin install slopocop-code@ForgePlan-marketplace
 ```
 
 ---

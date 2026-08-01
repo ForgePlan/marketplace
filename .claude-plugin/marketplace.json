@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.125.0"
+    "version": "1.126.0"
   },
   "plugins": [
     {
@@ -640,6 +640,33 @@
         "aesthetics",
         "hallmark"
       ]
+    },
+    {
+      "name": "slopocop-code",
+      "source": "./plugins/slopocop-code",
+      "cost": "light",
+      "stability": "stable",
+      "dependencies": [],
+      "targets": [
+        "claude-code"
+      ],
+      "description": "Slop cop for code — detects and strips AI-slop in source without changing behavior. The code sibling to slopocop (text) and slopocop-design (design). Targets the AI-authorship fingerprint (redundant comments, defensive bloat, one-implementation abstractions, generic naming, banner comments, emoji-in-code, copy-paste blocks) across JS/TS, Python, Go, Rust. Ships a deterministic 0-100 human-code scanner (tree-sitter with a regex fallback — works without pip, CI-gateable), a knowledge-base skill code-slop (catalog + per-language idiom baselines so idiomatic Go/Rust is never flagged), commands /code-audit (read-only detection) and /code-deslop (behavior-preserving rewrite), and an on-demand code-slop-cop reviewer agent. Distinct from code-reviewer (bugs) and simplify (general quality) — it targets the machine-generated fingerprint and gives a CI score.",
+      "version": "1.0.0",
+      "author": {
+        "name": "ForgePlan"
+      },
+      "homepage": "https://github.com/ForgePlan/marketplace",
+      "license": "MIT",
+      "keywords": [
+        "code-slop",
+        "anti-slop",
+        "code-quality",
+        "ai-code",
+        "deslop",
+        "complexity",
+        "code-review",
+        "tree-sitter"
+      ]
     }
   ],
   "profiles": {
@@ -697,7 +724,8 @@
       "cc-best",
       "forgeplan-map-pack",
       "slopocop",
-      "slopocop-design"
+      "slopocop-design",
+      "slopocop-code"
     ]
   }
 }

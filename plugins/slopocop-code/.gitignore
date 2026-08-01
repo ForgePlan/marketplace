@@ -1,0 +1,6 @@
+# The scanner is Python — never commit bytecode caches or tree-sitter build artifacts.
+__pycache__/
+*.pyc
+*.so
+build/
+.pytest_cache/
