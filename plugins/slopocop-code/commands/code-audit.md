@@ -35,7 +35,7 @@ python3 <code-slop skill dir>/scripts/scan_code.py <target> --json
 - If it runs, take its output as the numeric base — the **0-100 human-code score**, the band
   (`>=85` clean / `60-84` spot-fix / `<60` rewrite), and the per-line findings tagged with the
   metric that fired. Exit code is non-zero when the score is `<60` — that is the CI gate signal;
-  quote it. Layer your own reading on top for the semantic tells the regex/tree-sitter base can't
+  quote it. Layer your own reading on top for the semantic tells the regex/heuristic base can't
   judge (false positives, single_impl_abstraction with one real use, dup blocks that are coincidence).
 - If `python3` is missing or the scanner errors, tell the user once, then **audit by catalog anyway**
   — the audit must happen regardless. Estimate the score by the same weighting the scanner uses

@@ -1,8 +1,7 @@
 """Deterministic AI-code-slop metrics with a 0-100 human-code score.
 
 analyze(text, path) merges the comment / naming / structure metrics for one file
-and scores them. The pure-python path runs with no dependency; when tree-sitter
-grammars are installed the structure metrics are refined transparently.
+and scores them. Pure Python, no dependencies — regex + line-based heuristics.
 """
 from __future__ import annotations
 

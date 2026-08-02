@@ -69,7 +69,7 @@ The ten metrics:
 6. **max_nesting_depth** — deepest block nesting per function.
 7. **long_identifier** — any identifier longer than 30 characters.
 8. **generic_name_density** — frequency of `data`/`result`/`temp`/`tmp`/`obj`/`item`/`helper`/`util`/`manager`/`handler`/`foo`/`bar`.
-9. **single_impl_abstraction** — an interface/abstract/trait with exactly one implementation or use (tree-sitter; regex fallback counts declarations at low weight).
+9. **single_impl_abstraction** — an interface/abstract/trait declaration, counted at low weight (a heuristic; it does not count implementations across files).
 10. **duplicate_block** — near-identical runs of >= 3 lines (copy-paste with one value changed).
 
 **Scoring**: start at 100, apply weighted subtractions per metric, land in a band.
@@ -121,4 +121,4 @@ Deterministic detection is blunt. A high comment_ratio can be a genuinely gnarly
 
 ## Languages
 
-JS/TS, Python, Go, Rust, Java, PHP. Other languages fall back to the regex path (comment/banner/emoji/todo/naming/duplicate metrics still work; the tree-sitter-dependent single_impl_abstraction downgrades to a low-weight declaration count).
+JS/TS, Python, Go, Rust, Java, PHP. Other extensions get a generic C-like profile — the comment/banner/emoji/todo/naming/duplicate/nesting metrics still work; only the per-language idiom exemptions are absent.

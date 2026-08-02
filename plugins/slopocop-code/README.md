@@ -69,19 +69,13 @@ cat file.py | python3 <plugin>/skills/code-slop/scripts/scan_code.py -
 
 Because a low score exits non-zero, wire it into pre-commit or CI to keep slop out of the repo.
 
-### Optional: tree-sitter
+### Dependencies
 
-The scanner is **better with** tree-sitter grammars — `single_impl_abstraction` and the structural
-metrics get precise ASTs instead of regex heuristics. It **works without them**: every metric has a
-regex fallback (`single_impl_abstraction` falls back to a low-weight declaration count). Installing
-grammars is optional:
-
-```
-pip install tree_sitter tree_sitter_languages
-```
-
-Without the packages the scanner still runs and still scores — the AST-backed metrics simply drop to
-their lower-confidence regex path.
+None. The scanner is a self-contained regex/heuristic analyzer — pure Python 3, no packages to
+install — so it drops straight into pre-commit or CI. `single_impl_abstraction` is a low-weight
+declaration-count heuristic (it flags an interface/abstract/trait declaration without cross-scope
+implementation counting); an AST-backed pass could sharpen that metric later, but nothing extra is
+required today.
 
 ## Honest about false positives
 

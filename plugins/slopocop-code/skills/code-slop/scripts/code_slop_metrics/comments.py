@@ -2,7 +2,7 @@
 
 Line-based and approximate by design: it strips obvious string literals before
 looking for comment markers, which is enough for a slop signal without a full
-lexer. tree-sitter (when grammars are present) supersedes this via structure.py.
+lexer.
 """
 from __future__ import annotations
 
