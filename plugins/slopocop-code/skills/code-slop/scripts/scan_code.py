@@ -26,7 +26,8 @@ from code_slop_metrics import SUPPORTED_EXTS, analyze  # noqa: E402
 _SKIP_DIRS = {".git", "node_modules", "venv", ".venv", "target", "dist",
               "build", "__pycache__", ".next", ".pytest_cache"}
 _LANG_EXT = {"python": ".py", "js": ".js", "javascript": ".js",
-             "ts": ".ts", "typescript": ".ts", "go": ".go", "rust": ".rs"}
+             "ts": ".ts", "typescript": ".ts", "go": ".go", "rust": ".rs",
+             "java": ".java", "php": ".php"}
 
 
 def _iter_files(source):

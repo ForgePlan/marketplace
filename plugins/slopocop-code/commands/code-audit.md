@@ -1,6 +1,6 @@
 ---
 name: code-audit
-description: Read-only AI-slop detection for source code. Runs the deterministic 0-100 human-code scanner, then reads the target against the code-slop catalog respecting per-language idioms, and returns a ranked Critical/Warning/Suggestion punch list. Never edits. Languages — JS/TS, Python, Go, Rust.
+description: Read-only AI-slop detection for source code. Runs the deterministic 0-100 human-code scanner, then reads the target against the code-slop catalog respecting per-language idioms, and returns a ranked Critical/Warning/Suggestion punch list. Never edits. Languages — JS/TS, Python, Go, Rust, Java, PHP.
 ---
 
 # Code Audit Command

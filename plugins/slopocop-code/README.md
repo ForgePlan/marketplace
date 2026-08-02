@@ -14,7 +14,7 @@
   logic changes, no renamed public symbols. Cosmetic and structural cleanup only.
 - **Review** — an on-demand `code-slop-cop` agent that runs the scanner and reports a ranked punch list.
 
-**Languages (v1):** JavaScript / TypeScript, Python, Go, Rust.
+**Languages:** JavaScript / TypeScript, Python, Go, Rust, Java, PHP.
 
 ## Components
 

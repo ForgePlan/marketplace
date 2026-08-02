@@ -53,7 +53,7 @@ Source of truth: [`.claude-plugin/marketplace.json`](../.claude-plugin/marketpla
 | **forgeplan-map-pack** | `plugins/forgeplan-map-pack/` | `/map-build` — generate a validated `.forgeplan/map/map.json` via the 8-agent SCAN→…→VALIDATE pipeline |
 | **slopocop** | `plugins/slopocop/` | text anti-slop — humanizer-ru + slop-humanizer + `/slop-audit` + `/slop-humanize` + slop-cop agent |
 | **slopocop-design** | `plugins/slopocop-design/` | design anti-slop — hallmark + frontend-design + design-taste + `/design-audit` + `/design-redesign` + design-cop agent |
-| **slopocop-code** | `plugins/slopocop-code/` | code anti-slop — deterministic 0-100 scanner (JS/TS/Py/Go/Rust) + `/code-audit` + `/code-deslop` + code-slop-cop agent |
+| **slopocop-code** | `plugins/slopocop-code/` | code anti-slop — deterministic 0-100 scanner (JS/TS/Py/Go/Rust/Java/PHP) + `/code-audit` + `/code-deslop` + code-slop-cop agent |
 | **dev-toolkit** | `plugins/dev-toolkit/` | ⚠️ soft-deprecated (ADR-003) — migrate to fpl-skills |
 
 ### Agent packs (8) — see §4 for the agents inside

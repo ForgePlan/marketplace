@@ -40,6 +40,15 @@ _GO = Lang("go", "//", "/*", "*/", True, 0.38, 4,
 _RS = Lang("rust", "//", "/*", "*/", True, 0.30, 5,
            idioms=(re.compile(r'\bmatch\b'), re.compile(r'\bResult<'),
                    re.compile(r'\bOk\(|\bErr\('), re.compile(r'\?;?\s*$')))
+# Java is verbose by design — annotations, checked exceptions, and access
+# modifiers are the language, not ceremony; tolerate more nesting/comments.
+_JAVA = Lang("java", "//", "/*", "*/", True, 0.32, 5,
+             idioms=(re.compile(r'^\s*@\w+'), re.compile(r'\bthrows\b'),
+                     re.compile(r'\bcatch\s*\('), re.compile(r'\}?\s*(else\s*)?\{?\s*$')))
+# PHP: $this->, null-coalescing, and isset/empty guards are idiomatic, not bloat.
+_PHP = Lang("php", "//", "/*", "*/", True, 0.30, 4,
+            idioms=(re.compile(r'\$this->'),
+                    re.compile(r'\bisset\s*\(|\bempty\s*\(|\?\?')))
 _C_LIKE = Lang("generic", "//", "/*", "*/", True, 0.30, 4)
 
 _BY_EXT = {
@@ -48,6 +57,8 @@ _BY_EXT = {
     ".ts": _TS, ".tsx": _TS,
     ".go": _GO,
     ".rs": _RS,
+    ".java": _JAVA,
+    ".php": _PHP,
 }
 
 SUPPORTED_EXTS = tuple(_BY_EXT.keys())
