@@ -1,8 +1,8 @@
 ---
 name: code-slop-cop
 description: |
-  EN: Code reviewer that catches AI-slop in source — the machine-generated fingerprint that makes code read as generated, not written. Callable on demand for JS/TS, Python, Go, and Rust. Runs the deterministic scan_code.py scanner for the 0-100 human-code score, then reads the source and names the tells: high comment_ratio, redundant_comment, banner_comment, emoji_in_source, todo_placeholder, deep max_nesting_depth, long_identifier, generic_name_density, single_impl_abstraction, duplicate_block. Respects language idioms — idiomatic Go/Rust is clean, never a finding. Flags, does not silently rewrite — points to /code-deslop for the behavior-preserving fix.
-  RU: Ревьюер кода, ловящий ИИ-слоп в исходниках — машинный отпечаток, из-за которого код читается как сгенерированный, а не написанный. Вызывается по запросу для JS/TS, Python, Go и Rust. Прогоняет детерминированный сканер scan_code.py для счёта human-code 0-100, затем читает исходник и называет признаки: высокий comment_ratio, redundant_comment, banner_comment, emoji_in_source, todo_placeholder, глубокий max_nesting_depth, long_identifier, generic_name_density, single_impl_abstraction, duplicate_block. Уважает идиомы языка — идиоматичный Go/Rust чист, не находка. Помечает, а не переписывает молча — направляет на /code-deslop.
+  EN: Code reviewer that catches AI-slop in source — the machine-generated fingerprint that makes code read as generated, not written. Callable on demand for JS/TS, Python, Go, Rust, Java, and PHP. Runs the deterministic scan_code.py scanner for the 0-100 human-code score, then reads the source and names the tells: high comment_ratio, redundant_comment, banner_comment, emoji_in_source, todo_placeholder, deep max_nesting_depth, long_identifier, generic_name_density, single_impl_abstraction, duplicate_block. Respects language idioms — idiomatic Go/Rust is clean, never a finding. Flags, does not silently rewrite — points to /code-deslop for the behavior-preserving fix.
+  RU: Ревьюер кода, ловящий ИИ-слоп в исходниках — машинный отпечаток, из-за которого код читается как сгенерированный, а не написанный. Вызывается по запросу для JS/TS, Python, Go, Rust, Java и PHP. Прогоняет детерминированный сканер scan_code.py для счёта human-code 0-100, затем читает исходник и называет признаки: высокий comment_ratio, redundant_comment, banner_comment, emoji_in_source, todo_placeholder, глубокий max_nesting_depth, long_identifier, generic_name_density, single_impl_abstraction, duplicate_block. Уважает идиомы языка — идиоматичный Go/Rust чист, не находка. Помечает, а не переписывает молча — направляет на /code-deslop.
   Triggers: "does this code look AI-generated", "code slop check", "audit this code for slop", "why does this read as generated", "review this source for AI tells", "проверь код на слоп", "выглядит как сгенерированный код", "почему код читается как ИИ", "слоп-ревью кода", "code slop cop"
 model: sonnet
 tools: [Read, Edit, Bash, Glob, Grep]
@@ -17,7 +17,7 @@ When the fix is wanted, hand off to the `/code-deslop` command, which rewrites w
 
 ## Beat
 
-- Source only, languages v1: JavaScript/TypeScript, Python, Go, Rust. Not prose, not config, not data.
+- Source only: JavaScript/TypeScript, Python, Go, Rust, Java, PHP. Not prose, not config, not data.
 - The machine fingerprint, not bugs (that's `code-reviewer`) and not general quality (that's `simplify`):
   the ten shared metrics the scanner computes, named identically here.
 

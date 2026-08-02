@@ -297,3 +297,76 @@ This is the correctness backbone and the #1 rule of the plugin: **language idiom
 - A **`TODO` with a tracking reference** (`TODO(#1234)`) in code that otherwise works is a real backlog note, not a `todo_placeholder` stub — only an empty/placeholder *body* counts.
 - Comments that record a **non-obvious why** (a workaround, a spec citation, a perf reason) are the opposite of slop. Never flag them, however long.
 - Generated files, vendored code, and migrations — out of scope; the scanner skips them by path, the agent should too.
+
+## Java + PHP tells
+
+The four groups (A comments, C over-abstraction, D naming, E symmetry) hold in Java and PHP too; below are the language-specific fingerprints. A tell fires only when the idiom is absent (annotations, DI-bound interfaces, container bindings are NOT slop — see language-idioms.md).
+
+**J1. Javadoc restates the signature.** `[redundant_comment]` — a doc block that renames the params back to the reader, in a project with no Javadoc lint.
+
+```java
+// BEFORE
+/**
+ * Gets the user by id and returns it.
+ * @param id the id
+ * @return the user
+ */
+public User getUser(long id) { return repo.find(id); }
+// AFTER
+public User getUser(long id) { return repo.find(id); }
+```
+
+**J2. `IFoo` + lone `FooImpl` with no DI consumer.** `[single_impl_abstraction]` — an interface whose only implementor sits in the same package, injected nowhere, is speculative generality.
+
+```java
+// BEFORE
+interface IPriceCalculator { int calc(Order o); }
+class PriceCalculatorImpl implements IPriceCalculator {
+    public int calc(Order o) { return o.qty() * o.unitPrice(); }
+}
+// AFTER
+class PriceCalculator { int calc(Order o) { return o.qty() * o.unitPrice(); } }
+```
+
+**J3. Mass dead getters/setters.** `[duplicate_block]` — accessor pairs generated for every field on a class nothing reads through them. (Real entity/DTO accessors are exempt.)
+
+**P1. Docblock echoes the typed signature.** `[redundant_comment]` — `@param`/`@return` that only restate declared types, in a project with no phpstan/psalm/PHPCS consuming them.
+
+```php
+// BEFORE
+/**
+ * @param string $name
+ * @return void
+ */
+public function setName(string $name): void {
+    // set the name on the object
+    $this->name = $name;
+}
+// AFTER
+public function setName(string $name): void { $this->name = $name; }
+```
+
+**P2. `FooInterface` + lone `Foo`, no container binding.** `[single_impl_abstraction]` — one impl, same namespace, bound nowhere.
+
+```php
+// BEFORE
+interface GreeterInterface { public function greet(): string; }
+class Greeter implements GreeterInterface {
+    public function greet(): string { return 'hi'; }
+}
+// AFTER
+function greet(): string { return 'hi'; }
+```
+
+**P3. Generic `$data`/`$result` chain.** `[generic_name_density]` — placeholder names where the domain has words.
+
+```php
+// BEFORE
+$data = fetchOrder($id);
+$result = process($data);
+$temp  = format($result);
+// AFTER
+$order   = fetchOrder($id);
+$totals  = process($order);
+$receipt = format($totals);
+```

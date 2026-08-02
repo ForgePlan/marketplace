@@ -1,6 +1,6 @@
 ---
 name: code-slop
-description: "Detect and strip AI-slop in source code without changing behavior. Use when the user asks to de-slop code, asks 'does this look AI-generated', wants to clean up AI code, run a code slop audit, or check whether a function reads as machine-written. Also fires on Russian requests: 'убери слоп из кода', 'выглядит как ИИ-код', 'почисти сгенерированный код'. Targets the machine-generated fingerprint — over-commenting, defensive bloat, single-use abstractions, generic naming, forced symmetry, ceremony — in JS/TS, Python, Go, Rust. Pairs a deterministic 0-100 scanner (CI-gateable) with a rewrite mode. NOT a bug-finder (use code-reviewer) and NOT general quality (use simplify)."
+description: "Detect and strip AI-slop in source code without changing behavior. Use when the user asks to de-slop code, asks 'does this look AI-generated', wants to clean up AI code, run a code slop audit, or check whether a function reads as machine-written. Also fires on Russian requests: 'убери слоп из кода', 'выглядит как ИИ-код', 'почисти сгенерированный код'. Targets the machine-generated fingerprint — over-commenting, defensive bloat, single-use abstractions, generic naming, forced symmetry, ceremony — in JS/TS, Python, Go, Rust, Java, PHP. Pairs a deterministic 0-100 scanner (CI-gateable) with a rewrite mode. NOT a bug-finder (use code-reviewer) and NOT general quality (use simplify)."
 license: MIT
 ---
 
@@ -119,6 +119,6 @@ When in doubt about whether a change preserves behavior, do less. A smaller, obv
 
 Deterministic detection is blunt. A high comment_ratio can be a genuinely gnarly algorithm that earns its explanation. A single-impl interface can be a deliberate seam for a plugin boundary that will grow a second implementation next sprint. A duplicate block can be two cases that only look alike today. The scanner flags the shape; judgment decides. Report findings as "reads as slop, confirm before stripping", not as "this is wrong". The language-idiom allowlist exists precisely because the naive signal over-fires — respect it, and surface uncertainty rather than hiding it.
 
-## Languages (v1)
+## Languages
 
-JS/TS, Python, Go, Rust. Other languages fall back to the regex path (comment/banner/emoji/todo/naming/duplicate metrics still work; the tree-sitter-dependent single_impl_abstraction downgrades to a low-weight declaration count).
+JS/TS, Python, Go, Rust, Java, PHP. Other languages fall back to the regex path (comment/banner/emoji/todo/naming/duplicate metrics still work; the tree-sitter-dependent single_impl_abstraction downgrades to a low-weight declaration count).

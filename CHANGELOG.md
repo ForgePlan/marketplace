@@ -9,6 +9,16 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Timezone note**: dates reported in local timezone of the reconstruction. UTC merge time may differ by ≤1 day at midnight boundaries (e.g., v1.72.0 / v1.59.0 / v1.58.0 entries reported as local-day but PR merged just after UTC midnight). Chronological ordering is preserved either way.
 
+## [1.129.0] - 2026-08-02
+
+### slopocop-code v1.3.0 — Java + PHP support
+
+Extended the code scanner from 4 languages to 6: added **Java** and **PHP**, each with its own idiom baseline so the language's own conventions are never mistaken for slop.
+
+- **Java** — annotations (`@Override`), checked exceptions (`throws`), access modifiers, and verbose generics are idiomatic, not ceremony; tolerated. Real Java slop (self-narrating comments, `...HelperFactoryManager` naming, one-impl interfaces, banners, emoji, copy-paste) is still flagged.
+- **PHP** — `$this->`, `isset()`/`empty()`/`??` guards are idiomatic, not defensive bloat.
+- Fixtures + idiom + catalog sections added for both; `tests/test_scan.py` now covers 6 languages (every slop fixture <60 and below its clean counterpart; clean Java 95, clean PHP 94 with idioms intact). Scanner registry (`langs.py`) + stdin `--lang java|php` wired.
+
 ## [1.128.0] - 2026-08-01
 
 ### slopocop-code v1.2.0 — dogfood false-positive fix (duplicate_block)

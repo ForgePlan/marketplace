@@ -1,6 +1,6 @@
 ---
 name: code-deslop
-description: Behavior-preserving rewrite that strips the AI-slop layer from source code — redundant comments, defensive bloat, one-impl abstractions, generic names, banners, emoji, duplicate blocks — WITHOUT changing logic, control flow, or outputs. Audits first, shows a diff, requires the test suite after. Languages — JS/TS, Python, Go, Rust.
+description: Behavior-preserving rewrite that strips the AI-slop layer from source code — redundant comments, defensive bloat, one-impl abstractions, generic names, banners, emoji, duplicate blocks — WITHOUT changing logic, control flow, or outputs. Audits first, shows a diff, requires the test suite after. Languages — JS/TS, Python, Go, Rust, Java, PHP.
 ---
 
 # Code Deslop Command

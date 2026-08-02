@@ -17,7 +17,7 @@ sys.path.insert(0, str(HERE.parent))
 from code_slop_metrics import analyze  # noqa: E402
 
 FIX = HERE / "fixtures"
-LANGS = ["py", "ts", "go", "rs"]
+LANGS = ["py", "ts", "go", "rs", "java", "php"]
 
 
 def _score(name):

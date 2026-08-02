@@ -1,7 +1,7 @@
 {
   "name": "slopocop-code",
-  "version": "1.2.0",
-  "description": "Slop cop for code — detects and strips AI-slop in source without changing behavior. The code sibling to slopocop (text) and slopocop-design (design). Targets the AI-authorship fingerprint: redundant comments, defensive bloat, one-implementation abstractions, generic naming, banner comments, emoji-in-code, copy-paste blocks. Ships a deterministic 0-100 human-code scanner (tree-sitter with a regex fallback — works without pip) that is CI-gateable, a knowledge-base skill code-slop (catalog + per-language idiom baselines so idiomatic Go/Rust is never flagged), two commands (/code-audit read-only detection, /code-deslop behavior-preserving rewrite), and an on-demand code-slop-cop reviewer agent. Languages: JS/TS, Python, Go, Rust. Distinct from code-reviewer (bugs) and simplify (general quality) — it targets the machine-generated fingerprint and gives a CI score.",
+  "version": "1.3.0",
+  "description": "Slop cop for code — detects and strips AI-slop in source without changing behavior. The code sibling to slopocop (text) and slopocop-design (design). Targets the AI-authorship fingerprint: redundant comments, defensive bloat, one-implementation abstractions, generic naming, banner comments, emoji-in-code, copy-paste blocks. Ships a deterministic 0-100 human-code scanner (tree-sitter with a regex fallback — works without pip) that is CI-gateable, a knowledge-base skill code-slop (catalog + per-language idiom baselines so idiomatic Go/Rust is never flagged), two commands (/code-audit read-only detection, /code-deslop behavior-preserving rewrite), and an on-demand code-slop-cop reviewer agent. Languages: JS/TS, Python, Go, Rust, Java, PHP. Distinct from code-reviewer (bugs) and simplify (general quality) — it targets the machine-generated fingerprint and gives a CI score.",
   "author": {
     "name": "ForgePlan"
   },
