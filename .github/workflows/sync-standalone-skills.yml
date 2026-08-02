@@ -6,6 +6,12 @@ on:
     paths:
       - 'plugins/fpf/skills/fpf-knowledge/**'
       - 'plugins/laws-of-ux/skills/ux-laws/**'
+      - 'plugins/slopocop-code/skills/code-slop/**'
+      - 'plugins/slopocop/skills/humanizer-ru/**'
+      - 'plugins/slopocop/skills/slop-humanizer/**'
+      - 'plugins/slopocop-design/skills/hallmark/**'
+      - 'plugins/slopocop-design/skills/frontend-design/**'
+      - 'plugins/slopocop-design/skills/design-taste-frontend/**'
       - '.github/workflows/sync-standalone-skills.yml'
   workflow_dispatch:
     inputs:
@@ -18,6 +24,12 @@ on:
           - all
           - fpf
           - loux
+          - slopocop-code
+          - slopocop-humanizer-ru
+          - slopocop-humanizer-en
+          - slopocop-hallmark
+          - slopocop-frontend-design
+          - slopocop-design-taste
 
 permissions:
   contents: read
@@ -36,6 +48,24 @@ jobs:
           - plugin: loux
             skill_path: plugins/laws-of-ux/skills/ux-laws
             target_repo: ForgePlan/loux
+          - plugin: slopocop-code
+            skill_path: plugins/slopocop-code/skills/code-slop
+            target_repo: ForgePlan/slopocop-code
+          - plugin: slopocop-humanizer-ru
+            skill_path: plugins/slopocop/skills/humanizer-ru
+            target_repo: ForgePlan/slopocop-humanizer-ru
+          - plugin: slopocop-humanizer-en
+            skill_path: plugins/slopocop/skills/slop-humanizer
+            target_repo: ForgePlan/slopocop-humanizer-en
+          - plugin: slopocop-hallmark
+            skill_path: plugins/slopocop-design/skills/hallmark
+            target_repo: ForgePlan/slopocop-hallmark
+          - plugin: slopocop-frontend-design
+            skill_path: plugins/slopocop-design/skills/frontend-design
+            target_repo: ForgePlan/slopocop-frontend-design
+          - plugin: slopocop-design-taste
+            skill_path: plugins/slopocop-design/skills/design-taste-frontend
+            target_repo: ForgePlan/slopocop-design-taste
 
     steps:
       - name: Skip if not selected (manual run)
@@ -84,14 +114,19 @@ jobs:
             exit 1
           fi
 
-          # Sync SKILL.md (overwrite — marketplace is source of truth)
-          cp "$src/SKILL.md" "$dst/SKILL.md"
-
-          # Sync sections/ — mirror exactly (deletes removed files)
-          rm -rf "$dst/sections"
-          cp -R "$src/sections" "$dst/sections"
-
-          # README.md and .gitignore are preserved (standalone-specific)
+          # Mirror the whole skill dir into the standalone root (SKILL.md +
+          # references/ scripts/ sections/ and any upstream LICENSE), preserving
+          # the standalone's own README.md / .gitignore / LICENSE. The leading-/
+          # excludes anchor to the root, so a skill's own nested LICENSE.txt
+          # still syncs. Bytecode is never mirrored.
+          rsync -a --delete \
+            --exclude='/.git' \
+            --exclude='/README.md' \
+            --exclude='/.gitignore' \
+            --exclude='/LICENSE' \
+            --exclude='__pycache__' \
+            --exclude='*.pyc' \
+            "$src/" "$dst/"
 
           echo "Synced from $src to $dst"
 
@@ -108,7 +143,7 @@ jobs:
           git config user.name "forgeplan-bot"
           git config user.email "noreply@github.com"
 
-          git add -A SKILL.md sections
+          git add -A
 
           if git diff --cached --quiet; then
             echo "No changes — skipping commit"
