@@ -1,8 +1,8 @@
 """Structural metrics: nesting depth, copy-paste blocks, one-impl abstractions.
 
-Line-based fallback. When tree-sitter grammars are installed the scanner prefers
-real AST depth and real implementation counts; this module is the floor that
-runs everywhere with no dependency.
+Line-based, dependency-free heuristics. max_nesting_depth and
+single_impl_abstraction are approximations (no AST) — enough for a slop signal
+and they run everywhere with no packages.
 """
 from __future__ import annotations
 

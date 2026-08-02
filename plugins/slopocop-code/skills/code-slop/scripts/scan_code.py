@@ -7,9 +7,9 @@ Usage:
   echo "code" | python3 scan_code.py - --lang python
   python3 scan_code.py file.go --json
 
-The machine half of /code-audit. Prefers tree-sitter when grammars are present;
-otherwise a pure-python heuristic runs with no packages. Exits non-zero when any
-scanned file scores below --threshold (default 60), so it drops into pre-commit.
+The machine half of /code-audit. A dependency-free regex/heuristic analyzer — no
+packages needed. Exits non-zero when any scanned file scores below --threshold
+(default 60), so it drops into pre-commit.
 """
 from __future__ import annotations
 

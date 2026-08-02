@@ -9,6 +9,12 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Timezone note**: dates reported in local timezone of the reconstruction. UTC merge time may differ by ≤1 day at midnight boundaries (e.g., v1.72.0 / v1.59.0 / v1.58.0 entries reported as local-day but PR merged just after UTC midnight). Chronological ordering is preserved either way.
 
+## [1.130.0] - 2026-08-03
+
+### slopocop-code v1.3.1 — honest docs (drop the tree-sitter claim)
+
+Dogfood/audit found the docs claimed "tree-sitter with a regex fallback", but the scanner has no tree-sitter integration — it is a self-contained regex/heuristic analyzer. Corrected every claim (plugin.json, marketplace.json, README/README-RU, SKILL.md, command, code docstrings, CLAUDE.md table) to describe it accurately: **dependency-free, pure-Python regex/heuristic, no packages to install**. Removed the misleading "pip install tree_sitter" instruction (it did nothing). `single_impl_abstraction` is honestly described as a low-weight declaration-count heuristic, not cross-scope implementation counting. No behavior change — the scanner always ran this path; only the description was wrong.
+
 ## [1.129.0] - 2026-08-02
 
 ### slopocop-code v1.3.0 — Java + PHP support
