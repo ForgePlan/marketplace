@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.130.0"
+    "version": "1.131.0"
   },
   "plugins": [
     {
@@ -239,8 +239,8 @@
       "targets": [
         "claude-code"
       ],
-      "description": "Unified workflow: Forgeplan artifacts + Orchestra task tracking + Claude Code AI execution. Bidirectional sync, Session Start Protocol with Inbox Pattern, and methodology knowledge base. Requires forgeplan CLI + Orchestra MCP server. v1.4.1: orchestra-advisor agent canonical-lint compliant (LR-1..LR-3).",
-      "version": "1.4.1",
+      "description": "Unified workflow: Forgeplan artifacts + Orchestra task tracking + Claude Code AI execution. Bidirectional sync, Session Start Protocol with Inbox Pattern, and methodology knowledge base. Requires forgeplan CLI + Orchestra MCP server. v1.5.0: /sync field-write path fixed — the non-existent set_fields replaced by update_entity, fields passed as {fieldUid, value} with UIDs resolved via list_fields, create_entity moved to the entities[] form (marketplace#208).",
+      "version": "1.5.0",
       "author": {
         "name": "ForgePlan"
       },

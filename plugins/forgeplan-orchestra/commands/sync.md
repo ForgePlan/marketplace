@@ -20,8 +20,20 @@ Parse each line to extract: artifact ID, type (PRD/RFC/ADR/etc.), status (draft/
 ### Step 2: Collect Orchestra Tasks
 
 Use `mcp__orch__query_entities(repoType:"folder", repoUid:"all")` to get all tasks.
-Then use `mcp__orch__list_fields()` to get custom field definitions (Artifact, Type, Phase, etc.).
-For each task, check if it has an Artifact field value.
+Then use `mcp__orch__list_fields(contextUid: "<workspace_uid>", targetType: "task")` to get
+custom field definitions (Artifact, Type, Phase, etc.).
+
+**Keep two maps from that response — Step 6 cannot write fields without them:**
+- field name -> field `uid`
+- per option field, option name -> option `uid`
+
+Both are per-workspace. Never hardcode them, and never carry them over from another
+workspace.
+
+For each task, check if it has an Artifact field value. Note the response shapes differ
+between tools: in `query_entities` a text field is a bare string while an option field is
+an object with a nested `value`. Reading `fields[uid].value` uniformly yields `undefined`
+on text fields and makes every artifact ID look empty.
 
 ### Step 3: Cross-Reference
 
@@ -85,13 +97,43 @@ Ask: "Which actions should I execute? (all / numbers / none)"
 
 For confirmed actions only:
 
+Field writes need the UID maps from Step 2. If you skipped that step, run
+`mcp__orch__list_fields` now — field and option UIDs are per-workspace and cannot be
+guessed. See the `03-fields/custom-fields.md` section for the full contract.
+
 **Create missing task:**
 1. ALWAYS `mcp__orch__search_entities(query: "<ARTIFACT_ID>")` first — no duplicates
-2. `mcp__orch__create_entity(entityType: "task", name: "[<ID>] <Title>", ...)` 
-3. `mcp__orch__set_fields(entityUid: <new_task>, fields: {Artifact: "<ID>", Type: "<type>", Phase: "<phase>"})`
+2. Create the task and set its fields in one call:
+
+```
+mcp__orch__create_entity(entities: [{
+  type: "task",
+  name: "[<ID>] <Title>",
+  contextUid: "<project_uid>",
+  fields: [
+    { fieldUid: "<Artifact uid>", value: "<ID>" },              // text -> bare string
+    { fieldUid: "<Type uid>",     value: "<option uid of type>" },
+    { fieldUid: "<Phase uid>",    value: "<option uid of phase>" }
+  ]
+}])
+```
+
+3. Read `failedFields` inside `created[0]`. Report any entry to the user — do NOT
+   report a field as set without checking.
 
 **Update Status/Phase mismatch:**
-1. `mcp__orch__set_fields(entityUid: <task>, fields: {Phase: "<correct_phase>"})` or update Status as needed.
+
+```
+mcp__orch__update_entity(
+  entityUid: "<task_uid>",
+  fields: [ { fieldUid: "<Phase uid>", value: "<option uid of correct phase>" } ]
+)
+```
+
+Send only fields whose value actually changed. Re-writing a field with the value it
+already holds comes back in `failedFields` as `"Missing or insufficient permissions."`
+even though nothing is wrong — sending unchanged fields makes every clean run look
+broken. `failedFields` is at the top level on `update_entity`.
 
 **Remove orphan task (IN ORCH NOT IN FORGE):**
 - Suggest marking as Done or investigating — NEVER delete without explicit confirmation.
@@ -99,6 +141,8 @@ For confirmed actions only:
 ## Safety Rules
 
 - Before `mcp__orch__create_entity` -> ALWAYS `mcp__orch__search_entities` first (prevent duplicates)
+- NEVER write fields without resolving UIDs via `mcp__orch__list_fields` first — there is no `set_fields` tool, and option fields take the option UID, not its name
+- ALWAYS read `failedFields` from the response before reporting a field as set
 - NEVER use `mcp__orch__send_message` (safety rule — no automated messages)
 - NEVER use `mcp__orch__delete_entity` without explicit user confirmation for each entity
 - NEVER sync automatically — always show diff and wait for user decision

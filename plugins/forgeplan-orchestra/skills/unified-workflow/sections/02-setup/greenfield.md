@@ -111,8 +111,11 @@ forgeplan new epic "Project Name"
 # -> EPIC-001 created
 
 # Then in Orchestra:
-create_entity: task "[EPIC-001] Project Name"
-set_fields: Artifact=EPIC-001, Type=Epic, Phase=Shape
+list_fields: resolve field + option UIDs once (see 03-fields/custom-fields.md)
+create_entity(entities: [{ type: "task", name: "[EPIC-001] Project Name",
+  contextUid: <project_uid>,
+  fields: [Artifact=EPIC-001, Type=Epic, Phase=Shape] }])
+# each fields entry is {fieldUid, value}; option values are option UIDs, not names
 ```
 
 ## Step 6: First Sprint
