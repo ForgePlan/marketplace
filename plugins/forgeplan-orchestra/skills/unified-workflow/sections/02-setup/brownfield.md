@@ -22,17 +22,25 @@ forgeplan list --status active
 forgeplan list --status draft
 ```
 
+First resolve field and option UIDs once — `list_fields(contextUid, targetType: "task")`.
+Fields are written by UID, and option fields take the option UID rather than its name;
+see `03-fields/custom-fields.md` for the contract.
+
 For each **active** artifact:
 ```
-create_entity: task "[<ID>] <Title>"
-set_fields: Artifact=<ID>, Type=<kind>, Phase=Done, Status=Done
+create_entity(entities: [{ type: "task", name: "[<ID>] <Title>", contextUid: <project_uid>,
+  fields: [Artifact=<ID>, Type=<kind>, Phase=Done, Status=Done] }])
 ```
 
 For each **draft** artifact:
 ```
-create_entity: task "[<ID>] <Title>"
-set_fields: Artifact=<ID>, Type=<kind>, Phase=<current_phase>, Status=<mapped_status>
+create_entity(entities: [{ type: "task", name: "[<ID>] <Title>", contextUid: <project_uid>,
+  fields: [Artifact=<ID>, Type=<kind>, Phase=<current_phase>, Status=<mapped_status>] }])
 ```
+
+In both cases each `fields` entry is `{fieldUid, value}` with resolved UIDs — the
+`Name=Value` shorthand above is for readability only. Check `created[0].failedFields`
+after each call.
 
 Use the Phase-Status mapping:
 - Shape -> Backlog
@@ -48,8 +56,9 @@ Use the Phase-Status mapping:
 If you have many completed artifacts (10+), creating individual Done tasks creates noise. Instead, create one milestone task:
 
 ```
-create_entity: task "[EPIC-001] Pre-Orchestra Milestone — N artifacts"
-set_fields: Artifact=EPIC-001, Type=Epic, Phase=Done, Status=Done
+create_entity(entities: [{ type: "task", name: "[EPIC-001] Pre-Orchestra Milestone — N artifacts",
+  contextUid: <project_uid>,
+  fields: [Artifact=EPIC-001, Type=Epic, Phase=Done, Status=Done] }])
 ```
 
 Add a checklist listing all completed artifact IDs. Then only create individual tasks for **draft/active** artifacts that need tracking.

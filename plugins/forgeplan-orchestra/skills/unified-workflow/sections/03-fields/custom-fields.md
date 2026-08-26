@@ -86,21 +86,67 @@ mcp__orch__manage_field: create "Branch" type=text
 
 ## Setting Fields on a Task
 
-When creating or updating a task:
+There is no `set_fields` tool. Field values go through `mcp__orch__update_entity`, or
+through the `fields` array inside `mcp__orch__create_entity` at creation time.
+
+Two things trip up every first implementation:
+
+1. **Fields are keyed by UID, not by name** — each element is `{fieldUid, value}`.
+2. **For `option` and `status` fields the value is the OPTION UID**, not the option name.
+
+UIDs are per-workspace and must never be hardcoded. Resolve them first.
+
+### Step 1 — resolve names to UIDs
 
 ```
-mcp__orch__set_fields(
+mcp__orch__list_fields(contextUid: "<workspace_uid>", targetType: "task")
+```
+
+Build two maps from the response:
+
+- field name -> field `uid` — e.g. `"Artifact"` -> `da7lfvu97fn68j6gftvg`
+- per option field, option name -> option `uid` — e.g. `Phase` `"Shape"` -> `da7lg0e97fn68j6ghu7g`
+
+### Step 2 — write the values
+
+```
+mcp__orch__update_entity(
   entityUid: "<task_uid>",
-  fields: {
-    "Artifact": "PRD-021",
-    "Type": "PRD",
-    "Depth": "Standard",
-    "Phase": "Code",
-    "Sprint": "Sprint 9",
-    "Branch": "feat/adi-quality-prd021"
-  }
+  fields: [
+    { fieldUid: "<Artifact uid>", value: "PRD-021" },              // text  -> bare string
+    { fieldUid: "<Type uid>",     value: "<PRD option uid>" },     // option -> OPTION UID
+    { fieldUid: "<Depth uid>",    value: "<Standard option uid>" },
+    { fieldUid: "<Phase uid>",    value: "<Code option uid>" },
+    { fieldUid: "<Sprint uid>",   value: "Sprint 9" },             // text
+    { fieldUid: "<Branch uid>",   value: "feat/adi-quality-prd021" }
+  ]
 )
 ```
+
+When creating a task, pass the same array inline in `create_entity` instead — one call
+instead of two. See "Scenario 1" in the playbook section.
+
+### Always read `failedFields`
+
+Both tools return success even when individual values did not apply. Per-field errors
+live in `failedFields` — at the top level on `update_entity`, inside `created[i]` on
+`create_entity`. Read it and surface it; never report a field as set without checking.
+
+Two reasons you will see there:
+
+| Reason | What it actually means |
+|---|---|
+| `Invalid option UID "Shape" for field "Phase" (…)` | A name was sent where an option UID was required. Real error — fix the resolution step. |
+| `Missing or insufficient permissions.` | Usually **not** a permissions problem — it is returned when the field already holds that exact value. Send only changed fields, or this appears on every idempotent run. |
+
+### Why the mistake is easy to miss
+
+Some option UIDs happen to equal their own lowercased name: `Status` (`backlog`, `todo`,
+`doing`, `review`, `done`), `Priority` (`low`, `medium`, `high`), `Tags` (`feature`,
+`bug`, `docs`). Sending a name there succeeds by coincidence. The custom fields `Type`,
+`Phase` and `Depth` have generated UIDs and fail into `failedFields` instead — so a
+name-based implementation looks half-working rather than broken. Never rely on the
+coincidence; always resolve through `list_fields`.
 
 ## Tactical Tasks (No Artifact)
 

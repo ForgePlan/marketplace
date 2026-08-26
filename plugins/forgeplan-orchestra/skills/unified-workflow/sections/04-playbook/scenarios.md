@@ -44,9 +44,11 @@ Determines the depth (Tactical/Standard/Deep/Critical) and the artifact pipeline
 forgeplan new prd "Title"              # -> PRD-XXX created
 
 # Orchestra:
-create_entity: task "[PRD-XXX] Title"
-set_fields: Artifact=PRD-XXX, Type=PRD, Depth=Standard
-set_fields: Phase=Shape, Status=Backlog
+list_fields: resolve field + option UIDs once (see 03-fields/custom-fields.md)
+create_entity(entities: [{ type: "task", name: "[PRD-XXX] Title", contextUid: <project_uid>,
+  fields: [Artifact=PRD-XXX, Type=PRD, Depth=Standard, Phase=Shape, Status=Backlog] }])
+# one call, not three — each fields entry is {fieldUid, value}, option values are option UIDs
+# then check created[0].failedFields
 ```
 
 ### 3. SHAPE

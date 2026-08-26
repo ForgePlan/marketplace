@@ -9,6 +9,20 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Timezone note**: dates reported in local timezone of the reconstruction. UTC merge time may differ by ≤1 day at midnight boundaries (e.g., v1.72.0 / v1.59.0 / v1.58.0 entries reported as local-day but PR merged just after UTC midnight). Chronological ordering is preserved either way.
 
+## [1.131.0] - 2026-08-27
+
+### forgeplan-orchestra v1.5.0 — `/sync` field-write path fixed against the live Orchestra MCP
+
+`/sync` could not write task fields at all. Three bugs on the same path, verified against a live server (Orchestra Beta 0.141.0, `orchestra-mcp-server` 1.0.0) and filed as marketplace#208.
+
+- **`set_fields` does not exist.** The plugin referenced it in **ten places across six files** — four as `mcp__orch__set_fields(...)` calls, six as pseudocode without the tool prefix (so a grep for the full name missed them). All now use `update_entity`, or the inline `fields` array on `create_entity`.
+- **Wrong `fields` shape, no UID resolution** (the substantive one). The plugin passed a name-keyed map; the server takes an array of `{fieldUid, value}`, and for `option`/`status` fields the value must be the **option UID**, not the option name. UIDs are per-workspace, so `list_fields` must be called first — a step the plugin did not have at all. `03-fields/custom-fields.md` now documents the full contract; `/sync` Step 2 builds and keeps both UID maps.
+- **Stale `create_entity` signature.** `{entityType, name}` → `{entities: [{type, name, contextUid, fields}]}`. Fields are now set inline at creation, removing a round-trip and the separate field-setting step.
+
+Two silent-failure traps are now documented where implementers hit them: `failedFields` comes back inside a **successful** response and must be read (top level on `update_entity`, `created[i]` on `create_entity`); and re-writing a field with the value it already holds returns `"Missing or insufficient permissions."` although nothing is wrong — send only changed fields.
+
+Why it looked half-working before: some option UIDs happen to equal their own lowercased name (`Status`, `Priority`, `Tags`), so name-based writes succeeded there by coincidence while `Type`, `Phase` and `Depth` silently failed.
+
 ## [1.130.0] - 2026-08-03
 
 ### slopocop-code v1.3.1 — honest docs (drop the tree-sitter claim)
