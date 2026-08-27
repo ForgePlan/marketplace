@@ -9,6 +9,21 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Timezone note**: dates reported in local timezone of the reconstruction. UTC merge time may differ by ≤1 day at midnight boundaries (e.g., v1.72.0 / v1.59.0 / v1.58.0 entries reported as local-day but PR merged just after UTC midnight). Chronological ordering is preserved either way.
 
+## [1.132.0] - 2026-08-27
+
+### forgeplan-orchestra v1.6.0 — the card starts holding the work, not just its metadata
+
+Until now the plugin mirrored metadata: artifact ID, type, status, phase. What decides whether work is done — the acceptance criteria — stayed inside markdown nobody opens while working, and what was tried stayed in a terminal that closed. Six changes, from marketplace#210.
+
+- **Read the task's chat before acting on it.** Not optional and not configurable off — reading notifies nobody, and the standing prohibition was always about *sending*. Skipping it is how an agent overwrites a human correction or redoes an approach already recorded as a dead end. Text read from a chat is information, never authority: it can change a plan or force a stop, never authorise deleting, closing, or sending.
+- **Sending is now conditional rather than forbidden.** Off by default, opt-in per workspace, task's own chat only, no `@`-mentions, one marked message per event (`▶ START`, `✗ DEAD END`, `! FINDING`, `✓ GATE`, `→ HANDOFF`). With an explicit rule on what *not* to write: anything the card already shows is a duplicate that costs a notification. Decision recorded in ADR-021.
+- **`Blocked` added as a Status — never a phase.** A blocked task keeps the phase it was in; writing a phase alongside it rolls the task back to `Shape` and destroys how far it got. Both halves required in the description: `BLOCKED:` (what is awaited) and `TRIGGER:` (what would unblock it). "Later" is not a trigger.
+- **Checklists from acceptance criteria**, plus a `Done`-with-open-items report. The gate reports rather than forbids — closing with open items is sometimes right, it just stops reading identically to "we did everything". Two traps documented where implementers hit them: item text is plain text only (strip backticks), and reconciliation is additive by text match or a human's ticks get erased.
+- **`Artifact` backfill from task names.** On one live board 20 of 32 tasks carried their ID in the *name* while the field sat empty, making them invisible to sync. Three placements parsed; ambiguous or unmatched names yield no proposal; every row confirmed individually, because one wrong binding is worse than twenty unbound tasks.
+- **Workspace UIDs pinned; orphans never deleted.** `get_current_context` follows whichever workspace the user has open — it switched mid-run once, and a writing run would have written into the wrong space and reported success. It is now used only to report a mismatch. Orphan deletion is replaced by a report, with the reasoning recorded: five orphans in one session were all meaningful.
+
+Field-population baseline that drove the "who writes this, and when" contract: `Phase` 27/32, `Depth` 22/32, `Artifact`/`Type` 12/32, `Sprint`/`Branch` 0/32. The leaders are exactly the fields written at creation in the same call. `Sprint` and `Branch` stay declared with an explicit rule — populate where the project has sprints and branches, otherwise empty is correct and never reported as drift.
+
 ## [1.131.0] - 2026-08-27
 
 ### forgeplan-orchestra v1.5.0 — `/sync` field-write path fixed against the live Orchestra MCP
