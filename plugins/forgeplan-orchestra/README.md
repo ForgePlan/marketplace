@@ -91,9 +91,14 @@ Apply changes? [y/n]
 
 ## Safety Rules
 
-- **NEVER** `mcp__orch__send_message` without explicit user request
-- **NEVER** `mcp__orch__delete_entity` without confirmation
+- **ALWAYS** read a task's chat before acting on it — reading notifies nobody and is never optional
+- **NEVER** `mcp__orch__send_message` unless chat writing is explicitly enabled for the workspace; then only into the task's own chat, no `@`-mentions, one marked message per event
+- **NEVER** `mcp__orch__delete_entity` — orphans are reported, never deleted
+- **NEVER** resolve the target workspace from `get_current_context` — it follows the UI; use configured UIDs and report mismatches
+- **NEVER** set an assignee automatically — it pushes a notification to a person
+- **NEVER** write a phase alongside a `Blocked` status — the task keeps the phase it had
 - **ALWAYS** `mcp__orch__search_entities` before `create_entity` (no duplicates)
+- **ALWAYS** read `failedFields` before reporting a field as set — it arrives inside a *successful* response
 
 ## Credits
 

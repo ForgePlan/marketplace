@@ -15,8 +15,35 @@ Custom fields are created at the **workspace level** in Orchestra. This means:
 | **Type** | `option` | PRD / RFC / ADR / Epic / Spec / Problem / Evidence / Note | Artifact type | Required if Artifact is set |
 | **Depth** | `option` | Tactical / Standard / Deep / Critical | Depth from `forgeplan route` | Optional |
 | **Phase** | `option` | Shape / Validate / Code / Evidence / Done | Current Forge pipeline phase | Recommended |
-| **Sprint** | `text` | `Sprint 9`, `Sprint 10` | Sprint assignment | Recommended |
-| **Branch** | `text` | `fix/adi-quality-prob021` | Git branch name | Optional |
+| **Sprint** | `text` | `Sprint 9`, `Sprint 10` | Sprint assignment | Only where the project runs sprints |
+| **Branch** | `text` | `fix/adi-quality-prob021` | Git branch name | Only where work is branch-scoped |
+
+## Who writes each field, and when
+
+A field with no defined moment of writing stays empty forever. That is not a discipline
+problem — it is a design problem, and it shows up in measurements.
+
+Measured on a live 32-task board: `Phase` 27/32, `Depth` 22/32, `Artifact` and `Type`
+12/32 each, `Sprint` and `Branch` 0/32. The leaders are exactly the fields written *at
+creation, in the same call*. Anything requiring someone to come back and add it later
+does not get added.
+
+| Field | Written by / when | Read for | An empty value means |
+|---|---|---|---|
+| `Artifact` | Agent, at task creation; or operator via confirmed backfill | The link itself — every sync operation | Tactical work, not artifact-linked |
+| `Type` | Agent, same call as `Artifact` | Filtering by kind without querying forgeplan | Set only alongside `Artifact` |
+| `Phase` | Agent, at creation and at each phase transition | Status↔Phase sync | Not yet started in the pipeline |
+| `Depth` | Agent, at creation, from routing | Capacity judgement | Depth not assessed |
+| `Sprint` | Operator or agent, only where sprints exist | Time grouping | **Correct** — this project has no sprints |
+| `Branch` | Agent, on entering the Code phase, only where work is branch-scoped | Finding code for a task | **Correct** — work is not branch-scoped |
+
+`Sprint` and `Branch` stay declared. Populate them where the project genuinely has sprints
+and named branches; otherwise leave them empty. An empty value in those two is never
+reported as drift, never triggers a proposal, and never blocks a gate.
+
+**Never rename these fields.** Integrations resolve them by name.
+**Never modify system fields** (`Status`, `Priority`, assignee, dates) beyond what is
+described here, and never set an assignee automatically — it sends a push to a person.
 
 ## Why These 6 and Not More
 
@@ -64,6 +91,36 @@ Two fields reflect different aspects of the same work:
 | **Doing** | Code | Code being written, sprint in progress | Developer or AI |
 | **Review** | Evidence | Audit complete, evidence being created | AI after `/audit` |
 | **Done** | Done | Artifact activated in Forgeplan | AI after `forgeplan activate` |
+| **Blocked** | **unchanged** | Work stopped waiting on something external | Whoever hits the blocker |
+
+## Blocked
+
+`Blocked` is an option on the **`Status`** field. It is **not** a phase, and no `Phase`
+option named `Blocked` exists or should be created.
+
+**A blocked task keeps the phase it was already in.** Writing a phase alongside a `Blocked`
+status rolls the task back to `Shape` and destroys the record of how far it got.
+
+The five happy-path statuses have nowhere to put stopped work, so it settles in `To Do` —
+where it reads as "nobody picked this up" rather than "stuck on X". Someone then picks it
+up and hits the same blocker again.
+
+A blocked task states both halves in its description:
+
+```
+BLOCKED: what is being waited on
+TRIGGER: what must become true for it to move
+```
+
+"Later" is not a trigger. "After the migration merges" is a trigger. Only one half present
+means the task will sit there with nobody able to tell when it should wake up.
+
+Adding the option to a workspace that lacks it:
+
+```
+mcp__orch__manage_field_option(action: "create", fieldUid: "<Status uid>",
+                               optionName: "Blocked", optionColor: "red")
+```
 
 ## Sync Rule
 
@@ -147,6 +204,54 @@ Some option UIDs happen to equal their own lowercased name: `Status` (`backlog`,
 `Phase` and `Depth` have generated UIDs and fail into `failedFields` instead — so a
 name-based implementation looks half-working rather than broken. Never rely on the
 coincidence; always resolve through `list_fields`.
+
+## Checklists — acceptance criteria on the card
+
+Fields carry metadata. Checklists carry the thing that decides whether the work is done.
+
+Forgeplan already holds exactly what maps onto them one-to-one:
+
+| Parent kind | Source section | One item per |
+|---|---|---|
+| PRD / SPEC | Acceptance criteria | Criterion |
+| RFC | `## Implementation Phases` | Phase step |
+
+```
+mcp__orch__manage_checklist(action: "create", chatUid: "<task_uid>",
+                            name: "Acceptance criteria",
+                            items: [{text: "…"}, {text: "…"}])
+```
+
+Acceptance criteria stop being dead text inside an artifact nobody opens during the work,
+and become something visible on the card that cannot be closed without passing.
+
+### The gate
+
+A task in `Done` whose checklist still has open items is reported by `/sync` under its own
+category, naming the open items. The gate **reports**; it does not forbid closing.
+
+Closing with open items is sometimes right — work genuinely deferred. The point is that it
+stops reading identically to "we did everything". On one live board this check immediately
+found four tasks closed without walking their items; one of them had been closed with the
+note "deferred", meaning not because it was done.
+
+### Two traps
+
+**Item text is plain text only.** Neither markdown nor mentions render — they land in the
+item literally, backticks and all. Strip backticks from artifact IDs before writing.
+
+**Reconcile additively, matching on item text.** A human may have ticked items. Rebuilding
+the list from scratch erases that. Add what is missing; delete nothing; untick nothing.
+
+### Verify the attach
+
+```
+mcp__orch__get_checklists(chatUid: "<task_uid>")
+```
+
+A create issued immediately after task creation has been observed to return success and
+leave zero checklists. On an empty result, retry once and report the outcome either way.
+A silent retry that also fails is the same trap one level down.
 
 ## Tactical Tasks (No Artifact)
 
