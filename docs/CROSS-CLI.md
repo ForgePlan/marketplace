@@ -150,23 +150,38 @@ The section above is the **producer** side — what this repo publishes. This is
 **consumer** side: what a project that installs these plugins does so its agents can see
 them.
 
+**Do not do this by hand.** `fpl-skills` ships a tool that detects which runtimes are
+installed, reports what each one can and cannot see, and creates the missing links:
+
 ```bash
-mkdir -p .agents .opencode
-ln -s ../.claude/skills   .agents/skills        # Codex + OpenCode see every skill
-ln -s ../.claude/skills   .opencode/skills      # OpenCode's own path
-ln -s ../.claude/commands .opencode/commands    # OpenCode has no .claude/commands reader
+node "$CLAUDE_PLUGIN_ROOT/scripts/cross-runtime.mjs"           # report
+node "$CLAUDE_PLUGIN_ROOT/scripts/cross-runtime.mjs" --fix     # wire it
+node "$CLAUDE_PLUGIN_ROOT/scripts/cross-runtime.mjs" --strict  # exit 1 on any gap (CI)
 ```
 
-One symlink is enough for the skills to be picked up with no further configuration —
-`.agents/skills` is the path the ecosystem converged on, and Codex reads **only** that one.
+Run from the root of the project being wired. Zero dependencies. The skill wrapper is
+`/cross-runtime`.
 
-`npx skills` (vercel-labs) installs skills across a large set of agents by symlinking each
-one to a single canonical copy, so an update lands everywhere at once. `list` before
-installing; `--copy` when a symlink is wrong for the target; `skills-lock.json` for a
-reproducible restore.
+It creates **relative** symlinks (they survive a clone and never leak a home path), and it
+**deletes nothing**: a real directory where a link belongs is reported as `BLOCKED` because
+it may hold edits that were never in the source, and MCP config is printed as a command
+rather than written, because that file can be user-scoped or shared.
 
-Prefer symlinks over copies for the same reason the producer side does: a copy forks
-silently on the next edit, and nothing tells you which of the two an agent actually read.
+For reference, the wiring it produces:
+
+| Link | Serves |
+|---|---|
+| `.agents/skills -> .claude/skills` | Codex (only path it reads), OMP, any agents.md client |
+| `.opencode/skills -> .claude/skills` | OpenCode |
+| `.opencode/commands -> .claude/commands` | OpenCode (it does not read `.claude/commands`) |
+
+`npx skills` (vercel-labs) is the ecosystem's general-purpose installer and solves the
+adjacent problem — pulling skills *from* many sources across ~70 agents, symlinking each to
+one canonical copy. Use it for that. It does not know about this project's `.claude/`
+layout, which is what the tool above wires.
+
+Prefer symlinks over copies either way: a copy forks silently on the next edit, and nothing
+tells you which of the two an agent actually read.
 
 ---
 
