@@ -42,8 +42,33 @@ and named branches; otherwise leave them empty. An empty value in those two is n
 reported as drift, never triggers a proposal, and never blocks a gate.
 
 **Never rename these fields.** Integrations resolve them by name.
-**Never modify system fields** (`Status`, `Priority`, assignee, dates) beyond what is
-described here, and never set an assignee automatically — it sends a push to a person.
+
+**Never set an assignee automatically** — it sends a push to a person.
+
+### Do not assume which fields are "system"
+
+`list_fields` returns `type` and `isSystem` per field. **Read them; do not hardcode the
+split.** It differs between workspaces, and this document previously got it wrong.
+
+Measured on a live workspace:
+
+| Field | `type` | `isSystem` |
+|---|---|---|
+| `Artifact`, `Type`, `Depth`, `Phase`, `Sprint`, `Branch` | custom | `false` |
+| **`Status`, `Priority`, `Tags`** | **custom** | **`false`** |
+| `Project`, `Parent`, `Assignee`, `Members`, `Due date`, `Owner`, counters, timestamps | system | `true` |
+
+Nine custom fields there, not six. `Status`, `Priority` and `Tags` look like platform
+built-ins and behave like them in the UI, but on that server they are ordinary custom
+fields — writable, renameable, deletable like any other.
+
+Another workspace may genuinely have them as system fields. Both are possible, which is
+exactly why the rule is *resolve at runtime*: treat `isSystem` from `list_fields` as the
+answer, and never act on a belief about which side a field falls on.
+
+What is reliably system, and must not be written by a sync: `Assignee`, `Members`,
+`Due date`, `Owner`, and every read-only counter or timestamp (`messages_count`,
+`completed_at`, `last_activity`, `created_at`).
 
 ## Why These 6 and Not More
 
@@ -81,7 +106,8 @@ The rule: if the data is computed, dynamic, or content-heavy, it belongs in Forg
 ## Status <-> Phase Mapping
 
 Two fields reflect different aspects of the same work:
-- **Status** — Orchestra native field, visible to everyone, about "task state"
+- **Status** — the board's own field, visible to everyone, about "task state". Resolve it
+  through `list_fields` like any other; do not assume it is a platform built-in (see above).
 - **Phase** — Forge pipeline field, about "where in the methodology cycle"
 
 | Orchestra Status | Forge Phase | What is Happening | Who Updates |
@@ -234,6 +260,80 @@ Closing with open items is sometimes right — work genuinely deferred. The poin
 stops reading identically to "we did everything". On one live board this check immediately
 found four tasks closed without walking their items; one of them had been closed with the
 note "deferred", meaning not because it was done.
+
+### Naming — one axis, `Steps (<stage>)`
+
+Name every checklist `Steps (<stage>)` — `Steps (gate)`, `Steps (build)`, `Steps (review)`.
+
+**The task type never appears in a checklist name.** Type is already the `Tags` field, and
+checklist names are not queryable, so encoding it there buys nothing and costs a taxonomy.
+Type changes the *items*, not the name — a bug's `Steps (build)` and a feature's
+`Steps (build)` hold different work under the same heading, which is correct.
+
+Without a convention every card invents its own list names, and a reader cannot tell from
+the board which stage a task is in. `Phase` says it, and nothing cross-checks.
+
+### Create the lists in the filing turn, gate first
+
+Two lists at creation: **`Steps (gate)` with its items first**, then the first stage list.
+
+Gate first because if the turn is cut short you keep the definition of done and lose a
+to-do, rather than the reverse.
+
+This is the same gradient the field measurements show: `Phase` 27/32 and `Depth` 22/32 are
+populated because they are written *at creation, in the same call*; `Sprint` and `Branch`
+are 0/32 because they require coming back. **A list nobody creates in the filing turn is a
+list nobody creates.**
+
+### Item shape — `<imperative action> — <observable proof>`
+
+```
+Run the migration on a copy — row counts match the source
+Probe /quota/overview — returns 200 with 5 rows
+```
+
+Plain text, roughly 80 characters, one action per item.
+
+**The falsifiability test:** *could a competent agent doing this work honestly leave this
+item unticked?* If not, the item is decoration — delete it.
+
+`write the code`, `make sure tests pass`, `verify it works` all fail that test: there is no
+state of the world in which someone doing the work would leave them open. So they get
+ticked regardless of what happened, and the checklist becomes a formality that reports
+success by construction.
+
+Words that are never criteria on their own: **works**, **verified**, **correct**,
+**as expected**, **done properly**. Each needs the observable that would prove it.
+
+This is the expensive failure, not the taxonomy one. A checklist of unfalsifiable items
+produced 2633 green tests on a repo whose two HTTP probes were both returning 404 — every
+item honestly ticked, nothing actually checked.
+
+### Roles live on the list, not on every item
+
+The list name carries the owner. Add a `role: ` prefix on an individual item **only** when
+that item's owner differs from the list's — so the prefix's presence is itself the signal
+that a handoff happens here.
+
+### Description skeleton — `Done when`
+
+The description is block-based rich text and renders markdown. Nothing was telling agents
+to use it, so what landed was a sentence restating the title.
+
+```markdown
+## Why
+One or two sentences: what this unblocks, or what breaks without it.
+
+## Done when
+- <observable>
+- <observable>
+
+## Notes
+Links, constraints, anything a reader needs that the artifact does not carry.
+```
+
+`Done when` is the half that matters: it is where the acceptance criteria are readable
+without opening forgeplan, and it is what the checklist items are derived from.
 
 ### Two traps
 
