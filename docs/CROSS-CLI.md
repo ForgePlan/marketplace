@@ -133,6 +133,41 @@ Claude Code user does.
 The symlinks are relative (never absolute), so they resolve correctly after a
 fresh clone on any machine and never leak a developer's home path.
 
+**This is gated, not trusted.** `interop-skills-check` asserts that every skill has an
+alias, that each alias is a symlink rather than a copied directory, that each one resolves,
+and that no stale entries remain. Add a skill, then run `node scripts/gen-interop-skills.js`.
+
+The gate exists because the convention had drifted without anyone noticing: five plugins
+had no interop directory at all and the flagship carried 22 aliases for 41 skills — 34
+skills unreachable in the runtimes that read only this path. Nothing reported it, because
+absence is exactly what these runtimes cannot distinguish from "no such skill".
+
+---
+
+## (b2) Consuming this marketplace from another runtime
+
+The section above is the **producer** side — what this repo publishes. This is the
+**consumer** side: what a project that installs these plugins does so its agents can see
+them.
+
+```bash
+mkdir -p .agents .opencode
+ln -s ../.claude/skills   .agents/skills        # Codex + OpenCode see every skill
+ln -s ../.claude/skills   .opencode/skills      # OpenCode's own path
+ln -s ../.claude/commands .opencode/commands    # OpenCode has no .claude/commands reader
+```
+
+One symlink is enough for the skills to be picked up with no further configuration —
+`.agents/skills` is the path the ecosystem converged on, and Codex reads **only** that one.
+
+`npx skills` (vercel-labs) installs skills across a large set of agents by symlinking each
+one to a single canonical copy, so an update lands everywhere at once. `list` before
+installing; `--copy` when a symlink is wrong for the target; `skills-lock.json` for a
+reproducible restore.
+
+Prefer symlinks over copies for the same reason the producer side does: a copy forks
+silently on the next edit, and nothing tells you which of the two an agent actually read.
+
 ---
 
 ## (c) What is NOT yet cross-CLI
@@ -144,8 +179,26 @@ fresh clone on any machine and never leak a developer's home path.
   Other CLIs dispatch through their own agent layers; the skill bodies an agent
   orchestrates are portable Markdown, but the agent definition itself is not yet
   emitted in a cross-CLI format.
+
+  **The denylist does not travel, and its absence is silent.** `disallowedTools`
+  is a Claude Code key — verified absent from the OMP binary entirely. 42 agents
+  here carry a denylist and every one denies `forgeplan_activate`; in a runtime
+  without the key, none of that holds and nothing errors. Any invariant that
+  matters is therefore also stated as a HARD RULE in the agent body, which is the
+  only part that travels. See the "Denylists are Claude Code-only" section of
+  `AGENT-AUTHORING-GUIDE.md` before writing a new agent.
+
 - **Commands** (`plugins/<name>/commands/*.md`) - Claude Code slash-command
-  format. No cross-CLI equivalent is shipped yet.
+  format. Codex deprecated custom prompts in favour of skills and has no command
+  directory at all; OpenCode reads `.opencode/commands`, not `.claude/commands`.
+  So a plugin whose entry point is a slash command is a plugin those two runtimes
+  cannot start.
+
+  **The pattern that works**: ship the command *and* a skill that points at it —
+  the skill carries the trigger description plus the irreducible core, and says
+  "read the command file and follow it". One source of truth, discoverable from
+  the portable path. Four synchronised copies of a 200-line router is a promise
+  nobody keeps past the second edit.
 - **Hooks** (`plugins/<name>/hooks/hooks.json`) - Claude Code hook events
   (`PreToolUse`, `PostToolUse`, `SessionStart`, etc.). Other CLIs have their own
   automation primitives; no cross-CLI hook emit is shipped yet.
@@ -161,6 +214,25 @@ master-orchestrator. Its routing logic is declared in `AGENTS.md` so the same
 "what do I do now?" entry-point is discoverable by Claude Code, Cursor, Gemini,
 Codex, OpenCode, and Goose via the agents.md standard, even though each CLI
 invokes it through its own dispatch primitive.
+
+---
+
+## (d) Portability traps — all four fail silently
+
+Each of these was found by running this marketplace in a second runtime, and each one
+presents as something other than what it is. That is the common thread: none of them
+raises an error, so the reader reaches a wrong conclusion instead of a stack trace.
+
+| Trap | What you see | What it actually is |
+|---|---|---|
+| **Tool-name prefix** | "the MCP server is not connected" | `mcp__server__tool` is Claude Code's spelling; OMP collapses it to one underscore. The server is fine. Write tool names **bare** in prose — correct in both. Check the host's `/mcp` listing before concluding an outage. |
+| **Catalog name** | "Missing or invalid field `name`" | The field is present. OMP validates it against lowercase-kebab and rejects the whole catalog over a capital letter. Hence the generated `.omp-plugin/marketplace.json`. |
+| **Denylist** | nothing at all | The key does not exist outside Claude Code, so every denial silently lapses. The invariant has to be in the body. |
+| **Missing skill alias** | "no such skill" | The skill exists but has no `.agents/skills` entry, and Codex reads only that path. Gated now. |
+
+The shape is the same every time: **a runtime difference that reads as a fault in the
+thing being used.** When something appears absent in a second runtime, check how that
+runtime spells or discovers it before concluding it is broken.
 
 ---
 
