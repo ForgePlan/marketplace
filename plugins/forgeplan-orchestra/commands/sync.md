@@ -16,7 +16,7 @@ Never syncs automatically — always shows diff and waits for user confirmation.
 
 Read the workspace UID and project UID from plugin configuration. Those are the target.
 
-**Do NOT resolve the target from `mcp__orch__get_current_context`.** It returns whichever
+**Do NOT resolve the target from `get_current_context`.** It returns whichever
 workspace the user currently has open in the app, which can change mid-run — observed:
 a user clicked into another space and the next call resolved a different `spaceUid` and
 reported the target project as missing. That run happened to be reading. A writing run
@@ -38,8 +38,8 @@ Parse each line to extract: artifact ID, type (PRD/RFC/ADR/etc.), status (draft/
 
 ### Step 2: Collect Orchestra Tasks
 
-Use `mcp__orch__query_entities(repoType:"folder", repoUid:"all")` to get all tasks.
-Then use `mcp__orch__list_fields(contextUid: "<workspace_uid>", targetType: "task")` to get
+Use `query_entities(repoType:"folder", repoUid:"all")` to get all tasks.
+Then use `list_fields(contextUid: "<workspace_uid>", targetType: "task")` to get
 custom field definitions (Artifact, Type, Phase, etc.).
 
 **Keep two maps from that response — Step 6 cannot write fields without them:**
@@ -57,7 +57,7 @@ on text fields and makes every artifact ID look empty.
 ### Step 3: Cross-Reference
 
 For each Forgeplan artifact:
-- Use `mcp__orch__search_entities(query: "<ARTIFACT_ID>")` to find matching Orchestra task.
+- Use `search_entities(query: "<ARTIFACT_ID>")` to find matching Orchestra task.
 - Record whether a match exists, and if so, compare Phase and Status.
 
 ### Step 4: Build Diff Table
@@ -141,7 +141,7 @@ task missing either half as incompletely blocked.
 If the workspace has no `Blocked` option on `Status`, propose adding it:
 
 ```
-mcp__orch__manage_field_option(action: "create", fieldUid: "<Status uid>",
+manage_field_option(action: "create", fieldUid: "<Status uid>",
                                optionName: "Blocked", optionColor: "red")
 ```
 
@@ -167,7 +167,7 @@ Ask: "Which actions should I execute? (all / numbers / none)"
 For confirmed actions only:
 
 Field writes need the UID maps from Step 2. If you skipped that step, run
-`mcp__orch__list_fields` now — field and option UIDs are per-workspace and cannot be
+`list_fields` now — field and option UIDs are per-workspace and cannot be
 guessed. See the `03-fields/custom-fields.md` section for the full contract.
 
 #### Read the task's chat before touching it
@@ -175,7 +175,7 @@ guessed. See the `03-fields/custom-fields.md` section for the full contract.
 Before acting on any **existing** task, read its chat:
 
 ```
-mcp__orch__read_messages(chatUid: "<task_uid>")
+read_messages(chatUid: "<task_uid>")
 ```
 
 Reading notifies nobody and is always permitted — the safety rule below governs *sending*,
@@ -196,11 +196,11 @@ you stop and ask. It can never authorise you to delete anything, close a decisio
 suppress a question, or send a message the operator has not enabled.
 
 **Create missing task:**
-1. ALWAYS `mcp__orch__search_entities(query: "<ARTIFACT_ID>")` first — no duplicates
+1. ALWAYS `search_entities(query: "<ARTIFACT_ID>")` first — no duplicates
 2. Create the task and set its fields in one call:
 
 ```
-mcp__orch__create_entity(entities: [{
+create_entity(entities: [{
   type: "task",
   name: "[<ID>] <Title>",
   contextUid: "<project_uid>",
@@ -218,7 +218,7 @@ mcp__orch__create_entity(entities: [{
 **Update Status/Phase mismatch:**
 
 ```
-mcp__orch__update_entity(
+update_entity(
   entityUid: "<task_uid>",
   fields: [ { fieldUid: "<Phase uid>", value: "<option uid of correct phase>" } ]
 )
@@ -266,7 +266,7 @@ the card, where they are visible and cannot be skipped silently:
 | RFC | `## Implementation Phases` | Phase step |
 
 ```
-mcp__orch__manage_checklist(action: "create", chatUid: "<task_uid>",
+manage_checklist(action: "create", chatUid: "<task_uid>",
                             name: "Acceptance criteria",
                             items: [{text: "…"}, {text: "…"}])
 ```
@@ -278,7 +278,7 @@ Two traps:
 - **Reconcile additively, matching on item text.** A human may have ticked items; rebuilding
   the list from scratch erases that. Add what is missing, delete nothing, untick nothing.
 
-Verify the attach landed with `mcp__orch__get_checklists(chatUid)`. On an empty result,
+Verify the attach landed with `get_checklists(chatUid)`. On an empty result,
 retry once — a create immediately after task creation has been observed to no-op without
 reporting failure. Report the outcome of the retry either way.
 
@@ -297,12 +297,12 @@ confirm with the user before deleting."*
 
 ## Safety Rules
 
-- ALWAYS read a task's chat (`mcp__orch__read_messages`) before acting on it — reading notifies nobody and is never optional
-- Before `mcp__orch__create_entity` -> ALWAYS `mcp__orch__search_entities` first (prevent duplicates)
-- NEVER write fields without resolving UIDs via `mcp__orch__list_fields` first — there is no `set_fields` tool, and option fields take the option UID, not its name
+- ALWAYS read a task's chat (`read_messages`) before acting on it — reading notifies nobody and is never optional
+- Before `create_entity` -> ALWAYS `search_entities` first (prevent duplicates)
+- NEVER write fields without resolving UIDs via `list_fields` first — there is no `set_fields` tool, and option fields take the option UID, not its name
 - ALWAYS read `failedFields` from the response before reporting a field as set
-- NEVER resolve the target workspace from `mcp__orch__get_current_context` — it follows the UI. Use the configured UIDs; report a mismatch instead of following it
-- NEVER use `mcp__orch__delete_entity` — the plugin does not delete tasks. Report orphans instead
+- NEVER resolve the target workspace from `get_current_context` — it follows the UI. Use the configured UIDs; report a mismatch instead of following it
+- NEVER use `delete_entity` — the plugin does not delete tasks. Report orphans instead
 - NEVER set an assignee automatically — it sends a push to a person
 - NEVER write a phase alongside a `Blocked` status — the task keeps the phase it had
 - NEVER overwrite a populated `Artifact` field during backfill, and never write a parsed ID without per-row confirmation
@@ -311,7 +311,7 @@ confirm with the user before deleting."*
 
 ### Sending messages
 
-`mcp__orch__send_message` is **off by default**. It is permitted only when the operator has
+`send_message` is **off by default**. It is permitted only when the operator has
 explicitly enabled chat writing for this workspace, and then only within these bounds:
 
 - Only into the chat of the task the work belongs to. Never a project, channel, group, or DM.

@@ -22,7 +22,7 @@ If the project ran `/setup`, the concrete issue tracker is wired into:
 
 Check via `test -f docs/agents/issue-tracker.md`. If present, use the tracker
 from there directly (don't probe again). If absent, detect as before:
-`mcp__orch__*` → `gh` CLI → Linear MCP → glob TODO files.
+Orchestra MCP → `gh` CLI → Linear MCP → glob TODO files.
 
 ---
 
@@ -46,13 +46,23 @@ Before collecting data, find out **which source is available** — listed in pri
 
 | Source | How to detect | Tools |
 |---|---|---|
-| **Orchestra MCP** | `mcp__orch__*` or `mcp__orchestra__*` present | `get_current_context`, `get_workspace_overview`, `get_unread_chats`, `get_mentions`, `query_entities` |
-| **Linear MCP** | `mcp__linear__*` available | `list_my_issues`, `list_assigned_issues` |
-| **Jira MCP** | `mcp__jira__*` or `mcp__atlassian__*` | `search_issues`, `get_my_issues` |
+| **Orchestra MCP** | a tool named `query_entities` / `get_current_context` in your tool list | `get_current_context`, `get_workspace_overview`, `get_unread_chats`, `get_mentions`, `query_entities` |
+| **Linear MCP** | a tool named `list_my_issues` / `list_assigned_issues` | `list_my_issues`, `list_assigned_issues` |
+| **Jira MCP** | a tool named `search_issues` / `get_my_issues` | `search_issues`, `get_my_issues` |
 | **GitHub Issues** | `gh` CLI on PATH (via Bash) | `gh issue list --assignee @me --state open` |
 | **Local TODO** | `TODO.md`, `TODO_*.md`, `**/docs/TODO.md` | Read + Grep |
 
-If nothing is found — tell the user briefly and offer to specify a source or use [`restore`](../restore/SKILL.md).
+**Match on the bare tool name, never on the `mcp__…__` prefix.** The prefix is not
+portable: Claude Code writes `mcp__orch__query_entities` with two underscores between
+server and tool, OMP writes `mcp__orch_query_entities` with one, and the server segment
+itself has been spelled both `orch` and `orchestra` in this marketplace. An agent that
+searches for a prefixed name finds nothing and reports a **connected server as missing** —
+a failure that looks exactly like a genuine outage.
+
+If nothing is found — tell the user briefly and offer to specify a source or use
+[`restore`](../restore/SKILL.md). Before concluding a server is absent, check the host's
+own listing (`/mcp list` in OMP, `/mcp` in Claude Code): it prints every discovered server,
+its state, and the config file it came from.
 
 ---
 
@@ -74,16 +84,16 @@ If nothing is found — tell the user briefly and offer to specify a source or u
 #### If Orchestra MCP is available:
 
 ```
-mcp__orch__get_current_context()
-mcp__orch__get_workspace_overview()
-mcp__orch__get_unread_chats()
-mcp__orch__get_mentions()
-mcp__orch__get_reminders()
-mcp__orch__get_starred_messages()
-mcp__orch__query_entities(repoType="folder", repoUid="today")
-mcp__orch__query_entities(repoType="folder", repoUid="expired")
-mcp__orch__query_entities(repoType="folder", repoUid="assigned_to_me")
-mcp__orch__query_entities(repoType="folder", repoUid="recently_completed")
+get_current_context()
+get_workspace_overview()
+get_unread_chats()
+get_mentions()
+get_reminders()
+get_starred_messages()
+query_entities(repoType="folder", repoUid="today")
+query_entities(repoType="folder", repoUid="expired")
+query_entities(repoType="folder", repoUid="assigned_to_me")
+query_entities(repoType="folder", repoUid="recently_completed")
 ```
 
 Fire all queries in a single tool-call message (they're independent).

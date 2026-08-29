@@ -118,7 +118,7 @@ means the task will sit there with nobody able to tell when it should wake up.
 Adding the option to a workspace that lacks it:
 
 ```
-mcp__orch__manage_field_option(action: "create", fieldUid: "<Status uid>",
+manage_field_option(action: "create", fieldUid: "<Status uid>",
                                optionName: "Blocked", optionColor: "red")
 ```
 
@@ -133,18 +133,18 @@ If one is updated, the other must be updated too. The AI agent updates both Phas
 To create all 6 fields in a new workspace:
 
 ```
-mcp__orch__manage_field: create "Artifact" type=text
-mcp__orch__manage_field: create "Type" type=option values=["PRD","RFC","ADR","Epic","Spec","Problem","Evidence","Note"]
-mcp__orch__manage_field: create "Depth" type=option values=["Tactical","Standard","Deep","Critical"]
-mcp__orch__manage_field: create "Phase" type=option values=["Shape","Validate","Code","Evidence","Done"]
-mcp__orch__manage_field: create "Sprint" type=text
-mcp__orch__manage_field: create "Branch" type=text
+manage_field: create "Artifact" type=text
+manage_field: create "Type" type=option values=["PRD","RFC","ADR","Epic","Spec","Problem","Evidence","Note"]
+manage_field: create "Depth" type=option values=["Tactical","Standard","Deep","Critical"]
+manage_field: create "Phase" type=option values=["Shape","Validate","Code","Evidence","Done"]
+manage_field: create "Sprint" type=text
+manage_field: create "Branch" type=text
 ```
 
 ## Setting Fields on a Task
 
-There is no `set_fields` tool. Field values go through `mcp__orch__update_entity`, or
-through the `fields` array inside `mcp__orch__create_entity` at creation time.
+There is no `set_fields` tool. Field values go through `update_entity`, or
+through the `fields` array inside `create_entity` at creation time.
 
 Two things trip up every first implementation:
 
@@ -156,7 +156,7 @@ UIDs are per-workspace and must never be hardcoded. Resolve them first.
 ### Step 1 — resolve names to UIDs
 
 ```
-mcp__orch__list_fields(contextUid: "<workspace_uid>", targetType: "task")
+list_fields(contextUid: "<workspace_uid>", targetType: "task")
 ```
 
 Build two maps from the response:
@@ -167,7 +167,7 @@ Build two maps from the response:
 ### Step 2 — write the values
 
 ```
-mcp__orch__update_entity(
+update_entity(
   entityUid: "<task_uid>",
   fields: [
     { fieldUid: "<Artifact uid>", value: "PRD-021" },              // text  -> bare string
@@ -217,7 +217,7 @@ Forgeplan already holds exactly what maps onto them one-to-one:
 | RFC | `## Implementation Phases` | Phase step |
 
 ```
-mcp__orch__manage_checklist(action: "create", chatUid: "<task_uid>",
+manage_checklist(action: "create", chatUid: "<task_uid>",
                             name: "Acceptance criteria",
                             items: [{text: "…"}, {text: "…"}])
 ```
@@ -246,7 +246,7 @@ the list from scratch erases that. Add what is missing; delete nothing; untick n
 ### Verify the attach
 
 ```
-mcp__orch__get_checklists(chatUid: "<task_uid>")
+get_checklists(chatUid: "<task_uid>")
 ```
 
 A create issued immediately after task creation has been observed to return success and

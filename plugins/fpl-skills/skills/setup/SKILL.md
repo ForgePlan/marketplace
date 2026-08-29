@@ -31,7 +31,7 @@ Use `references/*-TEMPLATE.md` as starting content; fill in user answers.
 
 Probe in this order, present the first match as default:
 
-1. `mcp__orch__get_current_context()` works → **Orchestra**
+1. `get_current_context()` works → **Orchestra**
 2. `gh repo view` works → **GitHub Issues**
 3. `linear-cli` or Linear MCP available → **Linear**
 4. `find . -name 'TODO*.md' -maxdepth 3` non-empty → **Local markdown**

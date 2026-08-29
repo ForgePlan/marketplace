@@ -28,7 +28,7 @@ Every MCP tool is namespaced `mcp__<server>__<tool>`:
 
 ```
 mcp__forgeplan__forgeplan_get      server = forgeplan,  tool = forgeplan_get
-mcp__orch__send_message            server = orch,       tool = send_message
+send_message            server = orch,       tool = send_message
 ```
 
 This scoping is what `disallowedTools` denylists match against. A Profile B reviewer agent denies `mcp__forgeplan__forgeplan_activate` by its fully-scoped name — see the CRUD-R-A profiles in `plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md`. **Rule**: when you reference a tool in an agent frontmatter or a skill, always use the full `mcp__server__tool` form — the bare `forgeplan_get` is not a valid match target.
