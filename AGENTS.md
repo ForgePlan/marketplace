@@ -133,6 +133,12 @@ The 14-row routing table is **CLI-agnostic** — it names methodologies and Prof
 
 ## Cross-CLI compatibility
 
+> **Full recipe: [`docs/CROSS-CLI.md`](docs/CROSS-CLI.md)** — per-client MCP wiring, the
+> `.agents/skills` interop path (producer *and* consumer side), what is not yet portable,
+> and the four portability traps that all fail silently. Read it before concluding that
+> something in this marketplace does not work in your runtime; three of the four traps
+> present as "it is broken" when the actual answer is "that runtime spells it differently".
+
 The marketplace is **CLI-agnostic** via the MCP standard:
 
 ### MCP server registration
