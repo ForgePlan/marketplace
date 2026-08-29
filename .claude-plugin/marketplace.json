@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.136.0"
+    "version": "1.137.0"
   },
   "plugins": [
     {
@@ -240,7 +240,7 @@
         "claude-code"
       ],
       "description": "Unified workflow: Forgeplan artifacts + Orchestra task tracking + Claude Code AI execution. Bidirectional sync, Session Start Protocol with Inbox Pattern, and methodology knowledge base. Requires forgeplan CLI + Orchestra MCP server. v1.5.0: /sync field-write path fixed — the non-existent set_fields replaced by update_entity, fields passed as {fieldUid, value} with UIDs resolved via list_fields, create_entity moved to the entities[] form (marketplace#208). v1.6.0: read-before-act on task chats, Blocked as a Status (never a phase), checklists from acceptance criteria + a Done-with-open-items report, Artifact backfill from task names with per-row confirmation, pinned workspace UIDs, orphans reported never deleted (marketplace#210). v1.6.1: tool names written bare (query_entities, not mcp__orch__query_entities) — the prefix is Claude Code's spelling and OMP uses one underscore, so a prefixed name makes an agent report a connected server as missing (marketplace#212).",
-      "version": "1.6.1",
+      "version": "1.7.0",
       "author": {
         "name": "ForgePlan"
       },

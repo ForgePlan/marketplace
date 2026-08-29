@@ -271,12 +271,26 @@ manage_checklist(action: "create", chatUid: "<task_uid>",
                             items: [{text: "…"}, {text: "…"}])
 ```
 
-Two traps:
+Name lists `Steps (<stage>)` — `Steps (gate)`, `Steps (build)`. Task type never appears in
+the name; type changes the items, not the heading. Create **two lists in the same turn as
+the task**, gate first: if the turn is cut short you keep the definition of done and lose a
+to-do, rather than the reverse.
+
+Item shape is `<imperative action> — <observable proof>`, and every item must pass one test:
+**could a competent agent doing this work honestly leave it unticked?** If not, delete it.
+`write the code`, `make sure tests pass`, `verify it works` all fail — they get ticked
+regardless of what happened. `works`, `verified`, `correct`, `as expected` are not criteria
+on their own.
+
+Three traps:
 
 - **Item text is plain text only.** Markdown and mentions do not render — they land in the
   item literally. Strip backticks from artifact IDs before writing.
 - **Reconcile additively, matching on item text.** A human may have ticked items; rebuilding
   the list from scratch erases that. Add what is missing, delete nothing, untick nothing.
+- **An unfalsifiable item is worse than no item.** It reports success by construction, and
+  a full green checklist then certifies nothing. See `03-fields/custom-fields.md` for the
+  worked example.
 
 Verify the attach landed with `get_checklists(chatUid)`. On an empty result,
 retry once — a create immediately after task creation has been observed to no-op without
