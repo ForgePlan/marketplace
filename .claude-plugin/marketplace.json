@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code \u2014 UX, frontend, workflow, and developer tools",
-    "version": "1.135.0"
+    "version": "1.136.0"
   },
   "plugins": [
     {
@@ -214,7 +214,7 @@
         "claude-code"
       ],
       "description": "First Principles Framework (FPF) \u2014 thinking amplifier for structured reasoning, decomposition, and decision-making. Enhanced plugin with /fpf command, applied patterns, forgeplan integration, and FPF advisor agent. Based on FPF by Anatoly Levenchuk. v1.4.1: fpf-advisor agent canonical-lint compliant (LR-1..LR-3).",
-      "version": "1.4.1",
+      "version": "1.5.0",
       "author": {
         "name": "ForgePlan"
       },
@@ -363,7 +363,7 @@
         "claude-code"
       ],
       "description": "SPARC development methodology: orchestrator with quality gates plus 4 phase specialists (specification, pseudocode, architecture, refinement). v1.3.0: THIRD instance of the AD/AID-PDLC sub-cycle contract (ADR-010 / RFC-016) — sparc-orchestrator finished to a Profile B-orchestrator (disallowedTools denylist + Task-dispatch + C1-C6 framing; closes the LR-8 tools allowlist) + NEW /sparc skill (5-phase master-coordinated walk, mandatory per-gate independent C4, Pseudocode-absorption, Refinement→TDD delegation). hook-gate=No — no hook/lib/init. v1.2.2: refinement notes enforced-TDD delegation (RFC-012) \u2014 RED test-writing delegates to agents-tdd:coder-tdd and GREEN to agents-core:coder; refinement retains refactor-after-green. v1.2.1: Sprint Q PRD-042 \u2014 ASM-canon frontmatter added to 2 forgeplan-aware agents (specification + architecture get skills preload + maxTurns; architecture gets memory:project as learner). v1.2: ALL 5 agents canonical-lint compliant.",
-      "version": "1.4.1",
+      "version": "1.4.2",
       "author": {
         "name": "ForgePlan"
       },
