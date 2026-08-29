@@ -185,9 +185,25 @@ For multi-CLI environments, `forgeplan mcp-manifest` is planned (Batch F deliver
 
 Plugins publish skills in two locations:
 - `plugins/<name>/skills/` — Claude Code path (existing)
-- `plugins/<name>/.agents/skills/` — interop alias (agentskills.io standard) — symlinks to the existing skills
+- `plugins/<name>/.agents/skills/` — interop alias (agentskills.io standard) — one symlink per skill, pointing at `../../skills/<name>`
 
-Any CLI with agentskills.io support loads skills from `.agents/skills/`.
+Any CLI with agentskills.io support loads skills from `.agents/skills/`. **Codex reads only
+that path**, and OpenCode reads it alongside its own — so a skill missing from it is
+invisible in those runtimes, with no error anywhere.
+
+That silence is why this is gated rather than trusted. When the gate was added the
+convention had drifted badly: five plugins had no interop directory at all, and the
+flagship plugin carried 22 aliases for 41 skills. 34 skills were unreachable and nothing
+was looking.
+
+| | |
+|---|---|
+| Add a skill, then run | `node scripts/gen-interop-skills.js` |
+| CI asserts it with | `interop-skills-check` (present, symlink, resolving, no stale entries) |
+
+The gate treats a **dangling** symlink as worse than a missing one: it reads as present to
+a human and as absent to the loader. A real directory where a symlink belongs is reported
+rather than replaced — it may hold edits that never reached `skills/`.
 
 ### Agent identity
 
