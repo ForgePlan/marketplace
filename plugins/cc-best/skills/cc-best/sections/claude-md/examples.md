@@ -59,8 +59,12 @@ Internal methodology terms stay in forgeplan artifacts; give the user the outcom
 ```
 type(module): short summary
 
-Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
+Co-Authored-By: <your actual model name and version> <noreply@anthropic.com>
 ```
+
+Keep the trailer a placeholder in your own CLAUDE.md too. Hardcoding a specific model
+guarantees the line is wrong the moment a newer one ships, and an agent that copies it
+signs a name that did not do the work.
 
 ---
 
