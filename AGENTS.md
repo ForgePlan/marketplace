@@ -195,8 +195,43 @@ Each CLI exposes an environment variable for identity detection:
 - Claude Code: `CLAUDECODE=1`
 - Codex CLI: `CODEX_SANDBOX=*`
 - Gemini CLI: `AGENT_CLIENT=gemini` (per ACP) or `GEMINI_CLI=1`
+- OMP: `OMPCODE`
+- OpenCode: `OPENCODE`
 
 Identity format: `<cli_name>/<version>/<task_id>` is written into claim / EVID / NOTE metadata.
+
+#### Sign your own work — with what you actually are
+
+Every agent that writes to this repository states its own identity: the model or agent
+**name**, its **version**, and its **vendor** where one exists. This applies to commit
+trailers, to `claim` / EVID / NOTE metadata, and to any artifact recording who produced a
+result.
+
+**Write what you actually are, not what an example says.** The examples in this repository
+are shape, not content. An agent that copies a model name out of a document signs someone
+else's name — and the document is stale the moment a new model ships. This has already
+happened here: two files disagreed on the trailer, and the more specific one named a model
+that had been superseded.
+
+| Surface | Shape | What goes in it |
+|---|---|---|
+| Commit trailer | `Co-Authored-By: <name> <version-or-context> <email>` | Your resolved model identity at the time of the commit |
+| Forgeplan claim / EVID / NOTE | `<cli_name>/<version>/<task_id>` | The host CLI, its version, the task |
+| Sub-agent output | the agent's declared `name` from its frontmatter | Which specialist produced this, not "an agent" |
+
+Why it is load-bearing rather than etiquette:
+
+- **Attribution is the audit trail.** `generator != verifier` (see the ground-truth section
+  below) can only be checked if both sides are named. Two entries signed identically are
+  indistinguishable from one entity reviewing itself.
+- **Version explains behaviour.** When a run produces a result nobody can reproduce, the
+  first useful question is which model produced it. An unversioned signature makes that
+  unanswerable.
+- **A wrong name is worse than none.** A trailer naming a model that did not do the work is
+  a false record in an immutable log.
+
+If you cannot resolve your own version, say so — `Claude Code (version unresolved)` is
+honest and greppable. Do not substitute a plausible-looking one.
 
 ### MCP vs CLI parameter semantics (load-bearing safety convention)
 
@@ -254,10 +289,15 @@ type(module): description
 
 Refs: PRD-XXX, EVID-XXX
 
-Co-Authored-By: Claude <noreply@anthropic.com>
+Co-Authored-By: <your actual model name and version> <noreply@anthropic.com>
 ```
 
 Types: `feat`, `fix`, `docs`, `audit`, `chore`
+
+The trailer is a **placeholder for your real identity**, not a string to copy. Fill it with
+the model you actually are — see "Sign your own work" above. An agent that pastes the
+literal example signs a name that may belong to a different model, in a log that cannot be
+rewritten.
 
 ## Forgeplan integration
 
@@ -288,6 +328,22 @@ Always before opening a PR:
 ./scripts/validate-all-plugins.sh          # All plugins
 ./scripts/validate-all-plugins.sh plugin-name  # One plugin
 ```
+
+### Read CONTRIBUTING.md before changing the catalog
+
+**[`CONTRIBUTING.md`](CONTRIBUTING.md)** carries the procedural rules that the validation
+script only *enforces* after the fact. Read it when adding a plugin, bumping a version, or
+touching `.claude-plugin/marketplace.json`. The ones agents forget:
+
+| Rule | Why it bites |
+|---|---|
+| Bump the catalog `metadata.version` on every plugin change | It is the cache-invalidation key. Without it `/plugin marketplace update` delivers nothing and the user sees a stale plugin with a new version number nowhere. |
+| Run `node scripts/gen-omp-catalog.js` after any catalog edit | OMP reads `.omp-plugin/marketplace.json` first. A stale copy means OMP installs the previous catalog while Claude Code installs the current one. |
+| Plugin names are lowercase kebab | OMP rejects the entire catalog over one capital letter, with an error that names the wrong cause (#213). |
+| Bump `version` in **both** `plugin.json` and `marketplace.json` | They drift independently and nothing else catches it. |
+
+The `omp-catalog-check` and `catalog-check` gates fail the build when these are skipped —
+but they assert, they never fix. Running the generator is the author's job.
 
 ## CI
 
