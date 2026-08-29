@@ -71,13 +71,34 @@ Add your plugin to `.claude-plugin/marketplace.json`:
 }
 ```
 
-### 5. Validate
+Plugin names must be **lowercase kebab** — `[a-z0-9]`, dot and hyphen, not starting or
+ending with a separator, max 64 chars. Claude Code is lenient about this; OMP is not, and
+it rejects the whole catalog over a single capital letter (#213).
+
+### 5. Regenerate the OMP catalog
+
+Any change to `.claude-plugin/marketplace.json` — a new plugin, a version bump, a catalog
+`metadata.version` bump — needs the OMP copy regenerated:
+
+```bash
+node scripts/gen-omp-catalog.js
+```
+
+This writes `.omp-plugin/marketplace.json`, which is identical except that `name` is
+lowercased. OMP reads that path first and falls back to `.claude-plugin/`; Claude Code
+never looks at it. The file is committed rather than built in CI because OMP reads a clone
+of this repo, so a CI-only artifact would never reach a user's disk.
+
+The `omp-catalog-check` gate fails the build if you forget. It asserts and never writes —
+running the generator is your job.
+
+### 6. Validate
 
 ```bash
 ./scripts/validate-all-plugins.sh your-plugin-name
 ```
 
-### 6. Submit PR
+### 7. Submit PR
 
 - Branch: `add/your-plugin-name`
 - PR title: `Add plugin: your-plugin-name`
@@ -88,7 +109,8 @@ Add your plugin to `.claude-plugin/marketplace.json`:
 1. Make changes in `plugins/your-plugin-name/`
 2. Bump `version` in both `plugin.json` and `marketplace.json`
 3. Bump the catalog `metadata.version` in `.claude-plugin/marketplace.json` — **required**: without it, `/plugin marketplace update` delivers nothing to users (the catalog version is the cache-invalidation key).
-4. Submit PR with title: `Update plugin: your-plugin-name v1.1.0`
+4. Run `node scripts/gen-omp-catalog.js` — the catalog changed, so the OMP copy is now stale.
+5. Submit PR with title: `Update plugin: your-plugin-name v1.1.0`
 
 ## Plugin quality checklist
 

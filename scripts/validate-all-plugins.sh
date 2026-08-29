@@ -423,6 +423,7 @@ else
     run_gate "validate-no-personal-paths" node "$CI_DIR/validate-no-personal-paths.js"
     run_gate "validate-workflow-security" node "$CI_DIR/validate-workflow-security.js"
     run_gate "validate-install-manifests" node "$CI_DIR/validate-install-manifests.js"
+    run_gate "omp-catalog-check"         node "$CI_DIR/omp-catalog-check.js"
 fi
 
 echo ""
