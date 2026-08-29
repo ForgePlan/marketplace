@@ -267,11 +267,11 @@ AI: creates task:
 ```
 You: "Write in the task chat for PRD-021 that I started work"
 
-AI: mcp__orch__send_message(chatUid=task, message="Work started...")
+AI: send_message(chatUid=task, message="Work started...")
     <- ONLY because user explicitly requested it!
 
 You: "What was written in the chat for PROB-021?"
-AI: mcp__orch__read_messages(entityUid=task)
+AI: read_messages(entityUid=task)
     -> Shows history
 ```
 

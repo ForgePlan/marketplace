@@ -325,6 +325,34 @@ Do **not** invoke for:
 
 Numbered steps, one MCP call per step.
 
+### Naming convention — write tool names bare in prose
+
+**In agent bodies, skill prose, and READMEs, write the bare tool name** — `forgeplan_new`,
+`query_entities`, `list_fields` — not `mcp__forgeplan__forgeplan_new`. The server is
+established by context, and the bare name is correct in every runtime.
+
+The `mcp__<server>__<tool>` form is **Claude Code's spelling, not a universal one**. OMP
+collapses the separator to a single underscore (`mcp__forgeplan_new`), normalises hyphens,
+and does not repeat the server prefix when the tool name already starts with it. An agent
+told to call a name spelled for the wrong runtime searches its tool list, finds nothing,
+and reports **a connected server as missing**. That failure is indistinguishable from a
+genuine outage, which is what makes it expensive.
+
+Two places where the full prefixed form is correct and must stay:
+
+| Where | Why |
+|---|---|
+| `disallowedTools` / `tools` in frontmatter | Claude Code matches on the exact string. A bare name does not deny anything. |
+| Prose *about* the denylist mechanism | There the string is the subject — "the denylist entry `mcp__forgeplan__forgeplan_activate`" is a statement about a literal value, not an instruction to call it. |
+
+Note the consequence of the first row: a denylist is written in one runtime's dialect and
+is not honoured at all in another. See the denylist portability section for what that means
+for the invariants those denylists were carrying.
+
+Never invent a second spelling for the same server. This marketplace carried both
+`mcp__orch__` and `mcp__orchestra__` for one Orchestra server, so a detection rule matching
+one silently missed the other.
+
 ### Critical safety convention — MCP `body` parameter is a literal string
 
 **Load-bearing for any agent that writes artifact bodies via MCP.** The `body` parameter of `mcp__forgeplan__forgeplan_update` (and other body-accepting MCP tools) is a **literal string only**. It does NOT parse the `@/path/to/file.md` syntax that the CLI variant supports.

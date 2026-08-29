@@ -44,7 +44,7 @@ Orchestra (tasks, messages, documents) exposes ~50 tools so the assistant can re
 
 **Annotation**:
 - SSE/HTTP transport — a remote, already-running server reached by URL (contrast forgeplan's local stdio).
-- Tools are scoped `mcp__orch__send_message`, `mcp__orch__query_entities` — the scoping that denylists match.
+- Tools are scoped `send_message`, `query_entities` — the scoping that denylists match.
 - **Trap**: `send_message` and `delete_entity` are destructive / team-visible. Never invoke them without an explicit user request — server instructions say so, and no `disallowedTools` denylist substitutes for that judgment.
 
 ---

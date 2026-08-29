@@ -14,7 +14,9 @@
 
 Each system does what it does best. We don't duplicate -- we link. Artifact ID in Orchestra points to Forgeplan content. Status in Orchestra maps to Phase in Forge pipeline automatically.
 
-> **Note:** Requires **forgeplan CLI** (private ForgePlan application, access through project admin) + **Orchestra MCP server** configured (`mcp__orch__*` tools available). Product: [orch.so](https://orch.so)
+> **Note:** Requires **forgeplan CLI** (private ForgePlan application, access through project admin) + **Orchestra MCP server** configured. Product: [orch.so](https://orch.so)
+>
+> **Tool names in this plugin are written bare** — `query_entities`, not `mcp__orch__query_entities`. The prefix differs per runtime (Claude Code uses two underscores between server and tool, OMP uses one), so a prefixed name is wrong in one of them. If you search your tool list for `mcp__orch__*` and find nothing, the server is probably fine — check your host's `/mcp` listing before concluding it is down.
 
 ## Quick Start
 
@@ -92,12 +94,12 @@ Apply changes? [y/n]
 ## Safety Rules
 
 - **ALWAYS** read a task's chat before acting on it — reading notifies nobody and is never optional
-- **NEVER** `mcp__orch__send_message` unless chat writing is explicitly enabled for the workspace; then only into the task's own chat, no `@`-mentions, one marked message per event
-- **NEVER** `mcp__orch__delete_entity` — orphans are reported, never deleted
+- **NEVER** `send_message` unless chat writing is explicitly enabled for the workspace; then only into the task's own chat, no `@`-mentions, one marked message per event
+- **NEVER** `delete_entity` — orphans are reported, never deleted
 - **NEVER** resolve the target workspace from `get_current_context` — it follows the UI; use configured UIDs and report mismatches
 - **NEVER** set an assignee automatically — it pushes a notification to a person
 - **NEVER** write a phase alongside a `Blocked` status — the task keeps the phase it had
-- **ALWAYS** `mcp__orch__search_entities` before `create_entity` (no duplicates)
+- **ALWAYS** `search_entities` before `create_entity` (no duplicates)
 - **ALWAYS** read `failedFields` before reporting a field as set — it arrives inside a *successful* response
 
 ## Credits

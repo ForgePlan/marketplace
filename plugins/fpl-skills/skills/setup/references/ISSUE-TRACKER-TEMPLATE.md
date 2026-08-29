@@ -10,7 +10,7 @@
 {Command or MCP tool. Examples:
 - GitHub: `gh issue list --state open`
 - Linear: `mcp__linear__list_issues({ teamId: "..." })`
-- Orchestra: `mcp__orch__query_entities({ repoType: "folder", repoUid: "assigned_to_me" })`
+- Orchestra: `query_entities({ repoType: "folder", repoUid: "assigned_to_me" })`
 - Local markdown: read TODO file paths listed in `paths.md`}
 
 ## How to create an issue
@@ -18,7 +18,7 @@
 {Command or MCP tool. Examples:
 - GitHub: `gh issue create --title "..." --body "..."`
 - Linear: `mcp__linear__create_issue({ ... })`
-- Orchestra: `mcp__orch__create_task({ ... })`
+- Orchestra: `create_entity({ ... })`
 - Local markdown: append to `docs/TODO.md` with `[ ]` prefix}
 
 ## Triage roles → labels mapping

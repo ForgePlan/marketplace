@@ -25,7 +25,7 @@ Output should be brief and actionable — 10-15 lines max.
 Collect signals from all sources in parallel. This step is purely read-only and safe.
 
 **Orchestra signals:**
-- `mcp__orch__query_entities(repoType:"folder", repoUid:"all")` — find tasks with Status = Doing or Review
+- `query_entities(repoType:"folder", repoUid:"all")` — find tasks with Status = Doing or Review
 - Check for unread messages and @mentions on active tasks
 
 **Git signals:**
