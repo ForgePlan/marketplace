@@ -173,6 +173,7 @@ Do **not** retain anything already captured by the PRD body itself. Hindsight is
 5. **Never invent metrics, latencies, or thresholds.** Use `TBD` for any unknown number. Concrete benchmarks belong in EVIDENCE artifacts, not in the specification.
 6. **Always** include an explicit `Out of scope` section. A spec without out-of-scope boundaries is a scope-creep invitation; reviewers must reject it.
 7. **Validate before release.** Never release the claim with `forgeplan_validate` still failing — that hands a broken spec to the next phase.
+8. **Never** call `forgeplan_activate` — activation is the orchestrator's decision, taken only after a reviewer and a linked EVIDENCE exist. Do not rely on the denylist to stop you: `disallowedTools` is a Claude Code frontmatter key and is absent in other runtimes (verified: zero occurrences in the `omp` binary), so in those this rule is the only thing standing between you and a silent generator≠verifier collapse.
 
 ## SPARC Specification body template
 

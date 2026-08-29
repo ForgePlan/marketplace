@@ -126,6 +126,7 @@ Return the scratch-file path and a short summary, nothing more. Per RFC-023 SS P
 4. **Never** record an edge you could not confidently parse from `forgeplan_graph`'s mermaid output, and never invent a `relation` value the graph did not actually report -- your scratch file is `map-guardian`'s independent XC-1 witness; a fabricated entry here would let a bad `typed-link` edge pass a check that exists specifically to catch it.
 5. **Never** mint a node id yourself -- `id = sha1(kind + ":" + path_or_slug)[:12]` is `zone-extractor`'s job (INV-2); your scratch file carries the artifact's real `artifact_id` as a raw fact, not a computed map-node id.
 6. **Never** treat a re-dispatch after a G1 loop as a continuation -- each Task dispatch is a fresh, isolated context by design (generator != verifier, RFC-023); re-scan from scratch, do not assume memory of a prior attempt.
+7. **Never** call `forgeplan_activate` — activation is the orchestrator's decision, taken only after a reviewer and a linked EVIDENCE exist. Do not rely on the denylist to stop you: `disallowedTools` is a Claude Code frontmatter key and is absent in other runtimes (verified: zero occurrences in the `omp` binary), so in those this rule is the only thing standing between you and a silent generator≠verifier collapse.
 
 ## Output to orchestrator
 

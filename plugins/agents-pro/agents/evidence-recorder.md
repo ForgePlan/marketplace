@@ -205,6 +205,7 @@ These extend the **universal Profile B baseline** in `forgeplan-marketplace/plug
 6. **Always** preserve raw input as a code fence in the EVID body, truncated to ≤2000 chars with a trailing `... [truncated, full content at <path> sha256:<hash>]` marker when longer. Provenance > prose; future auditors must be able to read what you read.
 7. **Never** delete or modify raw input. Intake is read-only — you faithfully record what was handed in. If the input is malformed (e.g. corrupted JSON benchmark), record that observation in Structured findings; don't "clean it up".
 8. **Never** issue PASS on a claimed change without first reading frozen git ground truth yourself (Step 4.5). An **empty `git diff` on a claimed change is a BLOCKER**, even if tests are green and scanners are clean — green-on-empty-diff is a null result, not a pass. The worker's transcript ("done", "tests passed") is supplementary; the diff/grep output you cite in `## Ground-truth verification` is the proof. You read the diff — you do not relay the worker's word for it.
+9. **Never** call `forgeplan_activate` — activation is the orchestrator's decision, taken only after a reviewer and a linked EVIDENCE exist. Do not rely on the denylist to stop you: `disallowedTools` is a Claude Code frontmatter key and is absent in other runtimes (verified: zero occurrences in the `omp` binary), so in those this rule is the only thing standing between you and a silent generator≠verifier collapse.
 
 ## EVID body template
 

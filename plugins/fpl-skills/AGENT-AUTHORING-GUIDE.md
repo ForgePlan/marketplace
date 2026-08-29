@@ -65,7 +65,7 @@ Everyone else can skip this — agents authored against this guide just *work* w
 2. **Model is explicit** — `opus`/`sonnet`/`haiku`, never `inherit` for marketplace agents.
 3. **Bilingual description** — EN + RU + Triggers, parseable by orchestrator dispatch.
 4. **Body is procedural** — every MCP call mapped to a numbered step. No prose substitutes.
-5. **HARD RULES are first-class** — surface invariants that the denylist cannot enforce (identity tagging, "always call X before Y").
+5. **HARD RULES are first-class** — surface invariants that the denylist cannot enforce (identity tagging, "always call X before Y"). **In a runtime without denylist support that set is *everything*** — see "Denylists are Claude Code-only" below.
 6. **Three role profiles** — artifact-creator, consumer+EVID, read-only. Pick one. Mixing leads to drift.
 
 ---
@@ -324,6 +324,44 @@ Do **not** invoke for:
 ## Forgeplan MCP usage pattern
 
 Numbered steps, one MCP call per step.
+
+### Denylists are Claude Code-only — the invariant must also live in the body
+
+`disallowedTools` is a **Claude Code** frontmatter key. Claude Code honours it; other
+runtimes do not necessarily parse it at all.
+
+Measured against `omp` v18.0.8: the string `disallowedTools` appears **zero times** in the
+binary. The keys OMP's agent parser does accept are `name`, `description`, `tools`,
+`spawns`, `model`, `output`, `thinkingLevel`, `blocking`, `autoloadSkills`,
+`readSummarize`, `prewalk`, `advisor` — there is no denylist key and no MCP scope field.
+This is not a misconfiguration to fix on our side; the surface does not exist.
+
+**Consequence.** 42 agents in this marketplace carry a denylist and every one of them
+denies `forgeplan_activate`. In Claude Code that is a wall. In a runtime without the key it
+is nothing, and no error is raised — the tool is simply available. The quiet failure is a
+Profile B reviewer activating the artifact it just reviewed: `generator ≠ verifier`
+collapses and nothing reports it.
+
+**So the rule for authors is:**
+
+> Anything the denylist protects that actually *matters* must ALSO be stated as a HARD RULE
+> in the agent body. The frontmatter is an optimisation — a second line of defence in one
+> runtime. The body is the only line that travels.
+
+This is rule 5 taken to its conclusion: HARD RULES carry what the denylist cannot enforce,
+and in a runtime with no denylist that is the entire denylist.
+
+State it as a rule, not as a description of the mechanism. This is right:
+
+> **Never** call `forgeplan_activate` — orchestrator/guardian territory. Profile A creates
+> artifacts in `draft` only; activation requires a reviewer plus a linked EVIDENCE first.
+
+This is not, because it tells the model the mechanism will stop it:
+
+> The denylist blocks `forgeplan_activate`, so you cannot call it.
+
+The second form is worse than silence: in a runtime where the denylist is absent, it is a
+false statement about the agent's own constraints.
 
 ### Naming convention — write tool names bare in prose
 

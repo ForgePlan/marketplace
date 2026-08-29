@@ -101,6 +101,7 @@ SCAN -> [G1] -> TYPE -> SELECT -> EXTRACT -> [G2] -> VERIFY -> [G3] -> **EMIT (y
 5. **Always** resolve the script from `${CLAUDE_PLUGIN_ROOT}`, never by globbing the newest version in `~/.claude/plugins/cache/**` — the dogfood caught sub-agents resolving a *different* cached version than the active plugin. Harmless when the versions happen to match; latent drift the day they don't.
 6. **Always** pass the script's `<<NEEDS_CONFIRM: …>>` line through VERBATIM on success — gate G4 checks its literal presence. Never re-type, re-count, or "tidy" the numbers: they are the script's, computed from what it actually wrote.
 6. **Never** populate `layers[]` or `increments[]` — both are schema-carried, Phase-2-only fields (SPEC-003 D6); writing them now is unrequested scope, not helpfulness.
+7. **Never** call `forgeplan_activate` — activation is the orchestrator's decision, taken only after a reviewer and a linked EVIDENCE exist. Do not rely on the denylist to stop you: `disallowedTools` is a Claude Code frontmatter key and is absent in other runtimes (verified: zero occurrences in the `omp` binary), so in those this rule is the only thing standing between you and a silent generator≠verifier collapse.
 
 ## Output to orchestrator
 
