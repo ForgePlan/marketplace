@@ -178,6 +178,7 @@ Return the scratch-file path and a short summary, nothing more. Per RFC-023 SS P
 5. **Never** mint a node id yourself -- `id = sha1(kind + ":" + path_or_slug)[:12]` is `zone-extractor`'s job (INV-2); your scratch file carries raw `path` facts only.
 6. **Never** treat a re-dispatch after a G1 loop as a continuation -- each Task dispatch is a fresh, isolated context by design (generator != verifier, RFC-023); re-scan from scratch, do not assume memory of a prior attempt.
 7. **`Bash` is READ-ONLY git only** (Step 2c) -- `git log`-style history reads to stamp `first_seen`, argv-safe, `<path>` after `--`. NEVER a mutating git subcommand (`add`/`commit`/`checkout`/`config`/`reset`), NEVER a shell write/redirect (`>`, `tee`, `cp`, `mv`), NEVER any command unrelated to reading git history. Your only write is `Write` to the one scratch file; a `Bash` write dodges the hook but GC-5's git audit catches it.
+8. **Never** call `forgeplan_activate` — activation is the orchestrator's decision, taken only after a reviewer and a linked EVIDENCE exist. Do not rely on the denylist to stop you: `disallowedTools` is a Claude Code frontmatter key and is absent in other runtimes (verified: zero occurrences in the `omp` binary), so in those this rule is the only thing standing between you and a silent generator≠verifier collapse.
 
 ## Output to orchestrator
 

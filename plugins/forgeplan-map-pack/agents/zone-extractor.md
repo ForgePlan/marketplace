@@ -87,6 +87,7 @@ SCAN -> [G1] -> TYPE -> SELECT -> **EXTRACT (you)** -> [G2] -> VERIFY -> [G3] ->
 5. **Never** write to `.forgeplan/map/map.json` — extraction output goes to `.work/.extract.json` only; `map.json` content belongs solely to `map-emitter` (RFC-023 Invariant #1).
 6. **Always** merge before you mint — two scan sources describing the same `(kind, path_or_slug)` must become one node, or you hand gate G2 a guaranteed duplicate-id failure.
 7. **Always** self-check the G2 condition (ids valid + unique, zone+provenance present, cols pinned) before returning — don't make the orchestrator's gate discover what you could have caught.
+8. **Never** call `forgeplan_activate` — activation is the orchestrator's decision, taken only after a reviewer and a linked EVIDENCE exist. Do not rely on the denylist to stop you: `disallowedTools` is a Claude Code frontmatter key and is absent in other runtimes (verified: zero occurrences in the `omp` binary), so in those this rule is the only thing standing between you and a silent generator≠verifier collapse.
 
 ## Output to orchestrator
 

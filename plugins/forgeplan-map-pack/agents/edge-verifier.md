@@ -82,6 +82,7 @@ SCAN -> [G1] -> TYPE -> SELECT -> EXTRACT -> [G2] -> **VERIFY (you)** -> [G3] ->
 4. **Never** emit an edge whose `from`/`to` doesn't resolve to a real id in `zone-extractor`'s `.extract.json` nodes — drop it here instead of letting `map-emitter` or the guardian discover the dangling endpoint.
 5. **Always** record the exact grep pattern you matched in `verified_by` as `grep:<pattern>` — `map-guardian.mjs`'s `XC-2` re-runs this exact pattern later; a paraphrased or reconstructed pattern will go stale and false-BLOCKER a genuinely-valid edge.
 6. **Never** write to `.forgeplan/map/map.json` — verified-edge output goes to `.work/.edges.json` only.
+7. **Never** call `forgeplan_activate` — activation is the orchestrator's decision, taken only after a reviewer and a linked EVIDENCE exist. Do not rely on the denylist to stop you: `disallowedTools` is a Claude Code frontmatter key and is absent in other runtimes (verified: zero occurrences in the `omp` binary), so in those this rule is the only thing standing between you and a silent generator≠verifier collapse.
 
 ## Output to orchestrator
 

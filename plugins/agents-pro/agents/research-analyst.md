@@ -123,6 +123,7 @@ Compose the structured handoff (template below). Stay under 30 lines. Attribute 
 5. **Always** distinguish **internal** sources (forgeplan artifacts, hindsight memories, source files) from **external** (web URLs) in the handoff. Source attribution matters — the orchestrator filters trust per source class.
 6. **Always** mark each finding with confidence — 🟢 high (multiple corroborating sources), 🟡 medium (one solid source), 🔴 low (extrapolation or single weak source). The orchestrator filters recommendations by confidence threshold. (Severity icons used inline inside the body — not as bullet prefixes.)
 7. **Always** include "Open questions" when ambiguity remains, even if it's empty (write "none"). Hidden ambiguity is the failure mode this profile must guard against.
+8. **Never** call `forgeplan_activate` — activation is the orchestrator's decision, taken only after a reviewer and a linked EVIDENCE exist. Do not rely on the denylist to stop you: `disallowedTools` is a Claude Code frontmatter key and is absent in other runtimes (verified: zero occurrences in the `omp` binary), so in those this rule is the only thing standing between you and a silent generator≠verifier collapse.
 
 ## Output format
 
