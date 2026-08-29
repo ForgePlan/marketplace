@@ -245,6 +245,14 @@ If you want to read the original BMAD spec → see `sources/BMAD-METHOD/` in the
 
 ## Quick lookup table
 
+This table lists **20 methodologies — the ones with a standalone command or plugin**. It is
+a curated summary, not the catalogue. The catalogue is
+[`smith/routing-map.md`](../plugins/fpl-skills/skills/smith/routing-map.md), which carries
+**37 cards** with per-row dispatch chains and evidence bars; the remaining 17 are
+architecture lenses and ingest mappings that have no command of their own.
+
+When the two disagree, `routing-map.md` wins — it is the file the router reads.
+
 | Methodology | Where it lives | How to use |
 |---|---|---|
 | BMAD | forgeplan CLI | `forgeplan validate <id>` |
@@ -272,6 +280,7 @@ If you want to read the original BMAD spec → see `sources/BMAD-METHOD/` in the
 
 ## See also
 
+- [`smith/routing-map.md`](../plugins/fpl-skills/skills/smith/routing-map.md) — **the routing matrix smith actually reads**: 14 contexts and 37 methodology cards, each with a dispatch chain and an evidence bar. The table above is a curated summary of it; that file is what the router executes. Start there when a methodology is not listed here, or when you need the dispatch sequence rather than the name.
 - [DEVELOPER-JOURNEY.md](DEVELOPER-JOURNEY.md) — narrative onboarding with 4 personas
 - [PLAYBOOK.md](PLAYBOOK.md) — use-case matrix (which command for which scenario)
 - [USAGE-GUIDE.md](USAGE-GUIDE.md) — reference manual for the marketplace
