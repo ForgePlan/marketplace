@@ -31,7 +31,6 @@
   "components": {
     "commands": ["sync", "session"],
     "agents": ["orchestra-advisor"],
-    "skills": ["unified-workflow"],
-    "hooks": ["PostToolUse:Bash"]
+    "skills": ["unified-workflow"]
   }
 }

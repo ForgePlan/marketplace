@@ -27,7 +27,6 @@
   "components": {
     "commands": ["ux-review", "ux-law"],
     "agents": ["ux-reviewer"],
-    "skills": ["ux-laws"],
-    "hooks": ["PostToolUse:Write|Edit|MultiEdit"]
+    "skills": ["ux-laws"]
   }
 }

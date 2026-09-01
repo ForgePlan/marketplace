@@ -28,7 +28,6 @@
   "components": {
     "commands": ["slop-audit", "slop-humanize"],
     "agents": ["slop-cop"],
-    "skills": ["humanizer-ru", "slop-humanizer"],
-    "hooks": ["PostToolUse:Write|Edit|MultiEdit"]
+    "skills": ["humanizer-ru", "slop-humanizer"]
   }
 }

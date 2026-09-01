@@ -29,7 +29,6 @@
   "components": {
     "commands": ["audit", "sprint", "recall", "report"],
     "agents": ["dev-advisor"],
-    "skills": ["forge-report"],
-    "hooks": ["SessionStart", "PreToolUse:Bash", "PostToolUse:Write|Edit|MultiEdit", "PostToolUse:.*"]
+    "skills": ["forge-report"]
   }
 }
