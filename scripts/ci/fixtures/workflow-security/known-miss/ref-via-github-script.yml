@@ -1,0 +1,25 @@
+# CLASS: indirection in `ref` — computed in JavaScript
+# actions/github-script queries the API for the head sha; no untrusted expression appears near the
+# checkout at all.
+name: miss-ref-via-github-script
+on:
+  pull_request_target:
+    types: [opened]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - id: meta
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+        with:
+          script: |
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner, repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number });
+            core.setOutput('sha', pr.data.head.sha);
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ steps.meta.outputs.sha }}
+      - run: npm ci && npm test

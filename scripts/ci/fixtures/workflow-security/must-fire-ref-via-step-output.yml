@@ -1,0 +1,24 @@
+# CAUGHT INCIDENTALLY, not by the rule that should apply.
+# The checkout-indirection rule (PR_HEAD_REF) still cannot see this: the untrusted expression is a
+# hop away from the `ref:`. What fires is WF-INJECT, because THIS spelling routes the hop through a
+# `run:` block, and interpolating untrusted context into a shell block is its own finding.
+# Spell the same hop without a shell block — see known-miss/ref-via-github-script.yml — and it slips.
+# So the coverage here is a side effect of the shape, not of the class being understood.
+# CLASS: indirection in `ref` — via step output
+# The head sha is written to $GITHUB_OUTPUT in one step and consumed by the checkout in the next.
+name: miss-ref-via-step-output
+on:
+  pull_request_target:
+    types: [opened]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - id: pr
+        run: echo "sha=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ steps.pr.outputs.sha }}
+      - run: npm ci && npm test

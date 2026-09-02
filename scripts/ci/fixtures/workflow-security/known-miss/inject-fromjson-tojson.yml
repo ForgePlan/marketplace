@@ -1,0 +1,12 @@
+# CLASS: injection — the untrusted value is laundered through fromJSON(toJSON(...))
+name: miss-inject-fromjson-tojson
+on:
+  pull_request_target:
+    types: [opened]
+permissions:
+  contents: write
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "${{ fromJSON(toJSON(github.event)).pull_request.title }}"

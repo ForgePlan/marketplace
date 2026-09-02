@@ -1,0 +1,19 @@
+# CLASS: indirection in `ref` — via job-level env
+# The PR head is read into an env var one scope up, then used. PR_HEAD_REF requires the untrusted
+# expression to appear literally in the same step, so a single hop defeats it.
+name: miss-ref-via-job-env
+on:
+  pull_request_target:
+    types: [opened]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ env.HEAD_SHA }}
+      - run: npm ci && npm test

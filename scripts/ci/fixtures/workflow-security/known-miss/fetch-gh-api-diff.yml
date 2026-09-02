@@ -1,0 +1,18 @@
+# CLASS: fetch in run — the diff is pulled via the API and applied to the base tree
+name: miss-fetch-gh-api-diff
+on:
+  pull_request_target:
+    types: [opened]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      R: ${{ github.repository }}
+      N: ${{ github.event.pull_request.number }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - run: gh api "repos/$R/pulls/$N.diff" > pr.patch && patch -p1 < pr.patch
+      - run: npm ci && npm test

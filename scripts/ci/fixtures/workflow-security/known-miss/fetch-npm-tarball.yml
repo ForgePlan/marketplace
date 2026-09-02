@@ -1,0 +1,16 @@
+# CLASS: fetch in run — npm installs the fork tarball, running its lifecycle scripts
+name: miss-fetch-npm-tarball
+on:
+  pull_request_target:
+    types: [opened]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      FORK: ${{ github.event.pull_request.head.repo.owner.login }}
+      REPO: ${{ github.event.pull_request.head.repo.name }}
+      REV: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - run: npm install --no-save "https://github.com/$FORK/$REPO/tarball/$REV"

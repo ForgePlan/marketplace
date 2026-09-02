@@ -144,6 +144,21 @@ function privilegedTriggers(source) {
 /** Back-compat shim: the rules below only ask "is this file privileged at all?". */
 const PRIVILEGED_EVENT = { test: (source) => privilegedTriggers(source).length > 0 };
 
+/**
+ * A composite action is `action.yml` / `action.yaml`, and it has no `on:` key — it has no triggers
+ * of its own, it inherits whatever called it. `privilegedTriggers` reads the `on:` mapping, so for
+ * these files it returns nothing and EVERY privileged rule switches off by construction. The
+ * directory was added to the scan list and then scanned with all the interesting rules disabled.
+ *
+ * We cannot see the caller from here, so we assume the worst: a composite action reachable from a
+ * privileged workflow runs with that workflow's token, and the whole point of the rules is what
+ * happens under that token. A false positive costs a comment in an action that is only ever called
+ * from `on: push`; a false negative costs the repository.
+ */
+const COMPOSITE_ACTION_FILE = /(^|[/\\])action\.ya?ml$/i;
+const isPrivilegedFile = (source, filePath) =>
+  PRIVILEGED_EVENT.test(source) || (!!filePath && COMPOSITE_ACTION_FILE.test(filePath));
+
 // `github.head_ref` is the single most-cited pull_request_target footgun and was not matched here:
 // the old pattern demanded a `github.event.(pull_request|workflow_run).` prefix. It is already in
 // UNTRUSTED_EXPR, so it fired inside a `run:` block but not on the `ref:` where it actually hands
@@ -156,13 +171,30 @@ const PR_HEAD_REF = new RegExp(
 );
 const REFS_PULL = /\brefs\/(?:remotes\/)?pull\/[^\s'"]+/;
 
-function listWorkflowFiles(dir) {
+/**
+ * Every YAML under `dir`, descending.
+ *
+ * The first version read one level and stopped. `.github/actions` was added to the scan list on the
+ * reasoning that a composite action can do anything a workflow step can — but GitHub requires them
+ * at `.github/actions/<name>/action.yml`, one level deeper than the listing reached. The directory
+ * was scanned and nothing in it was ever read: a scan list entry that looked like coverage.
+ *
+ * Depth is bounded because this walks a checkout, and an unbounded recursion over an unexpected
+ * symlink or a vendored tree turns a fast gate into a hang. Four levels covers
+ * `.github/actions/<name>/<sub>/action.yml` with room to spare.
+ */
+function listWorkflowFiles(dir, depth = 4) {
   if (!fs.existsSync(dir)) return [];
-  return fs
-    .readdirSync(dir)
-    .filter((f) => /\.ya?ml$/i.test(f))
-    .map((f) => path.join(dir, f))
-    .sort();
+  const out = [];
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, e.name);
+    if (e.isDirectory()) {
+      if (depth > 0 && e.name !== 'node_modules') out.push(...listWorkflowFiles(p, depth - 1));
+    } else if (e.isFile() && /\.ya?ml$/i.test(e.name)) {
+      out.push(p);
+    }
+  }
+  return out.sort();
 }
 
 function splitLines(source) {
@@ -334,8 +366,15 @@ function findUnpinned(lines) {
   return findings;
 }
 
-function findPermissionIssues(source, lines) {
+function findPermissionIssues(source, lines, filePath) {
   const findings = [];
+
+  // `permissions:` is a WORKFLOW key. A composite action has no such key and cannot have one — it
+  // runs under the caller's token. WF-PERMS-MISSING on an action.yml is asking for something the
+  // format does not allow, and a gate that demands the impossible gets switched off. (Introduced
+  // and caught in the same pass as the composite-action privilege fix; write-all is still checked,
+  // since a literal `write-all` in an action file is worth seeing wherever it turns up.)
+  const isCompositeAction = !!filePath && COMPOSITE_ACTION_FILE.test(filePath);
 
   // write-all anywhere (top-level or job-level) is a HIGH over-grant.
   const wa = source.match(WRITE_ALL);
@@ -354,7 +393,7 @@ function findPermissionIssues(source, lines) {
   // no `permissions:` key before the first top-level `jobs:` line.
   const jobsIdx = source.search(/^jobs:\s*$/m);
   const header = jobsIdx >= 0 ? source.slice(0, jobsIdx) : source;
-  if (!PERMISSIONS_KEY.test(header)) {
+  if (!isCompositeAction && !PERMISSIONS_KEY.test(header)) {
     findings.push({
       line: 1,
       rule: 'WF-PERMS-MISSING',
@@ -367,9 +406,9 @@ function findPermissionIssues(source, lines) {
   return findings;
 }
 
-function findDangerousCheckout(source, lines) {
+function findDangerousCheckout(source, lines, filePath) {
   const findings = [];
-  if (!PRIVILEGED_EVENT.test(source)) return findings;
+  if (!isPrivilegedFile(source, filePath)) return findings;
 
   for (const step of findSteps(lines)) {
     const text = step.lines.join('\n');
@@ -412,9 +451,9 @@ function findDangerousCheckout(source, lines) {
  * the fetch verb alone, without needing to prove where the PR number came from: under a privileged
  * trigger there is no benign reason to check out the contributor's branch.
  */
-function findPrivilegedPrFetch(source, lines, runBlocks) {
+function findPrivilegedPrFetch(source, lines, runBlocks, filePath) {
   const findings = [];
-  if (!PRIVILEGED_EVENT.test(source)) return findings;
+  if (!isPrivilegedFile(source, filePath)) return findings;
 
   // The first version of this rule matched five tight regexes ONE PHYSICAL LINE AT A TIME. An
   // adversarial probe put 10 shapes straight through it, and every one is ordinary shell:
@@ -479,9 +518,9 @@ function findPrivilegedPrFetch(source, lines, runBlocks) {
  * so both rules above fall straight through it while the file is correctly identified as
  * privileged. Downloading and executing a PR-built artifact is fetching PR code by another name.
  */
-function findPrivilegedArtifactDownload(source, lines) {
+function findPrivilegedArtifactDownload(source, lines, filePath) {
   const findings = [];
-  if (!PRIVILEGED_EVENT.test(source)) return findings;
+  if (!isPrivilegedFile(source, filePath)) return findings;
 
   // Downloading an artifact is not itself the attack — reading a PR's lint report and posting it as
   // a comment is GitHub's own recommended pattern, and the first version of this rule reddened it.
@@ -526,11 +565,11 @@ function scanFile(filePath) {
 
   const findings = [
     ...findInjection(lines, runBlocks),
-    ...findDangerousCheckout(source, lines),
-    ...findPrivilegedPrFetch(source, lines, runBlocks),
-    ...findPrivilegedArtifactDownload(source, lines),
+    ...findDangerousCheckout(source, lines, filePath),
+    ...findPrivilegedPrFetch(source, lines, runBlocks, filePath),
+    ...findPrivilegedArtifactDownload(source, lines, filePath),
     ...findUnpinned(lines),
-    ...findPermissionIssues(source, lines),
+    ...findPermissionIssues(source, lines, filePath),
   ];
 
   return findings
@@ -610,9 +649,31 @@ function resolveScanDirs() {
  *    the survivor was `scanFile` returning `[]` for any path that is not a fixture. No self-test can
  *    catch that, because the self-test runs through the same mutated function. Whoever can make that
  *    edit can also delete this file — it is a code-review question, not a linter one.
- *  - **Coverage.** An adversarial corpus of 41 privileged workflows still gets past roughly half of
- *    this, mostly via checkout-ref indirection (`env:` / step-output / `needs.outputs` hops) and
- *    package managers pulling a PR URL. Tracked, not fixed here.
+ *  - **Coverage — 12 attacks walk past this gate, and they are checked in.**
+ *    `fixtures/workflow-security/known-miss/` holds one privileged workflow per attack that this
+ *    linter reads without complaint, and the self-test asserts each stays silent. The number moves
+ *    on its own: a known-miss that starts firing fails the suite and gets promoted; a must-fire that
+ *    stops firing fails the traps. Nobody has to remember to re-measure.
+ *
+ *    Three classes, all rooted in the same thing — **the mechanism of attack is data flow, and a
+ *    regex over text cannot see flow**:
+ *      · indirection in `ref` (4) — the untrusted expression is read into `env` / a step output /
+ *        a `needs` output / JavaScript, then used one hop away
+ *      · fetch inside `run:` (6) — a package manager, a docker git-context, an API diff, the binary
+ *        behind a variable, download and extraction split by `;`
+ *      · injection outside `run:` (4) — `github-script`'s `script:`, a docker action's `args:`,
+ *        bracket notation, `fromJSON(toJSON(…))`
+ *
+ *    This replaces an earlier claim of "a corpus of 41 gets past roughly half". That corpus was
+ *    never checked in and cannot be reproduced from what was written down; 14 concrete forms were
+ *    enumerated and are what this directory contains. Do not restore a number that has no fixtures
+ *    behind it.
+ *
+ *    Closing the first class properly means marking expressions that read untrusted context and
+ *    propagating the mark through `env` → `outputs` → `needs` — a small analyser plus a YAML
+ *    parser, which `scripts/ci/` has no dependency on today. Adding pattern rules one at a time was
+ *    tried; it produces a longer regex and the same blind spot, because the next hop is free to the
+ *    attacker and expensive to us.
  *
  * This is a tripwire, not a proof. It exists to stop the shapes people actually write by accident,
  * and to be honest about the ones it does not.
@@ -643,6 +704,14 @@ const SELF_TEST_EXPECT = {
   'must-fire-permissions-writeall.yml': ['WF-PERMS-WRITEALL', HIGH],
   'must-fire-templates-scanned.yml': ['WF-PERMS-WRITEALL', HIGH],
   'must-fire-unpinned.yml': ['WF-UNPINNED', WARN],
+  // Caught INCIDENTALLY, by WF-INJECT rather than by the checkout-indirection rule. Both spell the
+  // hop through a `run:` block, and interpolating untrusted context into a shell block is its own
+  // finding. The same hop through actions/github-script slips — known-miss/ref-via-github-script.
+  'must-fire-ref-via-step-output.yml': ['WF-INJECT', HIGH],
+  'must-fire-ref-via-needs-output.yml': ['WF-INJECT', HIGH],
+  // Composite action. Proves BOTH structural fixes at once: the recursive listing reaches
+  // `<dir>/action.yml`, and an action.yml is treated as privileged despite having no `on:` key.
+  'nested/action-dir/action.yml': ['WF-PRT-CHECKOUT', HIGH],
 };
 
 /** Ordinary CI that MUST stay clean. A gate that reddens honest work gets switched off. */
@@ -650,7 +719,40 @@ const SELF_TEST_BENIGN = [
   'must-not-fire-plain-ci.yml',
   'must-not-fire-mentions-trigger-in-comment.yml',
   'must-not-fire-pr-number.yml',
+  // An ordinary composite action must stay silent. It carries no `permissions:` — correct for the
+  // format, not an omission — so WF-PERMS-MISSING must not fire on it. That false positive was
+  // introduced by the privilege fix and caught by this control in the same pass.
 ];
+
+/**
+ * Fixtures that must produce NO finding at all — not even a WARN.
+ *
+ * SELF_TEST_BENIGN only rejects HIGH, which is right for ordinary CI (a WARN about an unpinned
+ * action there is a true positive). It is wrong here: making composite actions privileged also made
+ * them fail WF-PERMS-MISSING, a WARN — asking an `action.yml` for a `permissions:` key the format
+ * does not have. Mutation testing found that the HIGH-only control could not see it.
+ */
+const SELF_TEST_SILENT = [
+  'nested/benign-action-dir/action.yml',
+];
+
+/**
+ * The measured gap: privileged workflows carrying a real attack that this gate reads without
+ * complaint. They live in `fixtures/workflow-security/known-miss/` and the self-test asserts they
+ * produce NOTHING.
+ *
+ * Asserting a miss reads backwards until you see what it buys. The count stops being a sentence
+ * somebody wrote once and becomes a number the suite maintains:
+ *
+ *   - a known-miss file that STARTS firing fails the self-test, which tells you to promote it to
+ *     `must-fire` — coverage improved and the corpus records it
+ *   - a `must-fire` fixture that STOPS firing fails the existing traps — coverage regressed
+ *
+ * Both directions are caught, and nobody has to remember to re-measure. Before this, the gap was
+ * "roughly half of a corpus of 41" — a corpus that was never checked in and cannot be reproduced.
+ * See known-miss/README.md for the three classes and why patterns lose to them.
+ */
+const SELF_TEST_KNOWN_MISS_DIR = 'known-miss';
 
 /**
  * Prove the gate can still FAIL before trusting it to say "clean".
@@ -707,6 +809,57 @@ function selfTest() {
     const high = scanFile(p).filter((f) => f.severity === HIGH);
     if (high.length > 0) {
       dead.push(`${file}: benign workflow produced ${high[0].rule} HIGH — a gate that reddens honest CI gets turned off`);
+    }
+  }
+
+  // 2a — fixtures that must be completely silent, WARN included
+  for (const file of SELF_TEST_SILENT) {
+    const fp = path.join(dir, file);
+    if (!fs.existsSync(fp)) { dead.push(`${file}: silent-control fixture missing`); continue; }
+    const hits = scanFile(fp);
+    if (hits.length > 0) {
+      dead.push(
+        `${file}: expected complete silence, got ${hits[0].rule}/${hits[0].severity} — this control ` +
+        'exists because a WARN-level false positive is invisible to the HIGH-only benign check',
+      );
+    }
+  }
+
+  // 2a2 — DISCOVERY, separately from detection.
+  // The nested fixtures above are read by explicit path, so they prove the rules and say nothing
+  // about whether the walker would ever reach them. Breaking recursion left every trap green —
+  // found by mutation. Assert the walker actually returns the nested file.
+  const walked = listWorkflowFiles(dir);
+  const nested = walked.filter((f) => path.relative(dir, f).includes(path.sep));
+  if (nested.length === 0) {
+    dead.push(
+      'listWorkflowFiles returned no nested file — directory recursion is broken. Composite ' +
+      'actions live at <dir>/action.yml, one level down; a non-recursive walk scans the parent ' +
+      'directory and reads nothing in it.',
+    );
+  }
+
+  // 2b — the measured gap holds its shape in both directions
+  const missDir = path.join(dir, SELF_TEST_KNOWN_MISS_DIR);
+  if (!fs.existsSync(missDir)) {
+    dead.push(
+      `${SELF_TEST_KNOWN_MISS_DIR}/: corpus missing — the coverage gap goes back to being a ` +
+      'sentence nobody re-measures',
+    );
+  } else {
+    const missFiles = fs.readdirSync(missDir).filter((f) => /\.ya?ml$/i.test(f)).sort();
+    if (missFiles.length === 0) {
+      dead.push(`${SELF_TEST_KNOWN_MISS_DIR}/: no fixtures — an empty corpus proves nothing`);
+    }
+    for (const file of missFiles) {
+      const hits = scanFile(path.join(missDir, file));
+      if (hits.length > 0) {
+        dead.push(
+          `${SELF_TEST_KNOWN_MISS_DIR}/${file}: now fires ${hits[0].rule} — coverage IMPROVED. ` +
+          'Move the fixture to must-fire-*.yml, add it to SELF_TEST_EXPECT, and update the count ' +
+          'in this file’s header. This failure is good news; it is not a reason to delete the trap.',
+        );
+      }
     }
   }
 
