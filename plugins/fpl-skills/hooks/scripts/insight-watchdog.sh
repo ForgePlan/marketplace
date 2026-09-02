@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 # insight-watchdog.sh — SessionStart anomaly watchdog (PRD-074 / RFC-019 brick 1, Layer 3).
 #
-# Surfaces ONLY real, actionable forgeplan anomalies (severity >= medium) and
-# stays SILENT on a clean tree. Filters the two known-noise classes
-# (weakest_link_unresolvable per forgeplan#325 + benign phase_mismatch
-# advisories) so a genuine signal is never buried under low-severity noise.
+# Surfaces ONLY real, actionable forgeplan anomalies and stays SILENT on a clean
+# tree. Filters the two known-noise classes (weakest_link_unresolvable per
+# forgeplan#325, and phase_mismatch on a benign `shape`/`validate` marker) so a
+# genuine signal is never buried under low-severity noise.
+#
+# The severity floor is >= medium with ONE deliberate exception: a phase_mismatch
+# whose marker is outside the benign set surfaces at any severity, because the
+# detector stamps every phase_mismatch `low` and the floor would otherwise hide
+# the only interesting case (ADR-022 INV-1).
 #
 # Design: RFC-019 Layer 3 deterministic watchdog. Hooks cannot call MCP, so this
 # shells out to the `forgeplan` CLI (`forgeplan anomalies --json`, landed in
@@ -46,12 +51,37 @@ fi
 printf '%s' "$ANOM_JSON" | python3 -c '
 import json, sys
 
-# RFC-019 Choice 2b filter rule. weakest_link_unresolvable = forgeplan#325
-# structural noise (leaf artifacts with no child evidence score 0).
-# phase_mismatch = benign "active but early-cycle phase" advisory (every live
-# instance is benign for brick 1; narrows to a subset later if PRD-074 Q4 finds
-# a non-benign combination).
-KNOWN_NOISE = {"weakest_link_unresolvable", "phase_mismatch"}
+# RFC-019 Choice 2b filter rule, narrowed by ADR-022. The caveat RFC-019 R-3
+# left open ("narrow to the benign subset if a non-benign combination is ever
+# found") is now cashed in.
+#
+# weakest_link_unresolvable stays a wholesale drop: forgeplan#325 structural
+# noise, leaf artifacts with no child evidence score 0.
+#
+# phase_mismatch is NO LONGER dropped by kind. It is noise only when the
+# artifact lifecycle marker is one the canon expects to be stale — `shape` or
+# `validate`, the early-cycle values left on artifacts that were activated
+# without the marker being advanced. ADR-022 DD-5 decided NOT to backfill those,
+# so they are permanent benign advisories, not a backlog.
+#
+# A marker OUTSIDE that set on an active artifact is a different finding. Three
+# of the register-3 values (`adi`, `test`, `audit`) have no call site anywhere
+# in the tree, so an artifact carrying one was set by hand — the ADR-022 INV-1
+# violation nothing else detects.
+#
+# NOTE FOR EDITORS: everything from here down to the closing delimiter is the
+# argument of a single-quoted python3 -c string. ONE apostrophe anywhere in this
+# block — including in an English possessive inside a comment — terminates that
+# string and breaks the whole hook at parse time. Phrase around it: write "the
+# register-3 values", not the possessive form. test-insight-watchdog.sh catches
+# the breakage, but only after you have shipped it.
+#
+# That case deliberately BYPASSES the severity floor. Measured on the live tree
+# 2026-09-02: all 306 phase_mismatch anomalies carry severity `low`, so the
+# detector cannot separate benign from non-benign by severity and the floor
+# alone would swallow the one instance worth seeing. The bypass IS the detector.
+BENIGN_PHASE_MARKERS = {"shape", "validate"}
+DROP_KINDS = {"weakest_link_unresolvable"}
 KEEP_SEVERITY = {"medium", "high"}
 CAP = 5
 
@@ -63,10 +93,19 @@ except Exception:
 anomalies = data.get("anomalies", []) if isinstance(data, dict) else []
 total = data.get("total", len(anomalies)) if isinstance(data, dict) else len(anomalies)
 
-real = [
-    a for a in anomalies
-    if a.get("severity") in KEEP_SEVERITY and a.get("kind") not in KNOWN_NOISE
-]
+def survives(a):
+    kind = a.get("kind")
+    if kind in DROP_KINDS:
+        return False
+    if kind == "phase_mismatch":
+        marker = (a.get("evidence") or {}).get("current_phase")
+        # Benign marker -> noise. Anything else -> surface, severity floor and
+        # all. A MISSING marker also surfaces: a detector that stopped reporting
+        # the field should show up as a visible oddity, not vanish silently.
+        return marker not in BENIGN_PHASE_MARKERS
+    return a.get("severity") in KEEP_SEVERITY
+
+real = [a for a in anomalies if survives(a)]
 
 # INV-3: silent when nothing real survives.
 if not real:
@@ -95,6 +134,11 @@ for a in shown:
     if desc:
         line += " — " + desc
     print(line)
+    # A phase_mismatch that got this far cleared the benign allowlist, not the
+    # severity floor. Say so, or its `low` badge reads as noise that leaked.
+    if kind == "phase_mismatch":
+        print("        ^ lifecycle marker outside {shape, validate} on an active"
+              " artifact — set by hand (ADR-022 INV-1), not pipeline drift")
 if len(real) > CAP:
     print("   … and %d more" % (len(real) - CAP))
 print("   → run /forge-insight for the full digest")

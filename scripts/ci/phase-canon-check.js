@@ -35,11 +35,12 @@
  *  - **RFC-002 itself.** It lives in the PARENT workspace `.forgeplan/`, outside this git
  *    repository, so CI cannot reach the one normative document that started this. Keeping it in
  *    step is a Profile D job, tracked by ADR-022's Revisit Trigger — i.e. a human, again.
- *  - **A Russian self-naming claim.** The second anchor matches the English noun `pipeline`; a
- *    hypothetical `9-фазный конвейер` with no carrier named would slip. No live case exists, and
- *    the anchor's safety was measured on English text, so widening it blind would trade a real
- *    guarantee for a speculative one. The canon this ADR sets says «стадия конвейера» in Russian,
- *    and that phrasing IS caught by the contextual anchor.
+ *  - **A Russian claim that names no carrier.** Russian text IS checked when the line names a
+ *    canonical carrier (RFC-002, PRD-024, the matrix, «канонический конвейер») — that path is
+ *    verified by injection. What still slips is the self-naming form: the second anchor keys on the
+ *    English noun `pipeline`, so a bare `9-фазный конвейер` with no carrier named goes unseen. The
+ *    anchor's safety margin was measured on English text across the tree; widening it blind would
+ *    trade a measured guarantee for a speculative one.
  *  - **Semantics.** It compares a stated number to a derived one. A document can describe the
  *    stages wrongly while stating the right count.
  *
@@ -83,10 +84,17 @@ const DESCRIBES_THE_ERROR = new Map([
  * wave it through. Narrowed rather than exempted — an allowlist covering 90 false positives would
  * be a confession, not a fix.
  *
- * `(?<![\w-])` keeps `PRD-026 Phase` and `#287 Phase` out: a digit run glued to an identifier is
- * not a count.
+ * The leading negative lookbehind keeps `PRD-026 Phase` and `#287 Phase` out: a digit run glued to
+ * an identifier is not a count.
+ *
+ * BOUNDARIES ARE UNICODE-AWARE, AND THAT IS NOT COSMETIC. The first version ended with `\b`, which
+ * in JavaScript is defined over ASCII `[A-Za-z0-9_]`. A Cyrillic letter is not an ASCII word
+ * character, so no boundary ever formed after `стадий` or `фаз` — the two Russian alternatives sat
+ * in the pattern looking functional and matched nothing, in a repository whose normative prose is
+ * substantially Russian. `\p{L}`-class lookarounds under the `u` flag give the same guarantee in
+ * both scripts. Verified by injection in both languages, not by reading the pattern.
  */
-const CLAIM = /(?<![\w-])(\d{1,2})[\s-]+(phases?|stages?|фаз(?:ы|а)?|стади[йяи])\b/gi;
+const CLAIM = /(?<![\p{L}\p{N}_-])(\d{1,2})[\s-]+(phases?|stages?|фаз(?:ы|а)?|стади[йяи])(?![\p{L}\p{N}_])/giu;
 
 /**
  * The line must be talking about THIS pipeline. Other pipelines legitimately have other counts,
@@ -121,6 +129,12 @@ function stagesFromMatrix() {
   return keys;
 }
 
+/**
+ * CHANGELOG records history verbatim — its old numbers are the point, and rewriting them would
+ * falsify the log. It is the only root document held out.
+ */
+const ROOT_DOCS_EXEMPT = new Set(['CHANGELOG.md']);
+
 function shippedMarkdown() {
   const out = [];
   const walk = (dir) => {
@@ -138,7 +152,15 @@ function shippedMarkdown() {
     const full = path.join(REPO_ROOT, d);
     if (fs.existsSync(full)) walk(full);
   }
-  // CHANGELOG records history verbatim; its old numbers are the point.
+  // Root documents, non-recursively. CLAUDE.md and AGENTS.md are loaded into every session's
+  // context, which makes them the highest-traffic prose in the repository and the worst place for
+  // a stale count — yet the first version of this gate walked only plugins/ and docs/ and never
+  // looked at them. Found while writing the canon INTO CLAUDE.md and noticing nothing checked it.
+  for (const e of fs.readdirSync(REPO_ROOT, { withFileTypes: true })) {
+    if (e.isFile() && e.name.endsWith('.md') && !ROOT_DOCS_EXEMPT.has(e.name)) {
+      out.push(path.join(REPO_ROOT, e.name));
+    }
+  }
   return out.sort();
 }
 

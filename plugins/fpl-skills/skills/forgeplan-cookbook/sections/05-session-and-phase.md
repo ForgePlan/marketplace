@@ -1,13 +1,22 @@
 # Section 05 — Session and artifact-phase state machines
 
-**4 tools** + critical disambiguation: forgeplan has **two** distinct state machines (PROB-065). Don't confuse them.
+**4 tools** + critical disambiguation: **three** different things in this project are called "phase" (PROB-065, then ADR-022). Don't confuse them.
 
-| Machine | States | Tool family |
+| Register | Values | Where it lives |
 |---|---|---|
+| **Pipeline stage** | `brief` / `shape` / `decompose` / `design` / `estimate` / `gate` / `build` / `audit` / `evidence` / `activate` / `wrap` | `plugins/fpl-skills/templates/project-agent-matrix.yaml` — **no MCP tool reads it** |
 | **Methodology session phase** | `idle` / `routing` / `shaping` / `coding` / `evidence` / `pr` | `_session`, `_guard` |
-| **Artifact lifecycle phase** | `shape` / `validate` / `adi` / `code` / `test` / `audit` / `evidence` / `done` | `_phase`, `_phase_advance` |
+| **Artifact lifecycle marker** | `shape` / `validate` / `adi` / `code` / `test` / `audit` / `evidence` / `done` | `_phase`, `_phase_advance` |
 
-Both machines contain an `evidence` state lexically, but they're separate concepts. `_session` answers "what is the team doing right now"; `_phase` answers "what is artifact X's progress".
+This section used to list two machines. The third — the pipeline stage — went unnoticed for months precisely because it has no tool family: it is a document-and-template construct, so nothing queried it and nothing checked its count against the carrier. That is how RFC-002 came to carry a stage count in its title that its own table contradicted.
+
+The registers overlap lexically in three places — `shape`, `audit` and `evidence` each appear in more than one column — and mean something different in each. Ask which question you are answering:
+
+- **Pipeline stage** — "which step of the canonical pipeline is this task at?" Reference it by name, never by position (ADR-022 INV-5).
+- **Session phase** — "what is the team doing right now?"
+- **Lifecycle marker** — "how far did this artifact get?" It is **advisory**: a hint for resume, never a gate condition (ADR-022 INV-2). Gates read `status`, evidence and R_eff.
+
+Three of the marker values — `adi`, `test`, `audit` — currently have no code path that emits them. Read them as reserved rather than as positions in a sequence; whether they are removed or wired up is an open question in ADR-022, and the enumeration must not be extended in the meantime (INV-1).
 
 ## 05.1 forgeplan_session — current methodology session
 
