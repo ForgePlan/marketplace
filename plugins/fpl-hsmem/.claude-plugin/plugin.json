@@ -1,6 +1,6 @@
 {
   "name": "fpl-hsmem",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "ForgePlan Hindsight memory plugin for Claude Code. Long-term cross-session memory wrapping Hindsight (vectorize-io). Provides 13 MCP tools (memory_* + mental_model_* + document_ingest_*), 3 auto-hooks (recall on UserPromptSubmit, retain on Stop, force-retain on SessionEnd), and 5 helper skills (/status, /bootstrap, /mental-model, /diagnose, /export-bank). Three activation modes: plugin install (default-on, bank derived from cwd), per-project setup CLI (explicit `.mcp.json`), or direct MCP wire-up (standalone bundle). Source code colocated under plugins/fpl-hsmem/src/. Implements Ruflo-style outcome-feedback patterns (NOTE-004).",
   "author": {
     "name": "ForgePlan"
@@ -8,7 +8,6 @@
   "homepage": "https://github.com/ForgePlan/marketplace",
   "repository": "https://github.com/ForgePlan/marketplace",
   "license": "MIT",
-  "category": "memory",
   "keywords": [
     "memory",
     "hindsight",
@@ -19,13 +18,5 @@
     "cross-session",
     "forgeplan",
     "mcp"
-  ],
-  "components": {
-    "skills": 5,
-    "hooks": 3,
-    "mcp_servers": 1
-  },
-  "requires": {
-    "hindsight_server": "Hindsight server reachable at HINDSIGHT_URL (default https://hindsight.tools.orch.so or self-hosted via Docker). HINDSIGHT_API_KEY env var required. HINDSIGHT_BANK_ID env var optional (derived from cwd if unset)."
-  }
+  ]
 }

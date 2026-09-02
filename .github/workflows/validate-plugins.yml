@@ -218,5 +218,8 @@ jobs:
           run_gate "frontmatter-check"            node scripts/ci/frontmatter-check.js
           run_gate "phase-canon-check"            node scripts/ci/phase-canon-check.js
           run_gate "verdict-axis-check"           node scripts/ci/verdict-axis-check.js
+          # Runs the runtime's OWN validator, not ours. Skips loudly (exit 0) when the `claude`
+          # CLI is absent — the log then says SKIPPED rather than reporting a pass that never ran.
+          run_gate "official-plugin-validate"     bash scripts/ci/official-plugin-validate.sh
           run_gate "gate-parity-check"            node scripts/ci/gate-parity-check.js
           [ "$errors" -eq 0 ] || exit 1

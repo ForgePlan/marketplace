@@ -428,6 +428,7 @@ else
     run_gate "frontmatter-check"         node "$CI_DIR/frontmatter-check.js"
     run_gate "phase-canon-check"         node "$CI_DIR/phase-canon-check.js"
     run_gate "verdict-axis-check"        node "$CI_DIR/verdict-axis-check.js"
+    run_gate "official-plugin-validate"  bash "$CI_DIR/official-plugin-validate.sh"
     run_gate "gate-parity-check"         node "$CI_DIR/gate-parity-check.js"
 fi
 

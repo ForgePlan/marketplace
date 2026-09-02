@@ -92,7 +92,7 @@ Discover Agent гоняет **строгий приоритет источник
 Discover-агент закрывает сессию через `forgeplan_discover_complete`, потом эмитит `<<NEEDS_ACTIVATION: ARTIFACT-ID>>` sentinels на каждый черновой артефакт, чтобы оркестратор их активировал. После этого `forgeplan health` отражает реальную карту репы, а downstream-агенты (`architect-reviewer`, `ddd-domain-expert`, `security-expert`) могут маршрутить от неё.
 
 > [!TIP]
-> Для реп >100K LOC диспатчи агента в режиме `--deep`; для >2M LOC или критичных для бизнеса — в режиме `--full` (режим передаётся в prompt диспатча, например `prompt="Run discovery in --deep mode against this repo"`). Оба добавляют углубляющие проходы, которые фанаут параллельных саб-агентов на каждый модульный RFC. Замечание: в v1-плагине `--deep`/`--full` пока откатываются к поведению Pass 1 — подробнее по режимам в [README Discover-агента](../plugins/forgeplan-brownfield-pack/agents/discover/README.md).
+> Для реп >100K LOC диспатчи агента в режиме `--deep`; для >2M LOC или критичных для бизнеса — в режиме `--full` (режим передаётся в prompt диспатча, например `prompt="Run discovery in --deep mode against this repo"`). Оба добавляют углубляющие проходы, которые фанаут параллельных саб-агентов на каждый модульный RFC. Замечание: в v1-плагине `--deep`/`--full` пока откатываются к поведению Pass 1 — подробнее по режимам в [README Discover-агента](../plugins/forgeplan-brownfield-pack/docs/discover/README.md).
 
 ## Шаг 3 — Типичные ситуации brownfield и как их разруливать
 

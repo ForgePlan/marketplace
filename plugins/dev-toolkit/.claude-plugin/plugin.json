@@ -1,9 +1,7 @@
 {
   "name": "dev-toolkit",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "[DEPRECATED — superseded by fpl-skills] Universal engineering toolkit: multi-expert audit, wave-based sprints, session context recall, card-based structured reports with auto-trigger hooks, and safety hooks. Works with any project and language. New users: install fpl-skills@ForgePlan-marketplace instead. v1.6.3: dev-advisor agent canonical-lint compliant (LR-1..LR-3).",
-  "deprecated": true,
-  "supersededBy": "fpl-skills",
   "author": {
     "name": "ForgePlan"
   },
@@ -18,17 +16,5 @@
     "workflow",
     "quality",
     "universal"
-  ],
-  "category": "developer-tools",
-  "requires": {
-    "cli": [],
-    "mcp": [],
-    "plugins": []
-  },
-  "supersedes": {},
-  "components": {
-    "commands": ["audit", "sprint", "recall", "report"],
-    "agents": ["dev-advisor"],
-    "skills": ["forge-report"]
-  }
+  ]
 }
