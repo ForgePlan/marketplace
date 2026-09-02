@@ -216,5 +216,6 @@ jobs:
           run_gate "omp-catalog-check"            node scripts/ci/omp-catalog-check.js
           run_gate "interop-skills-check"         node scripts/ci/interop-skills-check.js
           run_gate "frontmatter-check"            node scripts/ci/frontmatter-check.js
+          run_gate "phase-canon-check"           node scripts/ci/phase-canon-check.js
           run_gate "gate-parity-check"            node scripts/ci/gate-parity-check.js
           [ "$errors" -eq 0 ] || exit 1

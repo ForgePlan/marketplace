@@ -82,7 +82,7 @@ User: новый проект, давай настраивай
 - **`/smith`** — parent default-mode skill; auto-delegates here for greenfield.
 - **`/smith-plan`** — once bootstrap completes, use this for the per-task Plan on the first PRD.
 - **`/smith-routing`** — if user wants to learn methodologies before bootstrapping.
-- **`/forge-cycle`** — the next step after bootstrap; activates the first PRD via the 9-phase pipeline.
+- **`/forge-cycle`** — the next step after bootstrap; activates the first PRD via the 11-stage pipeline.
 - **`forgeplan-brownfield-pack:discover`** — the brownfield counterpart (use this if pre-flight detects existing code).
 
 ## References

@@ -140,7 +140,7 @@ Grouped by phase of the SDLC they cover. Every methodology has a one-page card i
 
 ## Related
 
-- **`/forge-cycle`** (in `forgeplan-workflow`) — reactive enforcer. Runs ONE task through the 9-phase pipeline. Smith picks WHICH task; `/forge-cycle` executes it.
+- **`/forge-cycle`** (in `forgeplan-workflow`) — reactive enforcer. Runs ONE task through the 11-stage pipeline. Smith picks WHICH task; `/forge-cycle` executes it.
 - **`/autorun`** (in `fpl-skills`) — autonomous long-running loop. On cold start, should dispatch `/smith` first to get a Plan, then walk the Plan task-by-task.
 - **`/forge-progress`** — real-time visibility into in-flight forgeplan work. Orthogonal to smith.
 - **`/methodology-check <ID>`** — pre-activation 4-layer coverage report (S10 FPF, S11 BMAD, S12 OpenSpec, S13 Forgeplan). Orthogonal to smith (smith routes; methodology-check audits one artifact).

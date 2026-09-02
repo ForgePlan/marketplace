@@ -64,7 +64,7 @@ including NEEDS_ACTIVATION sentinel parsing (added Sprint D, PRD-032).
 
 ## Refs
 
-- PRD-024 (active) — Full SDLC Pipeline foundation (9 phases, 9 kinds)
+- PRD-024 (active) — Full SDLC Pipeline foundation (11 stages, 9 kinds)
 - PRD-032 (active) — NEEDS_ACTIVATION sentinel + /forge-cycle integration
 - RFC-002 (active) — Canonical pipeline architecture
 - `dogfood-inline-activate.md` — Stage 5 discipline detail
