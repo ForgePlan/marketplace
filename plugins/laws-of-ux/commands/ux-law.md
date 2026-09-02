@@ -1,6 +1,6 @@
 ---
 name: ux-law
-description: Look up a specific UX law by name. Shows description, key takeaways, frontend implications, and code review checklist. Usage: /ux-law [law-name]
+description: 'Look up a specific UX law by name. Shows description, key takeaways, frontend implications, and code review checklist. Usage: /ux-law [law-name]'
 ---
 
 # UX Law Lookup

@@ -1,6 +1,6 @@
 ---
 name: canvas-init
-description: One-time per-branch setup for the CANVAS tokens-gate. Detects the project framework, derives the per-framework guarded globs, verifies them against disk, and writes the per-branch state file the canvas-gate.sh PreToolUse hook reads. Without it the gate is dormant and design-system writes are unguarded. Usage: /canvas-init [explicit-guarded-globs]
+description: 'One-time per-branch setup for the CANVAS tokens-gate. Detects the project framework, derives the per-framework guarded globs, verifies them against disk, and writes the per-branch state file the canvas-gate.sh PreToolUse hook reads. Without it the gate is dormant and design-system writes are unguarded. Usage: /canvas-init [explicit-guarded-globs]'
 ---
 
 # /canvas-init — arm the CANVAS tokens-gate for this branch

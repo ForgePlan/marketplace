@@ -1,6 +1,6 @@
 ---
 name: canvas-rule
-description: Look up a CANVAS design-system convention or a UX law by name — refs/slots, token naming, atomic layering, the token contract, the six Pencil HARD RULES, or any of the 30 Laws of UX. Shows the canonical rule + checklist + 2-3 related rules. Usage: /canvas-rule [name]
+description: 'Look up a CANVAS design-system convention or a UX law by name — refs/slots, token naming, atomic layering, the token contract, the six Pencil HARD RULES, or any of the 30 Laws of UX. Shows the canonical rule + checklist + 2-3 related rules. Usage: /canvas-rule [name]'
 ---
 
 # /canvas-rule — look up a design-system convention or UX law

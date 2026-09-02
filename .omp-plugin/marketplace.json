@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code — UX, frontend, workflow, and developer tools",
-    "version": "1.138.0"
+    "version": "1.139.0"
   },
   "plugins": [
     {
@@ -48,7 +48,7 @@
         "claude-code"
       ],
       "description": "Flagship workflow plugin for the ForgePlan ecosystem. v1.57.0: NEW /cross-runtime skill + scripts/cross-runtime.mjs — detects which AI runtimes are installed, reports what each can and cannot see, and creates the missing skill/command links; the failure it removes is silent (a runtime that cannot find a skill behaves as though it does not exist) (marketplace#217). v1.55.0: AGENT-AUTHORING-GUIDE gains a tool-naming convention (write bare names in prose; the mcp__server__tool prefix is Claude Code-specific and OMP uses one underscore) + /briefing detects MCP servers by bare tool name instead of by prefix (marketplace#212). 40 engineering skills + dev-advisor agent + 5 hooks (+ smith greeting + RIPER auto-route + decay Layer 3 + insight watchdog + heal-or-task). v1.52.0: AGENT-AUTHORING-GUIDE gains a companion 'Autonomous build-workflow discipline' section (marketplace#169) + the build/sprint/do skills codify its 3 patterns - bake project red lines verbatim into the design/build prompt (catch spec-vs-constraint violations before code), spec-as-built reconciliation before activation (an omitted-by-redline mandate must be reconciled in the artifact body, not silently left stale), and self-verify + claim-sweep on agent crash (never ship on an unverified crashed-agent claim, never leave an orphaned claim). v1.51.0: AGENT-AUTHORING-GUIDE gains three canonical disciplines - claim-hygiene (read-only agents never claim; orchestrator pre-checks forgeplan_claims + sweeps orphans, marketplace#166), StructuredOutput-precedence (a Workflow schema wins over the EVIDENCE-writing default, marketplace#165), and CLI-vs-MCP contract (identity triple + per-EVID congruence_level/evidence_type/verdict are NOT in CLI --json, only MCP/body - forgeplan#397) + Profile B universal HARD RULES 9/10; smith SKILL + routing-map add a forgeplan_claims + activity_stats + journal pre-flight (health digest, never route onto a live-claimed artifact) and fix the read-vs-write forgeplan_claims denylist conflation (marketplace#167). v1.50.2: AGENT-AUTHORING-GUIDE + marketplace docs CANVAS-completeness sync (12->14 context routing, canvas-coordinator listed as a Profile B-orchestrator, CANVAS added to all methodology/plugin lists + onboarding). v1.50.1: smith routing-map + docs/SMITH CANVAS row 14 reframed to native single-framework (RFC-022 / agents-canvas v1.0.0). v1.49.0: NEW /forge-heal skill (PRD-074/RFC-020 brick 2 — Layer 4 heal-or-task: propose-not-silent 3-tier dispatch of findings onto PRD-032 AUTO/ADI/USER; AUTO auto-fixes only 2 reversible kinds after batch-confirm + journal + one-call rollback; USER → tracked NOTE-013 task + suggested agent; never silent-mutates). v1.48.0: NEW /forge-insight skill + insight-watchdog SessionStart hook (PRD-074/RFC-019 brick 1 self-aware integrity — filtered anomaly digest silent-when-clean, accurate session counts retiring the stale-grep draft-count falsehood, NOTE-013 machine-findings ledger) + decay-reminder.sh stale --output/--kind flag fix. v1.46.0: NEW /conformance-vectors skill — `## Conformance Vectors` SDD enrichment (ADR-008 / DEFER-012): frozen-corpus oracle + generic freeze/conformance/cross-language-equivalence harness (live negative-control-verified) + promoted 4-lang semver reference (EVID-119). v1.45.0: /autorun RIPER Plan→Execute human gate — Row-4 bug tasks HOLD before Execute pending a human (DEFER-016 / RFC-018 FR-4 / G8). v1.44.1: /riper FR-5 pin-hash basis clarified to the Research NOTE body content (excluding mutable frontmatter), NOT the projection file (false-stales on unrelated activation/link/score) — DEFER-018 / EVID-172 F1+F2. v1.44.0: RIPER instance #4 (RFC-018 / ADR-010 #4) shipped. v1.43.0: smith routing-map Row 3 (new feature in existing service) reframed as the explicit SPARC instance — master-coordinated sparc-orchestrator dispatch + mandatory per-gate independent C4 + Pseudocode-absorption + Refinement→TDD delegation + SPARC/BMAD/TDD/Strangler disambiguator (RFC-016/ADR-010 instance #3). v1.42.0: smith routing-map Row 1 (greenfield) reframed as the explicit BMAD instance — master-coordinated agents-bmad dispatch + 3 mandatory C4 gates + BMAD/SPARC/TDD/Strangler disambiguator (RFC-013/ADR-010 instance #2). v1.41.1: smith routing-map adds a 'TDD-first feature' context row routing to the agents-tdd dispatch sequence (RFC-012/ADR-010). v1.40.0: RFC-011 FR-3 ground-truth verification clause (generator≠verifier) — AGENT-AUTHORING-GUIDE 'Profile B Step 4.5' canonical section + universal HARD RULE 8 (empty git diff on a claimed change = BLOCKER even with green tests; makes ML-13 enforceable), smith routing-map methodology card (applies to every Build/Audit row), worktree under-claim corrected (isolation works for standalone subagents + Workflow + AgentTeams teammates). Refs PROB-002/RFC-011/ADR-009. v1.38.1: cookbook §07 + §14.4 fix — final-e2e found forgeplan#353 (CLI rejects `/` in agent ID, MCP accepts). Workaround: dash-form agent IDs. v1.38.0: /forgeplan-cookbook skill (66 MCP + 82 CLI across 14 sections). v1.37.x: MCP safety + --help audit.",
-      "version": "1.57.0",
+      "version": "1.58.0",
       "author": {
         "name": "ForgePlan"
       },
@@ -132,7 +132,7 @@
         "claude-code"
       ],
       "description": "UX laws knowledge base and frontend code reviewer. Analyzes HTML/CSS/JS/React/Vue/Svelte code against 30 Laws of UX principles with actionable recommendations. v1.4.1: ux-reviewer agent canonical-lint compliant (LR-1..LR-3).",
-      "version": "1.4.1",
+      "version": "1.5.0",
       "author": {
         "name": "ForgePlan"
       },
@@ -158,7 +158,7 @@
         "claude-code"
       ],
       "description": "Structured engineering workflow for forgeplan users. Provides /forge-cycle (full SDLC cycle) and /forge-audit. v1.12.0: Sprint Z7 PRD-059 — Step 4.5 FPF ADI mandatory for Standard+ (≥3 hypotheses; guardian BLOCKER when no ADI EVID). v1.11.0: Sprint Z6 PRD-057 — Step 6.5 BMAD adversarial review mandatory for Standard+ activation. v1.10.3: Sprint T PRD-046 — forgeplan_unlink MCP adopted.",
-      "version": "1.14.0",
+      "version": "1.15.0",
       "author": {
         "name": "ForgePlan"
       },
@@ -185,7 +185,7 @@
         "claude-code"
       ],
       "description": "[DEPRECATED — superseded by fpl-skills] Universal engineering toolkit: multi-expert audit, wave-based sprints, session context recall, card-based structured reports with auto-trigger hooks, and safety hooks. New users should install fpl-skills@ForgePlan-marketplace instead. v1.6.3: dev-advisor agent canonical-lint compliant (LR-1..LR-3).",
-      "version": "1.6.3",
+      "version": "1.7.0",
       "deprecated": true,
       "supersededBy": "fpl-skills",
       "author": {
@@ -240,7 +240,7 @@
         "claude-code"
       ],
       "description": "Unified workflow: Forgeplan artifacts + Orchestra task tracking + Claude Code AI execution. Bidirectional sync, Session Start Protocol with Inbox Pattern, and methodology knowledge base. Requires forgeplan CLI + Orchestra MCP server. v1.5.0: /sync field-write path fixed — the non-existent set_fields replaced by update_entity, fields passed as {fieldUid, value} with UIDs resolved via list_fields, create_entity moved to the entities[] form (marketplace#208). v1.6.0: read-before-act on task chats, Blocked as a Status (never a phase), checklists from acceptance criteria + a Done-with-open-items report, Artifact backfill from task names with per-row confirmation, pinned workspace UIDs, orphans reported never deleted (marketplace#210). v1.6.1: tool names written bare (query_entities, not mcp__orch__query_entities) — the prefix is Claude Code's spelling and OMP uses one underscore, so a prefixed name makes an agent report a connected server as missing (marketplace#212).",
-      "version": "1.7.0",
+      "version": "1.8.0",
       "author": {
         "name": "ForgePlan"
       },
@@ -266,7 +266,7 @@
         "claude-code"
       ],
       "description": "Brownfield extraction pack: 12 extraction skills + 2 playbooks + 3 integrations + 5 mappings (c4, ddd, madr, obsidian, autoresearch) + templates + examples. Two-tier extraction (Factum vs Intent) with confidence taxonomy and ADI cycle. v1.5.1: docs - discover_finding workaround references updated now that forgeplan#292 is resolved (SCAFFOLDING Anomaly #14 obsolete on forgeplan v0.32+; JSON examples carry session_status + artifact_status alongside the deprecated legacy status) (marketplace#86). v1.4.0: Sprint V (PRD-048) — discover agent migrated from standalone to plugin (canonical Profile A pattern, MCP-first 7-phase procedure, 9 brownfield MCP primitives wired).",
-      "version": "1.5.1",
+      "version": "1.6.0",
       "author": {
         "name": "ForgePlan"
       },
@@ -497,7 +497,7 @@
         "claude-code"
       ],
       "description": "CANVAS design-system→code methodology: canvas-coordinator master dispatches the Capture → Audit → Norm-check → Vectorize → Assemble native single-framework pipeline with a blocking generator≠verifier gate at every stage and a fail-closed tokens-before-code PreToolUse hook-gate (instance of the AD/AID-PDLC sub-cycle contract, ADR-010; hook-gate=Yes per the ADR-012 test). Implements RFC-021: master + 7 role agents (canvas-designer/-guardian/-tester/-porter-storybook/-coder/-porter-framework + the independent canvas-storybook-validator) + 6 skills + /canvas-init/-audit/-review/-rule + canvas-gate (permissionDecision:deny, exit2 fail-closed) reading a per-branch tokens-active state file. Topology: native single-framework — CANVAS generates in the project's one declared framework (resolved via Step 0; Lit/Web-Components is one selectable target, not canonical); tokens via the project's token tool (Style-Dictionary is one option); an optional multi-framework wrapper path is out-of-default (ADR-016). Requires the Pencil MCP.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": {
         "name": "ForgePlan"
       },
@@ -597,7 +597,7 @@
         "claude-code"
       ],
       "description": "Slop cop for text — detects AI slop and humanizes it in Russian and English. Skills humanizer-ru (54 patterns + HARD BANS + fact-lock + a deterministic 0-100 scanner) and slop-humanizer (EN de-slop), commands /slop-audit (read-only detection) and /slop-humanize (rewrite with language auto-routing), a hook-triggered slop-cop reviewer agent, and a PostToolUse prose hint. Use when humanizing text, removing AI tells, or auditing prose before publishing. Design/animation slop is out of scope by design (split from antislop).",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": {
         "name": "ForgePlan"
       },

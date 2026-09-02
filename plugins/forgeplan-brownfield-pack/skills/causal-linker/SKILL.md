@@ -1,6 +1,6 @@
 ---
 name: causal-linker
-description: "Maps actions, events, and side-effects into causal chains. Builds "X causes Y" relations across the codebase. Triggers — \"extract causal linker\", \"brownfield causal linker\", \"/causal-linker\"."
+description: 'Maps actions, events, and side-effects into causal chains. Builds "X causes Y" relations across the codebase. Triggers — "extract causal linker", "brownfield causal linker", "/causal-linker".'
 disable-model-invocation: true
 ---
 

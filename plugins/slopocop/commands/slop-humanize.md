@@ -1,6 +1,6 @@
 ---
 name: slop-humanize
-description: Humanize text — strip AI slop and rewrite in a specific human voice. Auto-detects Russian vs English and routes to the right skill (humanizer-ru or slop-humanizer). Honors a fact-lock: never invents numbers, dates, or citations. Optional tone argument casual/professional.
+description: 'Humanize text — strip AI slop and rewrite in a specific human voice. Auto-detects Russian vs English and routes to the right skill (humanizer-ru or slop-humanizer). Honors a fact-lock: never invents numbers, dates, or citations. Optional tone argument casual/professional.'
 ---
 
 # Slop Humanize Command
