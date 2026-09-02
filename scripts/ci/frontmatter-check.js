@@ -48,11 +48,16 @@ const path = require('path');
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const PLUGINS = path.join(REPO_ROOT, 'plugins');
 
-/** Files that legitimately carry no frontmatter — prose docs that happen to live in agents/. */
-const NO_FRONTMATTER_OK = new Set([
-  'forgeplan-brownfield-pack/agents/discover/README.md',
-  'forgeplan-brownfield-pack/agents/discover/SCAFFOLDING.md',
-]);
+/**
+ * Files that legitimately carry no frontmatter — prose docs that happen to live in agents/.
+ *
+ * Currently empty, and that is the point. It used to hold the two brownfield-pack docs
+ * (`agents/discover/README.md`, `SCAFFOLDING.md`); they were moved to `docs/discover/` in
+ * marketplace#246, because a doc sitting in `agents/` is a doc the official
+ * `claude plugin validate` insists on treating as an agent — the exemption bought silence here at
+ * the cost of the whole plugin failing `--strict`. Move the file rather than add a row.
+ */
+const NO_FRONTMATTER_OK = new Set([]);
 
 const problems = [];
 let checked = 0;

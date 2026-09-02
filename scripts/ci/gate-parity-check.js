@@ -16,8 +16,12 @@
  * to the script, reported ALL PASSED locally, and were absent from CI until this gate was
  * written.
  *
- * Both files are parsed for `scripts/ci/<name>.js` references. The comparison is on the set
- * of gate script names, so ordering and label wording are free to differ.
+ * Both files are parsed for `scripts/ci/<name>` references. The comparison is on the set of gate
+ * script names, so ordering and label wording are free to differ.
+ *
+ * Shell gates count too. The first version matched only `.js`, so a `.sh` gate could be wired into
+ * one list and forgotten in the other — the exact hole this checker exists to close, left open in
+ * its own pattern. Surfaced when `official-plugin-validate.sh` was added (marketplace#245).
  *
  * A third source is checked too: every gate that exists on disk in scripts/ci/ must appear
  * in both lists, so a newly written gate cannot sit unwired in either.
@@ -48,15 +52,15 @@ function gatesIn(file, label) {
   if (!fs.existsSync(file)) fail([`${label} not found at ${path.relative(REPO_ROOT, file)}`]);
   const text = fs.readFileSync(file, 'utf8');
   const found = new Set();
-  // matches: scripts/ci/foo.js  and  "$CI_DIR/foo.js"
-  for (const m of text.matchAll(/(?:scripts\/ci|\$CI_DIR|\$\{CI_DIR\})\/([A-Za-z0-9._-]+\.js)/g)) {
+  // matches: scripts/ci/foo.js  and  "$CI_DIR/foo.sh"
+  for (const m of text.matchAll(/(?:scripts\/ci|\$CI_DIR|\$\{CI_DIR\})\/([A-Za-z0-9._-]+\.(?:js|sh))/g)) {
     found.add(m[1]);
   }
   return found;
 }
 
 const onDisk = new Set(
-  fs.readdirSync(CI_DIR).filter((f) => f.endsWith('.js') && f !== SELF)
+  fs.readdirSync(CI_DIR).filter((f) => /\.(js|sh)$/.test(f) && f !== SELF)
 );
 
 const inWorkflow = gatesIn(WORKFLOW, 'CI workflow');

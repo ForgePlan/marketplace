@@ -45,17 +45,21 @@ jobs:
           done
           [ $errors -eq 0 ] || exit 1
 
-      - name: Check v2 optional fields
-        run: |
-          for f in plugins/*/.claude-plugin/plugin.json; do
-            [ -f "$f" ] || continue
-            plugin=$(dirname "$(dirname "$f")")
-            name=$(basename "$plugin")
-            category=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1])).get('category',''))" "$f" 2>/dev/null || true)
-            [ -z "$category" ] && echo "INFO: $name — no 'category' field (v2 schema)"
-            has_components=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print('yes' if 'components' in d else 'no')" "$f" 2>/dev/null || true)
-            [ "$has_components" = "yes" ] && echo "OK: $name — v2 components field present"
-          done
+      # REMOVED — "Check v2 optional fields" (marketplace#246).
+      #
+      # It reported whether each plugin.json carried `category` and `components`. Both fields have
+      # since been established as NOT belonging there: `category` lives in the marketplace entry,
+      # `components` was a descriptive duplicate of the directory contents that nothing read. Their
+      # absence is now the correct state, so the step printed 23 INFO lines about a healthy tree.
+      #
+      # It also carried a latent failure. Its last statement was `[ "$has_components" = "yes" ] &&
+      # echo ...`, and the job shell runs with `-e`. While every manifest still had `components`
+      # the test was true and the step exited 0; the moment the field was removed everywhere, the
+      # final compound returned non-zero and killed the step — a green check that depended on the
+      # thing it was reporting on being present.
+      #
+      # Superseded by the `official-plugin-validate` gate below, which runs the runtime's own
+      # `claude plugin validate --strict` and knows the real manifest schema.
 
       - name: Check command collisions
         run: |
@@ -178,6 +182,18 @@ jobs:
           [ "$found" -eq 0 ] && echo "No plugin test suites found (skipped)"
           [ "$errors" -eq 0 ] || exit 1
 
+      # The `official-plugin-validate` gate below runs the runtime's OWN manifest validator. It
+      # is not on the runner by default, and without it the gate reports SKIPPED — honest, but it
+      # would mean the one check that knows the real schema never runs on a PR from someone who
+      # did not run scripts/validate-all-plugins.sh first. That is exactly the case #245 was filed
+      # for: the first external PR arrived with a manifest problem our own gates could not see.
+      #
+      # continue-on-error so a registry hiccup degrades the gate to SKIPPED instead of failing the
+      # build for a reason that has nothing to do with the change under review.
+      - name: Install the Claude Code CLI (for the official manifest validator)
+        continue-on-error: true
+        run: npm install -g @anthropic-ai/claude-code
+
       - name: CI security + integrity gates (scripts/ci)
         run: |
           # The gates are Node scripts (Node >= 18). ubuntu-latest ships Node;
@@ -218,5 +234,8 @@ jobs:
           run_gate "frontmatter-check"            node scripts/ci/frontmatter-check.js
           run_gate "phase-canon-check"            node scripts/ci/phase-canon-check.js
           run_gate "verdict-axis-check"           node scripts/ci/verdict-axis-check.js
+          # Runs the runtime's OWN validator, not ours. Skips loudly (exit 0) when the `claude`
+          # CLI is absent — the log then says SKIPPED rather than reporting a pass that never ran.
+          run_gate "official-plugin-validate"     bash scripts/ci/official-plugin-validate.sh
           run_gate "gate-parity-check"            node scripts/ci/gate-parity-check.js
           [ "$errors" -eq 0 ] || exit 1

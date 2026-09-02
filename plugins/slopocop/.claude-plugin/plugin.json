@@ -1,6 +1,6 @@
 {
   "name": "slopocop",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Slop cop for text — detects AI slop and humanizes it in Russian and English. Two knowledge-base skills (humanizer-ru: 54 patterns + hard bans + fact-lock + a deterministic 0-100 scanner; slop-humanizer: EN de-slop synthesized from 5 humanizer repos), two commands (/slop-audit read-only detection, /slop-humanize full rewrite with language auto-routing), a hook-triggered slop-cop reviewer agent, and a PostToolUse hint on text files. Use when humanizing text, removing AI tells, de-slopping, or auditing prose before publishing. Design/animation slop is out of scope by design (split from antislop).",
   "author": {
     "name": "ForgePlan"
@@ -17,17 +17,5 @@
     "english",
     "detection",
     "writing"
-  ],
-  "category": "quality",
-  "requires": {
-    "cli": [],
-    "mcp": [],
-    "plugins": []
-  },
-  "supersedes": {},
-  "components": {
-    "commands": ["slop-audit", "slop-humanize"],
-    "agents": ["slop-cop"],
-    "skills": ["humanizer-ru", "slop-humanizer"]
-  }
+  ]
 }

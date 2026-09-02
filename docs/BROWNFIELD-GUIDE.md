@@ -92,7 +92,7 @@ The 7 phases run in sequence (canon — never skip ahead to docs):
 The discover agent closes its session with `forgeplan_discover_complete`, then emits `<<NEEDS_ACTIVATION: ARTIFACT-ID>>` sentinels for every draft artifact so the orchestrator activates them. After that, your `forgeplan health` reflects an actual map of the repo, and downstream agents (architect-reviewer, ddd-domain-expert, security-expert) can route off it.
 
 > [!TIP]
-> For repos >100K LOC, dispatch the agent in `--deep` mode; for >2M LOC or business-critical, in `--full` mode (pass the mode in the dispatch prompt, e.g. `prompt="Run discovery in --deep mode against this repo"`). Both add deepening passes that fan out parallel sub-agents per module RFC. Note: as of the v1 plugin, `--deep`/`--full` fall back to Pass 1 behavior — see the [Discover Agent README](../plugins/forgeplan-brownfield-pack/agents/discover/README.md) for mode details.
+> For repos >100K LOC, dispatch the agent in `--deep` mode; for >2M LOC or business-critical, in `--full` mode (pass the mode in the dispatch prompt, e.g. `prompt="Run discovery in --deep mode against this repo"`). Both add deepening passes that fan out parallel sub-agents per module RFC. Note: as of the v1 plugin, `--deep`/`--full` fall back to Pass 1 behavior — see the [Discover Agent README](../plugins/forgeplan-brownfield-pack/docs/discover/README.md) for mode details.
 
 ## Step 3 — Common brownfield situations + how to handle them
 

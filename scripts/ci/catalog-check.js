@@ -104,10 +104,11 @@ const FORGEPLAN_AWARE_PATTERN = /disallowedTools/;
  * published count silently omitted `forgeplan-brownfield-pack:discover`, a real, dispatched,
  * denylisted agent. The numbers were not drifting — the counter simply could not see it.
  *
- * Descending needs a second rule, because that same directory holds prose: `discover/README.md`
- * and `discover/SCAFFOLDING.md` are documentation, not agents, and counting them would have
- * inflated the total to 97. An agent is a file whose frontmatter declares `name:` — the same thing
- * that makes it loadable at runtime.
+ * Descending needs a second rule, because that directory used to hold prose alongside the agent:
+ * `discover/README.md` and `discover/SCAFFOLDING.md` were documentation, not agents, and counting
+ * them inflated the total to 97. They now live in `docs/discover/` (marketplace#246), but the rule
+ * stays — an agent is a file whose frontmatter declares `name:`, the same thing that makes it
+ * loadable at runtime. Structure, not a filename list, is what keeps the count honest.
  *
  * Returns paths relative to the agents dir so callers can read them.
  */
