@@ -15,7 +15,7 @@
  * `allowed-tools` (the tool restriction), `disable-model-invocation` (explicit-only). The file
  * still ships, still validates as a file, and silently does nothing it advertises.
  *
- * When this gate was written, 16 of 213 shipped files were in that state, including 9 skills of
+ * When this gate was written, 16 of 212 shipped files were in that state, including 9 skills of
  * the flagship plugin — `/riper`, `/team`, `/do`, `/setup`, `/spec-author`. Four of them carried
  * `disable-model-invocation: true`, which was being dropped, so skills meant to be explicit-only
  * were model-invocable. Nothing reported it: the existing checks assert SKILL.md *exists*, and
@@ -33,8 +33,8 @@
  *
  * NOT A YAML PARSER — deliberately. It detects the failure classes that actually bite and stays
  * dependency-free, matching the other gates in this directory. It was cross-checked against a
- * real YAML parser over all 213 shipped files: same verdict on every one. If that ever diverges,
- * the parser is right and this file is wrong.
+ * real YAML parser over all 210 shipped files that carry frontmatter: same verdict on every one,
+ * no false positives and no misses. If that ever diverges, the parser is right and this is wrong.
  *
  * The corollary is a rule, not a limitation: frontmatter that needs a full YAML engine to read is
  * frontmatter that is too clever. Keep it flat.

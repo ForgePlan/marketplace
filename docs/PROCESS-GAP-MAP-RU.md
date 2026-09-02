@@ -232,7 +232,7 @@ story mapping, impact mapping, Wardley mapping, opportunity solution tree.
 
 | Заявлено | Где | На диске |
 |---|---|---|
-| «41 marketplace-aware agents (94 total)» | `README.md:11`, `CLAUDE.md:6` | **95 агентов, 42 с денилистом** (см. §5.1) |
+| «41 marketplace-aware agents (94 total)» | `README.md:11`, `README-RU.md:11`, `CLAUDE.md:6` | **95 агентов, 42 с денилистом** (см. §5.1) |
 | «37 карточек методологий» | `docs/METHODOLOGIES.md:251`, `:283` | **31** |
 | «29 карточек» | `routing-map.md:405` (свой же футер) | **31** |
 | «fpl-skills skills (40)» | `docs/INDEX.md:89`, `:43` | **41** |

@@ -624,10 +624,19 @@ Reference: PROB-002, RFC-011 (FR-3), ADR-009. Related: Claude Code issue [#44035
 
 ## Version Bumping
 
-When a plugin changes, bump version in two places:
+When a plugin changes, four things move — miss any one and the release does not reach users:
 
 1. `plugins/X/.claude-plugin/plugin.json` → `version`
-2. `.claude-plugin/marketplace.json` → the corresponding plugin's `version`
+2. `.claude-plugin/marketplace.json` → that plugin's `version`
+3. `.claude-plugin/marketplace.json` → `metadata.version` — **the cache-invalidation key**
+4. `.omp-plugin/marketplace.json` → regenerate with `node scripts/gen-omp-catalog.js`
+
+Step 3 is the one that gets forgotten and the one that decides whether anything ships. The plugin
+cache is keyed by version in its path (`cache/<marketplace>/<plugin>/<version>/`), and
+`/plugin marketplace update` has nothing to notice without a catalog bump — so a perfectly correct
+fix sits in the repository and reaches nobody. This section used to list only steps 1 and 2, while
+the "Plugin cache troubleshooting" section below said the opposite; #248 is where that
+contradiction cost a release cycle.
 
 | Change | Bump |
 |-----------|------|
@@ -698,7 +707,7 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # rulesets
 
 ---
 
-## Plugin versions (catalog v1.138.0)
+## Plugin versions (catalog v1.139.0)
 
 ### Workflow plugins
 
@@ -717,7 +726,7 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # rulesets
 | **forgeplan-map-pack** | **0.20.0** (denylists are Claude Code-only — `disallowedTools` appears zero times in the OMP binary, so the activate invariant now lives in the agent bodies where it travels (marketplace#218) — 6 of its 8 agents were relying on the denylist alone) |
 | **slopocop** | 1.1.0 (манифест не отбраковывается на 2.1.257 + `/slop-humanize` снова грузится с метаданными — marketplace#242, #244. text anti-slop — humanizer-ru + slop-humanizer + /slop-audit + /slop-humanize + slop-cop agent) |
 | **slopocop-design** | 1.0.0 (design anti-slop — hallmark + frontend-design + design-taste + /design-audit + /design-redesign + design-cop agent) |
-| **slopocop-code** | 1.3.0 (code anti-slop — deterministic 0-100 scanner [JS/TS/Py/Go/Rust/Java/PHP, regex/heuristic dependency-free, per-language idioms] + code-slop skill + /code-audit + /code-deslop + code-slop-cop agent; v1.1.0-1.2.0 dogfood-fixed 3 scanner false positives; v1.3.0 +Java +PHP) |
+| **slopocop-code** | 1.3.1 (code anti-slop — deterministic 0-100 scanner [JS/TS/Py/Go/Rust/Java/PHP, regex/heuristic dependency-free, per-language idioms] + code-slop skill + /code-audit + /code-deslop + code-slop-cop agent; v1.1.0-1.2.0 dogfood-fixed 3 scanner false positives; v1.3.0 +Java +PHP) |
 | **dev-toolkit** | 1.7.0 (манифест не отбраковывается на Claude Code 2.1.257 — убран `components.hooks`, marketplace#242) |
 
 ### Agent packs
@@ -731,7 +740,7 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # rulesets
 | **agents-sparc** | **1.4.2** (dropped the word "ALL" from the sparc-orchestrator phase-agent row — four of those agents ship inside agents-sparc itself, marketplace#215; denylists are Claude Code-only — `disallowedTools` appears zero times in the OMP binary, so the activate invariant now lives in the agent bodies where it travels (marketplace#218)) | SPARC instance #3 (RFC-016) — sparc-orchestrator → B-orchestrator + /sparc skill |
 | **agents-tdd** | 0.3.0 | TDD instance #1 (RFC-012) — tdd-orchestrator + RED/GREEN agents + tdd-test-validator + fail-closed gate |
 | **agents-bmad** | 0.3.0 | BMAD instance #2 (RFC-013) — bmad-orchestrator persona-walk + no-code-before-plan gate |
-| **agents-canvas** | **1.1.0** (три команды `/canvas-*` снова грузятся с метаданными — marketplace#244. | CANVAS instance #5 (RFC-021 + RFC-022/ADR-015) — canvas-coordinator design→code master + tokens-before-code hook-gate + 7 role agents (incl. canvas-storybook-validator). **v1.0.0 STACK-AGNOSTIC (breaking)** — native single-framework generation; engine/framework/design-source/language = inputs resolved via Step 0 (detect → announce / force-ask); Lit/Web-Components + Spread/wrappers demoted to an optional out-of-default multi-framework path (ADR-016); Style-Dictionary one token-tool option; context7 mandatory; острый gate hardened for native layouts (per-framework guarded globs + state-schema migration + fail-safe stale-state substitution, canvas-gate.sh mechanism unchanged). **brand/style-agnostic** (designer Step 0 chooses + records the brand); v0.3.0 gate hardening — vision-first visual verdict, console-error gate, font-load assertion, data-state/interaction oracles, missing-master PROBLEM loop, master-anatomy completeness, coordinator-verified (optional-path) framework-porter ownership |
+| **agents-canvas** | **1.1.0** (три команды `/canvas-*` снова грузятся с метаданными — marketplace#244) | CANVAS instance #5 (RFC-021 + RFC-022/ADR-015) — canvas-coordinator design→code master + tokens-before-code hook-gate + 7 role agents (incl. canvas-storybook-validator). **v1.0.0 STACK-AGNOSTIC (breaking)** — native single-framework generation; engine/framework/design-source/language = inputs resolved via Step 0 (detect → announce / force-ask); Lit/Web-Components + Spread/wrappers demoted to an optional out-of-default multi-framework path (ADR-016); Style-Dictionary one token-tool option; context7 mandatory; острый gate hardened for native layouts (per-framework guarded globs + state-schema migration + fail-safe stale-state substitution, canvas-gate.sh mechanism unchanged). **brand/style-agnostic** (designer Step 0 chooses + records the brand); v0.3.0 gate hardening — vision-first visual verdict, console-error gate, font-load assertion, data-state/interaction oracles, missing-master PROBLEM loop, master-anatomy completeness, coordinator-verified (optional-path) framework-porter ownership |
 
 > Source of truth: `.claude-plugin/marketplace.json` and `plugins/*/.claude-plugin/plugin.json`. Always verify before PR.
 
