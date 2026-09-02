@@ -186,7 +186,7 @@ disallowedTools: Write, Edit, NotebookEdit, mcp__forgeplan__forgeplan_activate, 
 1. **Never** use `Write`/`Edit` on `.forgeplan/<kind>/`. Use MCP.
 2. **Never** call `forgeplan_reason`, `forgeplan_activate`, `forgeplan_claims`, or `memory_retain`. Whitelist forbids them; any attempt indicates an agent design flaw.
 3. **Always** identity-tag `claim`/`release` with `claude-code/<ver>/<agent-name>-task-<id>`.
-4. **Always** put the verdict (PASS / CONCERNS / BLOCKER) in the EVID body, not just in the orchestrator handoff. The handoff is a summary; the EVID is the audit record.
+4. **Always** put both verdicts in the EVID body, not just in the orchestrator handoff — the handoff is a summary, the EVID is the audit record. Two fields, two axes: `verdict` takes the evidence vocabulary (`supports` / `weakens` / `refutes`), `review_verdict` takes PASS / CONCERNS / BLOCKER. Putting a review word in `verdict` does not fail loudly — the scorer reads it as *supports*. See Step 9b.1.
 5. **Always** label Step 5 of the procedure as "mental reasoning, NOT `forgeplan_reason`". Profile B never calls ADI — that's Profile A's contract.
 6. **Never** fake-pass when a scanner / runner / linter is missing. Report it as CONCERNS with "tool unavailable", not PASS.
 7. **Always** include `file:line` (or test name) reference for every finding. No vague "somewhere in the auth module".
@@ -891,7 +891,7 @@ The parser MUST check `^...` (start of line) anchoring. This prevents false posi
 If the same subagent emits ask-back for the same question 2 times in a row in the same session, the orchestrator MUST:
 
 1. Apply `default_if_no_answer` (if present) or skip the phase with a documented warning
-2. Record an EVIDENCE artifact with `verdict=CONCERNS` noting "Anti-loop guard triggered for {agent}: {question}"
+2. Record an EVIDENCE artifact with `verdict=weakens` + `review_verdict=CONCERNS` noting "Anti-loop guard triggered for {agent}: {question}" (two axes — Step 9b.1)
 3. Continue — never block the pipeline indefinitely
 
 ### What the subagent does NOT do
@@ -988,54 +988,80 @@ Step 9b — Emit NEEDS_ACTIVATION sentinel
 
 ---
 
-## Profile B Step 9b.1 — EVID body MUST use markdown bold-pattern, NOT YAML frontmatter (Sprint L — PRD-038, Anomaly #17)
+## Profile B Step 9b.1 — the EVID verdict fields: two axes, two vocabularies (Sprint L Anomaly #17 + marketplace#251)
 
-The forgeplan EVID body parser reads `congruence_level`, `verdict`, and `evidence_type` **only** from markdown bold-pattern lines inside the body. **YAML frontmatter fields with the same names are silently ignored by the scoring engine.**
+### The mistake this section exists to prevent
 
-### Verified parsing pattern
+`verdict` is an **evidence** field. It answers *what this evidence does to confidence in the parent*:
 
-The parser looks for these EXACT patterns (case-sensitive, leading `**` required):
+```
+supports · weakens · refutes        (+ contradicts in the binary)
+```
+
+A reviewer's PASS / CONCERNS / BLOCKER is a **different axis** — *how ready the work is*. Both are real, neither substitutes for the other, and they get separate fields:
+
+| Field | Axis | Values |
+|---|---|---|
+| `verdict` | what this evidence does to trust in the parent | `supports` · `weakens` · `refutes` |
+| `review_verdict` | how ready the reviewed work is | `PASS` · `CONCERNS` · `BLOCKER` (suffixed forms like `PASS-WITH-NITS` are fine here — this field is free-form) |
+
+An audit that found defects is **CONCERNS** on the review axis and **weakens** on the evidence axis. Write both.
+
+**This section previously told you `Verdict` accepts PASS / CONCERNS / BLOCKER.** Thirteen EVID bodies followed that instruction and put review vocabulary in the evidence field (marketplace#251). The agents were not careless; the guide was wrong.
+
+### Why the failure is worse than an empty field
+
+An off-vocabulary value does **not** leave `verdict` blank. Measured on the live graph 2026-09-03: `EVID-041` carried only `verdict: PASS` and `forgeplan_score` reported it as `[Supports] CL3 = 1.0`. The scoring engine resolved an unrecognised value to *support*.
+
+So a reviewer who meant **weakens** and typed **CONCERNS** does not get a validation error and does not get a zero — the artifact silently counts as evidence FOR the thing it was warning about. Nothing surfaces it: `forgeplan validate` raises no MUST on this field.
+
+### Where the fields go
+
+Put them in the **body**. YAML frontmatter fields with these names are ignored by the scoring engine — that is the original Anomaly #17 (confirmed 2026-05-20, PRD-038): frontmatter-only bodies score `congruence_level: 0` and cap R_eff near 0.10, which reads as a quality problem and is actually a parsing mismatch.
+
+Inside the body, both the plain-key and the bold form are read. The canon writes **both**, matching the working examples (`EVID-205`, `EVID-207`):
 
 ```markdown
-**Verdict**: PASS
+## Structured Fields
+
+evidence_type: code_review
+verdict: weakens
+review_verdict: CONCERNS
+
+**Verdict**: weakens
+**Review verdict**: CONCERNS
+congruence_level: 3
 
 **Congruence level**: 3
-
-**Evidence type**: artifact_inspection
 ```
 
-- `Verdict` accepts: `PASS` / `CONCERNS` / `BLOCKER`
-- `Congruence level` accepts: integer 0..3 (NOT "low"/"medium"/"high" — those map to 0)
-- `Evidence type` accepts: free-text identifier (`artifact_inspection`, `live_verification`, `code_review`, `test_run`, etc.)
+- `Congruence level` accepts integer 0..3 — NOT `low`/`medium`/`high`, those map to 0
+- `Evidence type` is a free-text identifier (`artifact_inspection`, `live_verification`, `code_review`, `test_run`, …)
 
-### Failure mode (Anomaly #17 — confirmed 2026-05-20 PRD-038)
+### Never write two `verdict:` keys
 
-Writing these as YAML frontmatter fields like:
+The 13 broken bodies all had the same shape: a `## Structured Fields` block with the right value and a second legacy block repeating `verdict:` with review vocabulary. One key, one value. If you need to quote a verdict inside pasted tool output, leave it inside a fenced block — the parser skips fences and the quoted log stays truthful.
 
-```yaml
----
-verdict: PASS
-congruence_level: high
-evidence_type: artifact_inspection
----
-```
-
-→ silently fails. `forgeplan_score` reports `congruence_level: 0`, R_eff capped at ~0.10. Looks like a quality problem when it's actually a parsing mismatch.
-
-### Mitigation
-
-**Always include the markdown bold-pattern block** as the first content block after the title — even if you also include a YAML frontmatter (which is harmless but redundant). The reference template:
+### Reference template
 
 ```markdown
 # EVID-XXX: <title>
 
+## Structured Fields
+
+evidence_type: <artifact_inspection | live_verification | code_review | test_run | manual_qa>
+verdict: <supports | weakens | refutes>
+review_verdict: <PASS | CONCERNS | BLOCKER>
+
+**Verdict**: <same as above>
+**Review verdict**: <same as above>
+congruence_level: 3
+
+**Congruence level**: 3 (<what was directly observed: live tool invocation / structured output / cross-system verification>)
+
 ## Verdict
 
-**Verdict**: PASS — <one-sentence justification>
-
-- **Congruence level**: 3 (<what was directly observed: live tool invocation / structured output / cross-system verification>)
-- **Evidence type**: <artifact_inspection | live_verification | code_review | test_run | manual_qa>
-- **Method**: <how the evidence was gathered — inline orchestrator / sub-agent dispatch / external system query>
+<one-sentence justification, naming both axes if they diverge>
 ```
 
 This is the canonical EVID-063 / EVID-064 / EVID-060 body shape. Copy-paste from those references when in doubt.

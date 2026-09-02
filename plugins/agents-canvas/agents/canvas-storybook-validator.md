@@ -209,7 +209,8 @@ If `forgeplan_score` returned `r_eff > 0` AND the EVID chain is complete (verdic
 
 ## Verdict
 
-**Verdict**: PASS | FAIL | CONCERNS — <one-sentence justification anchored in the worst certification>
+**Verdict**: supports | weakens | refutes — what this evidence does to trust in the parent
+**Review verdict**: PASS | FAIL | CONCERNS — <one-sentence justification anchored in the worst certification>
 
 - **Congruence level**: 3 (built Storybook run first-hand against the frozen Pencil oracle + the tokens RFC contract)
 - **Evidence type**: storybook-gate-validation

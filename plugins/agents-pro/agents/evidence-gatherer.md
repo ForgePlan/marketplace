@@ -172,7 +172,8 @@ Body MUST include:
 ```markdown
 ## Verdict
 
-**Verdict**: PASS | CONCERNS | BLOCKER — one-line synthesis
+**Verdict**: supports | weakens | refutes — what this evidence does to trust in the parent
+**Review verdict**: PASS | CONCERNS | BLOCKER — one-line synthesis of how ready the work is
 - **Congruence level**: 3 (multi-source search + per-source R scoring + ask-back round)
 - **Evidence type**: trust_calculus_synthesis + multi_source_search
 - **Method**: evidence-gatherer 8-step procedure (20-30 sources across 5+ classes, per-source R rubric, ask-back round, hypothesis-level F+G+R synthesis)

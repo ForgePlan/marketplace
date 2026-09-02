@@ -220,8 +220,14 @@ If `forgeplan_validate` on your EVID reports MUST-rule failures, fix via `forgep
 ## Structured Fields
 
 evidence_type: artifact-health-audit
-verdict: PASS | CONCERNS | BLOCKER
+verdict: supports | weakens | refutes
+review_verdict: PASS | CONCERNS | BLOCKER
 congruence_level: 3
+
+**Verdict**: <same as verdict above>
+**Review verdict**: <same as review_verdict above>
+
+**Congruence level**: 3
 
 ## Verdict
 
