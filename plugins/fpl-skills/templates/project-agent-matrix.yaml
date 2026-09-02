@@ -6,7 +6,7 @@
 # -------------------
 # When `/forge-cycle` or `/autorun` runs in this project, it reads this file
 # (PRD-026 FR-041, Phase 6 work) to decide which agent to dispatch for each
-# pipeline phase. Without this file, the orchestrator falls back to the
+# pipeline stage. Without this file, the orchestrator falls back to the
 # hardcoded canonical defaults from RFC-003 Layer 2.
 #
 # WHERE THIS FILE LIVES
@@ -15,15 +15,15 @@
 #
 # HOW DISPATCH WORKS
 # ------------------
-# For each pipeline phase, the orchestrator:
+# For each pipeline stage, the orchestrator:
 #   1. Reads `phase_dispatch.<phase>.primary`
 #   2. If it starts with `.claude/agents/...` it dispatches the project-scoped
 #      agent (per FR-047 fallback chain: project-scoped wins over marketplace)
 #   3. Otherwise it dispatches the marketplace agent (e.g. `agents-pro:guardian`)
 #   4. If primary is unavailable, it falls back to `secondary`
-#   5. If `parallel` is set (audit phase), it spawns all listed agents at once
+#   5. If `parallel` is set (audit stage), it spawns all listed agents at once
 #      and merges their EVIDENCE artifacts
-#   6. `depth_filter` gates the phase: e.g. `deep+` means the phase only fires
+#   6. `depth_filter` gates the stage: e.g. `deep+` means the stage only fires
 #      for Deep or Critical depth tasks; Tactical/Standard skip it.
 #
 # OVERRIDE PATTERN (project-scoped customisation)
@@ -45,14 +45,14 @@
 #
 # SENTINELS (special values, not agent IDs)
 # -----------------------------------------
-# `inline`         — orchestrator handles this phase directly; no agent dispatched
-# `inline-merger`  — primary for `audit` phase; orchestrator merges parallel verdicts
+# `inline`         — orchestrator handles this stage directly; no agent dispatched
+# `inline-merger`  — primary for `audit` stage; orchestrator merges parallel verdicts
 # `none`           — methodology value when no formal methodology applies
 #
 # DEPTH FILTER VALUES
 # -------------------
-# `all`            — phase fires for every depth (Tactical → Critical)
-# `tactical-only`  — phase fires only for Tactical (rare; not currently used)
+# `all`            — stage fires for every depth (Tactical → Critical)
+# `tactical-only`  — stage fires only for Tactical (rare; not currently used)
 # `standard+`      — Standard, Deep, Critical
 # `deep+`          — Deep, Critical only
 # `critical-only`  — Critical only
@@ -98,22 +98,38 @@ language: typescript     # typescript | python | go | rust | java | swift | kotl
 # -----------------------------------------------------------------------------
 # phase_dispatch — the load-bearing section
 # -----------------------------------------------------------------------------
-# Maps each canonical pipeline phase (RFC-002 + PRD-024, 11 phases) to:
+# Maps each canonical pipeline stage (RFC-002 + PRD-024, 11 stages) to:
 #   primary       — main agent to dispatch (project-scoped or marketplace ref)
-#   methodology   — which methodology drives this phase (FPF ADI / SPARC / BMAD / none)
+#   methodology   — which methodology drives this stage (FPF ADI / SPARC / BMAD / none)
 #   secondary     — fallback agent when primary is unavailable
-#   parallel      — list of agents for parallel dispatch (audit phase only)
-#   depth_filter  — optional: which depths invoke this phase
+#   parallel      — list of agents for parallel dispatch (audit stage only)
+#   depth_filter  — optional: which depths invoke this stage
 #                   values: `all` (default), `standard+`, `deep+`, `critical-only`
 #
-# The 11 canonical phases are:
+# The 11 canonical stages are:
 #   brief → shape → decompose → design → estimate → gate → build → audit
 #         → evidence → activate → wrap
+#
+# THIS FILE IS THE CARRIER OF THAT LIST (ADR-022)
+# -----------------------------------------------
+# The stage count is DERIVED from the keys below, never restated by hand.
+# `scripts/ci/phase-canon-check.js` reads them and fails CI on any shipped
+# document that states a different number. If the pipeline really changes, add
+# or remove a key here FIRST and let the documents follow — the other direction
+# is how this repository ended up with an RFC titled "9 phases" over a table
+# listing eleven.
+#
+# Reference a stage by NAME, never by position (INV-5). The numbering that used
+# to sit in these comments is gone for that reason.
+#
+# The key `phase_dispatch` keeps its old name deliberately: orchestrators read
+# that path today, and renaming a consumed key to match the vocabulary would be
+# a breaking change for the benefit of a comment. Read it as "stage dispatch".
 # -----------------------------------------------------------------------------
 
 phase_dispatch:
 
-  # Phase 1: Brief — raw idea becomes a structured Brief NOTE.
+  # Stage `brief` — raw idea becomes a structured Brief NOTE.
   # Profile A creator. Always runs (every depth needs a Brief).
   brief:
     primary: "agents-pro:brief-intake"
@@ -121,7 +137,7 @@ phase_dispatch:
     # No secondary — brief-intake has no marketplace fallback for raw-idea intake.
     depth_filter: all
 
-  # Phase 2: Shape — Brief becomes a PRD.
+  # Stage `shape` — Brief becomes a PRD.
   # Profile A creator. Override below shows how to swap for a project-scoped pm.
   # Example override (uncomment to use):
   #   primary: ".claude/agents/pm.md"
@@ -132,7 +148,7 @@ phase_dispatch:
     secondary: "agents-pro:research-analyst"  # read-only prior-art discovery when specification needs research context
     depth_filter: standard+
 
-  # Phase 3: Decompose — PRD breaks into sibling RFCs / tasks.
+  # Stage `decompose` — PRD breaks into sibling RFCs / tasks.
   # Profile A decomposer. Deep+ only — Tactical/Standard usually don't decompose.
   decompose:
     primary: "agents-pro:goal-planner"
@@ -140,7 +156,7 @@ phase_dispatch:
     secondary: "agents-sparc:specification"
     depth_filter: deep+
 
-  # Phase 4: Design — RFC creation, technical contract.
+  # Stage `design` — RFC creation, technical contract.
   # Profile A creator. Standard+ (Tactical fixes don't need an RFC).
   design:
     primary: "agents-sparc:architecture"
@@ -148,7 +164,7 @@ phase_dispatch:
     secondary: "agents-pro:adr-architect"   # for architectural-decision-heavy RFCs
     depth_filter: standard+
 
-  # Phase 5: Estimate — effort & risk estimation.
+  # Stage `estimate` — effort & risk estimation.
   # No canonical agent yet (PRD-026 Phase 4 carry-forward).
   # Orchestrator falls back to inline estimation until a dedicated agent ships.
   estimate:
@@ -156,7 +172,7 @@ phase_dispatch:
     methodology: "none"
     depth_filter: deep+
 
-  # Phase 6: Gate — pre-build quality gate (PASS / CONCERNS / BLOCKER).
+  # Stage `gate` — pre-build quality gate (PASS / CONCERNS / BLOCKER).
   # Profile B gate-style. Guardian inspects the PRD+RFC chain before any code.
   gate:
     primary: "agents-pro:guardian"
@@ -164,7 +180,7 @@ phase_dispatch:
     secondary: "agents-pro:architect-reviewer"
     depth_filter: standard+
 
-  # Phase 7: Build — code implementation.
+  # Stage `build` — code implementation.
   # Profile C-coder (mutator). Tactical depth uses coder directly without RFC.
   build:
     primary: "agents-core:coder"
@@ -173,7 +189,7 @@ phase_dispatch:
     # (typescript-pro / golang-pro / etc.) live under agents-domain pack.
     depth_filter: all
 
-  # Phase 8: Audit — parallel multi-reviewer pass.
+  # Stage `audit` — parallel multi-reviewer pass.
   # Profile B reviewers run in PARALLEL; each writes its own EVIDENCE artifact.
   # The orchestrator merges verdicts before handing off to `activate`.
   # `primary` is the verdict-merger (orchestrator inline); `parallel` is the fleet.
@@ -186,13 +202,13 @@ phase_dispatch:
       - "agents-core:tester"             # test coverage, flaky tests, results
       - "agents-pro:architect-reviewer"  # single-RFC architectural fitness
       - "agents-pro:system-dev"          # staff/principal blast-radius audit (deep+)
-      # evidence-recorder is NOT in audit fan-out — see `evidence` phase below.
-      # Audit is for specialists with domain scoring; recorder is for non-specialist phases.
+      # evidence-recorder is NOT in audit fan-out — see `evidence` stage below.
+      # Audit is for specialists with domain scoring; recorder is for non-specialist stages.
     depth_filter: standard+
 
-  # Phase 9: Evidence — produced inline by each Profile B reviewer above.
-  # No separate dispatch; this phase is bookkeeping (EVID artifacts are linked).
-  # `evidence-recorder` (Profile B mechanical fallback) is used ONLY when a phase
+  # Stage `evidence` — produced inline by each Profile B reviewer above.
+  # No separate dispatch; this stage is bookkeeping (EVID artifacts are linked).
+  # `evidence-recorder` (Profile B mechanical fallback) is used ONLY when a stage
   # produces non-specialist evidence: manual QA, deployment validation, performance
   # benchmarks, UX session notes, external audits, compliance — see agent body.
   evidence:
@@ -201,7 +217,7 @@ phase_dispatch:
     # No secondary — if evidence-recorder doesn't fit, hand back to orchestrator.
     depth_filter: all
 
-  # Phase 10: Activate — final gate, full-chain inspection, binary verdict.
+  # Stage `activate` — final gate, full-chain inspection, binary verdict.
   # Profile B gate-style. Reads FULL EVID chain. PASS → activate, BLOCKER → halt.
   # Only the orchestrator may call `forgeplan_activate`; guardian only verdicts.
   activate:
@@ -210,7 +226,7 @@ phase_dispatch:
     secondary: "agents-pro:architect-reviewer"
     depth_filter: standard+
 
-  # Phase 11: Wrap — post-activation summary, lessons learned, retro.
+  # Stage `wrap` — post-activation summary, lessons learned, retro.
   # No canonical agent yet — orchestrator inlines a brief summary.
   wrap:
     primary: "inline"   # sentinel — orchestrator handles directly; no agent yet

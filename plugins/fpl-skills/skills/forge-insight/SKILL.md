@@ -35,13 +35,14 @@ This skill is **read-only on the audited tree** (Profile C posture). The one and
 
 This is the single authoritative filter. The `insight-watchdog.sh` hook implements the identical rule in shell+python so its numbers and this skill's always agree (RFC-019 Risk R-2 — one rule, two call sites).
 
-1. **Drop known-noise kinds** — `weakest_link_unresolvable` (all; structural noise per forgeplan#325 — leaf notes/EVIDs with no child evidence score 0) and `phase_mismatch` (all; benign "active but early-cycle phase" advisory).
-2. **Keep severity ∈ {medium, high}.** Low-severity survivors are noise for this digest.
-3. **Rank** high before medium, then most-recent (`observed_at`) first.
-4. **Cap the digest at 5 observations.** (The NOTE-013 ledger has its own cap of 20.)
-5. **Every number comes from the detector payload** — never invent or cache a count (PRD-074 NFR-002 accuracy, zero tolerance).
+1. **Drop `weakest_link_unresolvable` wholesale** — structural noise per forgeplan#325 (leaf notes/EVIDs with no child evidence score 0).
+2. **Drop `phase_mismatch` only when the marker is benign** — `evidence.current_phase ∈ {shape, validate}`. Those are the early-cycle values left on artifacts that were activated without the marker being advanced; ADR-022 DD-5 decided not to backfill them, so they are permanent advisories rather than a backlog. A marker outside that set — or a missing one — is NOT dropped.
+3. **Keep severity ∈ {medium, high}, with one exception.** A `phase_mismatch` that survived rule 2 surfaces at any severity. The detector stamps every `phase_mismatch` `low` (306 of 306 on the live tree, 2026-09-02), so the floor cannot tell benign from non-benign and would hide the only instance worth reading. Label such a finding for what it is: three of register 3's values (`adi`, `test`, `audit`) have no call site anywhere in the tree, so an active artifact carrying one was marked by hand — the ADR-022 INV-1 violation nothing else detects.
+4. **Rank** high before medium, then most-recent (`observed_at`) first.
+5. **Cap the digest at 5 observations.** (The NOTE-013 ledger has its own cap of 20.)
+6. **Every number comes from the detector payload** — never invent or cache a count (PRD-074 NFR-002 accuracy, zero tolerance).
 
-> Caveat (RFC-019 R-3 / PRD-074 Q4): `phase_mismatch` is dropped wholesale because every live instance is the benign advisory. If a non-benign phase combination is ever found, narrow the rule to the benign subset only — a one-line change here and in the hook.
+> The RFC-019 R-3 / PRD-074 Q4 caveat is now spent. It said `phase_mismatch` was dropped wholesale only because every live instance was benign, and to narrow the rule to the benign subset if a non-benign combination was ever found. ADR-022 found the combination as a *reachable* state rather than a live one: register 3 admits markers no code path emits, and nothing looked at the phase field. Rules 2 and 3 are that narrowing. On today's tree they change no output — all 306 instances are benign, and the two medium findings survive either way. The change is a detector that fires the first time a marker is set by hand.
 
 ---
 

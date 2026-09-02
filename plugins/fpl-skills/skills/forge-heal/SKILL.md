@@ -40,10 +40,12 @@ A finding is AUTO **only if BOTH** its detector `suggested_tier == "auto"` **AND
 
 | Kind | AUTO action | Precondition (re-checked at apply) | Rollback (one call) |
 |---|---|---|---|
-| `phase_mismatch` | `forgeplan_phase_advance --to <next>` (record the CURRENT phase into the journal first) | active ∧ early-cycle phase ∧ R_eff>0 | `forgeplan_phase_advance --to <recorded prior phase>` — NOT `undo_last` (it reverses only destructive ops delete/supersede/deprecate; `phase_advance` is additive and writes no undo receipt) |
+| `phase_mismatch` | `forgeplan_phase_advance --to <next>` (record the CURRENT phase into the journal first) | active ∧ early-cycle phase ∧ R_eff>0 ∧ **in scope for this session's work** (INV-3) | `forgeplan_phase_advance --to <recorded prior phase>` — NOT `undo_last` (it reverses only destructive ops delete/supersede/deprecate; `phase_advance` is additive and writes no undo receipt) |
 | `stuck_draft` (complete EVID) | `forgeplan_activate` | verdict ∧ congruence_level>0 ∧ links present ∧ R_eff>0 | `forgeplan_deprecate` → `forgeplan_restore` |
 
 Nothing else is ever AUTO. No AUTO delete, no AUTO content-write, no AUTO link-break a human set.
+
+**The `phase_mismatch` scope bound is not optional** (ADR-022 DD-5 / INV-3). The lifecycle marker records where an artifact actually stopped. Advancing it is reversible — the prior value stays in the artifact's phase history — but the aggregate reading is not recoverable that way: on 2026-09-02, 300 of 331 active artifacts had never left `validate`, and that number measures how the pipeline really ran. A batch that walks the whole backlog turns a real measurement into a green dashboard while every individual history row stays intact. AUTO advances markers for artifacts this session is working on; it is never pointed at the historical backlog.
 
 ### Tier ADI — ambiguous, reason first
 
@@ -72,7 +74,9 @@ Nothing else is ever AUTO. No AUTO delete, no AUTO content-write, no AUTO link-b
 
 Layer 4 reads two sources, because RFC-019's digest filter intentionally HIDES the two AUTO housekeeping kinds from the ledger (they are low-severity noise for the user, but still safe-auto-fixable):
 
-- **AUTO backlog — re-query the detector directly.** Call `forgeplan_anomalies` filtered to the 2 AUTO-allowlist kinds (`phase_mismatch`, complete `stuck_draft`). These never reach NOTE-013 — RFC-019 drops `phase_mismatch` by kind and low-severity `stuck_draft` by the severity floor — so the AUTO path MUST source them from the detector. Re-reading the detector for these two reversible kinds is fetching the housekeeping backlog the digest hides; it is NOT re-detecting findings.
+- **AUTO backlog — re-query the detector directly, then bound it.** Call `forgeplan_anomalies` filtered to the 2 AUTO-allowlist kinds (benign `phase_mismatch`, complete `stuck_draft`). These never reach NOTE-013 — RFC-019 drops *benign* `phase_mismatch` by phase and low-severity `stuck_draft` by the severity floor — so the AUTO path MUST source them from the detector. Re-reading the detector for these two reversible kinds is fetching the housekeeping backlog the digest hides; it is NOT re-detecting findings.
+
+  **Then intersect the result with this session's scope before proposing anything** (INV-3). The `phase_mismatch` backlog is large by design — most of it is historical drift the canon deliberately does not backfill (ADR-022 DD-5). Keep the artifacts this session actually worked on and drop the rest silently; they are not pending work. A **non-benign** `phase_mismatch` — a marker outside `{shape, validate}` on an active artifact — is not an AUTO candidate at all: the digest now surfaces it as a real finding (someone set that marker by hand), and it routes to USER.
 - **ADI + USER findings — drain the NOTE-013 ledger.** Read the open `Kind: finding` rows from NOTE-013's `## Machine findings (auto-tracked)` section (the medium+ findings `/forge-insight` recorded), OR take `Finding[]` from a just-run `/forge-insight`.
 
 Either way each finding carries the same frozen RFC-019 shape (`finding_id`, `anomaly_kind`, `affected`, `severity`, `suggested_tier`, `suggested_action`, `suggested_target`, `status`) — the AUTO-source findings are constructed from the detector payload using that SAME shape (not a redefinition; INV-7).
