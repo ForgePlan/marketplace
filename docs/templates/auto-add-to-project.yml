@@ -20,7 +20,12 @@ name: Auto-add to project
 on:
   issues:
     types: [opened, reopened]
-  pull_request:
+  # `pull_request_target`, not `pull_request`: secrets are withheld from fork-PR workflow runs, so a
+  # PAT-based step fails with "Input required and not supplied: github-token" on every external
+  # contribution. Safe in this template because the job checks out nothing — the only input is the
+  # PR number from the event payload, so there is no attacker code to run with the elevated token.
+  # If you add an `actions/checkout` step here, switch back to `pull_request` first.
+  pull_request_target:
     types: [opened, reopened, ready_for_review]
 
 permissions:

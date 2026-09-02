@@ -1,6 +1,6 @@
 ---
 name: reproducibility-validator
-description: "Verifies that canonical documentation is actually sufficient to reproduce the described system. The "code deletion test" in automated form. Triggers — \"extract reproducibility validator\", \"brownfield reproducibility validator\", \"/reproducibility-validator\"."
+description: 'Verifies that canonical documentation is actually sufficient to reproduce the described system. The "code deletion test" in automated form. Triggers — "extract reproducibility validator", "brownfield reproducibility validator", "/reproducibility-validator".'
 disable-model-invocation: true
 ---
 

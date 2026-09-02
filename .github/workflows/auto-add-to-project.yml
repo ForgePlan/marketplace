@@ -8,7 +8,16 @@ name: Auto-add to project
 on:
   issues:
     types: [opened, reopened]
-  pull_request:
+  # `pull_request_target`, not `pull_request`: GitHub withholds secrets from workflows triggered by
+  # a fork PR, so ADD_TO_PROJECT_PAT arrives empty and the job dies on "Input required and not
+  # supplied: github-token". The first external PR (#243) hit exactly that — a red check the
+  # contributor had no way to fix, on a PR whose own validation was green.
+  #
+  # Safe here because this job never fetches the PR's code: there is no `actions/checkout`, and the
+  # only input is the PR number from the event payload. The danger of `pull_request_target` is
+  # running attacker-controlled code with a write-scoped token; with nothing checked out there is
+  # nothing to run. Our own WF-PRT-CHECKOUT rule encodes the same distinction.
+  pull_request_target:
     types: [opened, reopened, ready_for_review]
 
 permissions:

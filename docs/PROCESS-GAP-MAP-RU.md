@@ -232,7 +232,7 @@ story mapping, impact mapping, Wardley mapping, opportunity solution tree.
 
 | Заявлено | Где | На диске |
 |---|---|---|
-| «41 marketplace-aware agents (94 total)» | `README.md:11`, `CLAUDE.md:6` | **97 файлов, 42 денилиста** |
+| «41 marketplace-aware agents (94 total)» | `README.md:11`, `CLAUDE.md:6` | **95 агентов, 42 с денилистом** (см. §5.1) |
 | «37 карточек методологий» | `docs/METHODOLOGIES.md:251`, `:283` | **31** |
 | «29 карточек» | `routing-map.md:405` (свой же футер) | **31** |
 | «fpl-skills skills (40)» | `docs/INDEX.md:89`, `:43` | **41** |
@@ -242,8 +242,28 @@ story mapping, impact mapping, Wardley mapping, opportunity solution tree.
 диспатч, не карточки. В секции карточек ровно 31. Арифметика «остальные 17» в METHODOLOGIES
 построена на этой ошибке. «29» в футере — просто отстало на две карточки, добавленные позже.
 
-Ни в одном скрипте `scripts/ci/` нет гейта, который пересчитывает эти числа. `catalog-check`
-сторожит несколько заголовков, всё остальное дрейфует молча.
+Ни в одном скрипте `scripts/ci/` нет гейта, который пересчитывает эти числа, кроме
+`catalog-check` — он сторожит часть заголовков, всё остальное дрейфует молча.
+
+### 5.1. Про число агентов: дело не в дрейфе, а в определении
+
+Первая редакция этой карты писала «97 файлов» и называла расхождение с «94» дрейфом. Это было
+неверно, и вот точная картина:
+
+| | |
+|---|---|
+| `agents/*.md` — верхний уровень | **94**, все настоящие агенты |
+| `agents/*/*.md` — вложенный уровень | 3 файла: `discover/README.md`, `discover/SCAFFOLDING.md` (не агенты) и `discover/discover.md` (**агент, с денилистом**) |
+| Настоящих агентов | **95** |
+| С денилистом | **42** |
+
+`catalog-check` считает по маске `plugins/<name>/agents/*.md` и внутрь папки агента не заходит.
+Поэтому у него выходит 94 и 41, и заявленные числа с этим счётом сходятся.
+
+Так что дрейфа тут нет — есть **слепое пятно счётчика**: `forgeplan-brownfield-pack:discover`,
+реальный forgeplan-aware агент, не виден ни в одном публикуемом числе. Правильный ход — научить
+счётчик спускаться на уровень ниже и отличать агента от соседнего README по наличию `name:`,
+после чего опубликованные числа станут 95 и 42.
 
 ---
 
@@ -268,7 +288,7 @@ story mapping, impact mapping, Wardley mapping, opportunity solution tree.
 
 | Факт | Число |
 |---|---|
-| Файлов агентов на диске | 97 (из них 2 — не агенты, а README/SCAFFOLDING внутри `agents/`) |
+| Настоящих агентов на диске | **95** (97 файлов минус 2 не-агента — README и SCAFFOLDING внутри `agents/discover/`) |
 | С денилистом (`disallowedTools`) | **42** |
 | Без денилиста | **53** |
 
@@ -327,7 +347,9 @@ RFC, а не создаёт EPIC.
 cd forgeplan-marketplace
 
 # §7 — агенты
-find plugins/*/agents -name '*.md' -type f | wc -l                       # 97
+find plugins/*/agents -name '*.md' -type f | wc -l                       # 97 файлов
+find plugins/*/agents -maxdepth 1 -name '*.md' -type f | wc -l           # 94 — так считает catalog-check
+# настоящих агентов 95: 97 минус discover/README.md и discover/SCAFFOLDING.md (см. §5.1)
 grep -l '^disallowedTools:' plugins/*/agents/*.md plugins/*/agents/*/*.md | wc -l   # 42
 
 # §5 — карточки методологий

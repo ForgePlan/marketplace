@@ -1,6 +1,6 @@
 ---
 name: canvas-audit
-description: One-shot DS-convention audit (canvas-guardian as a command). Loads the canvas-conventions rule set, reads an exported Pencil DS snapshot (manifest + reference screenshots + snapshot_layout dump), and reports Critical/Warning/Suggestion findings - each with a RULE-ID, a node-id, and a concrete fix. Audits build quality (refs/slots/tokens/naming/atomic-layering/clipping), not requirement coverage. Usage: /canvas-audit [snapshot-dir]
+description: 'One-shot DS-convention audit (canvas-guardian as a command). Loads the canvas-conventions rule set, reads an exported Pencil DS snapshot (manifest + reference screenshots + snapshot_layout dump), and reports Critical/Warning/Suggestion findings - each with a RULE-ID, a node-id, and a concrete fix. Audits build quality (refs/slots/tokens/naming/atomic-layering/clipping), not requirement coverage. Usage: /canvas-audit [snapshot-dir]'
 ---
 
 # /canvas-audit — one-shot Design-System convention audit
