@@ -182,6 +182,18 @@ jobs:
           [ "$found" -eq 0 ] && echo "No plugin test suites found (skipped)"
           [ "$errors" -eq 0 ] || exit 1
 
+      # The `official-plugin-validate` gate below runs the runtime's OWN manifest validator. It
+      # is not on the runner by default, and without it the gate reports SKIPPED — honest, but it
+      # would mean the one check that knows the real schema never runs on a PR from someone who
+      # did not run scripts/validate-all-plugins.sh first. That is exactly the case #245 was filed
+      # for: the first external PR arrived with a manifest problem our own gates could not see.
+      #
+      # continue-on-error so a registry hiccup degrades the gate to SKIPPED instead of failing the
+      # build for a reason that has nothing to do with the change under review.
+      - name: Install the Claude Code CLI (for the official manifest validator)
+        continue-on-error: true
+        run: npm install -g @anthropic-ai/claude-code
+
       - name: CI security + integrity gates (scripts/ci)
         run: |
           # The gates are Node scripts (Node >= 18). ubuntu-latest ships Node;
