@@ -200,7 +200,8 @@ yourself (denied — activation is orchestrator/Gate territory).
 
 ## Verdict
 
-**Verdict**: PASS | CONCERNS | BLOCKER — <one-sentence justification>
+**Verdict**: supports | weakens | refutes — what this evidence does to trust in the parent
+**Review verdict**: PASS | CONCERNS | BLOCKER — <one-sentence justification>
 
 - **Congruence level**: 3 (DS snapshot inspected directly against active ForgePlan artifacts read first-hand)
 - **Evidence type**: artifact_inspection

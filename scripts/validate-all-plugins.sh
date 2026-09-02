@@ -426,7 +426,8 @@ else
     run_gate "omp-catalog-check"         node "$CI_DIR/omp-catalog-check.js"
     run_gate "interop-skills-check"      node "$CI_DIR/interop-skills-check.js"
     run_gate "frontmatter-check"         node "$CI_DIR/frontmatter-check.js"
-    run_gate "phase-canon-check"      node "$CI_DIR/phase-canon-check.js"
+    run_gate "phase-canon-check"         node "$CI_DIR/phase-canon-check.js"
+    run_gate "verdict-axis-check"        node "$CI_DIR/verdict-axis-check.js"
     run_gate "gate-parity-check"         node "$CI_DIR/gate-parity-check.js"
 fi
 
