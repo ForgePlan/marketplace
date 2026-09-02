@@ -380,7 +380,7 @@ Cross-reference: RFC-018 FR-4, marketplace CLAUDE.md «Social-discipline boundar
 
 At `/autorun` start: generate `session_id` (format `SESS-YYYYMMDD-HHMMSS-<rand4>`) and create `.forgeplan/sessions/<session_id>.yaml` with initial state (`status: active`, `current_phase: 1`, `completed_phases: []`).
 
-After each phase completes (Route, Shape, Build per wave, Audit, Evidence, Activate, Commit): write checkpoint — update `current_phase`, append to `completed_phases[]`, record `last_checkpoint_at`.
+After each phase completes (Route, Shape, Build per wave, Audit, Evidence, Activate, Commit): write checkpoint — update `current_phase`, append to `completed_phases[]`, record `last_checkpoint_at`. Advance the artifact phase marker alongside the checkpoint write — see "Phase markers" below.
 
 On any blocker exit (ADI fail, `NEED_USER_INPUT` timeout, anti-loop, red-line): write checkpoint with `blocker_state` set to the trigger reason, `status: paused`, and surface resume hint: `"Session paused — resume with: /autorun --resume <session_id>"`.
 
@@ -421,6 +421,56 @@ Remove `status == completed` session files immediately — no prompt (these are 
 For sessions where `age > 7 days` OR (`status == paused` AND `age > 24h`): prompt user before deletion. Print one confirmation line per candidate file.
 
 Print summary on completion: `"N completed sessions removed. M stale sessions surfaced for review."`
+
+---
+
+## Phase markers (advisory layer)
+
+Artifacts carry a lifecycle **phase** (`shape → validate → adi → code → test → audit → evidence → done`) next to their `status`. It is advisory — nothing blocks on it — but `/forge-cleanup`, `/forge-heal` and `/forge-insight` read it, and an artifact left at `status=active` on an early-cycle phase surfaces there as a `phase_mismatch` finding. An unattended run that never moves the marker manufactures that finding on every artifact it touches.
+
+**Who advances what** — `/autorun` moves the marker only on the paths where it drives the artifact itself:
+
+| Detected environment | Who advances |
+|---|---|
+| `forgeplan-workflow` installed → delegating to `/forge-cycle` | `/forge-cycle` does it (its Steps 4 / 5 / 7 / 8). `/autorun` advances nothing — a second advance to the same phase only pads the history. |
+| `forgeplan` CLI only → manual calls between phases | `/autorun` — the mapping below. |
+| Neither | Nothing to mark. |
+
+**Where, on the manual path** — ride the advance along with the checkpoint write for the phase that just completed:
+
+| Completed checkpoint phase | Advance to |
+|---|---|
+| Shape (PRD/RFC written) | `shape` |
+| Build (last wave landed) | `code` |
+| Evidence (EVID created and linked) | `evidence` |
+| Activate (artifact activated) | `done` |
+
+```python
+# Runs next to the checkpoint write, once per completed phase.
+try:
+    mcp__forgeplan__forgeplan_phase_advance(
+        id=artifact_id, to=PHASE_MARKER[completed_phase],
+        reason=f"/autorun {session_id} — {completed_phase} complete"
+    )
+except Exception as e:
+    log(f"phase marker not advanced to {PHASE_MARKER[completed_phase]} (non-fatal): {e}")
+```
+
+Shell fallback:
+```bash
+forgeplan phase-advance "$ARTIFACT_ID" --to code --reason "/autorun $SESSION_ID — Build complete" || true
+```
+
+**Non-fatal, always.** A failed advance is one line in the run log and nothing more — never a paused wave, never a `blocker_state`, never an ADI round. Same for the autonomy gate: the advance is an append-only advisory marker, so it classifies low-risk and normally comes back `auto`; if the gate returns `ask` and nobody is watching, skip the marker and continue. Do not hold an unattended run on a marker.
+
+**No artifact, no marker.** Waves that ran against a derived `SESSION-*` id have no artifact behind them — skip the advance instead of inventing one.
+
+### Ordering hazard — do not "fix" this ordering back (forgeplan#330)
+
+`forgeplan_validate` writes the phase marker itself, and on an already-activated artifact it drags `done` back to `validate` ([forgeplan#330](https://github.com/ForgePlan/forgeplan/issues/330)). Two consequences:
+
+- Advance to `shape` **before** validating a freshly-written artifact, never after. Validate then carries the marker forward on its own (`shape → validate`), instead of the advance writing it backwards.
+- The `done` advance is the **last phase-touching call of the run.** The Commit / PR phases must not re-validate the activated artifact. If a re-validate happens anyway — a resumed session replaying a phase, or `forgeplan_validate` running silently from `auto_approve` — re-issue `forgeplan_phase_advance(to="done")` right after it and note it in the final report.
 
 ---
 
@@ -547,6 +597,7 @@ User can `TaskList` at any time to see live progress.
 - ❌ Don't run if `docs/agents/` is empty AND no project files exist. Refuse and route to `/setup`.
 - ❌ Don't generate a wave plan with file conflicts. If `sprint` produces one, regenerate before executing.
 - ❌ Don't merge or push without explicit user instruction in the original task. "implement X" doesn't mean "ship X".
+- ❌ Don't stop a wave because a phase marker failed to advance. The phase is an advisory layer — log the failure in one line and keep going.
 - ❌ Don't autonomously traverse RIPER Plan→Execute. A Row-4 (non-trivial production bug) task's hook-gate=No guarantee depends on a human at that transition (RFC-018 / DEFER-016) — HOLD before the first Execute dispatch, never auto-proceed; unattended default is WAIT, not continue.
 
 ---

@@ -302,7 +302,7 @@ If smith returned a `NEED_USER_INPUT` sentinel instead of a Plan, the skill prop
 ## References
 
 - **EPIC-002** — smith master-orchestrator initiative. Wave 1 produced the routing-map + sections + smith agent + templates; Wave 2 (this skill is part of Wave 2-B3) produces the four entrypoint skills.
-- **`routing-map.md`** — `plugins/fpl-skills/skills/smith/routing-map.md`. 14 contexts × 29 methodologies.
+- **`routing-map.md`** — `plugins/fpl-skills/skills/smith/routing-map.md`. 14 contexts × 33 methodologies.
 - **CLAUDE.md «4-Layer Pipeline (S10→S13)»** — methodology conveyor: FPF / BMAD / OpenSpec / Forgeplan + C4 architecture extension. Evidence requirements in the Plan derive from these layers.
 - **CLAUDE.md «BMAD adversarial review discipline» + «FPF ADI discipline»** — define the EVID quality bar smith and `/smith-plan` enforce in Step 6.
 - **`templates/smith-plan.md`** — the 8-section template the skill fills.

@@ -112,7 +112,7 @@ Smith поставляется как координированный клас�
 | `/smith-bootstrap` | Онбординг greenfield-проекта (pre-flight + scaffold + первый Brief) |
 | `/smith-plan <task>` | План под конкретную задачу с маршрутизацией методологии (14 контекстов) |
 | `/smith-routing` | Учебный walkthrough (Compare / Walkthrough / Q&A) |
-| Routing map | [`skills/smith/routing-map.md`](skills/smith/routing-map.md) — 14 контекстов × 29 методологий |
+| Routing map | [`skills/smith/routing-map.md`](skills/smith/routing-map.md) — 14 контекстов × 33 методологий |
 | 5 шаблонов | `templates/{smith-plan,smith-bootstrap,smith-handoff,post-mortem,routing-decision}.md` |
 | Session-start hook | `hooks/scripts/session-start.sh` — приветствие smith (3 состояния: greenfield / healthy / attention) |
 

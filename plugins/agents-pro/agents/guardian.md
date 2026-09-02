@@ -186,6 +186,9 @@ This step is **deliberate mental reasoning**, *not* a call to `mcp__forgeplan__f
 | ADR/RFC body discusses ≥3 modules (3+ distinct service/module names mentioned) AND no `docs/c4/<ADR-NNN>.md` file exists AND body contains no ` ```mermaid` block with `C4Context` or `flowchart` | **CONCERNS** (C4 discipline — Sprint Z9 PRD-060: full ADRs touching ≥3 modules must have C4 L1+L2 diagrams; recommendation: dispatch `/c4-diagram` in Dispatch mode before re-attempting activation; cite CLAUDE.md "C4 diagrams for ≥3-module architectural decisions") |
 | Artifact has `supersedes` link AND body lacks both `## Delta-spec` section AND any of `### ADDED` / `### MODIFIED` / `### REMOVED` / `### UNCHANGED` headers AND created_at ≥ 2026-05-25 | **BLOCKER** (OpenSpec delta-spec discipline — Sprint Z8 PRD-058: supersede operations from 2026-05-25 onward MUST include delta-spec; pre-Z8 supersedes downgrade to CONCERNS — handled by `/decay-watch` Step 2e; recommendation: dispatch `/supersede` skill to refill template; cite CLAUDE.md "OpenSpec delta-spec discipline") |
 | Any linked Profile B EVID claims a code change (parent has a diff / `affected_files`) BUT its body has no `## Ground-truth verification` section, or that section shows `DELTA=EMPTY` | **BLOCKER** (reviewer trusted the worker's claim instead of git ground truth — ML-13 violation; re-dispatch the reviewer with explicit base..head) |
+| PRD under review at Standard+ depth has no `## Non-Functional Requirements` (or `## NFR`) heading AND no `NFR-NNN` identifier anywhere in the body | **CONCERNS** (NFR discipline — marketplace#227: nothing in the pipeline enforced NFRs, and the live graph shows 77 of 79 PRDs carrying an FR section against 29 carrying NFR; recommendation: dispatch `agents-sparc:specification` on a draft PRD, or `agents-pro:artifact-maintainer` on an existing one, to fill the six-column NFR table; cite `agents-sparc/agents/specification.md` § "Non-Functional Requirements") |
+| ADR/RFC/PRD body discusses bounded contexts or domain aggregates (≥2 distinct DDD terms) AND no file exists under `docs/architecture/ddd/` AND the body carries no inline Mermaid context map | **CONCERNS** (DDD discipline — marketplace#232: `/ddd-decompose` produces a real artifact — context map + per-context files — that no gate ever asked for; recommendation: dispatch `/ddd-decompose` before re-attempting activation, or state in the body why the domain boundaries are out of scope) |
+| RFC/ADR body touches authentication, personal data, or an external interface AND no threat model is present (no `## Threat model` section, no `docs/security/<artifact_id>.md`, no linked `security-expert` EVID whose STRIDE walk covers the surface this artifact introduces) | **CONCERNS** (STRIDE discipline — marketplace#235: STRIDE today only classifies findings after code exists, so threat modelling never happens as a stage while the decision is still cheap to change; recommendation: dispatch `agents-pro:security-expert` with an explicit per-data-flow-boundary STRIDE mandate) |
 
 **Module-detection heuristic for C4 gate** (Row: ADR/RFC ≥3 modules):
 
@@ -205,6 +208,45 @@ This step is **deliberate mental reasoning**, *not* a call to `mcp__forgeplan__f
 - Body-content check (regex): `grep -E "^## Delta-spec|^### ADDED|^### MODIFIED|^### REMOVED|^### UNCHANGED"` against artifact body. If zero matches → predicate "lacks delta-spec" evaluates true.
 - Date threshold: parse `created` or `created_at` from artifact frontmatter (ISO 8601). If date ≥ `2026-05-25` → predicate "Z8+ supersede" evaluates true. Both predicates must hold for BLOCKER.
 - Pre-Z8 supersedes (created_at < 2026-05-25) without delta-spec downgrade to **CONCERNS** instead — handled by `/decay-watch` Step 2e classification (`MISSING-DELTA` backward-compatible warning, not `NO-DELTA-WHEN-REQUIRED`).
+
+**NFR-section detection for the NFR gate** (Row: Standard+ PRD, no Non-Functional Requirements):
+
+- Applies to `kind=prd` only, at Standard+ depth — read the artifact's `Depth:` field, which `forgeplan_get` already returns in the Step 2 read (`standard` / `deep` / `critical` qualify). Tactical PRDs are out of scope; do not fire the row on them.
+- Heading check (regex): `grep -E '^#{2,3} *(Non-Functional Requirements|Non-functional requirements|NFRs?)\b'` against the artifact body.
+- Identifier check (regex): `grep -E '\bNFR-[0-9]{3}\b'` against the same body.
+- Zero matches on **both** → predicate "no Non-Functional Requirements section" evaluates true. Either check matching closes this row. A heading present but empty — no `NFR-NNN` row and no non-applicability line — closes this row and belongs under the Step 5 «Artifact body complete» criterion instead; record it there, not twice.
+- Three concrete satisfy-paths close this gate:
+  - **Path A**: the six-column table `| ID | Category | Requirement | Metric | Condition | Measurement |` carrying ≥1 `NFR-NNN` row — the canonical shape in the `agents-sparc:specification` template; PRD-024 is the live worked example (8 rows).
+  - **Path B**: the older per-NFR prose form — `### NFR-001 — <category>` with **Category** / **Threshold** / **Measurement** bullets. Artifacts authored before the table was promoted into the template carry this; it still closes the gate.
+  - **Path C**: the heading present with an explicit one-line non-applicability statement ("no NFRs apply because `<reason>`"). Same rule shape as the OpenSpec «empty delta is fine if explicit» convention — a stated empty is a decision, a silent absence is an omission.
+- `TBD` in a `Metric` cell does **not** trigger *this* row: `agents-sparc:specification` HARD RULE 5 tells the author to write `TBD` rather than invent a number, and penalising it here would buy fabricated metrics. Whether a body still carrying `TBD`s counts as complete remains the separate Step 5 «Artifact body complete» criterion — this row does not change that judgement, it only asks whether the section exists at all.
+- Severity is **CONCERNS**, never BLOCKER: this is a heading-shape heuristic over prose, and a PRD can legitimately carry no measurable constraint — but such a PRD takes Path C and says so.
+
+**Domain-decomposition detection for the DDD gate** (Row: bounded contexts discussed, no DDD artifact):
+
+- Term check (regex, case-insensitive): `grep -icE 'bounded context|ubiquitous language|aggregate root|domain event|anti-corruption layer|context map|subdomain'`. Count **distinct** terms matched, not total occurrences.
+- Threshold: ≥2 distinct terms → predicate "discusses bounded contexts or domain aggregates" evaluates true. One term alone is not enough — "aggregate" carries unrelated senses (aggregate score, aggregate findings) and a single passing use of domain vocabulary is not a decomposition.
+- File-existence check: any `docs/architecture/ddd/*.md` relative to the repo root. `context-map.md` is the canonical name (`/ddd-decompose` step 7 writes it); `<context>.md` and `events.md` are its siblings.
+- Three concrete satisfy-paths close this gate:
+  - **Path A**: a file under `docs/architecture/ddd/` — the file-path output of `/ddd-decompose`.
+  - **Path B**: the body opens a fenced `mermaid` block whose first content line is `flowchart LR` (or `TB`/`RL`/`BT`) and which declares **≥2 `subgraph` blocks** — the context-map shape `/ddd-decompose` step 7 emits, one subgraph per bounded context. Detection: ``grep -E '^```mermaid' -A 40 <body> | grep -cE '^\s*subgraph'`` → ≥2.
+  - **Path C**: the graph path — the artifact links `based_on` to an EPIC carrying ≥2 `based_on` child PRDs, one per bounded context (`/ddd-decompose` step 8's MCP output). Verify with `forgeplan_get` on that EPIC.
+- Interaction with the C4 row: one inline Mermaid `flowchart` can satisfy **both** rows when it carries both properties (module-labelled nodes for C4, ≥2 `subgraph` boundaries for DDD). Evaluate each row's satisfy-paths independently and record only the rows that stay open — never two CONCERNS for one diagram.
+- Severity is **CONCERNS**, never BLOCKER: an RFC may use "bounded context" as a passing analogy without owning a domain model. The recommendation surfaces the gap; the orchestrator dispatches `/ddd-decompose` or overrides.
+
+**Sensitive-surface detection for the STRIDE gate** (Row: RFC/ADR touching auth / personal data / external interface, no threat model):
+
+- Surface check — three keyword families, case-insensitive, against the artifact body:
+  - *authentication / authorization*: `auth`, `login`, `session`, `token`, `OAuth`, `JWT`, `password`, `credential`, `permission`, `role-based`, `RBAC`
+  - *personal data*: `PII`, `personal data`, `GDPR`, `email address`, `phone number`, `user profile`, `consent`
+  - *external interface*: `public API`, `webhook`, `third-party`, `external service`, `inbound request`, `file upload`, `untrusted input`
+- Threshold: ≥1 term from **any one** family → predicate "touches authentication, personal data, or an external interface" evaluates true. One family is enough; these are the three surfaces where a missing threat model is expensive to discover late.
+- Presence check (regex): ``grep -icE '^#+ *(Threat model|Threats|Security considerations)|Spoofing|Tampering|Repudiation|Information disclosure|Elevation of privilege'`` against the artifact body **and** every linked EVID body. Zero matches → predicate "no threat model present" evaluates true.
+- Three concrete satisfy-paths close this gate:
+  - **Path A**: a linked `security-expert` EVID whose `## Methodology` STRIDE row names the facets considered **for the surface this artifact introduces**. A STRIDE-tagged finding list over pre-existing code does **not** close the gate — that is classification after the fact, which is the exact gap this row exists to surface.
+  - **Path B**: the body carries a `## Threat model` (or `## Threats` / `## Security considerations`) section enumerating threats per trust boundary, each tagged with a STRIDE facet (Spoofing / Tampering / Repudiation / Information disclosure / Denial of service / Elevation of privilege).
+  - **Path C**: a file at `docs/security/<artifact_id>.md` holding a data-flow sketch plus a STRIDE walk per boundary.
+- Severity is **CONCERNS**, never BLOCKER: the keyword families over-fire by design — `token` in a parser RFC, `session` in a terminal-session RFC, `permission` in a filesystem RFC are the standing false positives. A CONCERNS costs one reviewer dispatch; a BLOCKER on this signal would halt pipelines over vocabulary.
 
 Verdict derivation rule (no exceptions, no judgement-soft):
 

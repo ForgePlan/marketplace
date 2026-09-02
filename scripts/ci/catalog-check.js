@@ -97,6 +97,48 @@ function listSkillDirs(dir) {
 // methodology context without carrying a denylist, and are not forgeplan-aware in this sense.
 const FORGEPLAN_AWARE_PATTERN = /disallowedTools/;
 
+/**
+ * List a plugin's agents, including those that live one directory deeper.
+ *
+ * `listMarkdownFiles` is flat, so `plugins/<p>/agents/<name>/<name>.md` was invisible: every
+ * published count silently omitted `forgeplan-brownfield-pack:discover`, a real, dispatched,
+ * denylisted agent. The numbers were not drifting — the counter simply could not see it.
+ *
+ * Descending needs a second rule, because that same directory holds prose: `discover/README.md`
+ * and `discover/SCAFFOLDING.md` are documentation, not agents, and counting them would have
+ * inflated the total to 97. An agent is a file whose frontmatter declares `name:` — the same thing
+ * that makes it loadable at runtime.
+ *
+ * Returns paths relative to the agents dir so callers can read them.
+ */
+function listAgentFiles(agentsDir) {
+  if (!fs.existsSync(agentsDir)) return [];
+  const out = [];
+
+  const isAgent = (p) => {
+    let head;
+    try {
+      head = fs.readFileSync(p, 'utf8').slice(0, 4096);
+    } catch { return false; }
+    if (!head.startsWith('---')) return false;
+    const end = head.indexOf('\n---', 3);
+    return /^name:\s*\S/m.test(end === -1 ? head : head.slice(0, end));
+  };
+
+  for (const entry of fs.readdirSync(agentsDir, { withFileTypes: true })) {
+    if (entry.isFile() && entry.name.endsWith('.md')) {
+      if (isAgent(path.join(agentsDir, entry.name))) out.push(entry.name);
+    } else if (entry.isDirectory()) {
+      for (const nested of fs.readdirSync(path.join(agentsDir, entry.name), { withFileTypes: true })) {
+        if (!nested.isFile() || !nested.name.endsWith('.md')) continue;
+        const rel = path.join(entry.name, nested.name);
+        if (isAgent(path.join(agentsDir, rel))) out.push(rel);
+      }
+    }
+  }
+  return out.sort();
+}
+
 function isForgeplanAware(filePath) {
   let body;
   try {
@@ -134,7 +176,7 @@ function buildCatalog(root = ROOT) {
 
   for (const name of pluginNames) {
     const base = path.join(pluginsDir, name);
-    const agentFiles = listMarkdownFiles(path.join(base, 'agents'));
+    const agentFiles = listAgentFiles(path.join(base, 'agents'));
     const commandFiles = listMarkdownFiles(path.join(base, 'commands'));
     const skillDirs = listSkillDirs(path.join(base, 'skills'));
 

@@ -40,7 +40,7 @@ Source of truth: [`.claude-plugin/marketplace.json`](../.claude-plugin/marketpla
 ### Workflow plugins (14) + memory (1)
 | Plugin | Path | One-line |
 |---|---|---|
-| **fpl-skills** | `plugins/fpl-skills/` | flagship — 40 engineering skills + dev-advisor agent + hooks; hosts **smith** routing brain (`skills/smith/`) |
+| **fpl-skills** | `plugins/fpl-skills/` | flagship — 41 engineering skills + dev-advisor agent + hooks; hosts **smith** routing brain (`skills/smith/`) |
 | **fpl-hsmem** | `plugins/fpl-hsmem/` | Hindsight v2 cross-session memory (auto UserPromptSubmit/Stop/SessionEnd hooks) |
 | **forgeplan-workflow** | `plugins/forgeplan-workflow/` | `/forge-cycle`, `/forge-audit` — the reactive 4-layer enforcer |
 | **forgeplan-orchestra** | `plugins/forgeplan-orchestra/` | Orchestra ↔ forgeplan task sync |
@@ -86,7 +86,7 @@ CANVAS agents (`plugins/agents-canvas/agents/`): `canvas-coordinator` (master) �
 
 ## 5. Skills, hooks, scripts, CI
 
-- **fpl-skills skills (40)** — `plugins/fpl-skills/skills/<name>/SKILL.md` (agentic-RAG: `sections/*/_index.md` per skill). Notable: `smith/` (the 14-row routing brain + `routing-map.md`), `forge-cycle`, `autorun`, `audit`, `research`, `sprint`, `methodology-check`, `forge-heal`, `riper`, `conformance-vectors`.
+- **fpl-skills skills (41)** — `plugins/fpl-skills/skills/<name>/SKILL.md` (agentic-RAG: `sections/*/_index.md` per skill). Notable: `smith/` (the 14-row routing brain + `routing-map.md`), `forge-cycle`, `autorun`, `audit`, `research`, `sprint`, `methodology-check`, `forge-heal`, `riper`, `conformance-vectors`.
 - **Authoring contract** — `plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md` (agent frontmatter, Profile A/B/C/D, LR-8 denylist canon, Step 11 affected_files, ground-truth Step 4.5).
 - **Validation** — [`scripts/validate-all-plugins.sh`](../scripts/validate-all-plugins.sh) (run before every PR; `<plugin>` arg for one).
 - **CI gates** (`scripts/ci/`, run by the script + GH Actions): `catalog-check.js` (doc counts vs disk, `--write` autosync) · `cross-ref-check.js` (dangling agent/skill refs) · `check-unicode-safety.js` · `validate-no-personal-paths.js` · `validate-workflow-security.js` · `validate-install-manifests.js`.

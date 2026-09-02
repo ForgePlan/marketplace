@@ -1,0 +1,19 @@
+# TRAP — must fire WF-PRT-CHECKOUT even though a comment sits inside the step.
+# This is the marketplace#249 regression: stripComment truncated the joined step body at the first
+# '#', hiding the uses: line below it, so the rule silently stopped firing. Do not fix.
+name: trap prt checkout commented
+on:
+  pull_request_target:
+    types: [opened]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out PR
+        # fetch the contributor branch so we can run their tests
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - run: npm ci

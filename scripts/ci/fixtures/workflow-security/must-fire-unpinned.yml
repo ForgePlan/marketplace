@@ -1,0 +1,13 @@
+# TRAP — must fire WF-UNPINNED. Third-party action on a floating tag, not a SHA. Do not fix.
+name: trap unpinned
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+      - run: echo ok

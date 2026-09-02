@@ -178,7 +178,7 @@ Task(subagent_type="agents-pro:smith",
 ```
 
 The smith agent reads the **routing map** (`plugins/fpl-skills/skills/smith/routing-map.md`),
-optionally pulls one **section file** (`sections/01-greenfield.md` through `12-incident.md`) if
+optionally pulls one **section file** (`sections/01-greenfield.md` through `14-design-system.md`) if
 the chosen row needs a deeper playbook, and applies the matrix.
 
 ### Step 5 — Smith agent applies routing matrix → returns Plan markdown
@@ -321,7 +321,7 @@ These rules are absolute. Violations are CONCERNS at the next Profile B review.
 - **`plugins/fpl-skills/skills/smith/routing-map.md`** — the smith **brain**. 14 routing rows, 25
   methodology cards, 26-agent index. Loaded by the smith agent on every dispatch.
 - **`plugins/fpl-skills/skills/smith/sections/`** — agentic-RAG section files
-  (`01-greenfield.md` through `12-incident.md`). Loaded by the smith agent on demand when the
+  (`01-greenfield.md` through `14-design-system.md`). Loaded by the smith agent on demand when the
   chosen row needs deeper playbook guidance (e.g. failure-mode recovery hints).
 - **`plugins/fpl-skills/templates/smith-plan.md`** — output template (≤500 lines, 8 mandatory
   sections). Smith fills this; orchestrator verifies completeness in Step 6.

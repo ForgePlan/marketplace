@@ -42,7 +42,7 @@ Smith живёт в `plugins/agents-pro/agents/smith.md` (сам агент) п�
 - В начале сессии, когда непонятно «что дальше» — smith читает `forgeplan_health` и журнал, предлагает следующий шаг.
 - На **свежем репозитории** без артефактов — `/smith-bootstrap` запускает greenfield-сценарий: Brief → PRD → первый ADR через строку greenfield routing-карты.
 - Под **конкретную задачу любой глубины** — `/smith-plan <описание>`: smith подбирает строку из 14 контекстов, называет методологию и перечисляет последовательность диспатча.
-- Чтобы **понять поверхность методологий** — `/smith-routing` показывает 14 строк маршрутизации + 29 карточек методологий без обязательства привязки к задаче.
+- Чтобы **понять поверхность методологий** — `/smith-routing` показывает 14 строк маршрутизации + 33 карточек методологий без обязательства привязки к задаче.
 - Когда штатные точки входа (`/forge-cycle`, `/autorun`) **не подходят** — кросс-контекстная работа, неясная глубина, нестыковка методологий. Smith сначала disambiguate-ит.
 - Перед запуском **многоспринтового epic** — когда команде нужно договориться о primary-методологии и порядке диспатча до того, как написана первая строчка кода.
 - **Триггерные фразы** (EN / RU): `smith`, `/smith`, `кузнец`, `что дальше`, `куда идём`, `возьми управление`, `scrum master`, `master orchestrator`, `captain mode`, `оркеструй`, `take charge`, `what's next`, `which methodology`, `какую методологию`.
@@ -190,7 +190,7 @@ Smith явно укажет в Plan, какие из этих evidence ещё н
 И технические артефакты:
 
 - `plugins/agents-pro/agents/smith.md` — сам агент (370 строк, Profile B-orchestrator).
-- `plugins/fpl-skills/skills/smith/routing-map.md` — таблица 14 контекстов + 29 карточек + индекс агентов.
+- `plugins/fpl-skills/skills/smith/routing-map.md` — таблица 14 контекстов + 33 карточек + индекс агентов.
 - `plugins/fpl-skills/skills/smith/SKILL.md` — основной скил-входная точка.
 - `plugins/fpl-skills/skills/smith-bootstrap/SKILL.md` — путь greenfield-онбординга.
 - `plugins/fpl-skills/skills/smith-plan/SKILL.md` — per-task planning.

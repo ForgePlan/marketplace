@@ -105,6 +105,22 @@ function stripComment(line) {
   return line;
 }
 
+/**
+ * Strip comments from a MULTI-LINE block, line by line.
+ *
+ * `stripComment` returns at the first unquoted `#`, which is correct for one line and catastrophic
+ * for many: applied to a joined step body it throws away everything after the first comment. That
+ * is how WF-PRT-CHECKOUT was silently dead — one `# fetch the contributor branch` inside a step
+ * hid the `uses: actions/checkout@` below it, the rule's precondition failed, and it never fired.
+ * Commenting inside steps is this repo's own house style, so the bypass was the default.
+ *
+ * Same failure class as trimming a whole `git status --porcelain` blob instead of each line: one
+ * line's logic applied to many lines' data.
+ */
+function stripComments(text) {
+  return splitLines(text).map(stripComment).join('\n');
+}
+
 const indentOf = (line) => line.length - line.replace(/^\s*/, '').length;
 
 /**
@@ -120,7 +136,12 @@ function findRunBlocks(lines) {
   for (let i = 0; i < lines.length; i++) {
     const raw = lines[i];
     const code = stripComment(raw);
-    const m = code.match(/^(\s*)run:\s*(\S.*)?$/);
+    // `- run: cmd` is a step whose only key is run:, and it is the most compact form there is.
+    // Matching bare `run:` alone missed it entirely, so WF-INJECT was blind to
+    //     - run: echo "${{ github.event.issue.title }}"
+    // while catching the identical command written under a `- name:` step (marketplace#249).
+    // keyIndent counts the dash too, so a block scalar's body still has to sit deeper than `run:`.
+    const m = code.match(/^(\s*(?:-\s+)?)run:\s*(\S.*)?$/);
     if (!m) continue;
 
     const keyIndent = m[1].length;
@@ -268,13 +289,14 @@ function findDangerousCheckout(source, lines) {
 
   for (const step of findSteps(lines)) {
     const text = step.lines.join('\n');
-    if (!/uses:\s*['"]?actions\/checkout@/m.test(stripComment(text))) continue;
+    const code = stripComments(text);
+    if (!/uses:\s*['"]?actions\/checkout@/m.test(code)) continue;
 
     // Form 1: checkout an explicit untrusted head ref expression.
     const headExpr = text.match(PR_HEAD_REF);
     // Form 2: checkout a refs/pull/<n>/{head,merge} ref (GitHub treats this
     // as equivalent — it fetches attacker code under the privileged token).
-    const refPull = stripComment(text).match(/^\s*ref:\s*.*?(refs\/(?:remotes\/)?pull\/[^\s'"]+)/m);
+    const refPull = code.match(/^\s*ref:\s*.*?(refs\/(?:remotes\/)?pull\/[^\s'"]+)/m);
 
     if (headExpr || refPull) {
       const evidence = headExpr ? headExpr[0] : refPull[1];
@@ -286,6 +308,53 @@ function findDangerousCheckout(source, lines) {
           'pull_request_target/workflow_run trigger checks out the PR head ' +
           `(${evidence.trim()}) — attacker code runs with a write-scoped token`,
       });
+    }
+  }
+  return findings;
+}
+
+/**
+ * `actions/checkout` is not the only way to fetch a PR's code, and under a privileged trigger the
+ * others are just as fatal. A `run:` block can pull the branch with one line and carries no `uses:`
+ * for the checkout rule to key on:
+ *
+ *     - env: { PR: '${{ github.event.number }}' }
+ *       run: gh pr checkout "$PR" && npm ci && npm test
+ *
+ * That passes WF-PRT-CHECKOUT (no checkout step) and WF-INJECT (the expression sits in `env:`,
+ * which that rule treats as safe by design) — a textbook pull_request_target RCE, clean on both.
+ *
+ * So this rule keys on the ACT of fetching PR code, not on which action performs it. It fires on
+ * the fetch verb alone, without needing to prove where the PR number came from: under a privileged
+ * trigger there is no benign reason to check out the contributor's branch.
+ */
+function findPrivilegedPrFetch(source, lines, runBlocks) {
+  const findings = [];
+  if (!PRIVILEGED_EVENT.test(source)) return findings;
+
+  const FETCHERS = [
+    { re: /\bgh\s+pr\s+checkout\b/, what: 'gh pr checkout' },
+    { re: /\bhub\s+pr\s+checkout\b/, what: 'hub pr checkout' },
+    { re: /\bgit\s+fetch\b[^\n]*\bpull\/[^\s'"]+/, what: 'git fetch of a pull/ ref' },
+    { re: /\bgit\s+(?:checkout|switch)\b[^\n]*\brefs\/pull\//, what: 'git checkout of a refs/pull/ ref' },
+    { re: /\bgit\s+fetch\b[^\n]*\$\{\{\s*github\.event\.pull_request\.head/, what: 'git fetch of the PR head expression' },
+  ];
+
+  for (const block of runBlocks) {
+    for (let n = block.startLine; n <= block.endLine; n++) {
+      const code = stripComment(lines[n - 1] || '');
+      for (const f of FETCHERS) {
+        if (!f.re.test(code)) continue;
+        findings.push({
+          line: n,
+          rule: 'WF-PRT-FETCH',
+          severity: HIGH,
+          message:
+            'pull_request_target/workflow_run trigger fetches PR code in a run block ' +
+            `(${f.what}) — attacker code runs with a write-scoped token and the secrets in scope`,
+        });
+        break;
+      }
     }
   }
   return findings;
@@ -303,6 +372,7 @@ function scanFile(filePath) {
   const findings = [
     ...findInjection(lines, runBlocks),
     ...findDangerousCheckout(source, lines),
+    ...findPrivilegedPrFetch(source, lines, runBlocks),
     ...findUnpinned(lines),
     ...findPermissionIssues(source, lines),
   ];
@@ -347,18 +417,92 @@ function resolveWorkflowsDir() {
   return path.resolve(__dirname, '..', '..', '.github', 'workflows');
 }
 
+/**
+ * Directories that ship workflow YAML and therefore need scanning.
+ *
+ * `docs/templates/` was invisible to this linter for its whole life, which is backwards: those
+ * files are written to be copied into OTHER repositories, so a mistake there propagates to people
+ * who never read our review comments. The one artifact with the widest blast radius had zero
+ * mechanical checking.
+ */
+function resolveScanDirs() {
+  if (process.env.WORKFLOWS_DIR) return [process.env.WORKFLOWS_DIR];
+  const root = path.resolve(__dirname, '..', '..');
+  return [
+    path.join(root, '.github', 'workflows'),
+    path.join(root, 'docs', 'templates'),
+  ].filter((d) => fs.existsSync(d));
+}
+
+/**
+ * Prove the rules are alive before trusting them to say "no findings".
+ *
+ * A linter that reports clean is indistinguishable from a linter whose rules are broken — and this
+ * one shipped with WF-PRT-CHECKOUT silently dead, defeated by a single `#` inside a step, for as
+ * long as anyone had been relying on it. Silence was read as safety.
+ *
+ * So every run first scans `fixtures/workflow-security/`, where each file is built to trip exactly
+ * one rule. If a fixture stops producing its finding, the rule is dead and the gate fails saying so
+ * — instead of passing the real files and reporting a reassuring zero.
+ */
+const SELF_TEST_EXPECT = {
+  'must-fire-prt-checkout.yml': 'WF-PRT-CHECKOUT',
+  'must-fire-prt-checkout-commented.yml': 'WF-PRT-CHECKOUT',
+  'must-fire-prt-run-fetch.yml': 'WF-PRT-FETCH',
+  'must-fire-inject.yml': 'WF-INJECT',
+  'must-fire-permissions-writeall.yml': 'WF-PERMS-WRITEALL',
+  'must-fire-unpinned.yml': 'WF-UNPINNED',
+};
+
+function selfTest() {
+  const dir = path.join(__dirname, 'fixtures', 'workflow-security');
+  if (!fs.existsSync(dir)) {
+    console.error(
+      'validate-workflow-security FAILED: self-test fixtures are missing at ' +
+      `${path.relative(path.resolve(__dirname, '..', '..'), dir)}.\n` +
+      'Without them a clean report cannot be distinguished from dead rules — which is exactly how ' +
+      'WF-PRT-CHECKOUT stayed broken. Restore the fixtures rather than deleting this check.',
+    );
+    return 1;
+  }
+
+  const dead = [];
+  for (const [file, rule] of Object.entries(SELF_TEST_EXPECT)) {
+    const p = path.join(dir, file);
+    if (!fs.existsSync(p)) { dead.push(`${file}: fixture missing (rule ${rule} is now unproven)`); continue; }
+    const fired = scanFile(p).some((f) => f.rule === rule);
+    if (!fired) dead.push(`${file}: expected ${rule}, got nothing — the rule is DEAD`);
+  }
+
+  if (dead.length > 0) {
+    console.error(`validate-workflow-security FAILED its own self-test — ${dead.length} rule(s) not firing:\n`);
+    for (const d of dead) console.error(`  - ${d}`);
+    console.error('\nA rule that cannot fire on its own trap file will not fire on a real attack.');
+    return 1;
+  }
+  return 0;
+}
+
 if (require.main === module) {
   const args = process.argv.slice(2);
   const strict = args.includes('--strict');
   const dirArg = args.find((a) => !a.startsWith('--'));
-  const workflowsDir = dirArg || resolveWorkflowsDir();
-  process.exit(run(workflowsDir, { strict }));
+
+  if (!dirArg && selfTest() !== 0) process.exit(1);
+
+  const dirs = dirArg ? [dirArg] : resolveScanDirs();
+  let code = 0;
+  for (const d of dirs) code = run(d, { strict }) || code;
+  process.exit(code);
 }
 
 module.exports = {
   scanFile,
   run,
+  selfTest,
   findRunBlocks,
   findSteps,
+  stripComments,
   resolveWorkflowsDir,
+  resolveScanDirs,
 };

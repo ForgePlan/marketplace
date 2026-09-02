@@ -36,7 +36,7 @@ Smith is the canonical first point of contact when you (or another agent) don't 
 - At **session start** when unsure what to do next — smith reads `forgeplan_health` + recent journal and proposes the next action.
 - On a **fresh repo** with no artifacts — `/smith-bootstrap` seeds Brief / PRD / first ADR via the greenfield row.
 - For a **specific task** of any depth — `/smith-plan <task>` picks the matching row, names the methodology, lists the dispatch sequence.
-- For **learning the methodology surface** — `/smith-routing` inspects the 14 routing rows + 29 methodology cards without committing to a task.
+- For **learning the methodology surface** — `/smith-routing` inspects the 14 routing rows + 33 methodology cards without committing to a task.
 - When existing entry points (`/forge-cycle`, `/autorun`) don't fit — cross-context work, ambiguous depth, methodology mismatch.
 - **Trigger phrases** (EN / RU): `smith`, `кузнец`, `что дальше`, `what's next`, `scrum master`, `master orchestrator`, `which methodology`, `какую методологию`.
 
@@ -158,7 +158,7 @@ The 14-context routing table is **CLI-agnostic** — it names methodologies and 
 
 ## Related documentation
 
-- [`METHODOLOGIES.md`](METHODOLOGIES.md) — full background on the 29 methodologies smith routes
+- [`METHODOLOGIES.md`](METHODOLOGIES.md) — full background on the 33 methodologies smith routes
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) — 4-layer S10→S13 pipeline mental model
 - [`PLAYBOOK.md`](PLAYBOOK.md) — use-case matrix mapping situations to commands
 - [`DEVELOPER-JOURNEY.md`](DEVELOPER-JOURNEY.md) — 30-minute onboarding walkthrough
@@ -166,7 +166,7 @@ The 14-context routing table is **CLI-agnostic** — it names methodologies and 
 - [`../AGENTS.md`](../AGENTS.md) — cross-CLI manifest with the canonical smith section
 - [`../plugins/agents-pro/agents/smith.md`](../plugins/agents-pro/agents/smith.md) — the smith agent body (370 lines, Profile B-orchestrator master agent)
 - [`../plugins/fpl-skills/skills/smith/SKILL.md`](../plugins/fpl-skills/skills/smith/SKILL.md) — main `/smith` entry-point skill
-- [`../plugins/fpl-skills/skills/smith/routing-map.md`](../plugins/fpl-skills/skills/smith/routing-map.md) — 14-context table + 29 methodology cards + agent index
+- [`../plugins/fpl-skills/skills/smith/routing-map.md`](../plugins/fpl-skills/skills/smith/routing-map.md) — 14-context table + 33 methodology cards + agent index
 - [`../plugins/fpl-skills/skills/smith-bootstrap/SKILL.md`](../plugins/fpl-skills/skills/smith-bootstrap/SKILL.md) — greenfield bootstrap dispatch path
 - [`../plugins/fpl-skills/skills/smith-plan/SKILL.md`](../plugins/fpl-skills/skills/smith-plan/SKILL.md) — per-task planning skill
 - [`../plugins/fpl-skills/skills/smith-routing/SKILL.md`](../plugins/fpl-skills/skills/smith-routing/SKILL.md) — routing-table inspection skill

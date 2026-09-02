@@ -44,6 +44,32 @@ Full reference: [`forgeplan-methodology` skill section 06](../skills/forgeplan-m
 
 ---
 
+## Phase markers (advisory layer)
+
+Every artifact carries a lifecycle **phase** (`shape → validate → adi → code → test → audit → evidence → done`) alongside its `status`. The phase is advisory — nothing blocks on it — but `/forge-cleanup`, `/forge-heal` and `/forge-insight` read it, and an artifact sitting at `status=active` with an early-cycle phase is reported there as a `phase_mismatch` finding. Until this cycle started moving the marker itself, those repair skills were fixing drift the main pipeline produced.
+
+Advance the marker at four points:
+
+| After | Advance to | Marks |
+|---|---|---|
+| Step 4 — Shape the Work | `shape` | artifact body written |
+| Step 5 — Build | `code` | implementation landed |
+| Step 7 — Create Evidence | `evidence` | EVID created and linked |
+| Step 8 — Review and Activate | `done` | cycle closed on this artifact |
+
+**Every advance is non-fatal.** Wrap it in `try`/`except` (MCP) or append `|| true` (shell). A marker that fails to move — server unreachable, tool absent from this binary, no state file behind the id — is one logged line, not a stopped cycle. Never abort a step because the phase did not advance.
+
+**No artifact, no marker.** Tactical work that created no PRD has nothing to mark; skip the advance rather than inventing an id.
+
+### Ordering hazard — do not "fix" this ordering back (forgeplan#330)
+
+`forgeplan_validate` writes the phase marker itself, and on an already-activated artifact it drags `done` back to `validate` ([forgeplan#330](https://github.com/ForgePlan/forgeplan/issues/330)). Two placements below look wrong and are deliberate:
+
+1. **Step 4 advances to `shape` BEFORE `forgeplan validate`, not after.** Validate then carries the marker forward on its own (`shape → validate`). Advancing after validate would write the marker backwards and leave a regression in the phase history.
+2. **The `done` advance in Step 8 is the last phase-touching call of the cycle.** Do not run `forgeplan validate` on the artifact after activation — #330 resets it to `validate` and hands `/forge-heal` exactly the `phase_mismatch` finding this wiring exists to prevent. If a post-activation re-validate is genuinely unavoidable, re-issue `forgeplan_phase_advance(to="done")` immediately after it.
+
+---
+
 ## Step 0: Memory Bootstrap (optional — Hindsight v2)
 
 If `mcp__hindsight__memory_status` is available, probe the project memory bank for context:
@@ -224,6 +250,23 @@ Open the created PRD file and fill in these sections:
 - **Functional Requirements**: Specific requirements with acceptance criteria.
 - **Non-Functional Requirements**: Performance, security, maintainability constraints.
 
+Advance the phase marker to `shape` — **before** the validate call below, per the ordering hazard above (forgeplan#330). Non-fatal:
+
+```python
+try:
+    mcp__forgeplan__forgeplan_phase_advance(
+        id=PRD_ID, to="shape",
+        reason="/forge-cycle Step 4 — artifact body filled"
+    )
+except Exception as e:
+    print(f"phase marker not advanced to shape (non-fatal): {e}")
+```
+
+Shell fallback:
+```bash
+forgeplan phase-advance PRD-XXX --to shape --reason "Step 4 — artifact body filled" || true
+```
+
 Validate the PRD:
 ```bash
 forgeplan validate PRD-XXX
@@ -231,6 +274,8 @@ forgeplan validate PRD-XXX
 
 If depth is Deep+, also create RFC with `forgeplan new rfc "<title>"` and fill architectural decisions.
 If depth is Critical, also create ADR with `forgeplan new adr "<title>"` for the key decision record.
+
+Run the same `shape` advance for every artifact this step created — the RFC at Deep+, the ADR at Critical. Each artifact carries its own marker.
 
 ## Step 4.5: FPF ADI mandatory dispatch (Standard+ depth — Sprint Z7 PRD-059)
 
@@ -482,6 +527,27 @@ Full matrix: RFC-003 Layer 2 (Agent Pack Dispatch Matrix) — superseded by `.fo
 
 **Why unconditional (PRD-020)**: prior to v1.6.0 of forgeplan-workflow, /forge-cycle spawned SPARC agents directly via Task tool with zero forgeplan claim wiring. Now every SPARC phase is visible in `forgeplan_claims`.
 
+### Phase marker → `code`
+
+Once the implementation is in the tree — direct, parallel-dispatched, or through the SPARC phases above — advance the marker. Non-fatal:
+
+```python
+try:
+    mcp__forgeplan__forgeplan_phase_advance(
+        id=ARTIFACT_ID, to="code",
+        reason="/forge-cycle Step 5 — implementation landed"
+    )
+except Exception as e:
+    print(f"phase marker not advanced to code (non-fatal): {e}")
+```
+
+Shell fallback:
+```bash
+forgeplan phase-advance "$ARTIFACT_ID" --to code --reason "Step 5 — implementation landed" || true
+```
+
+Skip the advance when `ARTIFACT_ID` is a derived `SESSION-*` id — there is no artifact behind it to mark.
+
 ## Step 5.5a: Ask-back protocol handling (PRD-029)
 
 Subagents dispatched in Step 5 (Build) may emit a `<<NEED_USER_INPUT:...>>` sentinel when they hit a knowledge gap that cannot be resolved from existing artifacts. This is not an error — it is the ask-back protocol (PRD-029). The orchestrator must detect, surface, and re-dispatch; never ignore sentinels silently.
@@ -719,6 +785,25 @@ mcp__forgeplan__forgeplan_link(
 
 Reference: NOTE-004 (mail-as-beads pattern from Gas Town), PRD-025 FR-027.
 
+### Phase marker → `evidence`
+
+Once the EVID exists and is linked, advance the artifact this cycle is driving — the PRD/RFC/ADR. The EVID is a leaf record and needs no marker of its own. Non-fatal:
+
+```python
+try:
+    mcp__forgeplan__forgeplan_phase_advance(
+        id=PRD_ID, to="evidence",
+        reason=f"/forge-cycle Step 7 — {evid['id']} created and linked"
+    )
+except Exception as e:
+    print(f"phase marker not advanced to evidence (non-fatal): {e}")
+```
+
+Shell fallback:
+```bash
+forgeplan phase-advance PRD-XXX --to evidence --reason "Step 7 — EVID-NNN created and linked" || true
+```
+
 ## Step 7.5: Parse NEEDS_ACTIVATION sentinel (Sprint D — PRD-032)
 
 After subagents (especially Profile B reviewers) complete in Steps 6.5–7, scan their
@@ -840,6 +925,29 @@ marking the forbidden mandate superseded-by-build + the reason, THEN run
 still claim the forbidden surface while the shipped code correctly doesn't
 is a silent lie in the graph; re-adding the forbidden surface to satisfy
 the stale spec is the wrong fix.
+
+### Phase marker → `done`
+
+After `forgeplan activate` succeeds, close the cycle on the artifact. Non-fatal:
+
+```python
+try:
+    mcp__forgeplan__forgeplan_phase_advance(
+        id=PRD_ID, to="done",
+        reason="/forge-cycle Step 8 — reviewed and activated"
+    )
+except Exception as e:
+    print(f"phase marker not advanced to done (non-fatal): {e}")
+```
+
+Shell fallback:
+```bash
+forgeplan phase-advance PRD-XXX --to done --reason "Step 8 — reviewed and activated" || true
+```
+
+If this step did not actually activate — review failed, or the reconciliation gate above is holding — leave the marker where it is. `done` means activated.
+
+**This is the last phase-touching call of the cycle.** Steps 9 / 9.5 commit and open the PR; they must not re-run `forgeplan validate` on the artifact, because forgeplan#330 resets `done` to `validate`. If something downstream re-validates anyway, re-issue this advance immediately after it.
 
 ## Step 9: Commit
 

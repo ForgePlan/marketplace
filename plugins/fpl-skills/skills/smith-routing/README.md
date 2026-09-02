@@ -97,7 +97,7 @@ User: /smith-routing we have a legacy Rails monolith — what methodology?
 ## References
 
 - [SKILL.md](./SKILL.md) — full procedure, three-mode detection, example output shapes for each mode.
-- [`skills/smith/routing-map.md`](../smith/routing-map.md) — primary source: 14-row table + 29 methodology cards + agent index.
+- [`skills/smith/routing-map.md`](../smith/routing-map.md) — primary source: 14-row table + 33 methodology cards + agent index.
 - [`skills/smith/sections/`](../smith/sections/) — 12 per-context playbooks loaded on demand (one at a time).
 - [`agents-pro/agents/smith.md`](../../../agents-pro/agents/smith.md) — the smith agent (not invoked by this skill; this is read-only education).
 - **Methodology primary sources**: [BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD), [SPARC](https://github.com/ruvnet/sparc), [RIPER-5](https://github.com/johnpeterman72/CursorRIPER), [DDD](https://www.domainlanguage.com/ddd/), [Strangler Fig](https://martinfowler.com/bliki/StranglerFigApplication.html), [C4 Model](https://c4model.com), [OWASP Top 10 2025](https://owasp.org/Top10/), [STRIDE/ASTRIDE](https://arxiv.org/abs/2403.13309), [DORA](https://dora.dev), [JTBD](https://hbr.org/2016/09/know-your-customers-jobs-to-be-done), [A3](https://www.lean.org/lexicon-terms/a3-thinking/), [5 Whys](https://en.wikipedia.org/wiki/Five_whys).
