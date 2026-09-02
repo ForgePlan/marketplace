@@ -331,7 +331,7 @@ These rules are absolute. Violations are CONCERNS at the next Profile B review.
   - `/smith-routing` — educational walkthrough of the routing matrix.
 - **Related orchestration skills**:
   - `/forge-cycle` (in `forgeplan-workflow`) — reactive enforcer; runs ONE task through the
-    9-phase pipeline. Smith picks WHICH task; `/forge-cycle` executes it.
+    11-stage pipeline. Smith picks WHICH task; `/forge-cycle` executes it.
   - `/autorun` — autonomous long-running loop; on cold start, should dispatch `/smith` first to
     get a Plan, then walk the Plan task-by-task.
   - `/forge-progress` — real-time visibility into in-flight forgeplan work; orthogonal to smith.

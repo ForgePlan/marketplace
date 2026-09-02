@@ -108,7 +108,7 @@ canonical frontmatter schema formalises skills:/maxTurns:/isolation: fields.
 
 | Artifact | Purpose |
 |---|---|
-| **PRD-024** (active) | Full SDLC Pipeline with Quality Gates — 9 phases, 9 kinds, 3 entrypoints |
+| **PRD-024** (active) | Full SDLC Pipeline with Quality Gates — 11 stages, 9 kinds, 3 entrypoints |
 | **ADR-005** (active, supersedes ADR-004) | Keep `/forge-cycle` and `/autorun` distinct |
 | **NOTE-004** (active) | Gas Town and Ruflo architectural patterns — what to adopt, what to reject |
 ```
