@@ -1,0 +1,16 @@
+# A Sprint-V "keep it just in case" snapshot of the 19 plugins that existed then
+# — 970 files, 69 MB.
+#
+# Ignored rather than deleted: the history of every file in it is already in git
+# under the file's own path, so the copy holds nothing that is not recoverable,
+# and leaving it on disk costs only space.
+#
+# Ignored rather than tracked: it holds 19 shadow `.claude-plugin/plugin.json`
+# manifests, and 15 skill/command files whose frontmatter was repaired in the
+# live tree and is still unparseable in the copy. A stray `git add` would bring
+# those shadow manifests into the catalog, where a gate or a reader that opens
+# the wrong copy reports a plugin state that stopped being true in Sprint V.
+#
+# The three tracked files one level up — README.md, agent.md, protocol.json —
+# are the part of the archive that is meant to be kept, and stay tracked.
+agents/_archive/discover-pre-sprint-v/plugins/

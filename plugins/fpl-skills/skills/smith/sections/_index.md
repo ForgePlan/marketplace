@@ -1,6 +1,6 @@
 # Smith Sections — Agentic RAG Index
 
-Each section is self-contained (≤300 lines, target ~100). Load on demand per context — never load all 12 at once. The routing-map (`../routing-map.md`) picks the row; this index points at the matching playbook.
+Each section is self-contained (≤300 lines, target ~100). Load on demand per context — never load all 14 at once. The routing-map (`../routing-map.md`) picks the row; this index points at the matching playbook.
 
 ## Available sections
 
@@ -18,6 +18,8 @@ Each section is self-contained (≤300 lines, target ~100). Load on demand per c
 | Product discovery | [10-pdlc-discovery.md](10-pdlc-discovery.md) | "what should we build", "discovery", "что строить" | JTBD + Lean MVP + Double Diamond for pre-product framing. |
 | Tech debt cleanup | [11-tech-debt.md](11-tech-debt.md) | "tech debt", "cleanup sprint", "техдолг" | A3 + Fishbone for systemic-vs-local distinction + ADR-supersede. |
 | Live incident | [12-incident.md](12-incident.md) | "production down", "outage", "лежит прод" | ICS during the fire + blameless post-mortem + 5 Whys after. |
+| TDD-first feature | [13-tdd-first.md](13-tdd-first.md) | "test-first", "enforced TDD", "тесты сначала" | Enforced-TDD sub-cycle — RED, independent certification, frozen oracle, then GREEN. |
+| Design-system → code | [14-design-system.md](14-design-system.md) | "Pencil to Storybook", "дизайн-система в код" | CANVAS Capture-Audit-Norm-check-Vectorize-Assemble with a tokens-before-code gate. |
 
 ## How smith uses this
 

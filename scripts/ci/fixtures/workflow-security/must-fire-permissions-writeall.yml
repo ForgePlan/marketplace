@@ -1,0 +1,11 @@
+# TRAP — must fire WF-PERMS-WRITEALL. Do not fix.
+name: trap write-all
+on:
+  push:
+    branches: [main]
+permissions: write-all
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok

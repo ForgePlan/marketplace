@@ -216,17 +216,19 @@ Each FR has a stable ID, a one-line behaviour statement, and 1+ acceptance crite
 
 ## Non-Functional Requirements
 
-Performance, security, reliability, compliance, accessibility. Each NFR has a category, a measurable threshold, and a measurement method. Write `TBD` when a number is genuinely unknown — never invent.
+Performance, security, reliability, compliance, accessibility. One row per NFR — every row carries a metric, the condition the metric must hold under, and how it will be measured. Write `TBD` in the `Metric` cell when a number is genuinely unknown — never invent one.
 
-### NFR-001 — Performance
-- **Category**: performance
-- **Threshold**: p95 latency < TBD ms under TBD concurrent users
-- **Measurement**: <how it will be measured — load test tool, production metric, SLO>
+| ID | Category | Requirement | Metric | Condition | Measurement |
+|----|----------|-------------|--------|-----------|-------------|
+| NFR-001 | Performance | <observable constraint, e.g. "search stays inside the interaction budget"> | p95 < TBD ms | TBD concurrent users | load-test tool / production SLO |
+| NFR-002 | Security | <e.g. "PII is unreadable at rest"> | AES-256 on every PII column | all environments | penetration-test report / scanner output |
+| NFR-003 | <category> | <constraint> | <metric, or TBD> | <when the metric must hold> | <how it is verified> |
 
-### NFR-002 — Security
-- **Category**: security
-- **Threshold**: <e.g. all PII fields encrypted at rest using AES-256>
-- **Measurement**: <e.g. penetration test report, automated scanner output>
+`Category` is a short label — Performance, Security, Reliability, Compliance, Accessibility, Observability, Maintainability, Backward compat are the ones in circulation; reuse an existing label before minting a new one. `Condition` is the load, environment, or user segment the metric holds under: an NFR without a condition is untestable ("fast" is not a requirement; "p95 < 200 ms at 1000 concurrent users" is). `TBD` in `Metric` is a legitimate, reviewable state — an invented number is not.
+
+If a category genuinely does not apply, write one line under the table saying so. A silently absent NFR section reads identically to an unconsidered one, and `guardian` gates on that (Step 5 — Standard+ PRD with no NFR section → CONCERNS).
+
+Artifacts authored before this template carry the older per-NFR prose form (`### NFR-001 — Performance` with **Category** / **Threshold** / **Measurement** bullets). That form still satisfies the gate; use the table for anything new.
 
 ## Constraints
 

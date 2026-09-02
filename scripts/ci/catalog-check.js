@@ -97,6 +97,69 @@ function listSkillDirs(dir) {
 // methodology context without carrying a denylist, and are not forgeplan-aware in this sense.
 const FORGEPLAN_AWARE_PATTERN = /disallowedTools/;
 
+/**
+ * List a plugin's agents, including those that live one directory deeper.
+ *
+ * `listMarkdownFiles` is flat, so `plugins/<p>/agents/<name>/<name>.md` was invisible: every
+ * published count silently omitted `forgeplan-brownfield-pack:discover`, a real, dispatched,
+ * denylisted agent. The numbers were not drifting — the counter simply could not see it.
+ *
+ * Descending needs a second rule, because that same directory holds prose: `discover/README.md`
+ * and `discover/SCAFFOLDING.md` are documentation, not agents, and counting them would have
+ * inflated the total to 97. An agent is a file whose frontmatter declares `name:` — the same thing
+ * that makes it loadable at runtime.
+ *
+ * Returns paths relative to the agents dir so callers can read them.
+ */
+function listAgentFiles(agentsDir) {
+  if (!fs.existsSync(agentsDir)) return [];
+  const out = [];
+
+  const isAgent = (p) => {
+    let text;
+    try {
+      text = fs.readFileSync(p, 'utf8');
+    } catch { return false; }
+    if (!text.startsWith('---')) return false;
+    const end = text.indexOf('\n---', 3);
+    // No closing delimiter means there is no frontmatter block, only a file that starts with `---`.
+    // Reading on would search prose for a `name:` line — that is how a doc gets counted as an agent.
+    if (end === -1) return false;
+    // `\s` matches a newline in JS, so /^name:\s*\S/ was satisfied by an EMPTY `name:` spilling onto
+    // the next key. Anchor to the rest of the same line instead.
+    return /^name:[ \t]*\S/m.test(text.slice(0, end));
+  };
+
+  // readdirSync(withFileTypes) does not follow symlinks: for a symlink Dirent BOTH isFile() and
+  // isDirectory() are false, so a symlinked agent — or a symlinked pack directory — fell through
+  // every branch and silently lowered the count. This repo tracks 86 symlinks under
+  // `plugins/*/.agents/skills/`, so linking is a live convention here, not a hypothetical.
+  const kindOf = (full, entry) => {
+    if (entry.isFile()) return 'file';
+    if (entry.isDirectory()) return 'dir';
+    if (!entry.isSymbolicLink()) return 'other';
+    try {
+      return fs.statSync(full).isDirectory() ? 'dir' : 'file';   // statSync follows the link
+    } catch { return 'other'; }                                   // dangling link: not an agent
+  };
+
+  for (const entry of fs.readdirSync(agentsDir, { withFileTypes: true })) {
+    const full = path.join(agentsDir, entry.name);
+    const kind = kindOf(full, entry);
+
+    if (kind === 'file' && entry.name.endsWith('.md')) {
+      if (isAgent(full)) out.push(entry.name);
+    } else if (kind === 'dir') {
+      for (const nested of fs.readdirSync(full, { withFileTypes: true })) {
+        const nestedFull = path.join(full, nested.name);
+        if (kindOf(nestedFull, nested) !== 'file' || !nested.name.endsWith('.md')) continue;
+        if (isAgent(nestedFull)) out.push(path.join(entry.name, nested.name));
+      }
+    }
+  }
+  return out.sort();
+}
+
 function isForgeplanAware(filePath) {
   let body;
   try {
@@ -134,7 +197,7 @@ function buildCatalog(root = ROOT) {
 
   for (const name of pluginNames) {
     const base = path.join(pluginsDir, name);
-    const agentFiles = listMarkdownFiles(path.join(base, 'agents'));
+    const agentFiles = listAgentFiles(path.join(base, 'agents'));
     const commandFiles = listMarkdownFiles(path.join(base, 'commands'));
     const skillDirs = listSkillDirs(path.join(base, 'skills'));
 

@@ -1,0 +1,17 @@
+# TRAP — must fire WF-PRT-FETCH. No checkout step at all, and the PR number is laundered through
+# env: so WF-INJECT does not see it either. Both older rules pass this file clean. Do not fix.
+name: trap prt run fetch
+on:
+  pull_request_target:
+    types: [opened]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          PR: ${{ github.event.number }}
+        run: |
+          gh pr checkout "$PR"
+          npm ci && npm test

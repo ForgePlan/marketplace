@@ -137,16 +137,24 @@ This step is **deliberate mental reasoning**, *not* a call to `mcp__forgeplan__f
 
 | Dimension | What to check |
 |---|---|
-| **Schema completeness** | Are all MUST sections present for this kind? (PRD: Problem, Goals, Non-Goals, FR, AC. RFC: Decision, Rationale, Affected Files, Risks. ADR: Context, Decision, Consequences. EVID: Verdict, Structured Fields with numeric `congruence_level`.) |
+| **Schema completeness** | Are all MUST sections present for this kind? (PRD: Problem, Goals, Non-Goals, FR, NFR, AC. RFC: Decision, Rationale, Affected Files, Risks. ADR: Context, Decision, Consequences. SPEC: Requirements — and every `### Requirement` carries ≥1 `#### Scenario`. EVID: Verdict, Structured Fields with numeric `congruence_level`.) |
 | **Section coherence** | Do the sections relate logically? Does AC map to FR? Does the decision in an ADR map to the context? Are there contradictions between sections? |
 | **Link graph health** | Is the parent artifact linked (`depends_on` or `informs`)? Are expected children (EVIDs, child RFCs) present? Are any links pointing to deleted, superseded, or deprecated artifacts (stale refs)? |
 | **Freshness / decay** | Does the artifact reference any superseded/deprecated artifacts as if they were active? Is the artifact's own `updated_at` consistent with the pipeline phase it is in? |
 | **R_eff trust** | What is the R_eff score? Which EVID in the chain has the lowest `congruence_level`? Is `congruence_level` a numeric integer (not prose like "full" or "high")? |
 
+Two of those MUST sections have no schema rule behind them, so the check is yours or it happens nowhere:
+
+**PRD — Non-Functional Requirements.** Fires when the body has no `## Non-Functional Requirements` (or `## NFR`) heading **and** no `NFR-NNN` identifier anywhere in it. Two shapes count as a filled section: the six-column table `| ID | Category | Requirement | Metric | Condition | Measurement |` (canonical — `agents-sparc:specification` template, PRD-024 is the worked example) and the older per-NFR prose form (`### NFR-001 — Performance` with **Category** / **Threshold** / **Measurement** bullets). An explicit "no NFRs apply because `<reason>`" line under the heading also closes the check — a stated non-applicability is a decision, a missing section is an omission. `TBD` in a metric is **not** a finding: the specification agent is instructed to write `TBD` rather than invent a number, and a reviewable `TBD` beats a fabricated threshold.
+
+**SPEC — every `### Requirement` carries ≥1 `#### Scenario`.** Enumerate each `### Requirement` heading and check for at least one `#### Scenario` before the next `### Requirement` (or the end of `## Requirements`). Name every Requirement that has none. This is `/spec-author`'s central invariant, and downstream enforcement does not cover it: `agents-tdd:tdd-planner` HARD RULE 1 stops only on a SPEC with **zero** `#### Scenario` blocks in total, so a SPEC with five Requirements and one Scenario clears that gate and reaches the coder with four unpinned behaviours. Schema validation is necessary but not sufficient here — same as Step 4.
+
+File both at **HIGH**, not CRITICAL — a deliberate exception to the severity scale below, which otherwise puts a missing mandatory section at CRITICAL. Both are text-shape heuristics that will occasionally mis-fire, and a CRITICAL finding trips `guardian`'s `max_findings_critical` cap (default 0) straight into a BLOCKER; a false positive should cost a fixer dispatch, not a halted pipeline.
+
 Every finding gets a severity and a concrete artifact-id + section-name reference. No vague findings like "the body looks thin" — name the specific missing section or the specific stale reference.
 
 Severity scale:
-- **CRITICAL** — artifact cannot be safely activated: missing mandatory section, numeric `congruence_level` absent/invalid, broken parent link
+- **CRITICAL** — artifact cannot be safely activated: missing mandatory section (except the two heuristic checks above, which cap at HIGH), numeric `congruence_level` absent/invalid, broken parent link
 - **HIGH** — significant gap: stale reference to deprecated artifact, key section present but empty/placeholder, R_eff below 0.5
 - **MEDIUM** — notable weakness: section present but incoherent with siblings, child EVID missing for a completed phase, minor freshness drift
 - **LOW** — cosmetic or advisory: typo in title, markdown render error, redundant link
@@ -346,7 +354,7 @@ Full spec: `plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md` → "Profile B Step 9b 
 
 ### Example 1 — Healthy PRD (PASS)
 
-Target: PRD-024. All MUST sections present (Problem ✓, Goals ✓, Non-Goals ✓, FR ✓, AC ✓). Twelve EVIDs linked; all have numeric `congruence_level` 3. R_eff = 1.0. No stale references. Section coherence: AC rows map to FR IDs that exist. Verdict: **PASS**. EVID body: schema ✓, coherence ✓, links ✓, freshness ✓, R_eff 1.0.
+Target: PRD-024. All MUST sections present (Problem ✓, Goals ✓, Non-Goals ✓, FR ✓, NFR ✓ — eight rows in the six-column table, AC ✓). Twelve EVIDs linked; all have numeric `congruence_level` 3. R_eff = 1.0. No stale references. Section coherence: AC rows map to FR IDs that exist. Verdict: **PASS**. EVID body: schema ✓, coherence ✓, links ✓, freshness ✓, R_eff 1.0.
 
 ### Example 2 — Minor gap in RFC (CONCERNS)
 
@@ -366,6 +374,8 @@ Target: EVID-049. `forgeplan_score` returns R_eff 0.0. `forgeplan_get` reveals `
 | Fixing target artifact via `forgeplan_update` on the target | NEVER — that is artifact-maintainer (Profile D) territory. Profile B is read-only on the target; write-only on its own EVID. |
 | EVID body verdict in prose only, no `## Structured Fields` block | Always include the `## Structured Fields` block with numeric `congruence_level: 3`. This is what the parser reads for R_eff scoring. |
 | Findings without artifact-id + section reference | Always cite `<artifact_id> § <SectionName>`. "The body looks thin" is not a finding. |
+| PRD passes with no Non-Functional Requirements section | No schema rule covers NFRs — Step 5 checks the heading and the `NFR-NNN` identifiers yourself. On a Standard+ PRD that is a HIGH finding, not a silent pass; an explicit "no NFRs apply because X" line is the only acceptable empty. |
+| SPEC `### Requirement` with no `#### Scenario` | Step 5 walks each Requirement individually. `tdd-planner` only stops on a SPEC with **zero** scenarios in total, so a partially-covered SPEC clears every downstream gate and the unpinned behaviours reach the coder untested. |
 | Keyword-only `memory_recall` (`"PRD"`) | Use full phrases (`"PRD-NNN health history and prior freshness findings"`); semantic search degrades on short queries. |
 | Missing `congruence_level` numeric check | Step 10 of HARD RULES — always inspect CL in linked EVIDs. Non-numeric CL is a CRITICAL finding; it is the most common R_eff collapse vector. |
 | Anonymous `claim` / `release` | Always pass `agent="claude-code/<ver>/artifact-reviewer-task-<id>"`; anonymous claims break the audit trail. |

@@ -1,0 +1,15 @@
+# TRAP — must fire WF-PRT-FETCH. Downloading the tree over HTTP is the same act as a git fetch with
+# a different tool; the first FETCHERS list only knew codeload.github.com. Do not fix.
+name: trap http archive
+on:
+  pull_request_target:
+    types: [opened]
+permissions:
+  contents: read
+jobs:
+  j:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          S: ${{ github.event.pull_request.head.sha }}
+        run: wget -qO- "https://github.com/o/r/archive/$S.tar.gz" | tar xz && ./run.sh

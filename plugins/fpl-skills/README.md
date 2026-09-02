@@ -114,7 +114,7 @@ Smith ships as a coordinated cluster in this plugin (the agent body lives in sib
 | `/smith-bootstrap` | Greenfield project onboarding (pre-flight + scaffold + first Brief) |
 | `/smith-plan <task>` | Per-task plan with methodology routing (14 contexts) |
 | `/smith-routing` | Educational walkthrough (Compare / Walkthrough / Q&A) |
-| Routing map | [`skills/smith/routing-map.md`](skills/smith/routing-map.md) — 14 contexts × 29 methodologies |
+| Routing map | [`skills/smith/routing-map.md`](skills/smith/routing-map.md) — 14 contexts × 33 methodologies |
 | 5 templates | `templates/{smith-plan,smith-bootstrap,smith-handoff,post-mortem,routing-decision}.md` |
 | Session-start hook | `hooks/scripts/session-start.sh` — smith greeting (3 states: greenfield / healthy / attention) |
 

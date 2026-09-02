@@ -1,7 +1,7 @@
 ---
 name: smith-routing
 description: |
-  Educational routing skill. Walks the user through smith's methodology routing matrix without committing to a specific task. Use to learn "when do I apply BMAD vs SPARC?", "what methodology for brownfield?", "explain the bug fix workflow". Pulls from routing-map.md (14 contexts + 29 methodology cards) and sections/NN-*.md (detailed playbooks). Output: educational comparison + recommendation when user describes their situation. Does NOT produce a Plan artifact — for that, use /smith-plan.
+  Educational routing skill. Walks the user through smith's methodology routing matrix without committing to a specific task. Use to learn "when do I apply BMAD vs SPARC?", "what methodology for brownfield?", "explain the bug fix workflow". Pulls from routing-map.md (14 contexts + 33 methodology cards) and sections/NN-*.md (detailed playbooks). Output: educational comparison + recommendation when user describes their situation. Does NOT produce a Plan artifact — for that, use /smith-plan.
 
   Triggers: "smith routing", "/smith-routing", "explain methodology", "какая методология", "when do I use", "compare methodologies", "routing walkthrough", "BMAD vs SPARC", "Strangler Fig or rewrite", "show me the routing matrix"
 origin: forgeplan
@@ -18,7 +18,7 @@ walks the user through smith's 14 contexts, compares methodologies side-by-side,
 never calls `forgeplan_new`, `forgeplan_update`, or any mutating tool. It reads the routing-map
 and section playbooks and renders explanations.
 
-Foundation: `plugins/fpl-skills/skills/smith/routing-map.md` (14 contexts × 29 methodology cards)
+Foundation: `plugins/fpl-skills/skills/smith/routing-map.md` (14 contexts × 33 methodology cards)
 + `plugins/fpl-skills/skills/smith/sections/NN-*.md` (per-context detailed playbooks).
 
 ---
@@ -72,7 +72,7 @@ If ambiguous, ask the user one clarifying question before proceeding:
 ### Step 2 — Read the routing brain
 
 Always read `plugins/fpl-skills/skills/smith/routing-map.md` first. It contains the 14-row routing
-table (one row per context) and the 29 methodology cards. Treat it as the single source of truth —
+table (one row per context) and the 33 methodology cards. Treat it as the single source of truth —
 never invent rows, never blend rows.
 
 ### Step 3 — Comparison mode
@@ -91,7 +91,7 @@ If Walkthrough mode:
 
 1. Render the 14-context table with one-line summaries (use the `sections/_index.md` one-liners for rows 1-12, and the `routing-map.md` row summary for rows 13-14, which do not yet have dedicated section files).
 2. Ask the user to pick a row to dig into.
-3. On pick, load the matching section file (`sections/NN-*.md`) and render its playbook. Rows 13-14 do not yet have a dedicated section file — fall back to the full row in `routing-map.md`.
+3. On pick, load the matching section file (`sections/NN-*.md`) and render its playbook. All 14 rows have a section file (13-tdd-first.md, 14-design-system.md added in marketplace#238) — read the full row in `routing-map.md`.
 4. After the playbook, offer two follow-ups: "compare with another context?" or "ready to plan? → `/smith-plan <task>`".
 
 ### Step 5 — Question-Answer mode
@@ -274,8 +274,8 @@ The skill never pushes the user toward action. The user picks the next step.
 
 This skill reads from but never writes to:
 
-- **`plugins/fpl-skills/skills/smith/routing-map.md`** — primary source: 14-row routing table + 29 methodology cards + agent index + evidence quality bar.
-- **`plugins/fpl-skills/skills/smith/sections/_index.md`** — one-line summaries for the Walkthrough mode (rows 1-12 only; rows 13-14 do not yet have dedicated section files — fall back to `routing-map.md`).
+- **`plugins/fpl-skills/skills/smith/routing-map.md`** — primary source: 14-row routing table + 33 methodology cards + agent index + evidence quality bar.
+- **`plugins/fpl-skills/skills/smith/sections/_index.md`** — one-line summaries for the Walkthrough mode (all 14 rows; 13-tdd-first.md and 14-design-system.md added in marketplace#238) (was: rows 1-12 only) — section files — fall back to `routing-map.md`).
 - **`plugins/fpl-skills/skills/smith/sections/NN-*.md`** — 12 detailed per-context playbooks (loaded one at a time, never bundled).
 
 ### Sibling skills (when to redirect)

@@ -42,7 +42,7 @@ All artifacts live in `.forgeplan/` (PRD / RFC / ADR / EVID / NOTE structure).
 - At **session start** when unsure what to do next — smith reads `forgeplan_health` + recent journal and proposes the next action.
 - For a **fresh repository** with no artifacts yet — invoke `/smith-bootstrap` to seed Brief / PRD / first ADR via the greenfield row of the routing map.
 - For a **specific task** of any depth — invoke `/smith-plan <task description>` and smith picks the matching row, names the methodology, and lists the dispatch sequence.
-- For **learning the methodology surface** — invoke `/smith-routing` to inspect the 14 routing rows + 29 methodology cards without committing to a task.
+- For **learning the methodology surface** — invoke `/smith-routing` to inspect the 14 routing rows + 33 methodology cards without committing to a task.
 - When the existing entry points (`/forge-cycle`, `/autorun`) do not fit — e.g. cross-context work, ambiguous depth, methodology mismatch — smith disambiguates first.
 - **Trigger phrases** (English): `smith`, `what's next`, `scrum master`, `master orchestrator`, `which methodology`, `take charge`, `captain mode`. The agent file at `plugins/agents-pro/agents/smith.md` also registers bilingual Russian triggers per the agent-frontmatter exception in the Language policy section below — those triggers exist in the agent file, not here.
 
@@ -96,7 +96,7 @@ Evidence required: PRD + ADI EVID (≥3 hypotheses) + BMAD EVID with ≥1 findin
 
 ### Methodologies smith knows
 
-Twenty-nine methodologies are catalogued in `routing-map.md` with cards covering one-sentence definition, when it shines, when NOT to use, and a primary source link. Grouped:
+Thirty-three methodologies are catalogued in `routing-map.md` with cards covering one-sentence definition, when it shines, when NOT to use, and a primary source link. Grouped:
 
 - **AI-coding workflows**: BMAD-METHOD, SPARC, RIPER-5, GitHub Spec Kit, FPF ADI (Abduction → Deduction → Induction), CANVAS (design-system → code, hook-gate=Yes, instance #5).
 - **Architecture lenses**: C4 Model, Domain-Driven Design, Event Storming, Clean Architecture, Hexagonal Architecture (Ports & Adapters), ADR / MADR.
@@ -122,7 +122,7 @@ The 14-row routing table is **CLI-agnostic** — it names methodologies and Prof
 ### References
 
 - `plugins/agents-pro/agents/smith.md` — the smith agent itself (Profile B-orchestrator master agent, 368 lines).
-- `plugins/fpl-skills/skills/smith/routing-map.md` — the 14-row routing table + 29 methodology cards + agent index.
+- `plugins/fpl-skills/skills/smith/routing-map.md` — the 14-row routing table + 33 methodology cards + agent index.
 - `plugins/fpl-skills/skills/smith/SKILL.md` — the main entry skill (loader + index).
 - `plugins/fpl-skills/skills/smith-bootstrap/SKILL.md` — greenfield bootstrap dispatch path.
 - `plugins/fpl-skills/skills/smith-plan/SKILL.md` — per-task planning skill.

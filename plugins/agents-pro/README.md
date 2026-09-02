@@ -18,7 +18,7 @@ Smith is a **Profile B-orchestrator** (new sub-profile per AGENT-AUTHORING-GUIDE
 |---|---|
 | `smith` agent | `plugins/agents-pro/agents/smith.md` (this plugin) |
 | 4 `/smith*` skills | `plugins/fpl-skills/skills/smith*/` (sibling plugin) |
-| Routing brain (14 ctx × 29 methodologies) | `plugins/fpl-skills/skills/smith/routing-map.md` |
+| Routing brain (14 ctx × 33 methodologies) | `plugins/fpl-skills/skills/smith/routing-map.md` |
 | 5 templates (smith-plan / smith-bootstrap / smith-handoff / post-mortem / routing-decision) | `plugins/fpl-skills/templates/` |
 
 > [!TIP]

@@ -248,8 +248,14 @@ If you want to read the original BMAD spec → see `sources/BMAD-METHOD/` in the
 This table lists **20 methodologies — the ones with a standalone command or plugin**. It is
 a curated summary, not the catalogue. The catalogue is
 [`smith/routing-map.md`](../plugins/fpl-skills/skills/smith/routing-map.md), which carries
-**37 cards** with per-row dispatch chains and evidence bars; the remaining 17 are
+**33 cards** with per-row dispatch chains and evidence bars; the remaining 13 are
 architecture lenses and ingest mappings that have no command of their own.
+
+> The count used to read 37, which was a miscount rather than drift: `grep -c '^### '` over
+> `routing-map.md` returns 37, but six of those headings belong to the "Parallel dispatch &
+> orchestration discipline" section and are not methodology cards. Count the cards section itself:
+> `awk '/^## Methodology cards/{f=1;next} /^## /{if(f)exit} f&&/^### /{c++} END{print c+0}'`.
+> The "remaining N" arithmetic below inherits from that number, so it moved too (marketplace#229).
 
 When the two disagree, `routing-map.md` wins — it is the file the router reads.
 
@@ -280,7 +286,7 @@ When the two disagree, `routing-map.md` wins — it is the file the router reads
 
 ## See also
 
-- [`smith/routing-map.md`](../plugins/fpl-skills/skills/smith/routing-map.md) — **the routing matrix smith actually reads**: 14 contexts and 37 methodology cards, each with a dispatch chain and an evidence bar. The table above is a curated summary of it; that file is what the router executes. Start there when a methodology is not listed here, or when you need the dispatch sequence rather than the name.
+- [`smith/routing-map.md`](../plugins/fpl-skills/skills/smith/routing-map.md) — **the routing matrix smith actually reads**: 14 contexts and 33 methodology cards, each with a dispatch chain and an evidence bar. The table above is a curated summary of it; that file is what the router executes. Start there when a methodology is not listed here, or when you need the dispatch sequence rather than the name.
 - [DEVELOPER-JOURNEY.md](DEVELOPER-JOURNEY.md) — narrative onboarding with 4 personas
 - [PLAYBOOK.md](PLAYBOOK.md) — use-case matrix (which command for which scenario)
 - [USAGE-GUIDE.md](USAGE-GUIDE.md) — reference manual for the marketplace

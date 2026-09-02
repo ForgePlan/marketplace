@@ -1,0 +1,19 @@
+# TRAP — must fire WF-PRT-FETCH. `issue_comment` was not in the privileged-trigger list at all, yet
+# a ChatOps bot that reacts to a comment by checking out the PR is arguably the most common Actions
+# RCE in the wild: it runs in the base-repo context with a write-scoped token. Do not fix.
+name: trap chatops
+on:
+  issue_comment:
+    types: [created]
+permissions:
+  pull-requests: write
+jobs:
+  j:
+    if: startsWith(github.event.comment.body, '/test')
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          N: ${{ github.event.issue.number }}
+        run: |
+          gh pr checkout "$N"
+          npm ci && npm test

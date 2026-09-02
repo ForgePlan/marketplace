@@ -1,0 +1,12 @@
+# TRAP — must fire WF-INJECT. Untrusted title interpolated straight into a shell. Do not fix.
+name: trap inject
+on:
+  issues:
+    types: [opened]
+permissions:
+  contents: read
+jobs:
+  greet:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "new issue: ${{ github.event.issue.title }}"

@@ -20,7 +20,7 @@ Smith — это агент **Profile B-orchestrator** (новый подпро�
 |---|---|
 | Агент `smith` | `plugins/agents-pro/agents/smith.md` (этот плагин) |
 | 4 скилла `/smith*` | `plugins/fpl-skills/skills/smith*/` (соседний плагин) |
-| Routing-мозг (14 контекстов × 29 методологий) | `plugins/fpl-skills/skills/smith/routing-map.md` |
+| Routing-мозг (14 контекстов × 33 методологий) | `plugins/fpl-skills/skills/smith/routing-map.md` |
 | 5 шаблонов (smith-plan / smith-bootstrap / smith-handoff / post-mortem / routing-decision) | `plugins/fpl-skills/templates/` |
 
 > [!TIP]

@@ -1,0 +1,14 @@
+# TRAP — must fire WF-PRT-CHECKOUT. The trigger is written as a flow sequence, which the old
+# PRIVILEGED_EVENT regex (it demanded a trailing colon) did not recognise — turning EVERY
+# privileged-trigger rule off for this file. Do not fix.
+name: trap trigger flow-seq
+on: [issues, pull_request_target]
+permissions:
+  contents: read
+jobs:
+  j:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
