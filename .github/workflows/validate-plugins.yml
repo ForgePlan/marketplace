@@ -45,17 +45,21 @@ jobs:
           done
           [ $errors -eq 0 ] || exit 1
 
-      - name: Check v2 optional fields
-        run: |
-          for f in plugins/*/.claude-plugin/plugin.json; do
-            [ -f "$f" ] || continue
-            plugin=$(dirname "$(dirname "$f")")
-            name=$(basename "$plugin")
-            category=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1])).get('category',''))" "$f" 2>/dev/null || true)
-            [ -z "$category" ] && echo "INFO: $name — no 'category' field (v2 schema)"
-            has_components=$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print('yes' if 'components' in d else 'no')" "$f" 2>/dev/null || true)
-            [ "$has_components" = "yes" ] && echo "OK: $name — v2 components field present"
-          done
+      # REMOVED — "Check v2 optional fields" (marketplace#246).
+      #
+      # It reported whether each plugin.json carried `category` and `components`. Both fields have
+      # since been established as NOT belonging there: `category` lives in the marketplace entry,
+      # `components` was a descriptive duplicate of the directory contents that nothing read. Their
+      # absence is now the correct state, so the step printed 23 INFO lines about a healthy tree.
+      #
+      # It also carried a latent failure. Its last statement was `[ "$has_components" = "yes" ] &&
+      # echo ...`, and the job shell runs with `-e`. While every manifest still had `components`
+      # the test was true and the step exited 0; the moment the field was removed everywhere, the
+      # final compound returned non-zero and killed the step — a green check that depended on the
+      # thing it was reporting on being present.
+      #
+      # Superseded by the `official-plugin-validate` gate below, which runs the runtime's own
+      # `claude plugin validate --strict` and knows the real manifest schema.
 
       - name: Check command collisions
         run: |
