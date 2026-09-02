@@ -1,0 +1,17 @@
+# BENIGN — must produce NO HIGH finding. Ordinary CI: unprivileged trigger, base-ref checkout,
+# tags fetched for a version string. If this ever goes red the gate has become noise, and a noisy
+# gate gets switched off. Do not "fix" by making it look dangerous.
+name: benign plain ci
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  j:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - run: |
+          git fetch --tags --depth=1
+          npm ci && npm test

@@ -92,7 +92,57 @@ const PERMISSIONS_KEY = /^\s*permissions:\s*(\S.*)?$/m;
 // identical dangerous body underneath. Matching the bare word anywhere in the file is coarse (a
 // workflow that merely *mentions* the trigger in a comment now counts as privileged) and that is
 // the right trade: a false positive costs a comment, a false negative costs the repository.
-const PRIVILEGED_EVENT = /\b(pull_request_target|workflow_run)\b/;
+// Triggers that run in the BASE repo context with a write-scoped token while carrying
+// attacker-influenced payload. `issue_comment` is on this list because a ChatOps bot that reacts to
+// a comment by checking out the PR is arguably the most common Actions RCE in the wild, and the
+// first version of this file did not consider it privileged at all.
+const PRIVILEGED_TRIGGERS = [
+  'pull_request_target',
+  'workflow_run',
+  'issue_comment',
+  'pull_request_review',
+  'pull_request_review_comment',
+  'discussion_comment',
+];
+
+/**
+ * Does this workflow declare a privileged trigger?
+ *
+ * This is the MASTER SWITCH — every privileged rule is gated on it, so both directions hurt:
+ *
+ *  - Too narrow and the rules turn OFF silently. The original `/^\s*(trigger)\s*:/m` recognised
+ *    only the nested block form; `on: [pull_request_target]`, `on: pull_request_target` and
+ *    `on:\n  - pull_request_target` all disabled every rule with the identical dangerous body
+ *    underneath.
+ *  - Too broad and ordinary CI goes red. Replacing it with a bare word-match over the whole file
+ *    (the fix I reached for first) made an `on: push` workflow fail because a COMMENT said
+ *    "we deliberately do NOT use pull_request_target here". A gate that reddens honest work gets
+ *    switched off, and then it protects nothing.
+ *
+ * So: read the `on:` mapping specifically, with comments stripped, and accept every YAML spelling
+ * of it — block, scalar, flow sequence, flow mapping, block sequence, quoted key.
+ */
+function privilegedTriggers(source) {
+  const lines = splitLines(source).map(stripComment);
+  let region = '';
+
+  for (let i = 0; i < lines.length; i++) {
+    const m = /^(['"]?)on\1\s*:(.*)$/.exec(lines[i]);
+    if (!m) continue;
+    region = m[2];                              // inline part: `[a, b]`, `push`, `{a: …}` or empty
+    for (let j = i + 1; j < lines.length; j++) {
+      if (lines[j].trim() === '') continue;
+      if (indentOf(lines[j]) === 0) break;      // next top-level key ends the `on:` block
+      region += '\n' + lines[j];
+    }
+    break;
+  }
+
+  return PRIVILEGED_TRIGGERS.filter((t) => new RegExp(`\\b${t}\\b`).test(region));
+}
+
+/** Back-compat shim: the rules below only ask "is this file privileged at all?". */
+const PRIVILEGED_EVENT = { test: (source) => privilegedTriggers(source).length > 0 };
 
 // `github.head_ref` is the single most-cited pull_request_target footgun and was not matched here:
 // the old pattern demanded a `github.event.(pull_request|workflow_run).` prefix. It is already in
@@ -244,6 +294,10 @@ function findInjection(lines, runBlocks) {
     if (!inRunBlock(runBlocks, lineNo)) continue;
     const code = stripComment(lines[i]);
     const m = code.match(UNTRUSTED_EXPR);
+    // GitHub generates these leaves itself — they are integers, timestamps and opaque ids, not free
+    // text, so they cannot carry a shell break-out. Flagging `pull_request.number` sent an ordinary
+    // `echo "building PR #${{ ... }}"` red, which is the kind of noise that gets a gate ignored.
+    if (m && /\.(?:number|id|node_id|run_id|run_number|created_at|updated_at)\s*\}\}/.test(m[0])) continue;
     if (m) {
       findings.push({
         line: lineNo,
@@ -429,17 +483,33 @@ function findPrivilegedArtifactDownload(source, lines) {
   const findings = [];
   if (!PRIVILEGED_EVENT.test(source)) return findings;
 
+  // Downloading an artifact is not itself the attack — reading a PR's lint report and posting it as
+  // a comment is GitHub's own recommended pattern, and the first version of this rule reddened it.
+  // The attack is download-then-RUN. So HIGH requires an execution sink somewhere in the file;
+  // a bare download stays WARN, which says "look at this" without failing the build.
+  const executes = /\b(?:chmod\s+\+x|unzip|tar\s+x|\.\/|bash\s|sh\s|node\s|python\s|npm\s+(?:ci|i|install|run)|make\b)/
+    .test(lines.map(stripComment).join('\n'));
+
+  const DOWNLOADERS = [
+    { re: /uses:\s*['"]?[\w.-]+\/[\w.-]*download-artifact[\w.-]*@/, what: 'a download-artifact action' },
+    { re: /\bgh\s+run\s+download\b/, what: 'gh run download' },
+  ];
+
   for (let i = 0; i < lines.length; i++) {
     const code = stripComment(lines[i]);
-    if (!/uses:\s*['"]?(?:actions\/download-artifact@|dawidd6\/action-download-artifact@)/.test(code)) continue;
+    const hit = DOWNLOADERS.find((d) => d.re.test(code));
+    if (!hit) continue;
     findings.push({
       line: i + 1,
       rule: 'WF-PRT-ARTIFACT',
-      severity: HIGH,
+      severity: executes ? HIGH : WARN,
       message:
-        'pull_request_target/workflow_run trigger downloads a build artifact — an artifact produced ' +
-        'by the PR is attacker-controlled content; unpacking or executing it under this trigger is ' +
-        'the artifact-poisoning path',
+        `privileged trigger downloads a build artifact (${hit.what})` +
+        (executes
+          ? ' AND the job unpacks or executes — an artifact produced by the PR is attacker-controlled, ' +
+            'so this is the artifact-poisoning path'
+          : ' — no execution sink found in this file, so this is a heads-up rather than a failure; ' +
+            'reading an artifact to post a comment is a legitimate pattern'),
     });
   }
   return findings;
@@ -536,8 +606,16 @@ function resolveScanDirs() {
  *    but it widens which job sees the secrets. Judgement, not a rule.
  *  - **Semantics.** It matches text. A workflow can be dangerous without any string here, and safe
  *    with several.
+ *  - **A gate edited to exempt its own fixtures.** Mutation testing killed 6 of 7 sabotage attempts;
+ *    the survivor was `scanFile` returning `[]` for any path that is not a fixture. No self-test can
+ *    catch that, because the self-test runs through the same mutated function. Whoever can make that
+ *    edit can also delete this file — it is a code-review question, not a linter one.
+ *  - **Coverage.** An adversarial corpus of 41 privileged workflows still gets past roughly half of
+ *    this, mostly via checkout-ref indirection (`env:` / step-output / `needs.outputs` hops) and
+ *    package managers pulling a PR URL. Tracked, not fixed here.
  *
- * This is a tripwire, not a proof. It exists to stop the shapes people actually write by accident.
+ * This is a tripwire, not a proof. It exists to stop the shapes people actually write by accident,
+ * and to be honest about the ones it does not.
  */
 
 /**
@@ -552,26 +630,57 @@ function resolveScanDirs() {
  * — instead of passing the real files and reporting a reassuring zero.
  */
 const SELF_TEST_EXPECT = {
-  'must-fire-prt-checkout.yml': 'WF-PRT-CHECKOUT',
-  'must-fire-prt-checkout-commented.yml': 'WF-PRT-CHECKOUT',
-  'must-fire-prt-trigger-flowseq.yml': 'WF-PRT-CHECKOUT',
-  'must-fire-prt-head-ref.yml': 'WF-PRT-CHECKOUT',
-  'must-fire-prt-run-fetch.yml': 'WF-PRT-FETCH',
-  'must-fire-prt-fetch-flagged.yml': 'WF-PRT-FETCH',
-  'must-fire-prt-artifact.yml': 'WF-PRT-ARTIFACT',
-  'must-fire-prt-http-archive.yml': 'WF-PRT-FETCH',
-  'must-fire-inject.yml': 'WF-INJECT',
-  'must-fire-permissions-writeall.yml': 'WF-PERMS-WRITEALL',
-  'must-fire-templates-scanned.yml': 'WF-PERMS-WRITEALL',
-  'must-fire-unpinned.yml': 'WF-UNPINNED',
+  'must-fire-prt-checkout.yml': ['WF-PRT-CHECKOUT', HIGH],
+  'must-fire-prt-checkout-commented.yml': ['WF-PRT-CHECKOUT', HIGH],
+  'must-fire-prt-trigger-flowseq.yml': ['WF-PRT-CHECKOUT', HIGH],
+  'must-fire-prt-head-ref.yml': ['WF-PRT-CHECKOUT', HIGH],
+  'must-fire-prt-run-fetch.yml': ['WF-PRT-FETCH', HIGH],
+  'must-fire-prt-fetch-flagged.yml': ['WF-PRT-FETCH', HIGH],
+  'must-fire-prt-artifact.yml': ['WF-PRT-ARTIFACT', HIGH],
+  'must-fire-prt-http-archive.yml': ['WF-PRT-FETCH', HIGH],
+  'must-fire-prt-chatops.yml': ['WF-PRT-FETCH', HIGH],
+  'must-fire-inject.yml': ['WF-INJECT', HIGH],
+  'must-fire-permissions-writeall.yml': ['WF-PERMS-WRITEALL', HIGH],
+  'must-fire-templates-scanned.yml': ['WF-PERMS-WRITEALL', HIGH],
+  'must-fire-unpinned.yml': ['WF-UNPINNED', WARN],
 };
 
+/** Ordinary CI that MUST stay clean. A gate that reddens honest work gets switched off. */
+const SELF_TEST_BENIGN = [
+  'must-not-fire-plain-ci.yml',
+  'must-not-fire-mentions-trigger-in-comment.yml',
+  'must-not-fire-pr-number.yml',
+];
+
+/**
+ * Prove the gate can still FAIL before trusting it to say "clean".
+ *
+ * The first version of this checked only that each trap produced a finding with the right rule
+ * NAME. An adversarial pass then showed it constrained almost nothing: 13 of 13 mutations kept all
+ * traps green, and six of them left the gate structurally unable to fail CI at all — because
+ * severity, file discovery and the exit code were never asserted. Only the two regressions it was
+ * literally written against died. That is a self-test as theatre: it manufactured confidence
+ * instead of evidence.
+ *
+ * So it now asserts the whole pipeline, end to end:
+ *   1. every trap fires its rule AT ITS SEVERITY — severity is what decides pass/fail, so a
+ *      HIGH→WARN downgrade must not pass
+ *   2. ordinary CI fixtures stay clean — false positives are how a gate gets disabled
+ *   3. `run()` over the fixtures directory EXITS 1 — this exercises listWorkflowFiles and the exit
+ *      logic, which a per-file scan never touches
+ *   4. `resolveScanDirs()` still contains the real workflow directory — dropping it was a silent
+ *      blinding that no rule-level check could see
+ *
+ * It still cannot prove the rules catch attacks it has no trap for. That is a coverage question,
+ * tracked separately; this only guarantees the machinery is alive.
+ */
 function selfTest() {
   const dir = path.join(__dirname, 'fixtures', 'workflow-security');
+  const repoRoot = path.resolve(__dirname, '..', '..');
   if (!fs.existsSync(dir)) {
     console.error(
       'validate-workflow-security FAILED: self-test fixtures are missing at ' +
-      `${path.relative(path.resolve(__dirname, '..', '..'), dir)}.\n` +
+      `${path.relative(repoRoot, dir)}.\n` +
       'Without them a clean report cannot be distinguished from dead rules — which is exactly how ' +
       'WF-PRT-CHECKOUT stayed broken. Restore the fixtures rather than deleting this check.',
     );
@@ -579,17 +688,58 @@ function selfTest() {
   }
 
   const dead = [];
-  for (const [file, rule] of Object.entries(SELF_TEST_EXPECT)) {
+
+  // 1 — traps fire, at their severity
+  for (const [file, [rule, severity]] of Object.entries(SELF_TEST_EXPECT)) {
     const p = path.join(dir, file);
     if (!fs.existsSync(p)) { dead.push(`${file}: fixture missing (rule ${rule} is now unproven)`); continue; }
-    const fired = scanFile(p).some((f) => f.rule === rule);
-    if (!fired) dead.push(`${file}: expected ${rule}, got nothing — the rule is DEAD`);
+    const hits = scanFile(p).filter((f) => f.rule === rule);
+    if (hits.length === 0) { dead.push(`${file}: expected ${rule}, got nothing — the rule is DEAD`); continue; }
+    if (!hits.some((f) => f.severity === severity)) {
+      dead.push(`${file}: ${rule} fired at ${hits[0].severity}, expected ${severity} — severity is what fails CI`);
+    }
+  }
+
+  // 2 — ordinary CI stays clean
+  for (const file of SELF_TEST_BENIGN) {
+    const p = path.join(dir, file);
+    if (!fs.existsSync(p)) { dead.push(`${file}: benign fixture missing — false positives are now unproven`); continue; }
+    const high = scanFile(p).filter((f) => f.severity === HIGH);
+    if (high.length > 0) {
+      dead.push(`${file}: benign workflow produced ${high[0].rule} HIGH — a gate that reddens honest CI gets turned off`);
+    }
+  }
+
+  // 3 — the whole pipeline can actually fail
+  const savedLog = console.log;
+  const savedErr = console.error;
+  console.log = () => {};
+  console.error = () => {};
+  let code;
+  try {
+    code = run(dir, {});
+  } finally {
+    console.log = savedLog;
+    console.error = savedErr;
+  }
+  if (code !== 1) {
+    dead.push(
+      `run() over the fixtures returned ${code}, expected 1 — file discovery or the exit path is ` +
+      'broken, so the gate cannot fail CI no matter what the rules find',
+    );
+  }
+
+  // 4 — the real workflow directory is still in scope
+  const dirs = resolveScanDirs();
+  const wf = path.join(repoRoot, '.github', 'workflows');
+  if (fs.existsSync(wf) && !dirs.includes(wf)) {
+    dead.push('resolveScanDirs() no longer includes .github/workflows — the gate is scanning nothing that ships');
   }
 
   if (dead.length > 0) {
-    console.error(`validate-workflow-security FAILED its own self-test — ${dead.length} rule(s) not firing:\n`);
+    console.error(`validate-workflow-security FAILED its own self-test — ${dead.length} problem(s):\n`);
     for (const d of dead) console.error(`  - ${d}`);
-    console.error('\nA rule that cannot fire on its own trap file will not fire on a real attack.');
+    console.error('\nA gate that cannot fail on its own trap files will not fail on a real attack.');
     return 1;
   }
   return 0;
@@ -604,7 +754,23 @@ if (require.main === module) {
 
   const dirs = dirArg ? [dirArg] : resolveScanDirs();
   let code = 0;
-  for (const d of dirs) code = run(d, { strict }) || code;
+  let scanned = 0;
+  for (const d of dirs) {
+    scanned += listWorkflowFiles(d).length;
+    code = run(d, { strict }) || code;
+  }
+
+  // Mutation testing found a family the self-test cannot see: blind file DISCOVERY on the real path
+  // while leaving it working for the fixtures, and every trap still passes while the gate reads
+  // nothing that ships. Asserting that real files were actually read closes it — a report of
+  // "no findings" over zero files is not a clean bill of health, it is an empty room.
+  if (!dirArg && scanned === 0) {
+    console.error(
+      'validate-workflow-security FAILED: scanned 0 files. Either the workflow directories moved, ' +
+      'or file discovery is broken. A clean report over nothing is not a pass.',
+    );
+    process.exit(1);
+  }
   process.exit(code);
 }
 

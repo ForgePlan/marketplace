@@ -1,0 +1,13 @@
+# BENIGN — must produce NO HIGH finding. `pull_request.number` is an integer GitHub generates; it
+# cannot carry a shell break-out. Flagging it made an ordinary progress echo fail. Do not fix.
+name: benign pr number
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  j:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "building PR #${{ github.event.pull_request.number }}"
