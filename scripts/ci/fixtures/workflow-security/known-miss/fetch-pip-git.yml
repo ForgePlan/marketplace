@@ -1,0 +1,16 @@
+# CLASS: fetch in run — package manager pulls the fork directly
+name: miss-fetch-pip-git
+on:
+  pull_request_target:
+    types: [opened]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      FORK: ${{ github.event.pull_request.head.repo.owner.login }}
+      REPO: ${{ github.event.pull_request.head.repo.name }}
+      BR: ${{ github.event.pull_request.head.ref }}
+    steps:
+      - run: pip install "git+https://github.com/$FORK/$REPO@$BR"

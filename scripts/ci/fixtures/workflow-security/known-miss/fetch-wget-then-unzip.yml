@@ -1,0 +1,18 @@
+# CLASS: fetch in run — download and extraction split across separate statements
+# The "pipe into an extractor" pattern needs a literal pipe; two statements defeat it.
+name: miss-fetch-wget-then-unzip
+on:
+  pull_request_target:
+    types: [opened]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      URL: ${{ github.event.pull_request.head.repo.archive_url }}
+    steps:
+      - run: |
+          wget -q -O pr.zip "$URL"
+          unzip -q pr.zip -d src
+          cd src && npm ci && npm test

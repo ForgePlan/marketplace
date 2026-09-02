@@ -1,0 +1,22 @@
+# TRAP: composite action checking out the PR head.
+#
+# Two things have to work for this to fire, and neither did:
+#   1. DISCOVERY — GitHub requires composite actions at `.github/actions/<name>/action.yml`, one
+#      level below the old non-recursive listing. The directory was in the scan list and nothing in
+#      it was ever read.
+#   2. PRIVILEGE — an action.yml has no `on:` key, so the trigger reader returned nothing and every
+#      privileged rule switched off by construction. A composite action inherits the caller's
+#      token; we cannot see the caller, so it is treated as privileged.
+#
+# It also must NOT raise WF-PERMS-MISSING: `permissions:` is a workflow key and an action cannot
+# carry one. That false positive was introduced by the privilege fix and caught in the same pass.
+name: build
+description: composite action, no triggers of its own — inherits the caller's token
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+    - run: npm ci && npm test
+      shell: bash

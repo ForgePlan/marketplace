@@ -1,0 +1,20 @@
+# CLASS: fetch in run — the binary name itself is behind a variable, and the operators are `;`
+# The run-block window does not cross `;`, and the literal `git` never appears as a command.
+name: miss-fetch-git-via-variable
+on:
+  pull_request_target:
+    types: [opened]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      FORK: ${{ github.event.pull_request.head.repo.clone_url }}
+      BR: ${{ github.event.pull_request.head.ref }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - run: |
+          G=/usr/bin/git
+          $G remote add fork "$FORK"; $G fetch fork "$BR"; $G checkout FETCH_HEAD
+          npm ci && npm test

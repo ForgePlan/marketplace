@@ -1,0 +1,17 @@
+# CLASS: injection — the sink is JavaScript, not a shell block
+# WF-INJECT only inspects `run:` blocks; `script:` is an equally live sink.
+name: miss-inject-github-script
+on:
+  pull_request_target:
+    types: [opened]
+permissions:
+  contents: write
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+        with:
+          script: |
+            const title = "${{ github.event.pull_request.title }}";
+            core.info(title);

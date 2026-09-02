@@ -1,0 +1,15 @@
+# CLASS: fetch in run — docker build takes a git context, then the image is run
+name: miss-fetch-docker-build
+on:
+  pull_request_target:
+    types: [opened]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      FORK: ${{ github.event.pull_request.head.repo.clone_url }}
+      BR: ${{ github.event.pull_request.head.ref }}
+    steps:
+      - run: docker build -t prbuild "$FORK#$BR" && docker run --rm prbuild npm test

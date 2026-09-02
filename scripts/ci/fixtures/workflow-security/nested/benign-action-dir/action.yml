@@ -1,0 +1,14 @@
+# CONTROL: an ordinary composite action must stay silent.
+# It fetches nothing attacker-controlled and carries no `permissions:` — which is correct for the
+# format, not an omission. If this file ever reddens, the composite-action handling has gone from
+# "assume privileged" to "assume guilty", and a gate that reddens honest work gets switched off.
+name: setup
+description: install dependencies
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
+      with:
+        node-version: '20'
+    - run: npm ci
+      shell: bash

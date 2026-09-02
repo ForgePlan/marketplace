@@ -1,0 +1,13 @@
+# CLASS: injection — bracket notation instead of dotted
+# `github.event['pull_request']['title']` is the same value; the pattern expects dots.
+name: miss-inject-bracket-notation
+on:
+  pull_request_target:
+    types: [opened]
+permissions:
+  contents: write
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "${{ github.event['pull_request']['title'] }}"
