@@ -113,7 +113,7 @@ Smith: Context=TDD-first feature (row 13). Methodology=Enforced-TDD
 - Entry points: `/tdd-init` once per project, then `/tdd` — `plugins/agents-tdd/skills/`
 - Enforcement + state: `plugins/agents-tdd/hooks/tdd-gate.sh`, `plugins/agents-tdd/scripts/tdd-lib.sh`, `.forgeplan/tdd/stack.json`, `.forgeplan/tdd/state-<branch>.json`
 - RFC-012 — the enforced-TDD pipeline (FR-6: normalized full-file SPEC hash as the frozen oracle)
-- ADR-010 — the AD/AID-PDLC sub-cycle contract (C1–C7) this row instantiates first
+- ADR-010 — the AD/AID-PDLC sub-cycle contract (C1–C6; C7 — ортогональный FPF-слой, не обязателен) this row instantiates first
 - ADR-009 / RFC-011 / PROB-002 — generator ≠ verifier + ground-truth verification
 - Kent Beck, *Test-Driven Development: By Example* (2002)
 - This repo's CLAUDE.md — Sprint Z6 (BMAD adversarial ≥1 finding) + Ground-truth verification discipline

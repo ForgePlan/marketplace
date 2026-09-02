@@ -1,0 +1,20 @@
+# TRAP — must fire WF-PRT-FETCH. A flag between `git` and `fetch`, plus the ref laundered through
+# a shell variable and the command split over a backslash continuation. The first version of the
+# rule matched one physical line with `\bgit\s+fetch\b` and missed all three. Do not fix.
+name: trap fetch flagged
+on:
+  pull_request_target:
+    types: [opened]
+permissions:
+  contents: read
+jobs:
+  j:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          PR: ${{ github.event.number }}
+        run: |
+          REF="pull/$PR/head"
+          git -c protocol.version=2 fetch origin \
+            "$REF"
+          git checkout FETCH_HEAD && npm ci && npm test

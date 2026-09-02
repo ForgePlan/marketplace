@@ -1,0 +1,13 @@
+# TRAP — proves resolveScanDirs still includes docs/templates. Not a rule trap: it fires
+# WF-PERMS-WRITEALL, and the self-test asserts that. Dropping docs/templates from the scan list is
+# a silent coverage loss, so it needs its own trap too. Do not fix.
+name: trap templates coverage
+on:
+  push:
+    branches: [main]
+permissions: write-all
+jobs:
+  j:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok

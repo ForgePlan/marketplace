@@ -318,7 +318,7 @@ These rules are absolute. Violations are CONCERNS at the next Profile B review.
 
 - **`plugins/agents-pro/agents/smith.md`** — the smith agent invoked in default mode Step 4.
   Profile B-orchestrator. Reads the routing map, classifies, returns the Plan.
-- **`plugins/fpl-skills/skills/smith/routing-map.md`** — the smith **brain**. 14 routing rows, 25
+- **`plugins/fpl-skills/skills/smith/routing-map.md`** — the smith **brain**. 14 routing rows, 33
   methodology cards, 26-agent index. Loaded by the smith agent on every dispatch.
 - **`plugins/fpl-skills/skills/smith/sections/`** — agentic-RAG section files
   (`01-greenfield.md` through `14-design-system.md`). Loaded by the smith agent on demand when the
@@ -398,7 +398,7 @@ User: /smith routing для bug fix
 
 ## References
 
-- **`routing-map.md`** (in this skill folder) — the 14-context routing matrix + 25 methodology
+- **`routing-map.md`** (in this skill folder) — the 14-context routing matrix + 33 methodology
   cards + 26-agent index.
 - **`smith` agent** — `plugins/agents-pro/agents/smith.md`. Profile B-orchestrator. Reads the
   routing map and produces the Plan.

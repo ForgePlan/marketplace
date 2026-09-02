@@ -1,0 +1,15 @@
+# TRAP — must fire WF-PRT-CHECKOUT. `github.head_ref` is the most-cited pull_request_target
+# footgun and was not matched: the old PR_HEAD_REF demanded a github.event.* prefix. Do not fix.
+name: trap head_ref checkout
+on:
+  pull_request_target:
+    types: [opened]
+permissions:
+  contents: read
+jobs:
+  j:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.head_ref }}

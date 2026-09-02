@@ -71,9 +71,29 @@ const PERMISSIONS_KEY = /^\s*permissions:\s*(\S.*)?$/m;
 // Dangerous trigger events: a workflow that runs on these gets a write-scoped
 // token (or runs in the base-repo context) even for fork PRs, so checking out
 // the PR head is the classic privilege-escalation footgun.
-const PRIVILEGED_EVENT = /^\s*(pull_request_target|workflow_run)\s*:/m;
-const PR_HEAD_REF =
-  /\$\{\{\s*github\.event\.(?:pull_request|workflow_run)\.[^}]*\bhead[._]/;
+// This is the MASTER SWITCH: every privileged-trigger rule below is gated on it, so a form it
+// fails to recognise turns those rules off entirely and the file reports clean.
+//
+// It used to be /^\s*(pull_request_target|workflow_run)\s*:/m — the nested block form only. YAML
+// has at least four other spellings for the same trigger, and all four silently disabled the rules:
+//     on: [pull_request_target]           on: pull_request_target
+//     on: [issues, pull_request_target]   on:\n  - pull_request_target
+// Adversarial probe over 7 spellings: 2 caught, 5 missed, zero HIGH on the missed ones — with the
+// identical dangerous body underneath. Matching the bare word anywhere in the file is coarse (a
+// workflow that merely *mentions* the trigger in a comment now counts as privileged) and that is
+// the right trade: a false positive costs a comment, a false negative costs the repository.
+const PRIVILEGED_EVENT = /\b(pull_request_target|workflow_run)\b/;
+
+// `github.head_ref` is the single most-cited pull_request_target footgun and was not matched here:
+// the old pattern demanded a `github.event.(pull_request|workflow_run).` prefix. It is already in
+// UNTRUSTED_EXPR, so it fired inside a `run:` block but not on the `ref:` where it actually hands
+// the attacker the token.
+const PR_HEAD_REF = new RegExp(
+  '\\$\\{\\{\\s*(?:' +
+    'github\\.event\\.(?:pull_request|workflow_run)\\.[^}]*\\bhead[._]' +
+    '|github\\.head_ref' +
+  ')',
+);
 const REFS_PULL = /\brefs\/(?:remotes\/)?pull\/[^\s'"]+/;
 
 function listWorkflowFiles(dir) {
@@ -332,30 +352,81 @@ function findPrivilegedPrFetch(source, lines, runBlocks) {
   const findings = [];
   if (!PRIVILEGED_EVENT.test(source)) return findings;
 
+  // The first version of this rule matched five tight regexes ONE PHYSICAL LINE AT A TIME. An
+  // adversarial probe put 10 shapes straight through it, and every one is ordinary shell:
+  //
+  //   git -c protocol.version=2 fetch origin "pull/$PR/head"   flag between `git` and `fetch`
+  //   git --no-pager fetch ...                                 same
+  //   git pull origin "pull/$PR/head"                          `pull` is not `fetch`
+  //   git fetch origin \  ⏎  "pull/$PR/head"                   backslash continuation
+  //   REF="pull/$PR/head"; git fetch origin "$REF"             ref laundered through a variable
+  //   gh pr \  ⏎  checkout "$PR"                               command split across lines
+  //   gh pr diff "$PR" --patch | git apply                     fetches the code without checkout
+  //   git remote add fork "$URL" && git fetch fork "$BR"       no `pull/` token anywhere
+  //   curl codeload.github.com/$REPO/tar.gz/$SHA | tar xz      not git at all
+  //
+  // So this now reads the WHOLE block: comments stripped per line, continuations folded, newlines
+  // collapsed. And it stops trying to recognise "a fetch of the PR specifically" — under a
+  // privileged trigger there is no benign reason to pull remote code at all, so the rule fires on
+  // the act of fetching. Broad on purpose: a false positive costs a comment on a PR, a false
+  // negative costs the repository.
   const FETCHERS = [
-    { re: /\bgh\s+pr\s+checkout\b/, what: 'gh pr checkout' },
+    { re: /\bgh\s+pr\s+(?:checkout|diff|view)\b/, what: 'gh pr checkout/diff' },
     { re: /\bhub\s+pr\s+checkout\b/, what: 'hub pr checkout' },
-    { re: /\bgit\s+fetch\b[^\n]*\bpull\/[^\s'"]+/, what: 'git fetch of a pull/ ref' },
-    { re: /\bgit\s+(?:checkout|switch)\b[^\n]*\brefs\/pull\//, what: 'git checkout of a refs/pull/ ref' },
-    { re: /\bgit\s+fetch\b[^\n]*\$\{\{\s*github\.event\.pull_request\.head/, what: 'git fetch of the PR head expression' },
+    { re: /\bgit\b[^;&|]{0,120}?\b(?:fetch|pull|clone)\b/, what: 'git fetch/pull/clone' },
+    { re: /\bgit\s+remote\s+add\b/, what: 'git remote add (a second remote to fetch from)' },
+    { re: /\bgit\s+(?:checkout|switch)\b[^;&|]{0,120}?\brefs\/pull\//, what: 'checkout of a refs/pull/ ref' },
+    { re: /\bpull\/[^\s'"]*\/(?:head|merge)\b/, what: 'a pull/<n>/head ref' },
+    { re: /\bcodeload\.github\.com\b/, what: 'codeload.github.com tarball' },
   ];
 
   for (const block of runBlocks) {
-    for (let n = block.startLine; n <= block.endLine; n++) {
-      const code = stripComment(lines[n - 1] || '');
-      for (const f of FETCHERS) {
-        if (!f.re.test(code)) continue;
-        findings.push({
-          line: n,
-          rule: 'WF-PRT-FETCH',
-          severity: HIGH,
-          message:
-            'pull_request_target/workflow_run trigger fetches PR code in a run block ' +
-            `(${f.what}) — attacker code runs with a write-scoped token and the secrets in scope`,
-        });
-        break;
-      }
+    const text = lines
+      .slice(block.startLine - 1, block.endLine)
+      .map(stripComment)
+      .join('\n')
+      .replace(/\\\n/g, ' ')   // fold backslash continuations
+      .replace(/\n/g, ' ');    // and folded/multi-line commands
+
+    for (const f of FETCHERS) {
+      if (!f.re.test(text)) continue;
+      findings.push({
+        line: block.startLine,
+        rule: 'WF-PRT-FETCH',
+        severity: HIGH,
+        message:
+          'pull_request_target/workflow_run trigger fetches remote code in a run block ' +
+          `(${f.what}) — under this trigger that code runs with a write-scoped token and the ` +
+          'secrets in scope',
+      });
+      break;
     }
+  }
+  return findings;
+}
+
+/**
+ * `workflow_run` + downloading the PR's build artifact + running it is the canonical
+ * artifact-poisoning RCE for that trigger, and it has neither a checkout step nor a fetch verb —
+ * so both rules above fall straight through it while the file is correctly identified as
+ * privileged. Downloading and executing a PR-built artifact is fetching PR code by another name.
+ */
+function findPrivilegedArtifactDownload(source, lines) {
+  const findings = [];
+  if (!PRIVILEGED_EVENT.test(source)) return findings;
+
+  for (let i = 0; i < lines.length; i++) {
+    const code = stripComment(lines[i]);
+    if (!/uses:\s*['"]?(?:actions\/download-artifact@|dawidd6\/action-download-artifact@)/.test(code)) continue;
+    findings.push({
+      line: i + 1,
+      rule: 'WF-PRT-ARTIFACT',
+      severity: HIGH,
+      message:
+        'pull_request_target/workflow_run trigger downloads a build artifact — an artifact produced ' +
+        'by the PR is attacker-controlled content; unpacking or executing it under this trigger is ' +
+        'the artifact-poisoning path',
+    });
   }
   return findings;
 }
@@ -373,6 +444,7 @@ function scanFile(filePath) {
     ...findInjection(lines, runBlocks),
     ...findDangerousCheckout(source, lines),
     ...findPrivilegedPrFetch(source, lines, runBlocks),
+    ...findPrivilegedArtifactDownload(source, lines),
     ...findUnpinned(lines),
     ...findPermissionIssues(source, lines),
   ];
@@ -448,9 +520,14 @@ function resolveScanDirs() {
 const SELF_TEST_EXPECT = {
   'must-fire-prt-checkout.yml': 'WF-PRT-CHECKOUT',
   'must-fire-prt-checkout-commented.yml': 'WF-PRT-CHECKOUT',
+  'must-fire-prt-trigger-flowseq.yml': 'WF-PRT-CHECKOUT',
+  'must-fire-prt-head-ref.yml': 'WF-PRT-CHECKOUT',
   'must-fire-prt-run-fetch.yml': 'WF-PRT-FETCH',
+  'must-fire-prt-fetch-flagged.yml': 'WF-PRT-FETCH',
+  'must-fire-prt-artifact.yml': 'WF-PRT-ARTIFACT',
   'must-fire-inject.yml': 'WF-INJECT',
   'must-fire-permissions-writeall.yml': 'WF-PERMS-WRITEALL',
+  'must-fire-templates-scanned.yml': 'WF-PERMS-WRITEALL',
   'must-fire-unpinned.yml': 'WF-UNPINNED',
 };
 

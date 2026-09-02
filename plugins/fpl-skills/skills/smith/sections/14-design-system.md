@@ -49,7 +49,8 @@ sequenced by `blockedBy` on the gate chain. The optional multi-framework
 additional framework package, file-disjoint, worktree-isolated, each
 `blockedBy` the code gate, followed by a parity gate before Retro — runs
 only on an explicit multi-framework request and is out-of-default
-(tracked for a future ADR-016).
+(deferred; the decision is not yet written — note that ADR-016 is already taken by the
+map-pack pipeline decision, so this one will need a new number).
 
 The coordinator emits `NEEDS_ACTIVATION` after each C4 PASS; the
 orchestrator activates, the master never does. On a FAIL the coordinator
@@ -133,7 +134,7 @@ Smith: Context=design-system → code (row 14). Methodology=CANVAS
 - Entry points: `/canvas-init` once per branch, then `/canvas` — `plugins/agents-canvas/`
 - Enforcement + state: `plugins/agents-canvas/hooks/scripts/canvas-gate.sh` + `canvas-lib.sh`, `.forgeplan/canvas/state-<branch>.json`
 - RFC-021 — the CANVAS instance; RFC-022 / ADR-015 — the framework, design-source and language resolved as Step-0 inputs; the optional multi-framework Spread path is tracked for a future ADR-016
-- ADR-010 — the AD/AID-PDLC sub-cycle contract (C1–C7); ADR-012 — the hook-gate test warranting the master; ADR-009 — generator ≠ verifier
+- ADR-010 — the AD/AID-PDLC sub-cycle contract (C1–C6; C7 — ортогональный FPF-слой, не обязателен); ADR-012 — the hook-gate test warranting the master; ADR-009 — generator ≠ verifier
 - Laws of UX: https://lawsofux.com — `/laws-of-ux:ux-review` is the code-boundary gate
 - Storybook: https://storybook.js.org — renderer matching the resolved framework, a11y/axe addon, play/interaction tests
 - This repo's CLAUDE.md — Sprint Z6 (BMAD adversarial ≥1 finding)

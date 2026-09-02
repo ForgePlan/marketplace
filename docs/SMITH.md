@@ -74,7 +74,7 @@ Why one row per task: blending BMAD + SPARC + Spec Kit "to cover all bases" prod
 
 ## Methodologies smith knows
 
-Twenty-nine methodologies catalogued in [`routing-map.md`](../plugins/fpl-skills/skills/smith/routing-map.md). Each card states the one-sentence definition, when it shines, when NOT to use, and a primary source link. Grouped:
+Thirty-three methodologies catalogued in [`routing-map.md`](../plugins/fpl-skills/skills/smith/routing-map.md). Each card states the one-sentence definition, when it shines, when NOT to use, and a primary source link. Grouped:
 
 - **AI-coding workflows** — BMAD-METHOD (analyst-PM-architect-dev split), SPARC (Spec → Pseudo → Arch → Refine → Complete), RIPER-5 (Research-Innovate-Plan-Execute-Review), GitHub Spec Kit (spec-driven greenfield), FPF ADI (Abduction → Deduction → Induction), CANVAS (design-system to code: Capture-Audit-Norm-check-Vectorize-Assemble; stack-agnostic, hook-gate=Yes).
 - **Architecture lenses** — C4 Model (L1+L2 default, L3 only when needed), Domain-Driven Design, Event Storming, Clean Architecture, Hexagonal Architecture (Ports & Adapters), ADR / MADR.

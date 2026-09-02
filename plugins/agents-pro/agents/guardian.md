@@ -236,11 +236,26 @@ This step is **deliberate mental reasoning**, *not* a call to `mcp__forgeplan__f
 
 **Sensitive-surface detection for the STRIDE gate** (Row: RFC/ADR touching auth / personal data / external interface, no threat model):
 
-- Surface check — three keyword families, case-insensitive, against the artifact body:
-  - *authentication / authorization*: `auth`, `login`, `session`, `token`, `OAuth`, `JWT`, `password`, `credential`, `permission`, `role-based`, `RBAC`
+- Surface check — three keyword families, case-insensitive, **whole word**, against the artifact body:
+  - *authentication / authorization*: `authentication`, `authorization`, `OAuth`, `JWT`, `password`, `credential`, `access token`, `bearer token`, `session cookie`, `RBAC`, `privilege escalation`
   - *personal data*: `PII`, `personal data`, `GDPR`, `email address`, `phone number`, `user profile`, `consent`
   - *external interface*: `public API`, `webhook`, `third-party`, `external service`, `inbound request`, `file upload`, `untrusted input`
-- Threshold: ≥1 term from **any one** family → predicate "touches authentication, personal data, or an external interface" evaluates true. One family is enough; these are the three surfaces where a missing threat model is expensive to discover late.
+- Threshold: **≥2 distinct terms**, from any family or families. One term is not enough.
+
+  The first draft of this row used bare `auth`, `session`, `token` and `permission` at a ≥1
+  threshold, and firing it over this repository's own artifacts opened CONCERNS on **27 of 40**
+  ADRs and RFCs — 67%, essentially all of it noise. `session` appears in 24 of 40 files meaning a
+  *Claude Code conversation*; `token` means *design tokens* in RFC-021 and *LLM context tokens* in
+  ADR-009; bare `auth` substring-matches `authored` and `authority`. A gate that fires on two
+  thirds of everything is not a gate, it is a tax — reviewers learn to wave it through, and then it
+  will not stop the one artifact that mattered.
+
+  The whole-word rule and the compound forms (`access token`, not `token`) are what make the
+  difference; the ≥2 threshold is the safety margin, mirroring the DDD row above.
+
+  Re-measured after the narrowing, over the same 40 ADRs and RFCs: **1 fires**, not 27 — RFC-015,
+  on `public API` + `third-party`, which is a real external surface. Re-run the measurement if you
+  widen the list again; a keyword gate is only as good as its last false-positive count.
 - Presence check (regex): ``grep -icE '^#+ *(Threat model|Threats|Security considerations)|Spoofing|Tampering|Repudiation|Information disclosure|Elevation of privilege'`` against the artifact body **and** every linked EVID body. Zero matches → predicate "no threat model present" evaluates true.
 - Three concrete satisfy-paths close this gate:
   - **Path A**: a linked `security-expert` EVID whose `## Methodology` STRIDE row names the facets considered **for the surface this artifact introduces**. A STRIDE-tagged finding list over pre-existing code does **not** close the gate — that is classification after the fact, which is the exact gap this row exists to surface.

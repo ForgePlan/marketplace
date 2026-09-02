@@ -89,7 +89,7 @@ Smith **выбирает ровно одну строку** на задачу �
 
 ## Методологии, которые smith знает
 
-Двадцать девять методологий каталогизированы в `routing-map.md` карточками — определение в одно предложение, когда работает, когда НЕ использовать, ссылка на источник. Группы:
+Тридцать три методологии каталогизированы в `routing-map.md` карточками — определение в одно предложение, когда работает, когда НЕ использовать, ссылка на источник. Группы:
 
 - **AI-coding workflows**: BMAD-METHOD, SPARC, RIPER-5, GitHub Spec Kit, FPF ADI (Abduction → Deduction → Induction), CANVAS (дизайн-система в код: Capture-Audit-Norm-check-Vectorize-Assemble; агностичен к стеку, hook-gate=Yes).
 - **Architecture lenses**: C4 Model, Domain-Driven Design, Event Storming, Clean Architecture, Hexagonal Architecture (Ports & Adapters), ADR / MADR.

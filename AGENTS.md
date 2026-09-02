@@ -96,7 +96,7 @@ Evidence required: PRD + ADI EVID (≥3 hypotheses) + BMAD EVID with ≥1 findin
 
 ### Methodologies smith knows
 
-Twenty-nine methodologies are catalogued in `routing-map.md` with cards covering one-sentence definition, when it shines, when NOT to use, and a primary source link. Grouped:
+Thirty-three methodologies are catalogued in `routing-map.md` with cards covering one-sentence definition, when it shines, when NOT to use, and a primary source link. Grouped:
 
 - **AI-coding workflows**: BMAD-METHOD, SPARC, RIPER-5, GitHub Spec Kit, FPF ADI (Abduction → Deduction → Induction), CANVAS (design-system → code, hook-gate=Yes, instance #5).
 - **Architecture lenses**: C4 Model, Domain-Driven Design, Event Storming, Clean Architecture, Hexagonal Architecture (Ports & Adapters), ADR / MADR.

@@ -116,23 +116,44 @@ function listAgentFiles(agentsDir) {
   const out = [];
 
   const isAgent = (p) => {
-    let head;
+    let text;
     try {
-      head = fs.readFileSync(p, 'utf8').slice(0, 4096);
+      text = fs.readFileSync(p, 'utf8');
     } catch { return false; }
-    if (!head.startsWith('---')) return false;
-    const end = head.indexOf('\n---', 3);
-    return /^name:\s*\S/m.test(end === -1 ? head : head.slice(0, end));
+    if (!text.startsWith('---')) return false;
+    const end = text.indexOf('\n---', 3);
+    // No closing delimiter means there is no frontmatter block, only a file that starts with `---`.
+    // Reading on would search prose for a `name:` line — that is how a doc gets counted as an agent.
+    if (end === -1) return false;
+    // `\s` matches a newline in JS, so /^name:\s*\S/ was satisfied by an EMPTY `name:` spilling onto
+    // the next key. Anchor to the rest of the same line instead.
+    return /^name:[ \t]*\S/m.test(text.slice(0, end));
+  };
+
+  // readdirSync(withFileTypes) does not follow symlinks: for a symlink Dirent BOTH isFile() and
+  // isDirectory() are false, so a symlinked agent — or a symlinked pack directory — fell through
+  // every branch and silently lowered the count. This repo tracks 86 symlinks under
+  // `plugins/*/.agents/skills/`, so linking is a live convention here, not a hypothetical.
+  const kindOf = (full, entry) => {
+    if (entry.isFile()) return 'file';
+    if (entry.isDirectory()) return 'dir';
+    if (!entry.isSymbolicLink()) return 'other';
+    try {
+      return fs.statSync(full).isDirectory() ? 'dir' : 'file';   // statSync follows the link
+    } catch { return 'other'; }                                   // dangling link: not an agent
   };
 
   for (const entry of fs.readdirSync(agentsDir, { withFileTypes: true })) {
-    if (entry.isFile() && entry.name.endsWith('.md')) {
-      if (isAgent(path.join(agentsDir, entry.name))) out.push(entry.name);
-    } else if (entry.isDirectory()) {
-      for (const nested of fs.readdirSync(path.join(agentsDir, entry.name), { withFileTypes: true })) {
-        if (!nested.isFile() || !nested.name.endsWith('.md')) continue;
-        const rel = path.join(entry.name, nested.name);
-        if (isAgent(path.join(agentsDir, rel))) out.push(rel);
+    const full = path.join(agentsDir, entry.name);
+    const kind = kindOf(full, entry);
+
+    if (kind === 'file' && entry.name.endsWith('.md')) {
+      if (isAgent(full)) out.push(entry.name);
+    } else if (kind === 'dir') {
+      for (const nested of fs.readdirSync(full, { withFileTypes: true })) {
+        const nestedFull = path.join(full, nested.name);
+        if (kindOf(nestedFull, nested) !== 'file' || !nested.name.endsWith('.md')) continue;
+        if (isAgent(nestedFull)) out.push(path.join(entry.name, nested.name));
       }
     }
   }
