@@ -32,7 +32,6 @@
   "components": {
     "commands": ["forge-cycle", "forge-audit"],
     "agents": ["forge-advisor"],
-    "skills": ["forgeplan-methodology"],
-    "hooks": ["PreToolUse:Bash", "PreToolUse:Write"]
+    "skills": ["forgeplan-methodology"]
   }
 }
