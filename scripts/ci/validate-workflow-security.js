@@ -15,10 +15,20 @@
  *   WF-PRT-CHECKOUT HIGH `pull_request_target` (or `workflow_run`) trigger that
  *                       checks out the PR head ref — attacker code runs with a
  *                       write-scoped token.
+ *   WF-PRT-FETCH  HIGH  Same trigger, but the PR code is pulled in a `run:` block
+ *                       instead — git fetch/pull/clone, gh pr checkout, an HTTP
+ *                       archive download. No checkout step to key on.
+ *   WF-PRT-ARTIFACT HIGH Same trigger downloading a build artifact — under
+ *                       `workflow_run` that artifact is attacker-produced.
  *   WF-UNPINNED   WARN  Third-party `uses:` pinned to a tag/branch (@v3, @main,
  *                       @master) instead of a full 40-hex commit SHA.
  *   WF-PERMS-WRITEALL HIGH `permissions: write-all` grants every scope write.
  *   WF-PERMS-MISSING  WARN No top-level `permissions:` block (defaults are broad).
+ *
+ * SELF-TEST: every run first scans `fixtures/workflow-security/`, where each file is built to trip
+ * exactly one rule, and fails if any of them stops firing. This exists because the linter shipped
+ * with WF-PRT-CHECKOUT silently dead for months — a clean report and a broken rule looked identical
+ * from the outside. See `fixtures/workflow-security/README.md`; add a trap with every new rule.
  *
  * Exit code: 1 if any HIGH finding (or WARN promoted via --strict); else 0.
  * Output:    `file:line  rule-id  SEVERITY  message` per finding.
@@ -378,6 +388,10 @@ function findPrivilegedPrFetch(source, lines, runBlocks) {
     { re: /\bgit\s+(?:checkout|switch)\b[^;&|]{0,120}?\brefs\/pull\//, what: 'checkout of a refs/pull/ ref' },
     { re: /\bpull\/[^\s'"]*\/(?:head|merge)\b/, what: 'a pull/<n>/head ref' },
     { re: /\bcodeload\.github\.com\b/, what: 'codeload.github.com tarball' },
+    // Downloading the tree over HTTP is the same act with a different tool. Keyed on the archive
+    // path shapes GitHub serves rather than on the fetcher, so curl/wget/aria2 all land here.
+    { re: /\b(?:curl|wget|aria2c)\b[^;&|]{0,200}?\/(?:archive|tarball|zipball)\//, what: 'HTTP download of a repo archive' },
+    { re: /\b(?:curl|wget)\b[^;&|]{0,200}?\|\s*(?:tar|unzip|bash|sh|python)\b/, what: 'download piped straight into an extractor or shell' },
   ];
 
   for (const block of runBlocks) {
@@ -502,9 +516,29 @@ function resolveScanDirs() {
   const root = path.resolve(__dirname, '..', '..');
   return [
     path.join(root, '.github', 'workflows'),
+    // Composite actions run inside workflows and can do everything a workflow step can, including
+    // fetching the PR. They were never scanned.
+    path.join(root, '.github', 'actions'),
     path.join(root, 'docs', 'templates'),
   ].filter((d) => fs.existsSync(d));
 }
+
+/**
+ * WHAT THIS LINTER CANNOT SEE — stated, because a security check that hides its blind spots is
+ * worse than one that has none, and an adversarial pass will find them anyway.
+ *
+ *  - **Obfuscation.** `echo <base64> | base64 -d | sh` reconstructs any command at runtime. No
+ *    regex reaches it. Treat a privileged workflow that decodes-and-executes as unreviewable.
+ *  - **Indirection through a called workflow or action.** `uses: ./…` under `pull_request_target`
+ *    resolves against the BASE branch, so it is your own code — but this linter only reads the two
+ *    directories above, so a fetch hidden in an action elsewhere in the tree is invisible.
+ *  - **`secrets: inherit` to a reusable workflow.** Base-branch code, so not attacker-controlled,
+ *    but it widens which job sees the secrets. Judgement, not a rule.
+ *  - **Semantics.** It matches text. A workflow can be dangerous without any string here, and safe
+ *    with several.
+ *
+ * This is a tripwire, not a proof. It exists to stop the shapes people actually write by accident.
+ */
 
 /**
  * Prove the rules are alive before trusting them to say "no findings".
@@ -525,6 +559,7 @@ const SELF_TEST_EXPECT = {
   'must-fire-prt-run-fetch.yml': 'WF-PRT-FETCH',
   'must-fire-prt-fetch-flagged.yml': 'WF-PRT-FETCH',
   'must-fire-prt-artifact.yml': 'WF-PRT-ARTIFACT',
+  'must-fire-prt-http-archive.yml': 'WF-PRT-FETCH',
   'must-fire-inject.yml': 'WF-INJECT',
   'must-fire-permissions-writeall.yml': 'WF-PERMS-WRITEALL',
   'must-fire-templates-scanned.yml': 'WF-PERMS-WRITEALL',
