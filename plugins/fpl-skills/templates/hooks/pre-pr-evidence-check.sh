@@ -143,12 +143,21 @@ for candidate in origin/main origin/master main master origin/dev dev; do
   [[ -n "$merge_point" ]] || continue
   distance=$(git rev-list --count "$merge_point..HEAD" 2>/dev/null || true)
   [[ "$distance" =~ ^[0-9]+$ ]] || continue
+  # A candidate that already CONTAINS HEAD (distance 0) says nothing about this
+  # branch's own commits, and taking it as the base empties the range: no IDs
+  # collected, hook exits 0, gate silently stops checking. That is a fail-open,
+  # and it is reachable — a local `dev` or `main` fast-forwarded onto this branch
+  # is enough (guardian gate EVID-230). Nearest-but-non-empty, never nearest.
+  (( distance == 0 )) && continue
   if [[ -z "$best_distance" ]] || (( distance < best_distance )); then
     best_distance="$distance"
     base="$candidate"
   fi
 done
 
+# No candidate leaves any commits in range → fall back to the flat scan rather
+# than scanning nothing. Over-inclusion costs a false block, which is loud and
+# arguable; scanning nothing costs a gate that reports success without looking.
 if [[ -n "$base" ]]; then
   commit_range="$base..HEAD"
 else

@@ -219,6 +219,34 @@ c=ok
 grep -q "PRD-902" <<<"$OUT" && c=bad
 check "stale origin/main does not widen the range (PRD-902 out of scope)" "$c"
 
+# 8. FAIL-OPEN. A candidate ref that already CONTAINS HEAD (a local `dev` or
+#    `main` fast-forwarded onto this branch) has merge-base == HEAD, so
+#    nearest-merge-base selection would pick it, empty the range, collect no IDs
+#    and exit 0 without a word — the gate reporting success without looking.
+#    Reproduced live before the fix: rc=0, stderr empty, on a branch citing an
+#    artifact that does not exist (guardian gate EVID-230).
+REPO3="$WORK/repo3"
+mkdir -p "$REPO3"
+git -C "$REPO3" init -q -b main
+git -C "$REPO3" config user.email t@example.com
+git -C "$REPO3" config user.name test
+echo a > "$REPO3/a.txt"; git -C "$REPO3" add a.txt
+git -C "$REPO3" commit -q -m "chore: base"
+git -C "$REPO3" checkout -q -b feat/z
+echo b > "$REPO3/b.txt"; git -C "$REPO3" add b.txt
+git -C "$REPO3" commit -q -m "feat: work
+
+Refs: PRD-777"
+git -C "$REPO3" update-ref refs/remotes/origin/main "$(git -C "$REPO3" rev-parse main)"
+# The trap: a ref sitting exactly on HEAD.
+git -C "$REPO3" update-ref refs/remotes/origin/dev HEAD
+
+REPO_OVERRIDE="$REPO3" run "PRD-777" ""
+c=ok
+[[ "$RC" -eq 2 ]] || c=bad                      # PRD-777 exists, has no evidence → must block
+grep -q "PRD-777" <<<"$OUT" || c=bad            # and must be named, not silently skipped
+check "a base ref sitting on HEAD does not empty the range (no fail-open)" "$c"
+
 echo ""
 if (( failures > 0 )); then
   echo "$failures of $ran failed."
