@@ -19,7 +19,7 @@ forgeplan_fpf_search(query="when to escalate", semantic=true)    # vector
 forgeplan_fpf_search(query="...", limit=20)                       # bigger result set
 ```
 
-**First semantic call**: may take 10-30 seconds (BGE-M3 model download, ~150MB). Subsequent calls are fast.
+**First semantic call**: downloads the BGE-M3 model — **~2.1 GB**, several minutes, once per machine. Subsequent calls load from cache. Fetch it deliberately with `forgeplan setup` instead of discovering the wait mid-task.
 
 **Graceful fallback**: if `semantic-search` build feature not compiled in, query falls back to keyword + response includes `warning` field.
 

@@ -409,6 +409,69 @@ read-only-proxy rule forbids) at design time and propose the
 constraint-respecting alternative, instead of shipping the violation and
 discovering it at Step 6.5/6.6 review.
 
+## Step 4.65: Record the depth (the `estimate` stage — prerequisite for the gate)
+
+**Without this step every tier in `quality-gates.yaml` except `standard` is unreachable.**
+
+`depth` defaults to `standard` from `.forgeplan/config.yaml` and is reflected back for every
+artifact of every kind — measured on six artifacts of six kinds, all `standard`, including EVIDENCE
+and NOTE. So `standard` means "nobody decided" as often as it means "someone chose Standard".
+`forgeplan calibrate` computes a real signal (it suggests Deep for ADR-022) that nothing was
+recording.
+
+```bash
+forgeplan calibrate <ARTIFACT-ID>          # → Current / Suggested / Signals
+forgeplan update <ARTIFACT-ID> --depth <tactical|standard|deep|critical>
+```
+
+Show the suggestion and its signals, then record a depth — **with confirmation, and do not escalate
+unattended.**
+
+Measured 2026-09-03: `calibrate` suggested **Deep for 4 of 4** artifacts probed (ADR-022, PRD-024,
+RFC-002, NOTE-013) and Tactical or Standard for none. Auto-applying it moves the whole graph onto
+the strictest tier in one pass — which is how a gate that was meant to catch unready work starts
+blocking work that is ready.
+
+| Situation | What this step does |
+|---|---|
+| depth already recorded, calibrate agrees | leave it, say so, continue |
+| depth already recorded, calibrate disagrees | show both, ask; on no answer keep the recorded one |
+| depth is the untouched `standard` default | show the suggestion and ask |
+| under `/autorun` | **keep the existing depth**, log the suggestion as an observation. Escalating a tier without a human is the autonomy equivalent of `--force`, and `/autorun` does not `--force` the gate |
+
+Leaving the default in place has a concrete cost, not a theoretical one: a bug-fix PROBLEM card
+gets Standard thresholds (`formality ≥ 0.6`) when PRD-024 AC-2 says a Tactical bug-fix needs only
+`validate` PASS plus a linked EVID. That is the whole bug-fix branch failing a gate meant for
+feature work.
+
+`--depth critical` is accepted even though `forgeplan update --help` lists only three values.
+
+## Step 4.7: GATE-CHECK — pre-build (the `gate` stage, PRD-024 FR-006)
+
+**This is the transition RFC-002 INV-1 calls the only mechanism to move from `design` to `build`.**
+Until marketplace#237 it was the order of the paragraphs in this file, which is not a mechanism.
+
+Run before Step 5 spawns any build agent:
+
+```
+/gate-check <ARTIFACT-ID>
+```
+
+It reads the artifact's depth, loads thresholds from `.forgeplan/quality-gates.yaml` (falling back
+to the shipped template), and returns PASS or FAIL with each failed check named alongside its
+measured value and a concrete fix.
+
+| Verdict | What this step does |
+|---|---|
+| PASS | continue to Step 5 |
+| FAIL | **do not spawn a build agent.** Report the failed checks to the user with the fixes, and go back to Step 4 to strengthen the artifact |
+| FAIL, user insists | `/gate-check <ID> --force --reason "<why>"` — the skill records a NOTE naming which checks were bypassed and their values, then returns PASS marked `overridden`. Relay the override in the final report; an override nobody sees is the gate not having run. **The skill has already written that NOTE** — do not add a second one under "Autonomous decisions logging" below for the same override |
+
+**Skip only at Tactical depth** — its `must` list is a single `validate_errors_max: 0`, which Step 4
+already satisfies. At Standard and above the gate is not optional.
+
+Never treat a FAIL as advice. A gate whose failure the next step ignores is a paragraph.
+
 ## Step 5: Build
 
 Implement the code changes according to the PRD requirements.
@@ -803,6 +866,33 @@ Shell fallback:
 ```bash
 forgeplan phase-advance PRD-XXX --to evidence --reason "Step 7 — EVID-NNN created and linked" || true
 ```
+
+## Step 7.4: GATE-CHECK — post-build (Deep and Critical only, PRD-024 FR-006)
+
+After the EVID exists and is linked, before activation is considered:
+
+```
+/gate-check <ARTIFACT-ID> --post-build
+```
+
+Question answered: does the build match what was specified, and may it be activated?
+
+**Deep and Critical only.** `quality-gates.yaml` has no `post_build` section for Tactical or
+Standard, and the skill says so rather than inventing thresholds for a depth the config
+deliberately omits.
+
+The decisive check here is `evidence_grew` — at least one EVID linked since the pre-build gate ran.
+A build that produced no new evidence has been asserted, not verified.
+
+| Verdict | What this step does |
+|---|---|
+| PASS | continue to Step 7.5 |
+| FAIL | do not proceed to activation. Report which check failed; usually the fix is a missing or unlinked EVID |
+| FAIL, user insists | `--force --reason` as in Step 4.7, recorded the same way |
+
+This does **not** replace `guardian`. Guardian is the activation gate and reads the whole evidence
+chain; this reads thresholds. Where they overlap, guardian is stricter and later, and a PASS here
+is not permission to skip it.
 
 ## Step 7.5: Parse NEEDS_ACTIVATION sentinel (Sprint D — PRD-032)
 

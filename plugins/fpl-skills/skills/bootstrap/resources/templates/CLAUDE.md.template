@@ -418,7 +418,7 @@ conflicts on every PR. Full setup contract:
 ├── .gitignore                   ← TRACKED — lists what NOT to track
 │
 ├── lance/                       ← ❌ gitignored — LanceDB vector index (rebuild via `forgeplan scan-import`)
-├── .fastembed_cache/            ← ❌ gitignored — bge-m3 model cache (~600 MB)
+├── .fastembed_cache/            ← ❌ gitignored — legacy model cache (see note)
 ├── logs/                        ← ❌ gitignored — local audit/ops logs
 ├── .lock                        ← ❌ gitignored — runtime mutex
 ├── session.yaml                 ← ❌ gitignored — per-machine focus / claim TTLs (NOT shared)

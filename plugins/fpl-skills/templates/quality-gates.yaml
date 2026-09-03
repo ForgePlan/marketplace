@@ -1,0 +1,200 @@
+# quality-gates.yaml — thresholds the /gate-check skill reads (PRD-024 FR-007)
+#
+# WHAT THIS IS
+# ------------
+# The quality gate between Design and Build. RFC-002 INV-1 calls it "the only mechanism to move
+# from design to build" — until this file and the /gate-check skill shipped, that mechanism was
+# the order of steps inside a prompt, which is not a mechanism (marketplace#237).
+#
+# WHERE IT LIVES
+# --------------
+# Copy to `.forgeplan/quality-gates.yaml` in your project. The file is OPTIONAL: with no copy,
+# /gate-check uses these same defaults. A project copy overrides per key — you write only the
+# thresholds you disagree with, not the whole file.
+#
+# WHAT THE GATE CAN AND CANNOT DECIDE ON — read this before adding a check
+# ------------------------------------------------------------------------
+# Measured on forgeplan 0.34.0, not assumed:
+#
+#   per-artifact, machine-readable      validate --json · score --json · fgr --json
+#   workspace-wide, prose only          gaps · blindspots
+#
+# `gaps` and `blindspots` take NO artifact argument and have NO --json. They answer "what is wrong
+# in this workspace", not "is this artifact ready". On the live tree `gaps` reports 64 MUST items
+# across the whole graph; gating on that number would block every artifact for reasons that have
+# nothing to do with it.
+#
+# So they are ADVISORY here — invoked, reported, never blocking. PRD-024 FR-006 lists all five
+# tools together; the split is the reconciliation, recorded rather than silently applied.
+#
+# Only add a threshold for something you can read per-artifact and compare numerically. A check
+# that cannot fail on a specific artifact is a paragraph, not a gate.
+#
+# WHAT MAY BLOCK, AND WHY SO LITTLE DOES — measured 2026-09-03, 14 live artifacts
+# -----------------------------------------------------------------------------
+# Only two kinds of check are `must`: `forgeplan validate` errors, and structural requirements the
+# author either met or did not (`adi_evidence_required`, `adr_linked_required`, `evidence_grew`),
+# plus `formality`. Everything else derived from `score` is a `should`.
+#
+# That is not timidity. Each demotion has a measurement behind it.
+#
+# `r_eff` — a transitive minimum over the link graph (`score --json` names the culprit as
+# `weakest_link`), not a property of the artifact being gated. RFC-012 carries 8 linked EVIDs, all
+# active / congruence 3 / supports / 1.0, and scores 0.0: its weakest link is ADR-010 → NOTE-021 →
+# RFC-012, a cycle no single author can break.
+#
+#   And worse, it moves the wrong way. PRD-024 fell from r_eff 1.00 to 0.30 **because it was
+#   reviewed** — an honest audit landed carrying `verdict: weakens`, scored 0.5, and became the
+#   minimum. Blocking on `r_eff` would mean an artifact fails its own gate for recording adverse
+#   evidence about itself. That is the opposite of what this pipeline is for.
+#
+# `granularity` — kind-dependent, not quality-dependent. Measured across 14 artifacts: ADRs cluster
+# at 0.20–0.40 (ADR-005 0.20, ADR-009 0.40, ADR-022 0.40), PRDs and EPICs at 0.80–1.00, RFCs at
+# 0.60. An ADR is one decision; low granularity is CORRECT for it. A single threshold across kinds
+# fails every ADR by construction, including ADR-022, which the project took through a full cycle to
+# a guardian PASS. Per-kind thresholds would make this gateable; one number cannot.
+#
+# `reliability` — tracks the evidence chain, so it carries both problems above.
+#
+# `formality` — the closest thing to a usable score, and still not usable as a MUST. A 0.6 floor
+# passes all 16 sampled activated artifacts and flags 9 of the 126 gateable ones (7%). But a
+# spot-check of the lowest, ADR-006 at 0.38, found a structurally complete MADR: seven sections
+# (Context / Decision drivers / Considered options / Decision outcome / Consequences / Compliance /
+# References) over 9.7k of body. Whatever the metric measures, it is not "written down properly" in
+# the sense a blocking threshold would need. Reported, not blocking, until someone establishes what
+# it actually tracks.
+
+# WHAT IS LEFT AS A `must` — and why these
+# ----------------------------------------
+# Only checks a reader can settle without argument:
+#
+#   validate_errors_max     `forgeplan validate` — a MUST section is present or it is not
+#   adi_evidence_required   a linked EVID carries ≥3 `### Hypothesis` sections, or it does not
+#   adr_linked_required     an active ADR informs this artifact, or none does
+#   evidence_grew           an EVID was linked since the pre-build gate, or none was
+#
+# None is a threshold on a number whose meaning is in dispute. Each names a thing the author did or
+# did not do, and each has an obvious fix. That is a smaller gate than the first draft, and it is
+# the part of the first draft that survived measurement.
+#
+# THE FALSE-POSITIVE BUDGET IS THE POINT
+# --------------------------------------
+# PRD-024 NFR-003 sets it at ≤5%. An earlier draft of this file made `r_eff`, `granularity` and
+# `reliability` MUSTs at Deep; applied to 12 live artifacts that produced a **50% block rate** —
+# including PRD-024 itself, RFC-002 (the source of the INV-1 this gate enforces), and ADR-022.
+# A gate that blocks half of already-accepted work is not strict, it is broken, and it gets
+# bypassed with `--force` on its first firing.
+#
+# DEPTH IS RECORDED, NOT ASSUMED — and `calibrate` escalates almost everything
+# ---------------------------------------------------------------------------
+# `depth` defaults to `standard` from `.forgeplan/config.yaml` and is reflected back for every
+# artifact of every kind, so an unedited `standard` means "nobody decided". `/forge-cycle`
+# Step 4.65 now runs `forgeplan calibrate` and records a depth, which is what makes the tiers below
+# reachable at all.
+#
+# Measured the same day: `calibrate` suggested **Deep for 4 of 4** artifacts probed (ADR-022,
+# PRD-024, RFC-002, NOTE-013) and Tactical or Standard for none. So Step 4.65 asks for confirmation
+# and does not escalate unattended — an auto-applied suggestion would move the whole graph onto the
+# strictest tier at once.
+#
+# THESE NUMBERS ARE PROVISIONAL
+# -----------------------------
+# PRD-024 R-1 promised thresholds derived from a 30-artifact test set. This is 14, taken on
+# 2026-09-03, and several inputs move as artifacts are reviewed. Re-measure before tuning; a
+# threshold read as current when it is a year-old snapshot is the drift class ADR-022 exists to
+# prevent. Tracked in NOTE-013.
+
+schema_version: 1
+
+# ─── Pre-build gate — the `gate` stage, between `design` and `build` ─────────────
+#
+# Question: is there enough specification to start writing code?
+#
+# `must` blocks. `should` is reported and does not block — the distinction is the whole point,
+# because a gate where everything blocks gets bypassed with --force on the first false positive,
+# and then it protects nothing.
+pre_build:
+
+  # A `must` here is something the author can fix and that indicates genuine unreadiness.
+  # Everything derived from `score` is a `should` — measured reasons under each.
+
+  tactical:
+    must:
+      validate_errors_max: 0        # `forgeplan validate --json` → results[].errors
+    should:
+      r_eff_min: 0.0                # reported only
+
+  standard:
+    must:
+      validate_errors_max: 0        # `forgeplan validate --json` → results[].errors
+    should:
+      formality_min: 0.6
+      r_eff_min: 0.5
+      granularity_min: 0.5
+      evidence_count_min: 1         # score --json → r_eff_ci.evidence_count
+
+  deep:
+    must:
+      validate_errors_max: 0
+      adi_evidence_required: true   # ≥1 linked EVID whose body carries ≥3 `### Hypothesis`
+                                    # sections (CLAUDE.md Sprint Z7). Structural, not a score:
+                                    # the author either ran the ADI cycle or did not.
+    should:
+      formality_min: 0.6
+      r_eff_min: 0.7
+      granularity_min: 0.6
+      reliability_min: 0.6
+      evidence_count_min: 2
+
+  critical:
+    must:
+      validate_errors_max: 0
+      adi_evidence_required: true
+      adr_linked_required: true     # an architectural decision recorded, not implied
+    should:
+      r_eff_min: 0.8
+      formality_min: 0.75
+      granularity_min: 0.6
+      reliability_min: 0.75
+      evidence_count_min: 3
+
+# ─── Post-build gate — inside the `evidence` stage, Deep and Critical only ──────
+#
+# Question: does the build match what was specified, and may it be activated?
+#
+# Deliberately thinner than pre_build. By this point `guardian` runs as the activation gate and
+# reads the whole evidence chain; duplicating its judgement here would mean two gates disagreeing
+# about the same artifact, and the one that is easier to satisfy wins.
+post_build:
+
+  deep:
+    must:
+      validate_errors_max: 0
+      evidence_grew: true           # at least one EVID linked since the pre-build gate ran.
+                                    # A build that produced no new evidence has been asserted,
+                                    # not verified. Structural — the author can act on it.
+    should:
+      r_eff_min: 0.7
+      r_eff_not_lower: true         # see the note above on why a DROP here is often the sign of
+                                    # an honest audit rather than a worse artifact
+
+  critical:
+    must:
+      validate_errors_max: 0
+      evidence_grew: true
+      adr_linked_required: true
+    should:
+      r_eff_min: 0.8
+      r_eff_not_lower: true
+
+# ─── Override (PRD-024 FR-014) ──────────────────────────────────────────────────
+#
+# `--force` past a MUST failure is allowed and always leaves a record. An override that leaves no
+# trace is indistinguishable from the gate not having run.
+override:
+  allowed: true
+  requires_reason: true             # `--force` with no reason is refused
+  record_as: note                   # a NOTE artifact naming the artifact, the failed checks and
+                                    # the reason; linked `informs` to the artifact it let through
+  # Deliberately NOT configurable to `false`. A gate nobody can pass in an emergency is a gate that
+  # gets deleted in an emergency. Making the escape hatch loud is more durable than sealing it.
