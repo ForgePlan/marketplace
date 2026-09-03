@@ -14,7 +14,7 @@ A 15-minute, low-risk migration guide. Read it once, decide, then execute. **No 
 
 ## TL;DR
 
-- `fpl-skills` is a superset of `dev-toolkit` — same `/audit` and `/sprint`, 38 skills in total, plus `/fpl-init`.
+- `fpl-skills` is a superset of `dev-toolkit` — same `/audit` and `/sprint`, 44 skills in total, plus `/fpl-init`.
 - The migration is **side-by-side compatible**: install `fpl-skills`, verify it works, then uninstall `dev-toolkit` (or keep both during a transition).
 - Slash command names overlap (`/audit`, `/sprint`). Claude Code resolves the conflict by namespacing: `/dev-toolkit:audit` vs `/fpl-skills:audit`. Your project `CLAUDE.md` may reference the namespaced form — those references need updating.
 - Your `.forgeplan/` directory and any artifact you produced with `forgeplan` are **untouched**.
@@ -267,7 +267,7 @@ Migrate when one of these applies:
 ## See also
 
 - [DEVELOPER-JOURNEY.md](DEVELOPER-JOURNEY.md) — narrative onboarding "From Zero to Shipping" (the destination of this migration).
-- [USAGE-GUIDE.md](USAGE-GUIDE.md) — reference manual for fpl-skills' 38 skills.
+- [USAGE-GUIDE.md](USAGE-GUIDE.md) — reference manual for fpl-skills' 44 skills.
 - [`plugins/fpl-skills/README.md`](../plugins/fpl-skills/README.md) — full plugin documentation.
 - [`plugins/dev-toolkit/README.md`](../plugins/dev-toolkit/README.md) — current state of dev-toolkit (deprecated, but kept).
 - [ARCHITECTURE.md § Plugin Map](ARCHITECTURE.md#plugin-map) — where each plugin sits in the 4-system mental model.

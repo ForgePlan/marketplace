@@ -642,6 +642,30 @@ Unattended handling, per PRD-024 AC-5 (*"gate-check failures always halt — can
 `--force` is a human's call. Under `/autorun` the default is WAIT, matching the RIPER Plan→Execute
 gate (DEFER-016) — an autonomous run that can bypass its own gate has no gate.
 
+### The other two stages on the same path (marketplace#233, #234)
+
+`estimate` and `wrap` are the pipeline's remaining stages, and the non-delegating path skipped both
+for the same reason it skipped the gate.
+
+```
+/estimate <ARTIFACT-ID>    # Deep+ only, right after the depth is recorded above
+...
+/wrap <ARTIFACT-ID>        # Deep+ only, after the run's commits land
+```
+
+`/estimate` **never holds** — it feeds the gate a number and moves on. A run has never been stopped
+for being large, and autopilot does not start.
+
+`/wrap` closes the cycle: drift + stale + `/forge-heal` + a link audit, recorded in a REFRESH
+`based_on` the cycle's EVID at Deep and Critical (ADR-020). Run it **after** the commits, not
+before — `forgeplan drift` compares artifacts against the code they claim, and an uncommitted tree
+is a comparison nobody else can reproduce.
+
+One thing autopilot must not do here: **a REFRESH whose body says the reconciliation is clean when
+it did not run.** Paste what the tools returned; when one could not run, write that, with the error.
+Nothing downstream can tell those apart (CLAUDE.md G9), which is exactly why the unattended path is
+where it matters.
+
 ### Want full automation?
 
 For maximum forgeplan integration with zero per-phase pauses, install `forgeplan-workflow` then invoke `/autorun` — it will silently delegate to `/forge-cycle`:

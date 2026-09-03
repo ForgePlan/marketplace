@@ -11,7 +11,7 @@
 ## Что у тебя будет в конце
 
 - CLI `forgeplan` в `$PATH`.
-- Один Claude Code плагин (`fpl-skills`), 38 скиллов.
+- Один Claude Code плагин (`fpl-skills`), 44 скилла.
 - Проект с `.forgeplan/`, `CLAUDE.md`, `docs/agents/`, `.mcp.json`.
 - Дневной routine: утренний briefing → выбор задачи → research/refine → sprint → audit → ship.
 - Опционально: agent packs (83 специализированных агентов) — добавишь по мере необходимости.
@@ -29,7 +29,7 @@ FPF          — КАК думать?         (decompose, evaluate, reason)
 SPARC        — КАК кодить?         (spec → pseudo → arch → refine → complete)
 ```
 
-Плагин `fpl-skills` — **связующий слой**: 38 скиллов, которые композят эти системы и делегируют lifecycle артефактов в CLI `forgeplan`.
+Плагин `fpl-skills` — **связующий слой**: 44 скилла, которые композят эти системы и делегируют lifecycle артефактов в CLI `forgeplan`.
 
 ```mermaid
 flowchart LR
