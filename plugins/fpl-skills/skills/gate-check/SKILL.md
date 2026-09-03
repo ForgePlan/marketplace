@@ -142,6 +142,15 @@ produced no new evidence has been asserted, not verified.
 That distinction carries the whole design. A gate where everything blocks gets bypassed with
 `--force` on its first false positive, and a bypassed gate protects nothing.
 
+Every `must` in the shipped thresholds is **structural** — a MUST section present or absent, a
+linked EVID carrying three hypotheses or not, an active ADR informing this artifact or none. No
+`must` is a threshold on a score, because each score was tried and each failed measurement: `r_eff`
+falls when an artifact is honestly audited, `granularity` tracks artifact kind rather than quality,
+and `formality` flags a structurally complete MADR. Report all of them; block on none.
+
+If you are tempted to promote a score to `must`, measure the block rate on artifacts the project has
+already accepted first. The draft that promoted three of them blocked 56% of them.
+
 ### Step 6 — Report
 
 Name the failed check, the measured value, the threshold, and what to do about it. FR-008 asks for

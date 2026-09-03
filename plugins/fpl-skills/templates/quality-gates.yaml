@@ -56,9 +56,26 @@
 #
 # `reliability` — tracks the evidence chain, so it carries both problems above.
 #
-# `formality` — the one score that discriminates without punishing. Range on the sample 0.69–0.86;
-# a 0.6 floor fails none of them, and would fail an artifact that genuinely is not written down
-# properly. A 0.75 floor would have failed 6 of 14, which is why Critical keeps 0.75 as a `should`.
+# `formality` — the closest thing to a usable score, and still not usable as a MUST. A 0.6 floor
+# passes all 16 sampled activated artifacts and flags 9 of the 126 gateable ones (7%). But a
+# spot-check of the lowest, ADR-006 at 0.38, found a structurally complete MADR: seven sections
+# (Context / Decision drivers / Considered options / Decision outcome / Consequences / Compliance /
+# References) over 9.7k of body. Whatever the metric measures, it is not "written down properly" in
+# the sense a blocking threshold would need. Reported, not blocking, until someone establishes what
+# it actually tracks.
+
+# WHAT IS LEFT AS A `must` — and why these
+# ----------------------------------------
+# Only checks a reader can settle without argument:
+#
+#   validate_errors_max     `forgeplan validate` — a MUST section is present or it is not
+#   adi_evidence_required   a linked EVID carries ≥3 `### Hypothesis` sections, or it does not
+#   adr_linked_required     an active ADR informs this artifact, or none does
+#   evidence_grew           an EVID was linked since the pre-build gate, or none was
+#
+# None is a threshold on a number whose meaning is in dispute. Each names a thing the author did or
+# did not do, and each has an obvious fix. That is a smaller gate than the first draft, and it is
+# the part of the first draft that survived measurement.
 #
 # THE FALSE-POSITIVE BUDGET IS THE POINT
 # --------------------------------------
@@ -109,9 +126,9 @@ pre_build:
 
   standard:
     must:
-      validate_errors_max: 0
-      formality_min: 0.6            # score --json → fgr.formality — is it written down properly
+      validate_errors_max: 0        # `forgeplan validate --json` → results[].errors
     should:
+      formality_min: 0.6
       r_eff_min: 0.5
       granularity_min: 0.5
       evidence_count_min: 1         # score --json → r_eff_ci.evidence_count
@@ -119,11 +136,11 @@ pre_build:
   deep:
     must:
       validate_errors_max: 0
-      formality_min: 0.6
       adi_evidence_required: true   # ≥1 linked EVID whose body carries ≥3 `### Hypothesis`
                                     # sections (CLAUDE.md Sprint Z7). Structural, not a score:
                                     # the author either ran the ADI cycle or did not.
     should:
+      formality_min: 0.6
       r_eff_min: 0.7
       granularity_min: 0.6
       reliability_min: 0.6
@@ -132,7 +149,6 @@ pre_build:
   critical:
     must:
       validate_errors_max: 0
-      formality_min: 0.6
       adi_evidence_required: true
       adr_linked_required: true     # an architectural decision recorded, not implied
     should:

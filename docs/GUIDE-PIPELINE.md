@@ -102,37 +102,41 @@ split is reconciled in the FR-006 row rather than applied silently.
 
 | Depth | pre-build MUST |
 |---|---|
-| Tactical | `validate` clean |
-| Standard | + formality ≥ 0.6 |
+| Tactical / Standard | `validate` clean |
 | Deep | + ADI evidence (≥3 hypotheses in a linked EVID) |
 | Critical | + ADR linked |
 
-**Almost nothing derived from `score` blocks, and that is measured, not timid.** Applied to 14 live
-artifacts on 2026-09-03:
+**Every MUST is structural. Nothing derived from `score` blocks.** That is measured, not timid.
 
-- **`r_eff` is a graph minimum, and it moves the wrong way.** PRD-024 fell 1.00 → 0.30 *because it
-  was reviewed* — an honest audit landed carrying `weakens`, scored 0.5, and became the minimum.
-  Blocking on it means failing an artifact for recording adverse evidence about itself.
+A `must` here is something a reader settles without argument: a MUST section is present or it is
+not; a linked EVID carries three hypotheses or it does not; an active ADR informs this artifact or
+none does. Each names a thing the author did or did not do, and each has an obvious fix.
+
+The scores were tried as MUSTs and each failed measurement (14–16 live artifacts, 2026-09-03):
+
+- **`r_eff` is a graph minimum that moves the wrong way.** PRD-024 fell 1.00 → 0.30 *because it was
+  reviewed* — an honest audit landed carrying `weakens`, scored 0.5, became the minimum. Blocking on
+  it fails an artifact for recording adverse evidence about itself.
 - **`granularity` is kind-dependent, not quality-dependent.** ADRs cluster at 0.20–0.40, PRDs and
-  EPICs at 0.80–1.00. An ADR is one decision; low granularity is correct for it. One threshold
-  across kinds fails every ADR by construction.
-- **`formality` is the one score that discriminates without punishing** — range 0.69–0.86 on the
-  sample, so a 0.6 floor fails none of them and would fail something genuinely unwritten.
+  EPICs at 0.80–1.00. An ADR is one decision; low granularity is correct for it.
+- **`formality` looked usable and is not.** A 0.6 floor passes all 16 sampled activated artifacts
+  and flags 7% of the gateable corpus — but the lowest, ADR-006 at 0.38, is a structurally complete
+  seven-section MADR. Whatever it tracks, it is not "written down properly".
 
-An earlier draft made `r_eff`, `granularity` and `reliability` MUSTs at Deep. On 12 artifacts that
-produced a **50% block rate**, including PRD-024 itself, RFC-002 — the source of the INV-1 this gate
-enforces — and ADR-022, which the project had just taken through a full cycle to a guardian PASS.
-PRD-024 NFR-003 budgets false positives at ≤5%. A gate that blocks half of already-accepted work
-is not strict; it is broken, and it gets `--force`d the first time it fires.
+An early draft made `r_eff`, `granularity` and `reliability` MUSTs at Deep. On 16 artifacts that
+blocked **56%** — including PRD-024 itself, RFC-002 (the source of the INV-1 this gate enforces) and
+ADR-022, which the project had just taken through a full cycle to a guardian PASS. PRD-024 NFR-003
+budgets false positives at ≤5%. A gate that blocks half of already-accepted work is not strict; it
+is broken, and it gets `--force`d the first time it fires. The current set blocks **0%** of that
+sample.
 
 **Depth is recorded, not assumed — and not escalated unattended.** `forgeplan get` returns
-`standard` for every artifact of every kind (it is `default_depth` reflected back), so `/forge-cycle`
-Step 4.65 runs `calibrate` and records a depth. That same measurement showed `calibrate` suggesting
+`standard` for every artifact of every kind (`default_depth` reflected back), so `/forge-cycle`
+Step 4.65 runs `calibrate` and records one. The same measurement showed `calibrate` suggesting
 **Deep for 4 of 4** probed artifacts, so the step asks before escalating and `/autorun` keeps the
 existing depth — escalating a tier without a human is the autonomy equivalent of `--force`.
 
-These numbers are provisional: PRD-024 R-1 promised a 30-artifact calibration, this is 14. Tracked
-in NOTE-013.
+Provisional: PRD-024 R-1 promised a 30-artifact calibration; this is 16. Tracked in NOTE-013.
 
 `must` blocks; `should` is reported and does not. That split carries the design: a gate where
 everything blocks gets bypassed with `--force` on its first false positive, and then it protects
