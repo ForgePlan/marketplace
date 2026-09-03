@@ -67,6 +67,27 @@ what `git log --since=<artifact created>` shows alongside what `drift` returned.
 
 **Keep the output.** Step 3 needs the text, not your summary of it.
 
+### Step 1b — Coverage, when the cycle touched code (marketplace#263)
+
+```bash
+forgeplan coverage        # decision coverage per code module; no --json form
+```
+
+Workspace-wide and honest about it: measured 2026-09-04 it reported "1% (2/185 modules)" because it
+scans **everything under the workspace root**, including directories no artifact governs. Filter to
+the modules this cycle touched and report whether they gained a governing decision; the workspace
+total is context for the `## Gaps closed` section, never a finding against this cycle. A cycle that
+shipped code into a module with no decision coverage is worth one sentence in the REFRESH — it is
+tomorrow's drift.
+
+### Step 1c — Optional: capture the cycle's loose decisions
+
+`forgeplan_capture(decision="...")` (MCP; needs a configured LLM provider) turns a decision made in
+conversation into a NOTE or ADR — use it for calls made during the cycle that never rose to an
+artifact. One capture per real decision; do not capture the cycle's summary, that is what the
+REFRESH is for. If the provider is absent the tool fails loudly — record that as "capture
+unavailable", not as "no loose decisions".
+
 ### Step 2 — Below Deep, stop here
 
 Report what the four returned and finish. No artifact. Say which depth was applied and why there is

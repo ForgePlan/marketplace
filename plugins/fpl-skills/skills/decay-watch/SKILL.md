@@ -140,6 +140,18 @@ Classifications:
 **Note**: pre-Z8 supersedes are flagged as warnings, not blockers, to preserve backward
 compatibility. The discipline is **mandatory for new supersedes from Sprint Z8 onward**.
 
+### Step 2f — Evidence-decay impact on scores (marketplace#263)
+
+The name-twin tool this skill never called: `forgeplan_decay` (MCP; the CLI form `forgeplan decay`
+exists but prints nothing usable) lists artifacts whose R_eff has degraded because linked evidence
+expired — current vs fresh score, per artifact. It answers the question the revisit-trigger scan
+cannot: not "which decisions asked to be re-checked" but "which scores already rotted".
+
+**Cost warning, measured 2026-09-04: >2 minutes on a 385-artifact graph.** It walks scores for the
+whole workspace. Run it, but run it LAST, and if this invocation is time-boxed say "decay impact
+not measured this pass" rather than skipping silently. Report its rows in the same table as the
+trigger findings, tagged `decay`.
+
 ### Step 3 — Classify each trigger
 
 Three categories:

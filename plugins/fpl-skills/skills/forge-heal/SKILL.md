@@ -96,6 +96,11 @@ Either way each finding carries the same frozen RFC-019 shape (`finding_id`, `an
 3. For `phase_mismatch`: **read + record the artifact's CURRENT phase first** (`forgeplan_get` / `forgeplan_phase`) — that recorded value IS the rollback target. Then apply the reversible op (`forgeplan_phase_advance --to <next>` / `forgeplan_activate`).
 4. **Journal** the action: what changed, which finding_id, the rollback command. Append to the finding's NOTE-013 row (`status=healed action=<op> rollback=<cmd>`).
 5. The finding auto-closes on the next `/forge-insight` pass (RFC-019 auto-close) when the anomaly is gone.
+6. **When a fix itself was destructive** (`deprecate` / `supersede` / `delete` applied as part of a
+   USER-approved repair): the one-call rollback is `forgeplan_undo_last` — it reverses exactly those
+   three op kinds and nothing else (which is why phase rollbacks above must NOT use it). Journal the
+   undo receipt alongside the action; if `undo_last` reports nothing to undo, the op did not land —
+   investigate before retrying, never re-apply blind. (marketplace#263)
 
 ### Step 4 — ADI: reason, then apply-if-safe or escalate
 
