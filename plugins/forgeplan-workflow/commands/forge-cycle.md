@@ -337,7 +337,8 @@ Two things this step exists to keep honest:
   (a "Blocked by: RFC-NNN" line), and check it later with `forgeplan order --json` — the
   topological-order tool nothing was invoking.
 
-At Standard the single RFC from Step 4 stands; skip silently per the depth filter.
+At Standard and below this step is skipped silently per the depth filter — and there is nothing to
+decompose: Step 4 creates an RFC only at Deep+, so a Standard task carries just the PRD.
 
 ## Step 4.5: FPF ADI mandatory dispatch (Standard+ depth — Sprint Z7 PRD-059)
 
