@@ -122,7 +122,7 @@ The matrix may also set:
 - `methodology:` ∈ `{fpf, sparc, goap, tdd-london, tdd-classical, bdd, wbs, c4, checklist, none}` → informational; passed to the dispatched agent as context.
 
 **Sentinels** (special `primary` values, not agent IDs):
-- `inline` — orchestrator handles the phase directly; no agent dispatch.
+- `inline` — orchestrator handles the stage directly; no agent dispatch.
 - `inline-merger` — orchestrator merges parallel reviewer verdicts (used for `audit.primary`).
 - `skill:<name>` — orchestrator runs the named skill **in its own context**: no `Task` call, no isolated context, no fallback to `secondary` (a skill is either installed or it is not — see the miss row below). Used by `estimate` → `/estimate` (Step 4.65b) and `wrap` → `/wrap` (Step 10). A skill that goes on to dispatch an agent says so in its own body; the matrix does not model that.
 - `none` methodology — no formal methodology applies.
@@ -1149,7 +1149,13 @@ artifacts rather than passing an argument the tool ignores.
 | Depth | What happens |
 |---|---|
 | Deep, Critical | reconciliation **plus** a REFRESH artifact `based_on` the cycle's EVID, carrying `## Synced` / `## Gaps closed` / `## Links updated` / `## Ready verdict` |
-| Standard, Tactical | the same reconciliation, reported, **no artifact** — at these depths `/decay-watch`, `/forge-heal` and the journal already cover it (ADR-020) |
+| Standard, Tactical | **`/forge-cycle` skips this step entirely** — `wrap.depth_filter` is `deep+`, and a filtered stage is skipped silently (Step 0.5). The skill's Standard branch — same reconciliation, reported, no artifact — is for a direct `/wrap` call. At these depths the cycle's reconciliation is `/decay-watch`, `/forge-heal` and the journal (ADR-020) |
+
+**So this step, like `/estimate` at 4.65b, runs only when a depth above Standard was actually
+recorded.** `default_depth` is `standard` and Step 4.65a will not escalate unattended, so on an
+untouched graph both stages are built and idle. That is the intended trade — an auto-escalating
+depth arms the strictest gate tier for everything (EVID-228) — but "the stage executes" is true
+conditionally, and the condition is a human deciding the depth.
 
 Run it **after** Step 9 commits: `forgeplan drift` compares artifacts against the code they claim,
 and before the commit that comparison is measuring a working tree nobody else can see.

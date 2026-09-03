@@ -35,6 +35,11 @@ Per ADR-020: at Standard and Tactical the reconciliation is already covered by `
 the artifact — `/forge-cycle` Step 4.65 records it; if it is the untouched `standard` default, say so
 and treat it as Standard.
 
+**Через `/forge-cycle` эта стадия — только Deep+.** `wrap.depth_filter` в матрице стоит `deep+`, а
+отфильтрованная стадия пропускается молча, поэтому строка Standard/Tactical выше относится к прямому
+вызову `/wrap`, а не к прогону цикла. Через цикл на Standard сверку делают `/decay-watch` и
+`/forge-heal`.
+
 ---
 
 ## Process
@@ -93,9 +98,11 @@ G9) — not BLOCKER, so a rubber-stamp is caught by the reviewer chain rather th
 YES | NO — <one sentence>. On NO, name the blocker and who owns it.
 ```
 
-**`YES` or `NO`, those words.** ADR-020 fixes the vocabulary and `guardian` reads it: a verdict
-written any other way (`READY`, `✅`, "looks good") reads to the gate as a missing verdict, and the
-REFRESH comes back CONCERNS for a wording choice rather than a real gap.
+**`YES` or `NO`, those words.** ADR-020 writes the verdict as "yes/no + blocker"; the requirement
+that the literal uppercase tokens appear is `guardian`'s, at `plugins/agents-pro/agents/guardian.md`
+(the REFRESH structural-completeness row). A verdict written any other way (`READY`, `✅`, "looks
+good") reads to that gate as a missing verdict, and the REFRESH comes back CONCERNS for a wording
+choice rather than a real gap.
 
 **Created via generic `artifact-author`. There is no kind-specialist for REFRESH and that is
 deliberate** (ADR-020) — the reconciliation is done by the existing skills; this records their real

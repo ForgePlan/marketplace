@@ -113,12 +113,16 @@ estimate PRD-024 — Full SDLC Pipeline with Quality Gates
     + has calibration evidence (+20%)
     − no RFC phases                    → forgeplan new rfc "<title>"   (+25%)
 
-  footing: R_eff 0.30 · grade B · 5 linked EVID · CI 0.37-0.63
+  footing: R_eff 0.30 · grade B · CI 0.37-0.63
   heaviest: FR-003 · FR-004 · FR-005 — Hard, 168 pts each
 ```
 
 Name the heaviest items. A total tells you the size; the three biggest tell you where the risk is
 and what to decompose next.
+
+Measured 2026-09-03 against PRD-024. The estimate figures are deterministic and reproduce; the
+footing line is a live-graph reading and moves — the linked-evidence count changed twice while this
+skill was being reviewed, which is why it is not in the example.
 
 ---
 
