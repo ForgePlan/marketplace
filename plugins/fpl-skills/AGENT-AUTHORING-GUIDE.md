@@ -30,7 +30,7 @@ Every forgeplan artifact (PRD/RFC/ADR/EPIC/SPEC/PROBLEM/SOLUTION/EVIDENCE/NOTE/R
 
 | Operation | Profile | Generic agent (any kind) | Kind specialists (preferred when available) |
 |---|---|---|---|
-| **CREATE** | A | `artifact-author` (uses forgeplan_generate primary, forgeplan_new fallback) | adr-architect, specification, architecture, goal-planner, brief-intake, evidence-recorder |
+| **CREATE** | A | `artifact-author` (uses forgeplan_generate primary, forgeplan_new fallback) | adr-architect (ADR), specification (PRD/SPEC), architecture (RFC), brief-intake (NOTE Brief), evidence-recorder (EVIDENCE). **EPIC, PROBLEM, SOLUTION and REFRESH have none** — `artifact-author` creates them. `goal-planner` is not in this column: it *consumes* an EPIC to decompose it into RFCs (marketplace#234) |
 | **READ** | any | (no dedicated agent — direct `forgeplan_get`) | n/a |
 | **UPDATE** (metadata, links, status) | D | `artifact-maintainer` (NEW) | n/a — kind-specialists focus on CREATE |
 | **REVIEW** (health/quality audit) | B | `artifact-reviewer` (NEW) | code-reviewer, security-expert, architect-reviewer, tester, system-dev — these review CODE/DESIGN/SYSTEM, not the artifact itself |
