@@ -1,6 +1,6 @@
 {
   "name": "forgeplan-orchestra",
-  "version": "1.8.1",
+  "version": "1.9.0",
   "description": "Unified workflow: Forgeplan artifacts + Orchestra task tracking + Claude Code AI execution. Bidirectional sync, Session Start Protocol with Inbox Pattern, and methodology knowledge base. Requires forgeplan CLI (private app, access via project admin) + Orchestra MCP server. v1.5.0: /sync field-write path fixed — the non-existent set_fields replaced by update_entity, fields passed as {fieldUid, value} with UIDs resolved via list_fields, create_entity moved to the entities[] form (marketplace#208). v1.6.0: read-before-act on task chats, Blocked as a Status (never a phase), checklists from acceptance criteria + a Done-with-open-items report, Artifact backfill from task names with per-row confirmation, pinned workspace UIDs, orphans reported never deleted (marketplace#210).",
   "author": {
     "name": "ForgePlan"

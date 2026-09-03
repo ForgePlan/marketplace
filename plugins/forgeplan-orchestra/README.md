@@ -102,6 +102,49 @@ Apply changes? [y/n]
 - **ALWAYS** `search_entities` before `create_entity` (no duplicates)
 - **ALWAYS** read `failedFields` before reporting a field as set — it arrives inside a *successful* response
 
+## Skills
+
+### `unified-workflow` — the architecture
+
+How Orchestra tasks and forgeplan artifacts map onto one another.
+
+### `orchestra-task-cycle` — the runbook
+
+Working a single task end to end: **orient → read → claim → work → evidence → report → close**.
+Seven stages, each with a gate — and a gate you cannot answer means the previous stage is not
+finished. Every expensive failure in this workflow comes from starting stage N+1 on an unfinished
+stage N.
+
+Loads on its own when you say "what should I do next", "take this task", "close the task", "what is
+blocked", "что дальше", "возьми задачу", "закрой задачу", or name a board, task, status, phase or
+checklist.
+
+Progressive disclosure — `SKILL.md` stays under the 2000-word threshold and the depth sits beside it:
+
+| File | What is in it |
+|---|---|
+| `references/field-model.md` | eleven fields, the tag doctrine, the types that trap |
+| `references/query-recipes.md` | reverse dependency search, sweeps, audits |
+| `references/failure-modes.md` | how Orchestra refuses **silently** — the section to read before debugging |
+| `examples/` | a full seven-stage pass, the `Blocked` variant, filing a task inline |
+| `assets/` | skeletons for a task description and a completion report |
+| `scripts/field-map.sh` | dumps the field-UID and option map |
+
+Built from an audit of Orchestra's own sources and checked against a live board of 34 tasks — the
+behaviour in `failure-modes.md` and `query-recipes.md` was observed on a running server, not derived
+from documentation. One recipe was found wrong precisely because it was re-run rather than trusted.
+
+#### The endpoint is not hardcoded
+
+`scripts/field-map.sh` defaults to `http://localhost:28173/mcp` — the Orchestra desktop app on your
+own machine. That is a fallback, not a fixed address:
+
+```bash
+ORCH_MCP_URL=https://orchestra.example.com/mcp ./scripts/field-map.sh
+```
+
+Set `ORCH_MCP_URL` and the script talks to whatever server you point it at.
+
 ## Credits
 
 - **[Orchestra](https://orch.so)** -- task tracking and team collaboration
