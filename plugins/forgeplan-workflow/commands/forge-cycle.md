@@ -1107,7 +1107,12 @@ change with no artifact has nothing to gate.
 
 ### 8b — Review and activate (orchestrator)
 
-Run the review process:
+First, activate **guardian's own EVID** from 8a — guardian is Profile B and cannot activate
+anything, so its gate record lands in draft too (Sprint A-E anomaly #1 / `mm-draft-hygiene`,
+reappearing at every new Profile B call site). A gate verdict sitting in draft weighs nothing in
+the chain the next gate reads.
+
+Then run the review process:
 ```bash
 forgeplan review PRD-XXX
 ```
