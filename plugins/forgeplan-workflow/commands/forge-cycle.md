@@ -241,6 +241,19 @@ Run `forgeplan health` to check the project state.
 - If blind spots are reported, fix them before proceeding (missing README, no tests, stale artifacts, etc.).
 - If forgeplan is not installed or `.forgeplan/` does not exist, tell the user and stop.
 
+Alongside it, read the two one-glance tools that existed all along and were invoked by nothing on
+the pipeline path (marketplace#263):
+
+```bash
+forgeplan status      # workspace identity: project, artifact total, created — cheap sanity anchor
+forgeplan session     # methodology session phase (idle/routing/shaping/coding/evidence/pr)
+```
+
+If `session` reports a phase that contradicts what this cycle is about to do (e.g. `coding` while
+you are about to shape), say so before proceeding — a stale session phase is usually a previous run
+that died mid-cycle, and `/autorun --list-sessions` will know more. Neither tool gates; both are
+one line of context each in the final report.
+
 ## Step 2: Identify the Task
 
 Determine what to work on:

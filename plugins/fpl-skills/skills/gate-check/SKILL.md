@@ -120,6 +120,20 @@ forgeplan blindspots
 Read them, and report only what names the artifact under review or its direct links. A workspace
 total belongs in the report as context, never in the verdict.
 
+**Advisory — duplicates** (marketplace#263, `forgeplan_contradictions` via MCP; no CLI subcommand):
+report any pair naming the artifact under review. Honest label required: **v1 detects only
+title-similarity duplicates** (Jaccard ≥ 0.6) — the three real contradiction classes
+(invariant conflicts, glossary divergence, scenario-vs-invariant) are deferred upstream to an LLM
+judge, and the tool says so in its own `limitations[]`. An empty result means "no near-duplicate
+titles", not "no contradictions"; word the report accordingly.
+
+**Advisory — brownfield orphans, conditional**: `forgeplan_orphans` inspects brownfield artifacts
+only (use cases, invariants, glossary, hypotheses). **On a workspace with none it always returns
+empty** — measured 2026-09-04 — so running it there produces a check that looks like a check and
+verifies nothing. Call it only when the artifact under review is brownfield-linked (a
+`forgeplan_discover_*` product or a hypothesis chain); otherwise skip it and do not list it in the
+report as a passed check.
+
 **`adi_evidence_required`** (Deep, Critical) — take the EVID ids from `score --json` → `evidence[]`
 (neither `get --json` nor `forgeplan_get` returns a links field; the projection frontmatter lists
 outgoing edges only, so informing EVIDs are invisible there). Read each body and count

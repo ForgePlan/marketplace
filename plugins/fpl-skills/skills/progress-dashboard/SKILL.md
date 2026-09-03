@@ -33,6 +33,7 @@ Does **not** write files, store state, or introduce any new event system.
 | `mcp__forgeplan__forgeplan_claims` | Which artifacts are currently claimed by agents — "agents in flight" | 1 (highest) |
 | In-session TaskList | Tasks with status: done / running / pending | 2 |
 | `mcp__forgeplan__forgeplan_health` | Total artifacts, active/draft/orphan counts, health verdict | 3 |
+| `mcp__forgeplan__forgeplan_progress` | Per-artifact FR completion (`completed`/total per PRD) — the tool literally named "progress" that this dashboard derived by hand until marketplace#263 | 3 |
 | `mcp__forgeplan__forgeplan_list` with `status=draft` | Work in progress artifacts | 4 |
 | `.forgeplan/session.yaml` | Sprint name, phase, wave meta (written by `/sprint` and `/autorun`) | 5 |
 | `git log --oneline -10` | Recent commits — derive "files modified" count via `--shortstat` | 6 |
