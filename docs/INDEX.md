@@ -89,7 +89,7 @@ CANVAS agents (`plugins/agents-canvas/agents/`): `canvas-coordinator` (master) �
 - **fpl-skills skills (44)** — `plugins/fpl-skills/skills/<name>/SKILL.md` (agentic-RAG: `sections/*/_index.md` per skill). Notable: `smith/` (the 14-row routing brain + `routing-map.md`), `forge-cycle`, `autorun`, `audit`, `research`, `sprint`, `methodology-check`, `forge-heal`, `riper`, `conformance-vectors`.
 - **Authoring contract** — `plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md` (agent frontmatter, Profile A/B/C/D, LR-8 denylist canon, Step 11 affected_files, ground-truth Step 4.5).
 - **Validation** — [`scripts/validate-all-plugins.sh`](../scripts/validate-all-plugins.sh) (run before every PR; `<plugin>` arg for one).
-- **CI gates** (`scripts/ci/`, run by the script + GH Actions): `catalog-check.js` (doc counts vs disk, `--write` autosync) · `cross-ref-check.js` (dangling agent/skill refs) · `check-unicode-safety.js` · `validate-no-personal-paths.js` · `validate-workflow-security.js` · `validate-install-manifests.js`.
+- **CI gates** (`scripts/ci/`, run by the script + GH Actions; the list is derived from `validate-all-plugins.sh` — 13 gates): `catalog-check.js` (doc counts vs disk) · `cross-ref-check.js` · `check-unicode-safety.js` · `validate-no-personal-paths.js` · `validate-workflow-security.js` · `validate-install-manifests.js` · `omp-catalog-check.js` · `interop-skills-check.js` · `frontmatter-check.js` · `phase-canon-check.js` · `verdict-axis-check.js` · `official-plugin-validate.sh` · `gate-parity-check.js`. Plus every `plugins/*/tests/test-*.sh` suite.
 - **GH Actions** — `.github/workflows/validate-plugins.yml` (job `validate`, on PR to main/dev) + `auto-add-to-project.yml` + `sync-standalone-skills.yml`.
 
 ---
@@ -106,7 +106,9 @@ CANVAS agents (`plugins/agents-canvas/agents/`): `canvas-coordinator` (master) �
 | [`process-from-idea-to-delivery-EN.md`](process-from-idea-to-delivery-EN.md) (+RU) | full idea→commit process; §3.0 = the ADR-010 contract + 5 instances |
 | [`USAGE-GUIDE.md`](USAGE-GUIDE.md) (+RU) | command reference, hooks, agent activation, troubleshooting |
 | [`PLAYBOOK.md`](PLAYBOOK.md) (+RU) | which command for which scenario |
-| [`GUIDE-PIPELINE.md`](GUIDE-PIPELINE.md) | the eleven canonical stages, where the gates are, and which stages are still unbuilt |
+| [`GUIDE-PIPELINE.md`](GUIDE-PIPELINE.md) | the eleven canonical stages, where the gates are, and what executes conditionally |
+| [`GETTING-STARTED-E2E.md`](GETTING-STARTED-E2E.md) / [`-RU`](GETTING-STARTED-E2E-RU.md) | end-to-end first walk through the pipeline on a fresh project |
+| [`PROCESS-GAP-MAP-RU.md`](PROCESS-GAP-MAP-RU.md) | measured map of process gaps; re-verified 2026-09-04 (EVID-231) — check the date before citing |
 | [`BROWNFIELD-GUIDE.md`](BROWNFIELD-GUIDE.md) (+RU) | existing codebases — Discover Agent, Strangler Fig |
 | [`SETUP-GUIDE-NEW-REPO.md`](SETUP-GUIDE-NEW-REPO.md) | bootstrap a new ForgePlan repo (~20 min) |
 | [`CROSS-CLI.md`](CROSS-CLI.md) | running across Claude Code / Cursor / Gemini / Codex / Goose |

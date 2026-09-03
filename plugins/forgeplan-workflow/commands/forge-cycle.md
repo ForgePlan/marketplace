@@ -248,6 +248,24 @@ Determine what to work on:
 - Otherwise, check `TODO.md` or `forgeplan list --status pending` for the next item.
 - If nothing is found, ask the user what they want to build.
 
+## Step 2.5: The `brief` stage — raw idea becomes a Brief NOTE
+
+**Runs only when the task arrived as a raw idea** — a sentence, a pasted message, a "can we..." —
+with no existing artifact behind it. A task that already points at an artifact (or at code with an
+artifact) skips this step; a Brief for something already shaped is paperwork.
+
+Dispatch per `phase_dispatch.brief.primary` (default `agents-pro:brief-intake`, `depth_filter: all`):
+
+```python
+Task(subagent_type="agents-pro:brief-intake",
+     prompt=f"Intake this raw idea into a structured Brief NOTE via forgeplan MCP: {raw_idea}. "
+            f"Surface hidden assumptions (forgeplan_reason) before finalising. Leave it in draft.")
+```
+
+The Brief NOTE is the input Step 4 shapes into a PRD. Until marketplace#233's verification sweep,
+this stage was the only Profile A stage filtered `all` in the matrix — and the one stage no step
+ever invoked (EVID-231): the agent existed, the wiring did not.
+
 ## Step 3: Route the Task
 
 Run `forgeplan route "<task description>"` to determine the appropriate depth level.
@@ -295,6 +313,31 @@ If depth is Deep+, also create RFC with `forgeplan new rfc "<title>"` and fill a
 If depth is Critical, also create ADR with `forgeplan new adr "<title>"` for the key decision record.
 
 Run the same `shape` advance for every artifact this step created — the RFC at Deep+, the ADR at Critical. Each artifact carries its own marker.
+
+## Step 4.4: The `decompose` stage — PRD breaks into sibling RFCs (Deep and Critical)
+
+At Deep+ the single hand-created RFC from Step 4 is usually not enough — the work wants a set of
+sibling RFCs with an order. Dispatch per `phase_dispatch.decompose.primary` (default
+`agents-pro:goal-planner`, `depth_filter: deep+`):
+
+```python
+Task(subagent_type="agents-pro:goal-planner",
+     prompt=f"Decompose {PRD_ID} into a coherent set of sibling RFC tasks. "
+            f"Run forgeplan_reason first, then forgeplan_decompose as the primary path; "
+            f"create the RFCs in draft via MCP, linked to the parent. "
+            f"State the execution ORDER and why — which RFCs block which.")
+```
+
+Two things this step exists to keep honest:
+
+- **`forgeplan_decompose` gets called on the pipeline path.** Before this step it was named in
+  agent bodies and cookbooks and invoked by nothing the cycle runs (EVID-231).
+- **The order is stated, not implied.** goal-planner's DAG used to evaporate — RFCs landed, their
+  ordering lived only in the dispatch transcript. Have the agent record the order in each RFC body
+  (a "Blocked by: RFC-NNN" line), and check it later with `forgeplan order --json` — the
+  topological-order tool nothing was invoking.
+
+At Standard the single RFC from Step 4 stands; skip silently per the depth filter.
 
 ## Step 4.5: FPF ADI mandatory dispatch (Standard+ depth — Sprint Z7 PRD-059)
 
@@ -1037,6 +1080,31 @@ Before declaring Sprint done + commit, **dispatch at least 1 live sub-agent** th
 Cross-reference: `docs/SPRINT-A-E-RETROSPECTIVE.md` "Patterns that worked" section #5 (audit-driven closure) + Meta-lesson ML-1.
 
 ## Step 8: Review and Activate
+
+### 8a — Guardian gate (Standard+; the dispatch the matrix always promised)
+
+The matrix names `agents-pro:guardian` as `activate.primary`, and until marketplace#233's
+verification sweep this file promised guardian in prose while never dispatching it — the last
+reviewer before activation existed as a sentence (EVID-231). Dispatch it:
+
+```python
+Task(subagent_type="agents-pro:guardian",
+     prompt=f"Pre-activation gate on {ARTIFACT_ID}. Read the artifact and its FULL EVIDENCE "
+            f"chain (every linked reviewer EVID). Render PASS / CONCERNS / BLOCKER as an "
+            f"EVIDENCE artifact linked informs. You do not activate — the orchestrator does.")
+```
+
+| Guardian verdict | This step does |
+|---|---|
+| PASS | continue to 8b |
+| CONCERNS | dispatch a fixer for the named findings, re-run the relevant Profile B reviewer, then re-gate |
+| BLOCKER | **halt the cycle.** The artifact stays draft; report the blocker |
+
+Guardian cannot activate — `forgeplan_activate` is on its denylist — so the separation is
+structural, not narrated. Tactical depth skips this (matrix `depth_filter: standard+`); a Tactical
+change with no artifact has nothing to gate.
+
+### 8b — Review and activate (orchestrator)
 
 Run the review process:
 ```bash

@@ -35,10 +35,10 @@ The lifecycle marker is **advisory** — a resume hint, never a gate condition (
 
 | Stage | What happens | Methodology | Built? |
 |---|---|---|---|
-| `brief` | a raw idea becomes a structured Brief | — | agent exists (`brief-intake`); no step in `/forge-cycle` |
+| `brief` | a raw idea becomes a structured Brief | — | ✅ Step 2.5 — `brief-intake`, only when the task arrives raw |
 | `shape` | Brief becomes a PRD | BMAD | ✅ Step 4 |
-| `decompose` | PRD breaks into sibling RFCs | FPF | agent exists; no step |
-| `design` | RFC — the technical contract | SPARC Architecture | ✅ Steps 4.5–4.6 |
+| `decompose` | PRD breaks into sibling RFCs | FPF | ✅ Step 4.4 — `goal-planner` + `forgeplan_decompose`, Deep+ |
+| `design` | RFC — the technical contract | SPARC Architecture | ✅ Step 4 (RFC at Deep+) + Step 5 SPARC phase 3; 4.5–4.6 add ADI + red lines |
 | `estimate` | effort and risk; **records the depth** the gate then applies | — | ✅ Step 4.65 — depth at every depth, `/estimate` at Deep+ |
 | `gate` | **may this move to build?** | — | ✅ Step 4.7 — `/gate-check` |
 | `build` | code | SPARC Refinement / RIPER | ✅ Step 5 |
@@ -47,8 +47,8 @@ The lifecycle marker is **advisory** — a resume hint, never a gate condition (
 | `activate` | final gate, then activation | — | ✅ Steps 7.5–8, `guardian` |
 | `wrap` | reconciliation, then a REFRESH at Deep+ | ADR-020 | ✅ Step 10 — `/wrap` |
 
-Two stages still have no step — `brief` and `decompose`, both of which do have an agent. That is a
-real gap, tracked, and it is not hidden by this table.
+All eleven stages now have an executable step. `brief` and `decompose` were the last two wired
+(2026-09-04, EVID-231): both had an agent from the start and nothing that invoked it.
 
 `estimate` and `wrap` carry the matrix sentinel `skill:<name>`: the orchestrator runs the skill in
 its own context rather than dispatching an agent. `/wrap` then dispatches `artifact-author` for the
