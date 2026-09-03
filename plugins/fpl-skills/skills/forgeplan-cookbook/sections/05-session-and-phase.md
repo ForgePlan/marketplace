@@ -1,6 +1,6 @@
 # Section 05 — Session and artifact-phase state machines
 
-**4 tools** + critical disambiguation: **three** different things in this project are called "phase" (PROB-065, then ADR-022). Don't confuse them.
+**4 tools** + critical disambiguation: **three** different things in this project are called "phase" (ADR-022). Don't confuse them.
 
 | Register | Values | Where it lives |
 |---|---|---|
@@ -38,7 +38,7 @@ forgeplan_guard(target_session_phase="coding")
 # → {"allowed": true} or {"allowed": false, "reason": "..."}
 ```
 
-**Legacy param**: `target_phase=` is accepted as alias for back-compat (PROB-065).
+**Legacy param**: `target_phase=` is accepted as alias for back-compat.
 
 ## 05.3 forgeplan_phase — read artifact lifecycle phase
 

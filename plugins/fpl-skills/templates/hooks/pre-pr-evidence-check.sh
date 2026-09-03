@@ -127,15 +127,29 @@ esac
 # touched and cannot fix. The range that matches the sentence "artifacts referenced
 # in this PR" is base..HEAD. `-20` stays as the fallback for a detached or
 # base-less checkout, where nothing better is available.
+# Pick the candidate whose merge-base is NEAREST to HEAD, not the first that
+# exists. First-match reintroduces the bug it was meant to fix whenever the
+# first candidate is behind: a local `origin/main` that has not been fetched
+# lately puts every commit merged since then back in range, and the PR is once
+# again blocked by somebody else's work (EVID-229 finding 1). The hook does not
+# fetch — a git hook that reaches the network on every `gh pr create` is a worse
+# problem than the one it solves — so it compares what is on disk and takes the
+# tightest range available.
 base=""
+best_distance=""
 for candidate in origin/main origin/master main master origin/dev dev; do
-  if git rev-parse --verify -q "$candidate" >/dev/null 2>&1; then
+  git rev-parse --verify -q "$candidate" >/dev/null 2>&1 || continue
+  merge_point=$(git merge-base "$candidate" HEAD 2>/dev/null || true)
+  [[ -n "$merge_point" ]] || continue
+  distance=$(git rev-list --count "$merge_point..HEAD" 2>/dev/null || true)
+  [[ "$distance" =~ ^[0-9]+$ ]] || continue
+  if [[ -z "$best_distance" ]] || (( distance < best_distance )); then
+    best_distance="$distance"
     base="$candidate"
-    break
   fi
 done
 
-if [[ -n "$base" ]] && git merge-base "$base" HEAD >/dev/null 2>&1; then
+if [[ -n "$base" ]]; then
   commit_range="$base..HEAD"
 else
   commit_range=""
@@ -186,7 +200,11 @@ for artifact_id in $artifact_ids; do
   # artifact that does not exist. Report it as what it is, and do not block on
   # it. (Found 2026-09-03: PROB-065, cited in a commit message, absent from the
   # graph, blocked an unrelated PR with an impossible instruction.)
-  if ! "$forgeplan_bin" get "$artifact_id" >/dev/null 2>&1; then
+  # ONE call, reused below. Probing existence with a second `get` (EVID-229
+  # finding 2) means the same artifact is fetched twice per run, and two calls
+  # can disagree under CLI flakiness — the second one failing would push a real
+  # artifact into the blocking path instead of this non-blocking one.
+  if ! artifact_body=$("$forgeplan_bin" get "$artifact_id" 2>/dev/null); then
     dangling_artifacts+=("$artifact_id")
     continue
   fi
@@ -229,7 +247,7 @@ for artifact_id in $artifact_ids; do
   # Fallback path: heuristic body-text scan, but scoped to the relations
   # section so prose mentions of "informs" don't cause false positives.
   if [[ "$has_evidence" -eq 0 ]]; then
-    body=$("$forgeplan_bin" get "$artifact_id" 2>/dev/null || echo "")
+    body="$artifact_body"   # from the existence probe above — not a second call
     if [[ -n "$body" ]]; then
       # Audit-r-release F4 (code-reviewer): the range syntax
       # `/start/,/end/` matches inclusive on both endpoints — when the

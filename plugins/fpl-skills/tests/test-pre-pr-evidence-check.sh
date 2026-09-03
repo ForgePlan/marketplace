@@ -51,6 +51,7 @@ set -uo pipefail
 case "${1:-}" in
   get)
     id="${2:-}"
+    [[ -n "${FAKE_CALLS:-}" ]] && echo "get $id" >> "$FAKE_CALLS"
     for known in ${FAKE_KNOWN:-}; do
       if [[ "$known" == "$id" ]]; then
         printf '# %s\n\nbody text\n\n## Related\n\n(none)\n' "$id"
@@ -92,14 +93,17 @@ git -C "$REPO" commit -q -m "feat: this branch
 Refs: PRD-901"
 
 PAYLOAD='{"tool_input":{"command":"gh pr create --title t --body b"}}'
+CALLS="$WORK/calls.log"
+: > "$CALLS"
 
 # --- harness -----------------------------------------------------------------
 
 # run <known-ids> <evid-ids> -> sets RC / OUT
 run() {
   local out_file="$WORK/out.$$"
-  ( cd "$REPO" \
-    && PATH="$BIN:$PATH" FAKE_KNOWN="$1" FAKE_EVID="$2" \
+  : > "$CALLS"
+  ( cd "${REPO_OVERRIDE:-$REPO}" \
+    && PATH="$BIN:$PATH" FAKE_KNOWN="$1" FAKE_EVID="$2" FAKE_CALLS="$CALLS" \
        bash "$HOOK" <<<"$PAYLOAD" >/dev/null 2>"$out_file" )
   RC=$?
   OUT="$(cat "$out_file")"
@@ -172,6 +176,48 @@ c=ok
 [[ "$RC" -eq 0 ]] || c=bad
 [[ -z "$OUT" ]] || c=bad
 check "non-pr-create command: exit 0 and stderr empty" "$c"
+
+# 6. One `get` per artifact. The existence probe used to be a second call on top
+#    of the evidence-fallback read: the same artifact fetched twice per run, and
+#    two calls that can disagree — a flaky second one would push a real artifact
+#    into the blocking path instead of the non-blocking dangling path.
+run "PRD-901 PRD-900" ""
+c=ok
+gets=$(grep -c "^get PRD-901$" "$CALLS" || true)
+[[ "$gets" -eq 1 ]] || c=bad
+check "artifact is fetched exactly once (got $gets)" "$c"
+
+# 7. A stale base ref must not widen the range. Second fixture: `origin/main` is
+#    left pointing at the first commit while local `main` moved on — the shape a
+#    repo has when it has not been fetched lately. First-match base selection
+#    picks the stale ref and drags every commit merged since back into scope,
+#    which is the bug this hook was fixed for. Nearest-merge-base picks `main`.
+REPO2="$WORK/repo2"
+mkdir -p "$REPO2"
+git -C "$REPO2" init -q -b main
+git -C "$REPO2" config user.email t@example.com
+git -C "$REPO2" config user.name test
+echo one > "$REPO2/a.txt"; git -C "$REPO2" add a.txt
+git -C "$REPO2" commit -q -m "chore: old
+
+Refs: PRD-900"
+# origin/main frozen here — stale by one commit from now on.
+git -C "$REPO2" update-ref refs/remotes/origin/main HEAD
+echo two > "$REPO2/b.txt"; git -C "$REPO2" add b.txt
+git -C "$REPO2" commit -q -m "feat: merged by someone else since the last fetch
+
+Refs: PRD-902"
+git -C "$REPO2" checkout -q -b feat/y
+echo three > "$REPO2/c.txt"; git -C "$REPO2" add c.txt
+git -C "$REPO2" commit -q -m "feat: this branch
+
+Refs: PRD-901"
+
+REPO_OVERRIDE="$REPO2" run "PRD-901 PRD-902" "PRD-901"
+c=ok
+[[ "$RC" -eq 0 ]] || c=bad
+grep -q "PRD-902" <<<"$OUT" && c=bad
+check "stale origin/main does not widen the range (PRD-902 out of scope)" "$c"
 
 echo ""
 if (( failures > 0 )); then
