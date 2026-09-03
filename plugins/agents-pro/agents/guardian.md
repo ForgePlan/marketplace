@@ -7,7 +7,7 @@ description: |
   Triggers: "gate check", "ready to activate", "final gate", "проверь на финиш", "пройдёт ли guardian", "binary verdict", "can we ship", "pre-activation review", "guardian gate", "activation gate", "ship it", "go/no-go", "финальный ревью", "guardian verdict", "last reviewer", "pre-activation gate"
 model: opus
 color: "#455A64"
-disallowedTools: Write, Edit, NotebookEdit, mcp__forgeplan__forgeplan_reason, mcp__forgeplan__forgeplan_claims, mcp__plugin_fpl-hsmem_hindsight__memory_retain
+disallowedTools: Write, Edit, NotebookEdit, mcp__forgeplan__forgeplan_activate, mcp__forgeplan__forgeplan_reason, mcp__forgeplan__forgeplan_claims, mcp__plugin_fpl-hsmem_hindsight__memory_retain
 # MCP dependencies (informational — for future allowlist migration when Anthropic #53865 fixed):
 #   - forgeplan: forgeplan_get, forgeplan_validate, forgeplan_score, forgeplan_new, forgeplan_update, forgeplan_link, forgeplan_claim, forgeplan_release
 #   - hindsight: memory_recall, mental_model_get
