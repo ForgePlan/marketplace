@@ -16,7 +16,7 @@
 # + config.yaml (project config — TRACKED, but no literal API keys)
 
 lance/                 # LanceDB vector index — derived
-.fastembed_cache/      # bge-m3 embedding model cache (~600 MB)
+.fastembed_cache/      # legacy per-project model cache — see note below
 logs/                  # local audit/ops logs (per-machine)
 .lock                  # runtime mutex
 session.yaml           # runtime focus/claim state (per-machine)
@@ -27,6 +27,40 @@ discovery/             # ephemeral research findings (see note below)
 .env
 .env.local
 ```
+
+### Semantic search — what changed
+
+The embedding engine is `tract` (pure Rust) since ForgePlan's RFC-013. Two consequences
+worth knowing before you set a project up:
+
+**Vector search now ships in the released binaries.** Homebrew, `install.sh` and the
+GitHub Release archives all carry it. Earlier builds did not — the engine was C++ and
+linked from a prebuilt that only matched one of five release targets, so no published
+binary had the feature at all. If you told someone "install from source to get semantic
+search", that advice is out of date.
+
+**The model is not in the binary.** Run once per machine:
+
+```bash
+forgeplan setup     # fetches BGE-M3 (~2.1 GB) and, on a cargo install, creates the `fpl` alias
+```
+
+Until the model is present, `search --semantic` falls back to BM25 keyword search and
+says so. Nothing else is affected.
+
+**The cache moved.** Models now live in the platform cache directory —
+`~/Library/Caches/forgeplan/models` on macOS, `~/.cache/forgeplan/models` on Linux —
+shared across every project rather than one copy per repository. `FORGEPLAN_MODEL_CACHE`
+overrides it; `HF_HOME`, if set, takes precedence over both.
+
+The `.fastembed_cache/` entry above is the **legacy** per-project path. New versions do
+not write there, but keep it gitignored: an older checkout may still have one, and it
+holds gigabytes.
+
+**Only `bge-m3` works right now.** `embedding.model` rejects the other names rather than
+substituting silently. Pooling differs per model — BGE pools on CLS, E5 and MiniLM pool
+on the mean — and feeding a mean-pooled model through CLS pooling does not fail, it
+returns plausible vectors computed the wrong way. Tracked in ForgePlan's PROB-091.
 
 > **Note on `discovery/`** — gitignored by default because it's short-lived research before formalising into a PRD/RFC. If your team practises sharing research drafts, you can drop the line and track them explicitly. Default works for most teams.
 

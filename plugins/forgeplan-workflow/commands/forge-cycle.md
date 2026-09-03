@@ -424,8 +424,20 @@ forgeplan calibrate <ARTIFACT-ID>          # → Current / Suggested / Signals
 forgeplan update <ARTIFACT-ID> --depth <tactical|standard|deep|critical>
 ```
 
-Show the suggestion and its signals, then record a depth. Escalation is the user's call when they
-are present; under `/autorun` apply the suggestion and log it as an autonomous decision.
+Show the suggestion and its signals, then record a depth — **with confirmation, and do not escalate
+unattended.**
+
+Measured 2026-09-03: `calibrate` suggested **Deep for 4 of 4** artifacts probed (ADR-022, PRD-024,
+RFC-002, NOTE-013) and Tactical or Standard for none. Auto-applying it moves the whole graph onto
+the strictest tier in one pass — which is how a gate that was meant to catch unready work starts
+blocking work that is ready.
+
+| Situation | What this step does |
+|---|---|
+| depth already recorded, calibrate agrees | leave it, say so, continue |
+| depth already recorded, calibrate disagrees | show both, ask; on no answer keep the recorded one |
+| depth is the untouched `standard` default | show the suggestion and ask |
+| under `/autorun` | **keep the existing depth**, log the suggestion as an observation. Escalating a tier without a human is the autonomy equivalent of `--force`, and `/autorun` does not `--force` the gate |
 
 Leaving the default in place has a concrete cost, not a theoretical one: a bug-fix PROBLEM card
 gets Standard thresholds (`formality ≥ 0.6`) when PRD-024 AC-2 says a Tactical bug-fix needs only

@@ -104,19 +104,35 @@ split is reconciled in the FR-006 row rather than applied silently.
 |---|---|
 | Tactical | `validate` clean |
 | Standard | + formality ≥ 0.6 |
-| Deep | + R_eff ≥ 0.7, granularity ≥ 0.6, reliability ≥ 0.6, ADI evidence |
-| Critical | + R_eff ≥ 0.8, formality ≥ 0.75, reliability ≥ 0.75, ADR linked |
+| Deep | + ADI evidence (≥3 hypotheses in a linked EVID) |
+| Critical | + ADR linked |
 
-**`r_eff` is a `should` at Standard, not a `must`** — it is a transitive minimum over the link
-graph, not a property of the artifact being gated. Measured on 18 live artifacts: 12 pass, 6 fail,
-and all 6 fail on `r_eff` alone. RFC-012 carries eight flawless EVIDs and scores 0.0 because its
-weakest link is ADR-010, whose weakest link is NOTE-021, whose weakest link is RFC-012 — a cycle no
-single author can break. At Deep and Critical it stays a `must`: there the chain is the deliverable.
+**Almost nothing derived from `score` blocks, and that is measured, not timid.** Applied to 14 live
+artifacts on 2026-09-03:
 
-**Depth is currently a constant.** `forgeplan get` returns `standard` for every artifact of every
-kind — it is `default_depth` reflected back. `/forge-cycle` Step 4.65 now calibrates and records a
-depth before the gate runs; until a project adopts that step, every artifact receives the Standard
-row and the other three tiers are unreachable.
+- **`r_eff` is a graph minimum, and it moves the wrong way.** PRD-024 fell 1.00 → 0.30 *because it
+  was reviewed* — an honest audit landed carrying `weakens`, scored 0.5, and became the minimum.
+  Blocking on it means failing an artifact for recording adverse evidence about itself.
+- **`granularity` is kind-dependent, not quality-dependent.** ADRs cluster at 0.20–0.40, PRDs and
+  EPICs at 0.80–1.00. An ADR is one decision; low granularity is correct for it. One threshold
+  across kinds fails every ADR by construction.
+- **`formality` is the one score that discriminates without punishing** — range 0.69–0.86 on the
+  sample, so a 0.6 floor fails none of them and would fail something genuinely unwritten.
+
+An earlier draft made `r_eff`, `granularity` and `reliability` MUSTs at Deep. On 12 artifacts that
+produced a **50% block rate**, including PRD-024 itself, RFC-002 — the source of the INV-1 this gate
+enforces — and ADR-022, which the project had just taken through a full cycle to a guardian PASS.
+PRD-024 NFR-003 budgets false positives at ≤5%. A gate that blocks half of already-accepted work
+is not strict; it is broken, and it gets `--force`d the first time it fires.
+
+**Depth is recorded, not assumed — and not escalated unattended.** `forgeplan get` returns
+`standard` for every artifact of every kind (it is `default_depth` reflected back), so `/forge-cycle`
+Step 4.65 runs `calibrate` and records a depth. That same measurement showed `calibrate` suggesting
+**Deep for 4 of 4** probed artifacts, so the step asks before escalating and `/autorun` keeps the
+existing depth — escalating a tier without a human is the autonomy equivalent of `--force`.
+
+These numbers are provisional: PRD-024 R-1 promised a 30-artifact calibration, this is 14. Tracked
+in NOTE-013.
 
 `must` blocks; `should` is reported and does not. That split carries the design: a gate where
 everything blocks gets bypassed with `--force` on its first false positive, and then it protects
@@ -165,7 +181,9 @@ Stated here so the guide cannot be read as a completion certificate.
 | `brief` and `decompose` have agents but no `/forge-cycle` step | #233 / #234 |
 | `gaps` / `blindspots` cannot be attributed to an artifact *machine-readably* — they do emit per-artifact lines, but with no `--json` that is prose parsing, which is why they advise rather than block | upstream forgeplan |
 | Structural body checks RFC-002 specifies but the gate does not do — "PRD has FRs with AC", "PROBLEM has reproduction", "SPEC linked if API" | #237 (remainder) |
-| Thresholds were never derived empirically as PRD-024 R-1 promised (test set of 30). The 18-artifact run above is the first measurement | #237 (remainder) |
+| Thresholds are provisional — PRD-024 R-1 promised a 30-artifact calibration; the 2026-09-03 run above is 14, and several inputs move as artifacts are reviewed | NOTE-013, `#237` |
 
-Seven of eleven stages execute today. The two gates are the ones that were missing and are now
-built; the four unbuilt stages are convenience and bookkeeping, not the mechanism.
+Eight of eleven stages execute today — `estimate` joined them with Step 4.65, which records the
+depth the gate then applies. It is the gate's prerequisite, not bookkeeping. The two gates are the ones that were missing and are now
+built; the three that remain — `brief`, `decompose`, `wrap` — are convenience and bookkeeping, not
+the mechanism.

@@ -23,7 +23,7 @@ The everyday "where is the artifact about X" tool. Smart mode (default) blends B
 ```python
 forgeplan_search(query="authentication", limit=10)
 forgeplan_search(query="auth", kind="adr", with_evidence=true)   # only ADRs with EVID linked
-forgeplan_search(query="JWT", mode="semantic")                    # vector similarity (needs BGE-M3)
+forgeplan_search(query="JWT", mode="semantic")                    # vector similarity (needs the BGE-M3 model — `forgeplan setup`)
 forgeplan_search(query="X", no_evidence=true)                    # find unbacked decisions
 ```
 

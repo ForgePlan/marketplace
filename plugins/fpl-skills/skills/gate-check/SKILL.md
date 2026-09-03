@@ -209,8 +209,7 @@ Stated, because a gate that hides its blind spots is worse than one that has non
 - **It cannot attribute `gaps` or `blindspots` to an artifact *machine-readably*.** They emit
   per-artifact lines (`PRD-069 Standard depth but no linked RFC`), so Step 4 does read them for
   mentions of the artifact — but with no `--json` that is prose parsing, which is why they advise
-  and never block. The earlier wording here claimed a harder limit than exists and contradicted the
-  step two pages above it.
+  and never block.
 - **It does not judge whether the depth is right.** It applies the thresholds for the depth already
   recorded on the artifact.
 

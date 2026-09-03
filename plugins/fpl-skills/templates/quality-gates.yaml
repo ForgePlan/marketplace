@@ -30,45 +30,62 @@
 # Only add a threshold for something you can read per-artifact and compare numerically. A check
 # that cannot fail on a specific artifact is a paragraph, not a gate.
 #
-# `r_eff` IS NOT LOCAL EITHER — read this before raising it
-# --------------------------------------------------------
-# `r_eff` is a transitive minimum over the link graph (`score --json` reports the culprit as
-# `weakest_link`), not a property of the artifact being gated. An artifact can carry perfect
-# evidence and still score 0.
+# WHAT MAY BLOCK, AND WHY SO LITTLE DOES — measured 2026-09-03, 14 live artifacts
+# -----------------------------------------------------------------------------
+# Only two kinds of check are `must`: `forgeplan validate` errors, and structural requirements the
+# author either met or did not (`adi_evidence_required`, `adr_linked_required`, `evidence_grew`),
+# plus `formality`. Everything else derived from `score` is a `should`.
 #
-# Measured, 18 live artifacts, pre-build MUST set applied by hand:
+# That is not timidity. Each demotion has a measurement behind it.
 #
-#   12 PASS · 6 FAIL — and all 6 failed on `r_eff` alone.
-#   `formality` fired once as a co-failure; `granularity` and `reliability` never fired.
+# `r_eff` — a transitive minimum over the link graph (`score --json` names the culprit as
+# `weakest_link`), not a property of the artifact being gated. RFC-012 carries 8 linked EVIDs, all
+# active / congruence 3 / supports / 1.0, and scores 0.0: its weakest link is ADR-010 → NOTE-021 →
+# RFC-012, a cycle no single author can break.
 #
-#   RFC-012 carries 8 linked EVIDs, every one active / congruence 3 / supports / score 1.0,
-#   and scores r_eff 0.0 — its weakest_link is ADR-010, whose weakest_link is NOTE-021, whose
-#   weakest_link is RFC-012. A three-node cycle: none of them can clear the bar by editing itself.
+#   And worse, it moves the wrong way. PRD-024 fell from r_eff 1.00 to 0.30 **because it was
+#   reviewed** — an honest audit landed carrying `verdict: weakens`, scored 0.5, and became the
+#   minimum. Blocking on `r_eff` would mean an artifact fails its own gate for recording adverse
+#   evidence about itself. That is the opposite of what this pipeline is for.
 #
-# So at `standard` depth `r_eff_min` is a **should**. Blocking there would mean failing an author
-# for a neighbour's weakness with no action available to them — the `--force`-on-first-false-
-# positive failure this file claims to avoid, arriving through the choice of variable rather than
-# the height of the bar. At `deep` and `critical` it stays a **must**: at those depths the chain
-# IS the deliverable, and its weakest link is the author's problem too.
+# `granularity` — kind-dependent, not quality-dependent. Measured across 14 artifacts: ADRs cluster
+# at 0.20–0.40 (ADR-005 0.20, ADR-009 0.40, ADR-022 0.40), PRDs and EPICs at 0.80–1.00, RFCs at
+# 0.60. An ADR is one decision; low granularity is CORRECT for it. A single threshold across kinds
+# fails every ADR by construction, including ADR-022, which the project took through a full cycle to
+# a guardian PASS. Per-kind thresholds would make this gateable; one number cannot.
 #
-# Wherever `r_eff` is reported, name `weakest_link` next to it. "R_eff too low" is not an
-# actionable finding; "R_eff 0.0, weakest link ADR-010" is.
+# `reliability` — tracks the evidence chain, so it carries both problems above.
 #
-# An inherited cascade failure is a legitimate `--force` case. Say so in the reason.
+# `formality` — the one score that discriminates without punishing. Range on the sample 0.69–0.86;
+# a 0.6 floor fails none of them, and would fail an artifact that genuinely is not written down
+# properly. A 0.75 floor would have failed 6 of 14, which is why Critical keeps 0.75 as a `should`.
 #
-# DEPTH IS CURRENTLY A CONSTANT — the tiers below are aspirational until that is fixed
-# ------------------------------------------------------------------------------------
-# `forgeplan get` returns `depth: standard` for every artifact of every kind: it is
-# `default_depth` from `.forgeplan/config.yaml` reflected back, not a judgement. `forgeplan
-# calibrate` computes a real signal (it suggests Deep for ADR-022) that nothing records.
+# THE FALSE-POSITIVE BUDGET IS THE POINT
+# --------------------------------------
+# PRD-024 NFR-003 sets it at ≤5%. An earlier draft of this file made `r_eff`, `granularity` and
+# `reliability` MUSTs at Deep; applied to 12 live artifacts that produced a **50% block rate** —
+# including PRD-024 itself, RFC-002 (the source of the INV-1 this gate enforces), and ADR-022.
+# A gate that blocks half of already-accepted work is not strict, it is broken, and it gets
+# bypassed with `--force` on its first firing.
 #
-# Until `/forge-cycle` records a calibrated depth — added in the same change as this file, at the
-# `estimate` stage — every artifact receives the `standard` row, and `tactical`, `deep` and
-# `critical` are unreachable. `adi_evidence_required`, `adr_linked_required` and the whole
-# `post_build` section are dead until then.
+# DEPTH IS RECORDED, NOT ASSUMED — and `calibrate` escalates almost everything
+# ---------------------------------------------------------------------------
+# `depth` defaults to `standard` from `.forgeplan/config.yaml` and is reflected back for every
+# artifact of every kind, so an unedited `standard` means "nobody decided". `/forge-cycle`
+# Step 4.65 now runs `forgeplan calibrate` and records a depth, which is what makes the tiers below
+# reachable at all.
 #
-# Do not tune these tiers on the assumption they are running. Check `forgeplan get <id> --json`
-# first.
+# Measured the same day: `calibrate` suggested **Deep for 4 of 4** artifacts probed (ADR-022,
+# PRD-024, RFC-002, NOTE-013) and Tactical or Standard for none. So Step 4.65 asks for confirmation
+# and does not escalate unattended — an auto-applied suggestion would move the whole graph onto the
+# strictest tier at once.
+#
+# THESE NUMBERS ARE PROVISIONAL
+# -----------------------------
+# PRD-024 R-1 promised thresholds derived from a 30-artifact test set. This is 14, taken on
+# 2026-09-03, and several inputs move as artifacts are reviewed. Re-measure before tuning; a
+# threshold read as current when it is a year-old snapshot is the drift class ADR-022 exists to
+# prevent. Tracked in NOTE-013.
 
 schema_version: 1
 
@@ -81,47 +98,48 @@ schema_version: 1
 # and then it protects nothing.
 pre_build:
 
+  # A `must` here is something the author can fix and that indicates genuine unreadiness.
+  # Everything derived from `score` is a `should` — measured reasons under each.
+
   tactical:
     must:
       validate_errors_max: 0        # `forgeplan validate --json` → results[].errors
     should:
-      r_eff_min: 0.0                # a tactical fix carries no evidence yet; reported only
+      r_eff_min: 0.0                # reported only
 
   standard:
     must:
       validate_errors_max: 0
       formality_min: 0.6            # score --json → fgr.formality — is it written down properly
     should:
-      r_eff_min: 0.5                # score --json → r_eff. `should`, NOT `must` — see the cascade
-                                    # note in the header. 6 of 6 failures in the 18-artifact
-                                    # sample were r_eff-only, several of them uncorrectable by
-                                    # the artifact's own author.
-      granularity_min: 0.5          # fgr.granularity — is it broken down enough
+      r_eff_min: 0.5
+      granularity_min: 0.5
       evidence_count_min: 1         # score --json → r_eff_ci.evidence_count
 
   deep:
     must:
       validate_errors_max: 0
-      r_eff_min: 0.7
       formality_min: 0.6
+      adi_evidence_required: true   # ≥1 linked EVID whose body carries ≥3 `### Hypothesis`
+                                    # sections (CLAUDE.md Sprint Z7). Structural, not a score:
+                                    # the author either ran the ADI cycle or did not.
+    should:
+      r_eff_min: 0.7
       granularity_min: 0.6
       reliability_min: 0.6
-      adi_evidence_required: true   # ≥1 linked EVID whose body carries ≥3 `### Hypothesis`
-                                    # sections (CLAUDE.md Sprint Z7). The gate reads the linked
-                                    # EVID bodies; it cannot infer this from a score.
-    should:
       evidence_count_min: 2
 
   critical:
     must:
       validate_errors_max: 0
+      formality_min: 0.6
+      adi_evidence_required: true
+      adr_linked_required: true     # an architectural decision recorded, not implied
+    should:
       r_eff_min: 0.8
       formality_min: 0.75
       granularity_min: 0.6
       reliability_min: 0.75
-      adi_evidence_required: true
-      adr_linked_required: true     # an architectural decision must be recorded, not implied
-    should:
       evidence_count_min: 3
 
 # ─── Post-build gate — inside the `evidence` stage, Deep and Critical only ──────
@@ -136,21 +154,21 @@ post_build:
   deep:
     must:
       validate_errors_max: 0
-      r_eff_min: 0.7
       evidence_grew: true           # at least one EVID linked since the pre-build gate ran.
-                                    # A build that produced no new evidence has not been verified,
-                                    # only asserted.
+                                    # A build that produced no new evidence has been asserted,
+                                    # not verified. Structural — the author can act on it.
     should:
-      r_eff_not_lower: true         # R_eff below its pre-build value means the build weakened
-                                    # confidence — worth a look, not a block
+      r_eff_min: 0.7
+      r_eff_not_lower: true         # see the note above on why a DROP here is often the sign of
+                                    # an honest audit rather than a worse artifact
 
   critical:
     must:
       validate_errors_max: 0
-      r_eff_min: 0.8
       evidence_grew: true
       adr_linked_required: true
     should:
+      r_eff_min: 0.8
       r_eff_not_lower: true
 
 # ─── Override (PRD-024 FR-014) ──────────────────────────────────────────────────
