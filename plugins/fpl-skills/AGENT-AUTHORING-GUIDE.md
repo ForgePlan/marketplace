@@ -30,7 +30,7 @@ Every forgeplan artifact (PRD/RFC/ADR/EPIC/SPEC/PROBLEM/SOLUTION/EVIDENCE/NOTE/R
 
 | Operation | Profile | Generic agent (any kind) | Kind specialists (preferred when available) |
 |---|---|---|---|
-| **CREATE** | A | `artifact-author` (uses forgeplan_generate primary, forgeplan_new fallback) | adr-architect, specification, architecture, goal-planner, brief-intake, evidence-recorder |
+| **CREATE** | A | `artifact-author` (uses forgeplan_generate primary, forgeplan_new fallback) | adr-architect (ADR), specification (PRD/SPEC), architecture (RFC), brief-intake (NOTE Brief), evidence-recorder (EVIDENCE). **EPIC, PROBLEM, SOLUTION and REFRESH have none** — `artifact-author` creates them. `goal-planner` is not in this column: it *consumes* an EPIC to decompose it into RFCs (marketplace#234) |
 | **READ** | any | (no dedicated agent — direct `forgeplan_get`) | n/a |
 | **UPDATE** (metadata, links, status) | D | `artifact-maintainer` (NEW) | n/a — kind-specialists focus on CREATE |
 | **REVIEW** (health/quality audit) | B | `artifact-reviewer` (NEW) | code-reviewer, security-expert, architect-reviewer, tester, system-dev — these review CODE/DESIGN/SYSTEM, not the artifact itself |
@@ -758,19 +758,27 @@ Different consumers read them with different freshness semantics:
 
 `/forge-cycle` uses sequential numbered Steps (1-9 in the SKILL.md narrative) but dispatches per the 11 canonical phases defined in `project-agent-matrix.yaml`. The mapping is documented in `forge-cycle.md` Step 0.5; the canonical list (RFC-002):
 
-| Canonical phase | forge-cycle Step | Default agent (matrix) | Methodology |
+| Canonical stage | forge-cycle Step | Default agent (matrix) | Methodology |
 |---|---|---|---|
-| `brief` | Step 1 (when raw idea) | `agents-pro:brief-intake` | fpf |
-| `shape` | Step 2 | `agents-sparc:specification` | sparc |
-| `decompose` | Step 3 (deep+) | `agents-pro:goal-planner` | fpf |
-| `design` | Step 4 | `agents-sparc:architecture` | sparc |
-| `estimate` | inline (deep+) | inline | none |
-| `gate` | Step 5 | `agents-pro:guardian` | fpf |
-| `build` | Step 6 | `agents-core:coder` | tdd-london |
-| `audit` | Step 7 (parallel) | 5 Profile B reviewers | fpf (merger) |
-| `evidence` | inline (per Profile B) | `agents-pro:evidence-recorder` (fallback) | none |
+| `brief` | — (Step 2 identifies an existing artifact) | `agents-pro:brief-intake` | fpf |
+| `shape` | Step 4 (standard+) | `agents-sparc:specification` | sparc |
+| `decompose` | — (deep+) | `agents-pro:goal-planner` | fpf |
+| `design` | Step 4 / 4.5 | `agents-sparc:architecture` | sparc |
+| `estimate` | Step 4.65 (depth always, effort deep+) | `skill:estimate` | checklist |
+| `gate` | Step 4.7 (pre-build) / 7.4 (post-build) | `agents-pro:guardian`, gate run via `/gate-check` | fpf |
+| `build` | Step 5 | `agents-core:coder` | tdd-london |
+| `audit` | Steps 6.5 + 6.6 (parallel) | 5 Profile B reviewers | fpf (merger) |
+| `evidence` | Step 7 (per Profile B) | `agents-pro:evidence-recorder` (fallback) | none |
 | `activate` | Step 8 | `agents-pro:guardian` (final gate) | fpf |
-| `wrap` | Step 9 (deep+) | inline | none |
+| `wrap` | Step 10 (deep+) | `skill:wrap` → `agents-pro:artifact-author` for the REFRESH | checklist |
+
+Two rows carry the `skill:<name>` sentinel: the stage is a procedure the orchestrator performs in
+its own context, not work handed to a dispatched agent. `/wrap` goes on to dispatch
+`artifact-author` for the REFRESH body (ADR-020 — no kind-specialist by design); that dispatch is
+described in the skill, not modelled in the matrix.
+
+Step numbers are read off `forge-cycle.md`, not restated from memory — they drifted by one for
+`build`, `audit` and `gate` before marketplace#233 re-derived them.
 
 A future RFC-005 will formalise this mapping; for now this table is the contract.
 

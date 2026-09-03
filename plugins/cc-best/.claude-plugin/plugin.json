@@ -1,7 +1,7 @@
 {
   "name": "cc-best",
-  "version": "1.1.4",
-  "description": "Claude Code ecosystem reference — opinionated agentic-RAG guide for CLAUDE.md, plugins, agents, hooks, MCP, and anti-patterns. Synthesises 47+ audit findings from ForgePlan marketplace work. v1.1.0: all 6 sections authored — claude-md + plugins + agents + hooks + mcp + anti-patterns (RFC-005..009 closed / DEFER-005..009).",
+  "version": "1.1.5",
+  "description": "Claude Code ecosystem reference — opinionated agentic-RAG guide for CLAUDE.md, plugins, agents, hooks, MCP, and anti-patterns. Synthesises 47+ audit findings from ForgePlan marketplace work. v1.1.0: all 6 sections authored — claude-md + plugins + agents + hooks + mcp + anti-patterns (RFC-005..009 closed / DEFER-005..009). v1.1.5: the manifest section stops teaching a `components` inventory as ForgePlan's real shape — the field was removed from all 23 plugin manifests (marketplace#246) because it drifted on every skill added and nothing read it. ",
   "author": {
     "name": "ForgePlan"
   },

@@ -46,7 +46,7 @@ Do **not** invoke when a kind-specialist exists — delegate via orchestrator in
 - `adr-architect` for ADR (runs ADI cycle + MADR 3.0 format)
 - `specification` or `pm` for PRD/SPEC (stakeholder-facing; specialist required)
 - `architecture` for RFC (structural decisions need specialist reasoning)
-- `goal-planner` for EPIC (decomposition into RFC chain)
+- **EPIC has no kind-specialist — you create it.** `goal-planner` is the EPIC's *consumer*: it reads a parent PRD/EPIC and decomposes it into a chain of RFCs. This line used to name it as the EPIC's author, which sent the orchestrator to delegate EPIC creation to an agent that does not do it (marketplace#234)
 - `brief-intake` for NOTE Brief (first-touch intake with FPF Abduction)
 - `evidence-recorder` for EVIDENCE (verdict + findings require reviewer role)
 

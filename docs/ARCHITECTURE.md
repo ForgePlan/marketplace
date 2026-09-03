@@ -159,7 +159,7 @@ Orchestra: Task "OAuth" Status=Review, Phase=Evidence
 
 | System | Plugin(s) | Notes |
 |--------|----------|-------|
-| **Glue layer** | **fpl-skills** | **Flagship**: 38 skills composing Forgeplan + FPF + SPARC + (optional) UX. Includes `/fpl-init` for one-shot project bootstrap. Replaces dev-toolkit for forgeplan users. |
+| **Glue layer** | **fpl-skills** | **Flagship**: 44 skills composing Forgeplan + FPF + SPARC + (optional) UX. Includes `/fpl-init` for one-shot project bootstrap. Replaces dev-toolkit for forgeplan users. |
 | Orchestra | forgeplan-orchestra | `/sync` and `/session` for multi-session coordination. |
 | Forgeplan | forgeplan-workflow | `/forge-cycle` and `/forge-audit` — tighter forgeplan-only loop (alternative to fpl-skills' broader bundle). |
 | FPF | fpf | Structured reasoning: decompose / evaluate / reason / lookup. Pairs with fpl-skills' `/refine` and `/diagnose`. |

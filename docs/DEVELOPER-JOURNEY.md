@@ -11,7 +11,7 @@ A 30-minute walkthrough that takes you from "I just heard about ForgePlan" to "I
 ## What you'll have at the end
 
 - The `forgeplan` CLI on your `$PATH`.
-- One Claude Code plugin (`fpl-skills`) installed, providing 38 skills.
+- One Claude Code plugin (`fpl-skills`) installed, providing 44 skills.
 - A target project wired with `.forgeplan/`, `CLAUDE.md`, `docs/agents/`, `.mcp.json`.
 - A daily routine: morning briefing → pick task → research/refine → sprint → audit → ship.
 - Optional: agent packs (83 specialised agents) added when you need them.
@@ -29,7 +29,7 @@ FPF          — HOW to think?       (decompose, evaluate, reason)
 SPARC        — HOW to code?        (spec → pseudo → arch → refine → complete)
 ```
 
-The `fpl-skills` plugin is the **glue layer**: 38 skills that compose these systems and delegate artifact lifecycle to the `forgeplan` CLI.
+The `fpl-skills` plugin is the **glue layer**: 44 skills that compose these systems and delegate artifact lifecycle to the `forgeplan` CLI.
 
 ```mermaid
 flowchart LR

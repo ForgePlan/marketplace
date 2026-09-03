@@ -58,7 +58,7 @@ Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/
 | Your role | Install these | Why |
 |-----------|--------------|-----|
 | **I want a master orchestrator** | **fpl-skills + agents-pro** | Start here → `/smith` routes 14 routing rows to 33 methodologies |
-| **Forgeplan user (recommended)** | **fpl-skills** | One install, 38 skills, full route → ship loop |
+| **Forgeplan user (recommended)** | **fpl-skills** | One install, 44 skills, full route → ship loop |
 | Any developer (no forgeplan) | dev-toolkit + agents-core | Universal tools, no CLI dependency |
 | Frontend | fpl-skills + laws-of-ux + agents-domain | UX + framework agents |
 | Architect | fpl-skills + fpf + agents-pro + agents-sparc | Thinking + SPARC |

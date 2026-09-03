@@ -114,15 +114,24 @@ For every pipeline phase below (`brief`, `shape`, `decompose`, `design`, `estima
 | 3 | **Marketplace secondary** — `secondary:` value from matrix | Primary unavailable / not installed |
 | 4 | **Inline orchestrator** — handled directly by `/forge-cycle` | Both primary and secondary unavailable, OR sentinel `inline` / `inline-merger`. Log a warning and proceed |
 
+`skill:<name>` does not enter this chain at all — it is not a dispatch. See the sentinel table below.
+
 The matrix may also set:
 - `parallel:` (audit phase only) → spawn the listed agents in a single message with multiple `Task` calls, then merge their EVIDENCE artifacts before `activate`.
 - `depth_filter:` ∈ `{all, tactical-only, standard+, deep+, critical-only}` → if the current task's depth doesn't qualify, **skip the phase silently**.
 - `methodology:` ∈ `{fpf, sparc, goap, tdd-london, tdd-classical, bdd, wbs, c4, checklist, none}` → informational; passed to the dispatched agent as context.
 
 **Sentinels** (special `primary` values, not agent IDs):
-- `inline` — orchestrator handles the phase directly; no agent dispatch (used for `estimate`, `wrap` until canonical agents ship).
+- `inline` — orchestrator handles the stage directly; no agent dispatch.
 - `inline-merger` — orchestrator merges parallel reviewer verdicts (used for `audit.primary`).
+- `skill:<name>` — orchestrator runs the named skill **in its own context**: no `Task` call, no isolated context, no fallback to `secondary` (a skill is either installed or it is not — see the miss row below). Used by `estimate` → `/estimate` (Step 4.65b) and `wrap` → `/wrap` (Step 10). A skill that goes on to dispatch an agent says so in its own body; the matrix does not model that.
 - `none` methodology — no formal methodology applies.
+
+| `primary` prefix | How the orchestrator acts on it | On a miss |
+|---|---|---|
+| `.claude/agents/…` / `pack:agent` | `Task(subagent_type=…)` | fall through to `secondary`, then inline |
+| `skill:<name>` | invoke `/<name>` inline | **say the skill is missing and continue** — never silently skip the stage, and never substitute an agent for it |
+| `inline` / `inline-merger` | orchestrator does the work | n/a |
 
 ### Load + parse the matrix (read once, dispatch many)
 
@@ -181,6 +190,16 @@ def resolve_phase_dispatch(matrix, phase, current_depth):
         phase_cfg.get("methodology", "none"),
         False,
     )
+
+def dispatch_kind(primary):
+    """How to act on a resolved `primary`. Called before any Task call."""
+    if primary is None:
+        return "default"           # no matrix entry — RFC-003 Layer 2 default
+    if primary.startswith("skill:"):
+        return "skill"             # run /<name> inline; no Task, no secondary fallback
+    if primary in ("inline", "inline-merger"):
+        return "inline"
+    return "agent"                 # .claude/agents/... or pack:agent
 
 def _depth_qualifies(depth, filter_):
     order = {"tactical": 1, "standard": 2, "deep": 3, "critical": 4}
@@ -409,9 +428,14 @@ read-only-proxy rule forbids) at design time and propose the
 constraint-respecting alternative, instead of shipping the violation and
 discovering it at Step 6.5/6.6 review.
 
-## Step 4.65: Record the depth (the `estimate` stage — prerequisite for the gate)
+## Step 4.65: The `estimate` stage — record the depth, then size the work
 
-**Without this step every tier in `quality-gates.yaml` except `standard` is unreachable.**
+Two parts. The depth runs at every depth because the gate reads it; the effort estimate runs at
+Deep and Critical only (`phase_dispatch.estimate.depth_filter: deep+`).
+
+### 4.65a — Record the depth
+
+**Without this part every tier in `quality-gates.yaml` except `standard` is unreachable.**
 
 `depth` defaults to `standard` from `.forgeplan/config.yaml` and is reflected back for every
 artifact of every kind — measured on six artifacts of six kinds, all `standard`, including EVIDENCE
@@ -445,6 +469,25 @@ gets Standard thresholds (`formality ≥ 0.6`) when PRD-024 AC-2 says a Tactical
 feature work.
 
 `--depth critical` is accepted even though `forgeplan update --help` lists only three values.
+
+### 4.65b — Size the work (Deep and Critical)
+
+```
+/estimate <ARTIFACT-ID>
+```
+
+The skill runs `forgeplan estimate --json` and reports per-item complexity, hours across the five
+grades, and — this is the part worth reading — the `confidence_reasons` behind the confidence
+figure, paired with a current R_eff snapshot. "Confidence 60%" is not actionable; "60% — no RFC
+phases" names the missing thing and the hint carries the command that fixes it.
+
+| Result | What this step does |
+|---|---|
+| a number with its reasons | record it in the report; continue to Step 4.7 |
+| no estimable items | say so and continue — an artifact with no FR table is a finding about the artifact, not a reason to stop the cycle |
+
+**The estimate never gates.** Step 4.7 is the gate; this feeds it a number. A cycle has never been
+blocked for being large, and this step does not start.
 
 ## Step 4.7: GATE-CHECK — pre-build (the `gate` stage, PRD-024 FR-006)
 
@@ -1089,6 +1132,43 @@ The tool returns a Keep-a-Changelog–shaped structured payload (Added/Changed/F
 **Anti-pattern**: do not pass `draft=True` for production releases — that bypasses the quality gate and includes incomplete artifacts.
 
 Cross-reference: `plugins/fpl-skills/skills/progress-dashboard/SKILL.md` includes a "Recent release notes" panel reading from this same tool.
+
+## Step 10: The `wrap` stage — close the cycle (ADR-020)
+
+The last stage. Answers *is this cycle actually closed, or does it only look closed*.
+
+```
+/wrap <ARTIFACT-ID>
+```
+
+The skill runs the reconciliation — `forgeplan drift`, `forgeplan stale`, `forgeplan health`,
+`/forge-heal`, and a link audit — and reports what they returned. `drift` and `stale` take no
+artifact ID; they are workspace-wide, and the skill filters their output down to this cycle's
+artifacts rather than passing an argument the tool ignores.
+
+| Depth | What happens |
+|---|---|
+| Deep, Critical | reconciliation **plus** a REFRESH artifact `based_on` the cycle's EVID, carrying `## Synced` / `## Gaps closed` / `## Links updated` / `## Ready verdict` |
+| Standard, Tactical | **`/forge-cycle` skips this step entirely** — `wrap.depth_filter` is `deep+`, and a filtered stage is skipped silently (Step 0.5). The skill's Standard branch — same reconciliation, reported, no artifact — is for a direct `/wrap` call. At these depths the cycle's reconciliation is `/decay-watch`, `/forge-heal` and the journal (ADR-020) |
+
+**So this step, like `/estimate` at 4.65b, runs only when a depth above Standard was actually
+recorded.** `default_depth` is `standard` and Step 4.65a will not escalate unattended, so on an
+untouched graph both stages are built and idle. That is the intended trade — an auto-escalating
+depth arms the strictest gate tier for everything (EVID-228) — but "the stage executes" is true
+conditionally, and the condition is a human deciding the depth.
+
+Run it **after** Step 9 commits: `forgeplan drift` compares artifacts against the code they claim,
+and before the commit that comparison is measuring a working tree nobody else can see.
+
+**The REFRESH body carries pasted tool output, never a self-reported "all good."** That is the whole
+value of the node — a REFRESH that rubber-stamps manufactures a "cycle closed" signal nothing else
+in the graph will contradict. Guardian (CLAUDE.md G9) can check the four sections are present and a
+verdict exists; it cannot tell pasted output from convincing prose. That half is on whoever's
+identity is on the artifact. If a reconciliation step could not run, write **that**, with the error.
+
+The REFRESH is created via generic `agents-pro:artifact-author`. There is no kind-specialist for
+REFRESH and that is deliberate (ADR-020) — the reconciliation is done by the existing skills; this
+records their real output and the verdict.
 
 ## Error Handling
 

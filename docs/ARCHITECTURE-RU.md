@@ -159,7 +159,7 @@ Orchestra: Task "OAuth" Status=Review, Phase=Evidence
 
 | Система | Плагин(ы) | Заметки |
 |---------|----------|---------|
-| **Связующий слой** | **fpl-skills** | **Флагман**: 38 скиллов, композящих Forgeplan + FPF + SPARC + (опционально) UX. Включает `/fpl-init` для one-shot развёртки проекта. Заменяет dev-toolkit для пользователей forgeplan. |
+| **Связующий слой** | **fpl-skills** | **Флагман**: 44 скилла, композящих Forgeplan + FPF + SPARC + (опционально) UX. Включает `/fpl-init` для one-shot развёртки проекта. Заменяет dev-toolkit для пользователей forgeplan. |
 | Orchestra | forgeplan-orchestra | `/sync` и `/session` для multi-session координации. |
 | Forgeplan | forgeplan-workflow | `/forge-cycle` и `/forge-audit` — узкий forgeplan-only loop (альтернатива broader bundle fpl-skills). |
 | FPF | fpf | Структурное мышление: decompose / evaluate / reason / lookup. Пара к `/refine` и `/diagnose` из fpl-skills. |

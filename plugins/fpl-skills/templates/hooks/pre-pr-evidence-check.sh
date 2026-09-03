@@ -119,9 +119,57 @@ case "$branch" in
     ;;
 esac
 
-# Collect artifact IDs referenced in branch + last 20 commits.
+# Collect artifact IDs referenced in the branch name + THIS branch's own commits.
+#
+# Scope fix (2026-09-03): the range used to be a flat `git log -20`, which reaches
+# back past the branch point into commits other PRs already merged. A PR then got
+# blocked by an artifact reference in somebody else's older commit — work it never
+# touched and cannot fix. The range that matches the sentence "artifacts referenced
+# in this PR" is base..HEAD. `-20` stays as the fallback for a detached or
+# base-less checkout, where nothing better is available.
+# Pick the candidate whose merge-base is NEAREST to HEAD, not the first that
+# exists. First-match reintroduces the bug it was meant to fix whenever the
+# first candidate is behind: a local `origin/main` that has not been fetched
+# lately puts every commit merged since then back in range, and the PR is once
+# again blocked by somebody else's work (EVID-229 finding 1). The hook does not
+# fetch — a git hook that reaches the network on every `gh pr create` is a worse
+# problem than the one it solves — so it compares what is on disk and takes the
+# tightest range available.
+base=""
+best_distance=""
+for candidate in origin/main origin/master main master origin/dev dev; do
+  git rev-parse --verify -q "$candidate" >/dev/null 2>&1 || continue
+  merge_point=$(git merge-base "$candidate" HEAD 2>/dev/null || true)
+  [[ -n "$merge_point" ]] || continue
+  distance=$(git rev-list --count "$merge_point..HEAD" 2>/dev/null || true)
+  [[ "$distance" =~ ^[0-9]+$ ]] || continue
+  # A candidate that already CONTAINS HEAD (distance 0) says nothing about this
+  # branch's own commits, and taking it as the base empties the range: no IDs
+  # collected, hook exits 0, gate silently stops checking. That is a fail-open,
+  # and it is reachable — a local `dev` or `main` fast-forwarded onto this branch
+  # is enough (guardian gate EVID-230). Nearest-but-non-empty, never nearest.
+  (( distance == 0 )) && continue
+  if [[ -z "$best_distance" ]] || (( distance < best_distance )); then
+    best_distance="$distance"
+    base="$candidate"
+  fi
+done
+
+# No candidate leaves any commits in range → fall back to the flat scan rather
+# than scanning nothing. Over-inclusion costs a false block, which is loud and
+# arguable; scanning nothing costs a gate that reports success without looking.
+if [[ -n "$base" ]]; then
+  commit_range="$base..HEAD"
+else
+  commit_range=""
+fi
+
 branch_ids=$(echo "$branch" | grep -oE '(PRD|RFC|ADR|EPIC|SPEC|PROB|EVID|NOTE)-[0-9]+' || true)
-commit_ids=$(git log -20 --pretty='%s%n%b' 2>/dev/null | grep -oE '(PRD|RFC|ADR|EPIC|SPEC|PROB|EVID|NOTE)-[0-9]+' || true)
+if [[ -n "$commit_range" ]]; then
+  commit_ids=$(git log "$commit_range" --pretty='%s%n%b' 2>/dev/null | grep -oE '(PRD|RFC|ADR|EPIC|SPEC|PROB|EVID|NOTE)-[0-9]+' || true)
+else
+  commit_ids=$(git log -20 --pretty='%s%n%b' 2>/dev/null | grep -oE '(PRD|RFC|ADR|EPIC|SPEC|PROB|EVID|NOTE)-[0-9]+' || true)
+fi
 artifact_ids=$(printf '%s\n%s\n' "$branch_ids" "$commit_ids" | sort -u | grep -v '^$' || true)
 
 # No artifacts referenced → can't enforce evidence; pass.
@@ -146,12 +194,29 @@ fi
 
 # Check evidence links for each non-evidence artifact.
 missing_artifacts=()
+dangling_artifacts=()
 for artifact_id in $artifact_ids; do
   case "$artifact_id" in
     EVID-*|NOTE-*)
       continue
       ;;
   esac
+
+  # Does the artifact exist at all? An ID that is not in the graph — a typo, a
+  # deleted artifact, an ID quoted from prose — used to fall through to the
+  # evidence check, come out with has_evidence=0, and be reported as "evidence
+  # missing" with a remedy that cannot work: you cannot link an EVID to an
+  # artifact that does not exist. Report it as what it is, and do not block on
+  # it. (Found 2026-09-03: PROB-065, cited in a commit message, absent from the
+  # graph, blocked an unrelated PR with an impossible instruction.)
+  # ONE call, reused below. Probing existence with a second `get` (EVID-229
+  # finding 2) means the same artifact is fetched twice per run, and two calls
+  # can disagree under CLI flakiness — the second one failing would push a real
+  # artifact into the blocking path instead of this non-blocking one.
+  if ! artifact_body=$("$forgeplan_bin" get "$artifact_id" 2>/dev/null); then
+    dangling_artifacts+=("$artifact_id")
+    continue
+  fi
 
   has_evidence=0
 
@@ -191,7 +256,7 @@ for artifact_id in $artifact_ids; do
   # Fallback path: heuristic body-text scan, but scoped to the relations
   # section so prose mentions of "informs" don't cause false positives.
   if [[ "$has_evidence" -eq 0 ]]; then
-    body=$("$forgeplan_bin" get "$artifact_id" 2>/dev/null || echo "")
+    body="$artifact_body"   # from the existence probe above — not a second call
     if [[ -n "$body" ]]; then
       # Audit-r-release F4 (code-reviewer): the range syntax
       # `/start/,/end/` matches inclusive on both endpoints — when the
@@ -210,6 +275,21 @@ for artifact_id in $artifact_ids; do
     missing_artifacts+=("$artifact_id")
   fi
 done
+
+# Dangling references are reported, never blocking. The remedy is a commit-message
+# or branch-name correction, not an evidence link, and it is usually not this PR's
+# to make.
+if (( ${#dangling_artifacts[@]} > 0 )); then
+  {
+    echo ""
+    echo -e "${YELLOW}⚠️  Referenced artifact(s) not found in the graph — not blocking:${NC}"
+    for id in "${dangling_artifacts[@]}"; do
+      echo "   - $id"
+    done
+    echo -e "${YELLOW}   A typo, a deleted artifact, or an ID quoted from prose. Evidence cannot be linked to an artifact that does not exist.${NC}"
+    echo ""
+  } >&2
+fi
 
 # Decision.
 if (( ${#missing_artifacts[@]} > 0 )); then

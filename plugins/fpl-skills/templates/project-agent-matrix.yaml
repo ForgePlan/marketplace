@@ -47,6 +47,14 @@
 # -----------------------------------------
 # `inline`         — orchestrator handles this stage directly; no agent dispatched
 # `inline-merger`  — primary for `audit` stage; orchestrator merges parallel verdicts
+# `skill:<name>`   — orchestrator runs the named skill IN ITS OWN CONTEXT (no Task
+#                    dispatch, no isolated context). Use when the stage is a
+#                    procedure the orchestrator performs, not work handed to a
+#                    reviewer or creator. A skill that goes on to dispatch an agent
+#                    says so in its own body — the matrix does not model that.
+#                    `generator ≠ verifier` is unaffected: these stages produce a
+#                    report or an artifact, never a verdict on the orchestrator's
+#                    own work. Anything that gates stays an agent (see `gate`).
 # `none`           — methodology value when no formal methodology applies
 #
 # DEPTH FILTER VALUES
@@ -165,11 +173,12 @@ phase_dispatch:
     depth_filter: standard+
 
   # Stage `estimate` — effort & risk estimation.
-  # No canonical agent yet (PRD-026 Phase 4 carry-forward).
-  # Orchestrator falls back to inline estimation until a dedicated agent ships.
+  # Read-only procedure, not a dispatch: `/estimate` wraps `forgeplan estimate`
+  # and pairs the number with an R_eff snapshot. It writes nothing and never
+  # gates — `gate` below is the gate. (marketplace#233)
   estimate:
-    primary: "inline"   # sentinel — orchestrator handles estimation directly; no agent yet
-    methodology: "none"
+    primary: "skill:estimate"
+    methodology: "checklist"
     depth_filter: deep+
 
   # Stage `gate` — pre-build quality gate (PASS / CONCERNS / BLOCKER).
@@ -226,11 +235,17 @@ phase_dispatch:
     secondary: "agents-pro:architect-reviewer"
     depth_filter: standard+
 
-  # Stage `wrap` — post-activation summary, lessons learned, retro.
-  # No canonical agent yet — orchestrator inlines a brief summary.
+  # Stage `wrap` — cycle close: reconciliation, then a REFRESH artifact.
+  # `/wrap` runs drift + stale + /forge-heal + a link audit and records their
+  # ACTUAL output; at Deep and Critical it then has `agents-pro:artifact-author`
+  # write the REFRESH `based_on` the cycle's EVID. There is no REFRESH
+  # kind-specialist and that is deliberate (ADR-020). The dispatch lives in the
+  # skill body, not here — `secondary` means "fallback when primary is
+  # unavailable", and misusing it to mean "and then this agent" would make the
+  # resolver dispatch artifact-author for the whole stage. (marketplace#233/#234)
   wrap:
-    primary: "inline"   # sentinel — orchestrator handles directly; no agent yet
-    methodology: "none"
+    primary: "skill:wrap"
+    methodology: "checklist"
     depth_filter: deep+
 
 # -----------------------------------------------------------------------------

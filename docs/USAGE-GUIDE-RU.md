@@ -33,7 +33,7 @@ Reference manual для маркетплейса. **Если ты новеньк
 См. [Рекомендуемые стеки](#рекомендуемые-стеки-по-персонам) ниже. Большинству нужен:
 
 ```
-/plugin install fpl-skills@ForgePlan-marketplace   # флагман — 38 скиллов, /fpl-init
+/plugin install fpl-skills@ForgePlan-marketplace   # флагман — 44 скилла, /fpl-init
 /reload-plugins
 ```
 
@@ -77,7 +77,7 @@ End-to-end развёртка: `forgeplan init`, MCP wiring, CLAUDE.md, docs/age
 
 ## Quick reference (все команды)
 
-`fpl-skills` даёт 38 скиллов (большинство slash-invocable); companion-плагины добавляют 14 `commands/` (dev-toolkit, forgeplan-workflow, forgeplan-orchestra, fpf, laws-of-ux).
+`fpl-skills` даёт 44 скилла (большинство slash-invocable); companion-плагины добавляют 14 `commands/` (dev-toolkit, forgeplan-workflow, forgeplan-orchestra, fpf, laws-of-ux).
 
 > [!TIP]
 > **Не понимаешь какую команду брать?** Запусти `/smith` — он прочитает состояние проекта и порекомендует следующий dispatch (например `/forge-cycle`, `/autorun`, `/forge-cleanup`, `/sprint`). Для обучающего walkthrough по всем 14 строкам роутинга — `/smith-routing`.

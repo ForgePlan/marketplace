@@ -51,9 +51,11 @@ That is a complete, valid manifest. Everything below is optional metadata.
 }
 ```
 
-Real shape: `fpl-skills` declares 0 commands, 1 agent, 38 skills, 5 hooks. The `hooks` array lists event signatures, not file paths — they describe *when* hooks fire.
+The `hooks` array lists event signatures, not file paths — they describe *when* hooks fire.
 
-**Trap**: keeping `components` accurate is manual. If you add a skill and forget to list it here, nothing breaks at runtime — but the manifest now lies. Treat `components` like the version table in CLAUDE.md: a single source of truth that you bump together with the change.
+**Trap**: keeping `components` accurate is manual. If you add a skill and forget to list it here, nothing breaks at runtime — but the manifest now lies.
+
+**What ForgePlan did with it**: removed it from all 23 plugin manifests (marketplace#246). The trap above is the reason — the inventory drifted every time a skill was added, and nothing read it: no gate, no loader, no installer. Claude Code discovers components by directory convention either way, so a hand-maintained copy of `ls` is a second source of truth that can only be wrong. The field remains valid upstream; this is a house rule, not a schema change.
 
 ## Related
 

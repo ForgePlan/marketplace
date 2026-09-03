@@ -39,16 +39,20 @@ The lifecycle marker is **advisory** — a resume hint, never a gate condition (
 | `shape` | Brief becomes a PRD | BMAD | ✅ Step 4 |
 | `decompose` | PRD breaks into sibling RFCs | FPF | agent exists; no step |
 | `design` | RFC — the technical contract | SPARC Architecture | ✅ Steps 4.5–4.6 |
-| `estimate` | effort and risk; **records the depth** the gate then applies | — | partially — Step 4.65 calibrates and records depth; effort/risk estimation itself is still `inline` (#233) |
+| `estimate` | effort and risk; **records the depth** the gate then applies | — | ✅ Step 4.65 — depth at every depth, `/estimate` at Deep+ |
 | `gate` | **may this move to build?** | — | ✅ Step 4.7 — `/gate-check` |
 | `build` | code | SPARC Refinement / RIPER | ✅ Step 5 |
 | `audit` | multi-reviewer pass | FPF / BMAD | ✅ Steps 6.5–6.6 |
 | `evidence` | EVID created and linked | — | ✅ Step 7, post-build gate at 7.4 |
 | `activate` | final gate, then activation | — | ✅ Steps 7.5–8, `guardian` |
-| `wrap` | release notes, session reset | — | **not built** — `inline` in the matrix (#233) |
+| `wrap` | reconciliation, then a REFRESH at Deep+ | ADR-020 | ✅ Step 10 — `/wrap` |
 
-Two stages have no agent and no step. That is a real gap, tracked, and it is not hidden by this
-table.
+Two stages still have no step — `brief` and `decompose`, both of which do have an agent. That is a
+real gap, tracked, and it is not hidden by this table.
+
+`estimate` and `wrap` carry the matrix sentinel `skill:<name>`: the orchestrator runs the skill in
+its own context rather than dispatching an agent. `/wrap` then dispatches `artifact-author` for the
+REFRESH body — ADR-020 gives REFRESH no kind-specialist on purpose.
 
 ### Conditional sub-stages
 
@@ -180,14 +184,13 @@ Stated here so the guide cannot be read as a completion certificate.
 
 | Gap | Tracked |
 |---|---|
-| `wrap` has no agent and no step; `estimate` has a step (4.65) but no agent and no effort/risk estimation | #233 |
 | Reference playbooks and the four wrapper skills | #237 (remainder) |
 | `brief` and `decompose` have agents but no `/forge-cycle` step | #233 / #234 |
 | `gaps` / `blindspots` cannot be attributed to an artifact *machine-readably* — they do emit per-artifact lines, but with no `--json` that is prose parsing, which is why they advise rather than block | upstream forgeplan |
 | Structural body checks RFC-002 specifies but the gate does not do — "PRD has FRs with AC", "PROBLEM has reproduction", "SPEC linked if API" | #237 (remainder) |
 | Thresholds are provisional — PRD-024 R-1 promised a 30-artifact calibration; the 2026-09-03 run above is 14, and several inputs move as artifacts are reviewed | NOTE-013, `#237` |
 
-Eight of eleven stages execute today — `estimate` joined them with Step 4.65, which records the
-depth the gate then applies. It is the gate's prerequisite, not bookkeeping. The two gates are the ones that were missing and are now
-built; the three that remain — `brief`, `decompose`, `wrap` — are convenience and bookkeeping, not
-the mechanism.
+Nine of eleven stages execute today. `estimate` and `wrap` joined them last: the first records the
+depth the gate applies and then sizes the work, the second closes the cycle by running the
+reconciliation and recording what it actually returned. The two that remain — `brief` and
+`decompose` — have an agent each and no step; both are entry-side convenience, not the mechanism.

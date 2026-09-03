@@ -33,7 +33,7 @@ Reference manual for the marketplace. **If you're new, start with [DEVELOPER-JOU
 See [Recommended stacks](#recommended-stacks-by-persona) below. Most users want:
 
 ```
-/plugin install fpl-skills@ForgePlan-marketplace   # flagship — 38 skills, /fpl-init
+/plugin install fpl-skills@ForgePlan-marketplace   # flagship — 44 skills, /fpl-init
 /reload-plugins
 ```
 
@@ -77,7 +77,7 @@ Mirror of root [README.md](../README.md) "Where to Start?" matrix, with cross-li
 
 ## Quick reference (all commands)
 
-`fpl-skills` provides 38 skills (most slash-invocable); the companion plugins add 14 `commands/` (dev-toolkit, forgeplan-workflow, forgeplan-orchestra, fpf, laws-of-ux).
+`fpl-skills` provides 44 skills (most slash-invocable); the companion plugins add 14 `commands/` (dev-toolkit, forgeplan-workflow, forgeplan-orchestra, fpf, laws-of-ux).
 
 > [!TIP]
 > **Not sure which command to use?** Run `/smith` — it reads project state and recommends the next dispatch (e.g. `/forge-cycle`, `/autorun`, `/forge-cleanup`, `/sprint`). For an educational walkthrough of all 14 routing rows, run `/smith-routing`.
