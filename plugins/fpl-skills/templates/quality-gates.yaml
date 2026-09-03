@@ -1,0 +1,166 @@
+# quality-gates.yaml — thresholds the /gate-check skill reads (PRD-024 FR-007)
+#
+# WHAT THIS IS
+# ------------
+# The quality gate between Design and Build. RFC-002 INV-1 calls it "the only mechanism to move
+# from design to build" — until this file and the /gate-check skill shipped, that mechanism was
+# the order of steps inside a prompt, which is not a mechanism (marketplace#237).
+#
+# WHERE IT LIVES
+# --------------
+# Copy to `.forgeplan/quality-gates.yaml` in your project. The file is OPTIONAL: with no copy,
+# /gate-check uses these same defaults. A project copy overrides per key — you write only the
+# thresholds you disagree with, not the whole file.
+#
+# WHAT THE GATE CAN AND CANNOT DECIDE ON — read this before adding a check
+# ------------------------------------------------------------------------
+# Measured on forgeplan 0.34.0, not assumed:
+#
+#   per-artifact, machine-readable      validate --json · score --json · fgr --json
+#   workspace-wide, prose only          gaps · blindspots
+#
+# `gaps` and `blindspots` take NO artifact argument and have NO --json. They answer "what is wrong
+# in this workspace", not "is this artifact ready". On the live tree `gaps` reports 64 MUST items
+# across the whole graph; gating on that number would block every artifact for reasons that have
+# nothing to do with it.
+#
+# So they are ADVISORY here — invoked, reported, never blocking. PRD-024 FR-006 lists all five
+# tools together; the split is the reconciliation, recorded rather than silently applied.
+#
+# Only add a threshold for something you can read per-artifact and compare numerically. A check
+# that cannot fail on a specific artifact is a paragraph, not a gate.
+#
+# `r_eff` IS NOT LOCAL EITHER — read this before raising it
+# --------------------------------------------------------
+# `r_eff` is a transitive minimum over the link graph (`score --json` reports the culprit as
+# `weakest_link`), not a property of the artifact being gated. An artifact can carry perfect
+# evidence and still score 0.
+#
+# Measured, 18 live artifacts, pre-build MUST set applied by hand:
+#
+#   12 PASS · 6 FAIL — and all 6 failed on `r_eff` alone.
+#   `formality` fired once as a co-failure; `granularity` and `reliability` never fired.
+#
+#   RFC-012 carries 8 linked EVIDs, every one active / congruence 3 / supports / score 1.0,
+#   and scores r_eff 0.0 — its weakest_link is ADR-010, whose weakest_link is NOTE-021, whose
+#   weakest_link is RFC-012. A three-node cycle: none of them can clear the bar by editing itself.
+#
+# So at `standard` depth `r_eff_min` is a **should**. Blocking there would mean failing an author
+# for a neighbour's weakness with no action available to them — the `--force`-on-first-false-
+# positive failure this file claims to avoid, arriving through the choice of variable rather than
+# the height of the bar. At `deep` and `critical` it stays a **must**: at those depths the chain
+# IS the deliverable, and its weakest link is the author's problem too.
+#
+# Wherever `r_eff` is reported, name `weakest_link` next to it. "R_eff too low" is not an
+# actionable finding; "R_eff 0.0, weakest link ADR-010" is.
+#
+# An inherited cascade failure is a legitimate `--force` case. Say so in the reason.
+#
+# DEPTH IS CURRENTLY A CONSTANT — the tiers below are aspirational until that is fixed
+# ------------------------------------------------------------------------------------
+# `forgeplan get` returns `depth: standard` for every artifact of every kind: it is
+# `default_depth` from `.forgeplan/config.yaml` reflected back, not a judgement. `forgeplan
+# calibrate` computes a real signal (it suggests Deep for ADR-022) that nothing records.
+#
+# Until `/forge-cycle` records a calibrated depth — added in the same change as this file, at the
+# `estimate` stage — every artifact receives the `standard` row, and `tactical`, `deep` and
+# `critical` are unreachable. `adi_evidence_required`, `adr_linked_required` and the whole
+# `post_build` section are dead until then.
+#
+# Do not tune these tiers on the assumption they are running. Check `forgeplan get <id> --json`
+# first.
+
+schema_version: 1
+
+# ─── Pre-build gate — the `gate` stage, between `design` and `build` ─────────────
+#
+# Question: is there enough specification to start writing code?
+#
+# `must` blocks. `should` is reported and does not block — the distinction is the whole point,
+# because a gate where everything blocks gets bypassed with --force on the first false positive,
+# and then it protects nothing.
+pre_build:
+
+  tactical:
+    must:
+      validate_errors_max: 0        # `forgeplan validate --json` → results[].errors
+    should:
+      r_eff_min: 0.0                # a tactical fix carries no evidence yet; reported only
+
+  standard:
+    must:
+      validate_errors_max: 0
+      formality_min: 0.6            # score --json → fgr.formality — is it written down properly
+    should:
+      r_eff_min: 0.5                # score --json → r_eff. `should`, NOT `must` — see the cascade
+                                    # note in the header. 6 of 6 failures in the 18-artifact
+                                    # sample were r_eff-only, several of them uncorrectable by
+                                    # the artifact's own author.
+      granularity_min: 0.5          # fgr.granularity — is it broken down enough
+      evidence_count_min: 1         # score --json → r_eff_ci.evidence_count
+
+  deep:
+    must:
+      validate_errors_max: 0
+      r_eff_min: 0.7
+      formality_min: 0.6
+      granularity_min: 0.6
+      reliability_min: 0.6
+      adi_evidence_required: true   # ≥1 linked EVID whose body carries ≥3 `### Hypothesis`
+                                    # sections (CLAUDE.md Sprint Z7). The gate reads the linked
+                                    # EVID bodies; it cannot infer this from a score.
+    should:
+      evidence_count_min: 2
+
+  critical:
+    must:
+      validate_errors_max: 0
+      r_eff_min: 0.8
+      formality_min: 0.75
+      granularity_min: 0.6
+      reliability_min: 0.75
+      adi_evidence_required: true
+      adr_linked_required: true     # an architectural decision must be recorded, not implied
+    should:
+      evidence_count_min: 3
+
+# ─── Post-build gate — inside the `evidence` stage, Deep and Critical only ──────
+#
+# Question: does the build match what was specified, and may it be activated?
+#
+# Deliberately thinner than pre_build. By this point `guardian` runs as the activation gate and
+# reads the whole evidence chain; duplicating its judgement here would mean two gates disagreeing
+# about the same artifact, and the one that is easier to satisfy wins.
+post_build:
+
+  deep:
+    must:
+      validate_errors_max: 0
+      r_eff_min: 0.7
+      evidence_grew: true           # at least one EVID linked since the pre-build gate ran.
+                                    # A build that produced no new evidence has not been verified,
+                                    # only asserted.
+    should:
+      r_eff_not_lower: true         # R_eff below its pre-build value means the build weakened
+                                    # confidence — worth a look, not a block
+
+  critical:
+    must:
+      validate_errors_max: 0
+      r_eff_min: 0.8
+      evidence_grew: true
+      adr_linked_required: true
+    should:
+      r_eff_not_lower: true
+
+# ─── Override (PRD-024 FR-014) ──────────────────────────────────────────────────
+#
+# `--force` past a MUST failure is allowed and always leaves a record. An override that leaves no
+# trace is indistinguishable from the gate not having run.
+override:
+  allowed: true
+  requires_reason: true             # `--force` with no reason is refused
+  record_as: note                   # a NOTE artifact naming the artifact, the failed checks and
+                                    # the reason; linked `informs` to the artifact it let through
+  # Deliberately NOT configurable to `false`. A gate nobody can pass in an emergency is a gate that
+  # gets deleted in an emergency. Making the escape hatch loud is more durable than sealing it.

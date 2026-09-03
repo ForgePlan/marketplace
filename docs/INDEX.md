@@ -106,6 +106,7 @@ CANVAS agents (`plugins/agents-canvas/agents/`): `canvas-coordinator` (master) �
 | [`process-from-idea-to-delivery-EN.md`](process-from-idea-to-delivery-EN.md) (+RU) | full idea→commit process; §3.0 = the ADR-010 contract + 5 instances |
 | [`USAGE-GUIDE.md`](USAGE-GUIDE.md) (+RU) | command reference, hooks, agent activation, troubleshooting |
 | [`PLAYBOOK.md`](PLAYBOOK.md) (+RU) | which command for which scenario |
+| [`GUIDE-PIPELINE.md`](GUIDE-PIPELINE.md) | the eleven canonical stages, where the gates are, and which stages are still unbuilt |
 | [`BROWNFIELD-GUIDE.md`](BROWNFIELD-GUIDE.md) (+RU) | existing codebases — Discover Agent, Strangler Fig |
 | [`SETUP-GUIDE-NEW-REPO.md`](SETUP-GUIDE-NEW-REPO.md) | bootstrap a new ForgePlan repo (~20 min) |
 | [`CROSS-CLI.md`](CROSS-CLI.md) | running across Claude Code / Cursor / Gemini / Codex / Goose |

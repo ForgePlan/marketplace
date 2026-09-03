@@ -609,8 +609,38 @@ The probe block at the start of this skill (step 2 — Detect environment) alrea
 | Detected | What `/autorun` does |
 |---|---|
 | `forgeplan-workflow` plugin installed | **Delegates to `/forge-cycle "<task>"`** — full route → shape → build → evidence → activate. No pauses. |
-| `forgeplan` CLI but no `forgeplan-workflow` | Runs `research → sprint → audit → report` and **inserts manual `forgeplan` calls between phases** (route → new prd → new evidence → activate). All non-interactive. When the task is artifact-driven, `/sprint` automatically uses `forgeplan dispatch` for parallel-safe wave grouping and `forgeplan claim` per teammate (sprint SKILL.md §4a-bis / 4b.g). |
+| `forgeplan` CLI but no `forgeplan-workflow` | Runs `research → sprint → audit → report` and **inserts manual `forgeplan` calls between phases** (route → new prd → **gate-check** → new evidence → activate). All non-interactive. When the task is artifact-driven, `/sprint` automatically uses `forgeplan dispatch` for parallel-safe wave grouping and `forgeplan claim` per teammate (sprint SKILL.md §4a-bis / 4b.g). |
 | Neither | Runs the standard pipeline. Prints a single warning at the start: "no forgeplan integration; artifact graph will not be updated". |
+
+### The quality gate on the non-delegating path (PRD-024 FR-006, marketplace#237)
+
+**This is the path that matters most for the gate, and it was the one without it.**
+
+When `/autorun` delegates to `/forge-cycle` it inherits that skill's Step 4.7 and 7.4. On its own
+path it does not — and its own path is the one that runs for hours with nobody watching. Putting the
+gate only where a human is already present protects the case that needed it least.
+
+RFC-002 names `/gate-check` the *"single source of quality gate decisions, invoked from all three
+entrypoints"*. Two of the three now invoke it (playbooks, the third, are not built — PRD-024 FR-012).
+
+On the `research → sprint → audit → report` path, before `/sprint` dispatches any build agent:
+
+```
+forgeplan calibrate <ARTIFACT-ID>     # depth defaults to `standard` for everything and means
+forgeplan update <ID> --depth <d>     # "nobody decided" — record one before gating
+/gate-check <ARTIFACT-ID>
+```
+
+Unattended handling, per PRD-024 AC-5 (*"gate-check failures always halt — cannot auto-bypass"*):
+
+| Verdict | `/autorun` does |
+|---|---|
+| PASS | continue to `/sprint` |
+| FAIL | **HOLD.** Write a checkpoint, record a CONCERNS EVIDENCE naming the failed checks, and stop. Do not build |
+| FAIL, and the failure is an inherited `r_eff` cascade (the `weakest_link` names a different artifact) | still HOLD, and say which artifact must be fixed. Autopilot never `--force`s: an override with nobody to read the reason is the gate not having run |
+
+`--force` is a human's call. Under `/autorun` the default is WAIT, matching the RIPER Plan→Execute
+gate (DEFER-016) — an autonomous run that can bypass its own gate has no gate.
 
 ### Want full automation?
 

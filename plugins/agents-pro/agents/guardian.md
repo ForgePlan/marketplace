@@ -174,6 +174,7 @@ This step is **deliberate mental reasoning**, *not* a call to `mcp__forgeplan__f
 | Any linked EVID has **≥1** Critical finding above `max_findings_critical` cap | **BLOCKER** |
 | Aggregate linked-EVID High findings exceed `max_findings_high` cap | downgrade to **CONCERNS** |
 | Aggregate linked-EVID Medium findings exceed `2× max_findings_medium` | downgrade to **CONCERNS** (informational below 2×) |
+| Artifact has a linked NOTE titled `Gate override:` | downgrade PASS → **CONCERNS**, and name the bypassed checks in the verdict. A `/gate-check --force` records that NOTE (PRD-024 FR-014); without this row nothing ever reads it, and the override is visible only in the report of the run that made it. An override nobody re-reads is the gate not having run |
 | `require_evidence_chain` includes artifact's kind AND zero `informs`-linked EVIDENCE present | **BLOCKER** (missing audit trail) |
 | `require_validate_pass: true` AND `forgeplan_validate(id=<artifact>)` returns errors | **BLOCKER** |
 | `require_audit_pass: true` AND no Profile B EVIDENCE with `verdict=PASS` in chain | **CONCERNS** |
