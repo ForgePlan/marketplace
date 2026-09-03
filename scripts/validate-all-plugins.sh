@@ -433,6 +433,29 @@ else
 fi
 
 echo ""
+echo "=== Plugin test suites (plugins/*/tests/test-*.sh) ==="
+# Mirrors the CI step of the same name. Until now CI ran these and this script
+# did not, so a local "ALL PASSED" was weaker than a green CI — the asymmetry
+# gate-parity-check exists to prevent, in the one place it does not look.
+SUITES=0
+for suite in "$REPO_ROOT"/plugins/*/tests/test-*.sh; do
+    [ -f "$suite" ] || continue
+    SUITES=$((SUITES + 1))
+    label="${suite#"$REPO_ROOT"/}"
+    echo "--- suite: $label ---"
+    if bash "$suite" >/dev/null 2>&1; then
+        echo "  OK: $label"
+    else
+        echo "  FAIL: $label — re-run it directly for the output:"
+        echo "        bash $label"
+        ERRORS=$((ERRORS + 1))
+    fi
+done
+if [ "$SUITES" -eq 0 ]; then
+    echo "  (none found)"
+fi
+
+echo ""
 if [ $ERRORS -gt 0 ]; then
     echo "FAILED: $ERRORS error(s) found"
     exit 1

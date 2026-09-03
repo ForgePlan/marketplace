@@ -119,9 +119,34 @@ case "$branch" in
     ;;
 esac
 
-# Collect artifact IDs referenced in branch + last 20 commits.
+# Collect artifact IDs referenced in the branch name + THIS branch's own commits.
+#
+# Scope fix (2026-09-03): the range used to be a flat `git log -20`, which reaches
+# back past the branch point into commits other PRs already merged. A PR then got
+# blocked by an artifact reference in somebody else's older commit — work it never
+# touched and cannot fix. The range that matches the sentence "artifacts referenced
+# in this PR" is base..HEAD. `-20` stays as the fallback for a detached or
+# base-less checkout, where nothing better is available.
+base=""
+for candidate in origin/main origin/master main master origin/dev dev; do
+  if git rev-parse --verify -q "$candidate" >/dev/null 2>&1; then
+    base="$candidate"
+    break
+  fi
+done
+
+if [[ -n "$base" ]] && git merge-base "$base" HEAD >/dev/null 2>&1; then
+  commit_range="$base..HEAD"
+else
+  commit_range=""
+fi
+
 branch_ids=$(echo "$branch" | grep -oE '(PRD|RFC|ADR|EPIC|SPEC|PROB|EVID|NOTE)-[0-9]+' || true)
-commit_ids=$(git log -20 --pretty='%s%n%b' 2>/dev/null | grep -oE '(PRD|RFC|ADR|EPIC|SPEC|PROB|EVID|NOTE)-[0-9]+' || true)
+if [[ -n "$commit_range" ]]; then
+  commit_ids=$(git log "$commit_range" --pretty='%s%n%b' 2>/dev/null | grep -oE '(PRD|RFC|ADR|EPIC|SPEC|PROB|EVID|NOTE)-[0-9]+' || true)
+else
+  commit_ids=$(git log -20 --pretty='%s%n%b' 2>/dev/null | grep -oE '(PRD|RFC|ADR|EPIC|SPEC|PROB|EVID|NOTE)-[0-9]+' || true)
+fi
 artifact_ids=$(printf '%s\n%s\n' "$branch_ids" "$commit_ids" | sort -u | grep -v '^$' || true)
 
 # No artifacts referenced → can't enforce evidence; pass.
@@ -146,12 +171,25 @@ fi
 
 # Check evidence links for each non-evidence artifact.
 missing_artifacts=()
+dangling_artifacts=()
 for artifact_id in $artifact_ids; do
   case "$artifact_id" in
     EVID-*|NOTE-*)
       continue
       ;;
   esac
+
+  # Does the artifact exist at all? An ID that is not in the graph — a typo, a
+  # deleted artifact, an ID quoted from prose — used to fall through to the
+  # evidence check, come out with has_evidence=0, and be reported as "evidence
+  # missing" with a remedy that cannot work: you cannot link an EVID to an
+  # artifact that does not exist. Report it as what it is, and do not block on
+  # it. (Found 2026-09-03: PROB-065, cited in a commit message, absent from the
+  # graph, blocked an unrelated PR with an impossible instruction.)
+  if ! "$forgeplan_bin" get "$artifact_id" >/dev/null 2>&1; then
+    dangling_artifacts+=("$artifact_id")
+    continue
+  fi
 
   has_evidence=0
 
@@ -210,6 +248,21 @@ for artifact_id in $artifact_ids; do
     missing_artifacts+=("$artifact_id")
   fi
 done
+
+# Dangling references are reported, never blocking. The remedy is a commit-message
+# or branch-name correction, not an evidence link, and it is usually not this PR's
+# to make.
+if (( ${#dangling_artifacts[@]} > 0 )); then
+  {
+    echo ""
+    echo -e "${YELLOW}⚠️  Referenced artifact(s) not found in the graph — not blocking:${NC}"
+    for id in "${dangling_artifacts[@]}"; do
+      echo "   - $id"
+    done
+    echo -e "${YELLOW}   A typo, a deleted artifact, or an ID quoted from prose. Evidence cannot be linked to an artifact that does not exist.${NC}"
+    echo ""
+  } >&2
+fi
 
 # Decision.
 if (( ${#missing_artifacts[@]} > 0 )); then
