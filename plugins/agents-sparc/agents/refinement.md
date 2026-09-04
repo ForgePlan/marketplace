@@ -134,3 +134,10 @@ The red-green-refactor loop above is the SPARC default for a feature surface. Wh
 - **Refactor-after-green** → stays with this refinement agent: once the tests are green, improve structure/clarity/performance while keeping the (still frozen) tests passing, then hand off to `tester` (Profile B) for the coverage-delta EVIDENCE.
 
 Outside enforced-TDD, the standard red-green-refactor loop documented above continues to apply unchanged.
+## Constraint model (marketplace#236)
+
+This agent is constrained by its `tools:` **allowlist**, not a denylist: the list omits every
+`forgeplan_*` tool, so graph mutation is impossible by construction — a stronger guarantee than the
+denylist packs carry, recorded here so "no denylist" is not read as "unconstrained" (EVID-231).
+It works on LOCAL FILES only; artifact lifecycle belongs to the forgeplan-aware SPARC agents
+(`specification`, `architecture`) and the orchestrator.

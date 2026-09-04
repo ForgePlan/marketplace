@@ -5,7 +5,7 @@ description: |
   RU: Аналитик инъекций промптов и джейлбрейков — обнаруживает, классифицирует и устраняет угрозы инъекций в приложениях на базе LLM с использованием таксономии из 6 типов угроз, обнаружения обхода и оценки сложности. Используйте при аудите кода интеграции LLM на наличие поверхностей инъекций, проверке шаблонов промптов или реализации фильтрации ввода/вывода. Передайте `security-expert` для полного аудита безопасности приложения или `pii-detector` для параллельного сканирования на чувствительные данные.
   Triggers: "prompt injection", "jailbreak", "LLM security", "injection attack", "prompt manipulation", "AI security", "jailbreaking", "instruction override", "role switching attack", "инъекция промптов", "безопасность LLM", "джейлбрейк", "атака на промпт"
 model: sonnet
-tools: [Read, Write, Edit, Bash, Glob, Grep]
+tools: [Read, Bash, Glob, Grep]
 color: '#9C27B0'
 ---
 

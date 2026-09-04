@@ -340,11 +340,17 @@ Quick alphabetical lookup of every agent named in the 14 rows above. Each entry:
 | **system-dev** | `agents-pro` | B | Staff-level cross-Epic / long-horizon reviewer; pairs with guardian for system-wide go/no-go. |
 | **tester** | `agents-core` | B | Profile B test-coverage reviewer; produces tester EVID with coverage % vs `min_test_coverage` gate. |
 
-† **Profile letter is advisory, not enforced.** These eight agents carry no `disallowedTools`
-denylist, so nothing stops them doing what the letter says they will not. The letter records intent
-for routing; it is not a runtime guarantee. Treat a `†` agent as unconstrained until it gets a
-denylist — see marketplace#236. (And note the denylist itself is a Claude Code key: in other
-runtimes even a backed profile silently lapses — `docs/CROSS-CLI.md`.)
+† **Profile letter is advisory, not enforced by a denylist.** Nuance measured in EVID-231: most
+`†` agents carry a `tools:` ALLOWLIST, which constrains **harder** than a denylist — an agent whose
+allowlist omits every `forgeplan_*` tool cannot mutate the graph at all. The letter fails only where
+the allowlist contradicts it: three B-labelled reviewers carried Write/Edit until 2026-09-04
+(injection-analyst, pii-detector, performance-engineer — write rights removed; a reviewer that can
+edit sources is not a reviewer), and error-detective's C was allowlist-backed all along. The
+remaining `†` C-labels (code-analyzer, debugger, platform-engineer, ddd-domain-expert A) keep
+Write/Edit because their BODIES are fixer/author-shaped — for those the letter, not the agent, is
+the advisory part. See marketplace#236. (And note both keys are Claude Code frontmatter: in other
+runtimes any profile constraint lapses unless restated in the body — `docs/CROSS-CLI.md`,
+marketplace#218.)
 
 Notes:
 
