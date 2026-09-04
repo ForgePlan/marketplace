@@ -26,14 +26,16 @@ section 12 (incident) first.
 
 ## Evidence requirements
 
-- [ ] performance-engineer Profile B EVID with **baseline** measurement (must include numeric p50/p95/p99 — narrative is not enough)
-- [ ] NOTE with hot-path analysis (profiler output or equivalent)
-- [ ] PRD-NNN with explicit perf-budget target (e.g. "p95 < 200ms at 1000 RPS")
-- [ ] If architectural: ADR-NNN + C4 L1+L2 if ≥3 modules + delta-spec if supersedes
-- [ ] ADI EVID with ≥3 hypotheses for the perf fix (e.g. "add cache", "denormalise", "do nothing — accept current perf")
-- [ ] BMAD adversarial EVID with ≥1 finding from `artifact-reviewer`
-- [ ] tester EVID with **post-change benchmark** numbers + verdict=PASS
-- [ ] guardian Profile B EVID with verdict=PASS
+1. performance-engineer Profile B EVID with **baseline** measurement per **`templates/perf-baseline.md`** — numeric p50/p95/p99 AND the reproduction command (narrative is not enough; a baseline that cannot be re-run is theatre)
+2. NOTE with hot-path analysis (profiler output or equivalent)
+3. PRD-NNN with explicit perf-budget target (e.g. "p95 < 200ms at 1000 RPS")
+4. If architectural: ADR-NNN + C4 L1+L2 if ≥3 modules + delta-spec if supersedes
+5. ADI EVID with ≥3 hypotheses for the perf fix (e.g. "add cache", "denormalise", "do nothing — accept current perf")
+6. BMAD adversarial EVID with ≥1 finding from `artifact-reviewer`
+7. tester EVID with **post-change benchmark** numbers + verdict=PASS
+8. guardian Profile B EVID with verdict=PASS
+(Reference list, not a runtime checklist — numbered per the CLAUDE.md ban on empty `- [ ]` in committed files.)
+
 
 ## Failure modes
 
