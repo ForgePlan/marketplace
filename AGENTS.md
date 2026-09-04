@@ -134,7 +134,7 @@ The 14-row routing table is **CLI-agnostic** — it names methodologies and Prof
 ## Cross-CLI compatibility
 
 > **Full recipe: [`docs/CROSS-CLI.md`](docs/CROSS-CLI.md)** — per-client MCP wiring, the
-> `.agents/skills` interop path (producer *and* consumer side), what is not yet portable,
+> `.agents/skills` interop path (producer *and* consumer side), what is Claude-Code-native by design,
 > and the four portability traps that all fail silently. Read it before concluding that
 > something in this marketplace does not work in your runtime; three of the four traps
 > present as "it is broken" when the actual answer is "that runtime spells it differently".
@@ -183,7 +183,7 @@ command = "forgeplan"
 args = ["serve"]
 ```
 
-For multi-CLI environments, `forgeplan mcp-manifest` is planned (Batch F deliverable per RFC-003) to generate all three config files in one call. Until that command ships, run `forgeplan mcp install` once per client target. Verify the command's current availability with `forgeplan mcp --help` — as of forgeplan 0.32.1 the available sub-commands are `serve` and `install` only.
+For multi-CLI environments, per-client `forgeplan mcp install` is the **terminal supported path** — one run per client target (ADR-025: cross-CLI settles as compliance with open standards; no one-call generator is a commitment of this marketplace). `forgeplan mcp-manifest`, if the upstream ever ships it, is a convenience — verify availability with `forgeplan mcp --help`; as of forgeplan 0.32.1 the sub-commands are `serve` and `install` only.
 
 **Used by**: `/smith-bootstrap` Step 0b (active runner, calls `mcp install --scope project` automatically when `.mcp.json` lacks the forgeplan block) and `/fpl-init` Step 5 (same primitive).
 
@@ -412,7 +412,7 @@ forgeplan session                         # Current pipeline phase
 # Validation
 ./scripts/validate-all-plugins.sh
 
-# Cross-CLI setup (per-client; `forgeplan mcp-manifest --output-dir` is planned but not yet shipped)
+# Cross-CLI setup — per-client, and per-client is the terminal supported path (ADR-025)
 forgeplan mcp install --client claude --scope project    # one client at a time
 ```
 

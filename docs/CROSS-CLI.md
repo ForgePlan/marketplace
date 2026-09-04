@@ -11,11 +11,11 @@ concerns and `CLAUDE.md` is the source of truth for Claude-Code specifics.
 
 Three things travel across CLIs, and they cross at different maturity levels:
 
-| Surface | Cross-CLI today? | How |
+| Surface | Cross-CLI? | How |
 |---|---|---|
 | **MCP server** (forgeplan tools) | Yes - any MCP client | Section (a) |
 | **Skills** (plugin knowledge bases) | Yes - any agentskills.io client | Section (b) |
-| **Agents / commands / hooks** | No - Claude-Code-native today | Section (c) |
+| **Agents / commands / hooks** | No - Claude-Code-native by design | Section (c) |
 
 ---
 
@@ -48,9 +48,9 @@ forgeplan mcp install --client claude --scope project --dry-run
 
 Verify the command's current sub-commands with `forgeplan mcp --help` - as of
 forgeplan 0.32.1 the available sub-commands are `serve` and `install` only.
-`forgeplan mcp-manifest` (one call generates all client configs) is planned as
-the Batch F deliverable per RFC-003 but is **not yet shipped**; until then, run
-`forgeplan mcp install` once per client target.
+Per-client `forgeplan mcp install` is the **terminal supported path** — one run
+per client target. `forgeplan mcp-manifest` (a one-call generator) is an upstream
+convenience this marketplace makes no commitment to (ADR-025).
 
 ### Per-client config (what the command writes, or write by hand)
 
@@ -185,15 +185,16 @@ tells you which of the two an agent actually read.
 
 ---
 
-## (c) What is NOT yet cross-CLI
+## (c) What is Claude-Code-native by design
 
-**Agents, commands, and hooks are Claude-Code-native today.**
+**Agents, commands, and hooks are Claude-Code-native — terminally, not pending emit (ADR-025).**
 
 - **Agents** (`plugins/<name>/agents/*.md`) - Claude Code subagent format
   (frontmatter `tools` / `disallowedTools` denylist per the PRD-026 B2 paradigm).
   Other CLIs dispatch through their own agent layers; the skill bodies an agent
-  orchestrates are portable Markdown, but the agent definition itself is not yet
-  emitted in a cross-CLI format.
+  orchestrates are portable Markdown; the agent definition itself is not emitted
+  in a cross-CLI format, and none will be built without a new decision — a
+  concrete request opens one (ADR-025 Trigger 2).
 
   **The denylist does not travel, and its absence is silent.** `disallowedTools`
   is a Claude Code key — verified absent from the OMP binary entirely. 42 agents
@@ -216,13 +217,15 @@ tells you which of the two an agent actually read.
   nobody keeps past the second edit.
 - **Hooks** (`plugins/<name>/hooks/hooks.json`) - Claude Code hook events
   (`PreToolUse`, `PostToolUse`, `SessionStart`, etc.). Other CLIs have their own
-  automation primitives; no cross-CLI hook emit is shipped yet.
+  automation primitives; no cross-CLI hook emit is shipped, and none will be
+  built without a new decision — a concrete request opens one (ADR-025 Trigger 2).
 
-**Roadmap.** Cross-CLI emit for agents/commands/hooks is the Tier-1 / Tier-2
-work, tracked under the multi-agent multi-CLI architecture (RFC-003, four layers:
-dispatch / agents / memory / cross-CLI) and the AGENTS.md cross-CLI section.
-Until that lands, the portable surface is **MCP tools + skills**; agents,
-commands, and hooks remain Claude-Code-first.
+**Posture (ADR-025).** The portable surface is **MCP tools + skills + AGENTS.md**
+— by design and terminally, as compliance with open standards (MCP,
+agentskills.io, AGENTS.md), not as Tier 0 of a deferred adapter programme.
+Agents, commands and hooks are Claude-Code-native, with **no cross-CLI emit on
+any horizon by decision**; a concrete request opens a **new** decision rather
+than unblocking an old programme (ADR-025 supersedes ADR-014).
 
 One thing already bridges all CLIs at the orchestration layer: **smith**, the
 master-orchestrator. Its routing logic is declared in `AGENTS.md` so the same
