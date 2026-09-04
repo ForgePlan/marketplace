@@ -211,6 +211,16 @@ This step is **deliberate mental reasoning**, *not* a call to `mcp__forgeplan__f
 - Date threshold: parse `created` or `created_at` from artifact frontmatter (ISO 8601). If date ≥ `2026-05-25` → predicate "Z8+ supersede" evaluates true. Both predicates must hold for BLOCKER.
 - Pre-Z8 supersedes (created_at < 2026-05-25) without delta-spec downgrade to **CONCERNS** instead — handled by `/decay-watch` Step 2e classification (`MISSING-DELTA` backward-compatible warning, not `NO-DELTA-WHEN-REQUIRED`).
 
+**Discovery-discipline detection for the Non-Goals / user-job gate** (Row: Standard+ PRD, empty Non-Goals or no user job — ADR-023 D4):
+
+- Applies to `kind=prd` only, at Standard+ depth (same depth read as the NFR row). Tactical PRDs are out of scope.
+- **Non-Goals leg** — heading check (regex): `grep -E '^#{2,3} *(Non-Goals|Non-goals|Out of [Ss]cope)\b'` against the body. If a heading matches, non-emptiness check: at least one list item or table row between it and the next `^#{2,3}` heading — `awk '/^#{2,3} *(Non-Goals|Non-goals|Out of [Ss]cope)/{f=1;next} /^#{2,3} /{f=0} f' | grep -cE '^ *([-*]|\|)'` ≥ 1. A heading with only prose ("nothing is out of scope") also closes the leg — an explicit statement is a decision; an ABSENT or EMPTY section is not.
+- **User-job leg** — either check closes it:
+  - JTBD shape (regex, case-insensitive): `grep -iE 'When .{3,80}, I want .{3,120}, so (I|that)'` against the body; the Russian form `Когда .{3,80}, я хочу .{3,120}, чтобы` counts equally.
+  - Problem-statement shape: a `^#{2,3} *(Problem [Ss]tatement|Постановка проблемы)` heading whose section names an actor AND a task — decidable as: the section contains at least one of `user|customer|developer|maintainer|оператор|пользователь|разработчик` AND is non-empty by the same awk test.
+- Fire the row (CONCERNS) only when a leg fails **structurally** — section absent or empty, no shape-matching sentence anywhere. Never grade the QUALITY of the job statement or of the Non-Goals: "the job sounds aspirational" is `architect-reviewer`'s finding (row 10 chain), not this gate's — the ADR-009 structural line, restated in ADR-023 DD-7.
+- Satisfy-path for authors: run `/discover-product` (its PRD output carries both legs by construction), or `agents-sparc:specification` whose template includes Out of scope.
+
 **NFR-section detection for the NFR gate** (Row: Standard+ PRD, no Non-Functional Requirements):
 
 - Applies to `kind=prd` only, at Standard+ depth — read the artifact's `Depth:` field, which `forgeplan_get` already returns in the Step 2 read (`standard` / `deep` / `critical` qualify). Tactical PRDs are out of scope; do not fire the row on them.
