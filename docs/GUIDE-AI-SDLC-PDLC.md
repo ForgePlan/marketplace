@@ -649,15 +649,21 @@ profile letter is **advisory**, not denylist-enforced, and most such agents carr
 - **`ddd-domain-expert`** is labelled (A) with the same allowlist shape — structurally unable to
   produce the bounded-contexts NOTE its section requires.
 
-## 7.2 Two routing rows demand the impossible
+## 7.2 Two routing rows demanded the impossible — fixed 2026-09-05
 
-| Row | Requirement | Why unsatisfiable |
-|---|---|---|
-| 8 (security) | an EVID from `injection-analyst` and `pii-detector` | both carry `tools: [Read, Bash, Glob, Grep]` — **zero** forgeplan tools; they cannot create the EVID |
-| 9 (performance) | the baseline EVID from `performance-engineer` (the first dispatch, the row's falsifiability anchor) | the same allowlist, the same impossibility |
+The defect (found by the audit): rows 8 (security) and 9 (performance) demanded EVIDs from
+`injection-analyst`, `pii-detector` and `performance-engineer`, whose allowlists
+`[Read, Bash, Glob, Grep]` contained **zero** forgeplan tools — the agents structurally could not
+record the evidence the rows required. Removing Write/Edit (marketplace#236) had fixed the "a
+reviewer can edit" half and left the "cannot record" half.
 
-Removing Write/Edit (marketplace#236) fixed the "a reviewer can edit" half and left the "cannot
-record" half.
+The fix: all three now carry the Profile B forgeplan surface
+(get/list/new/update/link/validate/score/claim/release); `activate`/`reason`/`claims`/
+`memory_retain` are denied by omission from the allowlist, and the portable EVID-discipline HARD
+RULES (two verdict axes, honest zero as CONCERNS, the `<<NEEDS_ACTIVATION>>` sentinel, release as
+a `finally` clause) live in the bodies. `performance-engineer` is additionally pinned to
+`perf-baseline.md` — the baseline EVID with p50/p95/p99 and the reproduction command must exist
+**before** any change lands.
 
 ## 7.3 Section playbooks lag their rows
 
