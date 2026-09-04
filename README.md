@@ -25,6 +25,7 @@ Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/
 | 📋 [Playbook](docs/PLAYBOOK.md) | Use-case matrix: which command for which scenario (empty project, brownfield, night-run, …) |
 | 📖 [Usage Guide](docs/USAGE-GUIDE.md) | Reference manual: 18 commands, hooks, agent activation rules, troubleshooting |
 | 🏛 [Architecture](docs/ARCHITECTURE.md) | 4-layer mental model — Orchestra (where) · Forgeplan (what) · FPF (how to think) · SPARC (how to code) |
+| 🏭 [Guide: AI-PDLC & AI-SDLC](docs/GUIDE-AI-SDLC-PDLC.md) | The desk book for both loops: stages, the seven role profiles, the four gate layers, context separation (generator ≠ verifier), methodology routing, **and the model-tier ladder** — which task goes to which model |
 | 🔬 [Methodologies](docs/METHODOLOGIES.md) | What's built into forgeplan (BMAD, OpenSpec, ADI, F-G-R, DDR, Verification Gate) vs what's external |
 | 🔁 [Autoresearch integration](docs/AUTORESEARCH-INTEGRATION.md) | Combining `uditgoenka/autoresearch` (metric-driven loops) with `/forge-cycle` lifecycle |
 | 🧭 [AI-SDLC mapping](docs/AI-SDLC-MAPPING.md) | Phase-by-phase map for users coming from AI-SDLC vocabulary (Concept → Research → Design → Build → Test → Release → Operate → Maintain) |
