@@ -68,9 +68,18 @@ elif echo "$prompt_lc" | grep -qE '\b(fix (the )?bug|debug|broken|not working|cr
   if echo "$prompt_lc" | grep -qE '\b(typo|off-by-one|off by one|broken link|hotfix|one-?liner|one line fix|опечатк|хотфикс|правка одной строки|битая ссылка|сломанн(ая|ой) ссылк|линк)\b'; then
     is_trivial=1
   fi
-  if [ "$is_trivial" -eq 0 ] && echo "$prompt_lc" | grep -qE '\b(production bug|prod bug|race condition|regression|sev-?1|sev-?2|incident|p0|p1|outage|postmortem|post-mortem|продакшн баг|прод баг|продовый баг|гонк[аи]|состояние гонки|регресси|инцидент|падение в проде)\b'; then
+  # ADR-024 D4a — the /incident vs /riper boundary is BINARY, not intent-based:
+  # service degraded for users RIGHT NOW -> /incident; defect found, no active
+  # degradation -> /riper. Written in the words already in the regex: the
+  # active-degradation set routes to /incident and WINS on overlap (an outage IS
+  # a prod bug that needs fixing — that overlap is exactly why the old wording
+  # failed, EVID-243 N6). Smith forbids ties.
+  if [ "$is_trivial" -eq 0 ] && echo "$prompt_lc" | grep -qE '\b(outage|sev-?1|sev-?2|p0|падение в проде|лежит прод|недоступен)\b'; then
     suggestion="$suggestion
-   • Non-trivial production bug? Try \`/riper\` (Research → Innovate → Plan → Execute → Review) before jumping to code."
+   • Active degradation right now? Run \`/incident\` (ICS fire phase, then blameless post-mortem). /riper is for defects WITHOUT live user impact."
+  elif [ "$is_trivial" -eq 0 ] && echo "$prompt_lc" | grep -qE '\b(production bug|prod bug|race condition|regression|p1|incident|postmortem|post-mortem|продакшн баг|прод баг|продовый баг|гонк[аи]|состояние гонки|регресси|инцидент)\b'; then
+    suggestion="$suggestion
+   • Non-trivial production bug (no active degradation)? Try \`/riper\` (Research → Innovate → Plan → Execute → Review) before jumping to code. If the service is degraded for users right now, \`/incident\` instead."
   fi
 
 # Pattern: NEW FEATURE / IMPLEMENT

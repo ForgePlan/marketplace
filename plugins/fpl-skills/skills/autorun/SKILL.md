@@ -661,6 +661,14 @@ for being large, and autopilot does not start.
 before — `forgeplan drift` compares artifacts against the code they claim, and an uncommitted tree
 is a comparison nobody else can reproduce.
 
+**Between the run's merges and `/wrap` — the `ship` sub-stage (Standard+, mirrors `/forge-cycle`
+Step 9.7; ADR-024).** Fix what shipped (tag / catalog version / merge SHA / PR number) in the final
+report, and when the run shipped something whose behaviour needs watching, register ONE observation
+row in NOTE-013 — date FIRST, kind always `date`, tail mandatory (`— <source> — last_checked …`):
+event/metric rows surface as PENDING and are never forced (DD-8). Skip at Tactical; the depth bound
+lives in RFC-002's own sub-stage carriers, not in any inheritance. The changelog tool is Step 9.5's
+business — this sub-stage only references its output.
+
 One thing autopilot must not do here: **a REFRESH whose body says the reconciliation is clean when
 it did not run.** Paste what the tools returned; when one could not run, write that, with the error.
 Nothing downstream can tell those apart (CLAUDE.md G9), which is exactly why the unattended path is

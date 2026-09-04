@@ -187,6 +187,26 @@ post_build:
       r_eff_min: 0.8
       r_eff_not_lower: true
 
+# ─── Loops (ADR-024) ────────────────────────────────────────────────────────────
+#
+# Gates for the operational LOOPS beside the pipeline — keyed by LOOP NAME, never by depth,
+# so this section cannot be confused with pre_build/post_build. Reader: `/gate-check --loop <name>`
+# (D5a) — without that mode this section is a key nobody reads, which is the defect class the
+# whole ADR-024 wave exists to close.
+#
+# Every `must` here is STRUCTURAL — "the author did it or did not" — per this file's own bar:
+# no threshold on a contestable number.
+loops:
+  incident_close:                    # gate on the Phase-2 post-mortem of /incident (ADR-024 D5)
+    must:
+      timeline_present: true         # ## Timeline carries >=1 row with a source (log/monitor/PR)
+      action_items_present: true     # ## Action items carries >=1 row with an owner AND a due date
+      revisit_triggers_parseable: true  # >=1 row matching the canonical `- [ ] **Kind**: date — YYYY-MM-DD — ...`
+                                     # form (the ADR-024 G1 lesson: a near-miss row is a dead watch)
+      problem_artifact_linked: true  # a PROBLEM artifact exists and links to the post-incident record
+    # no `should` block — the post-mortem's quality beyond structure is the reviewer chain's job
+    # (blameless norms are social discipline, not parseable properties; CLAUDE.md G6 pattern)
+
 # ─── Override (PRD-024 FR-014) ──────────────────────────────────────────────────
 #
 # `--force` past a MUST failure is allowed and always leaves a record. An override that leaves no

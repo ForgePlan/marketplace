@@ -29,7 +29,7 @@ verbal go/no-go ships the hotfix. The artefacts above are NOTEs, not PRDs.
 
 ## Dispatch sequence — Phase 2 (after the fire is out)
 
-6. **research-analyst** (Profile A) — produces NOTE with full incident timeline + 5 Whys root-cause analysis. Why now: with the fire out, RCA can be done properly.
+6. **research-analyst** (Profile C — read-only; its denylist forbids creating anything, so the synthesis goes TO the orchestrator, who persists the timeline+5-Whys as a NOTE) — full incident timeline + 5 Whys root-cause analysis. Why now: with the fire out, RCA can be done properly. (An earlier revision of this line said Profile A — the same mislabel routing-map row 12 carried; EVID-231 p.4.)
 7. **adr-architect** (Profile A, **only if systemic cause**) — produces ADR-NNN if the root cause is architectural. Auto-dispatches `c4-diagram` for ≥3-module decisions. Why conditional: not every incident is architectural; sometimes it's a stale config.
 8. **specification** (Profile A) — produces post-incident PRD-NNN with the lessons + action items (e.g. monitoring gap, missing test, rollback playbook gap). Why eighth: the PRD is what activates and becomes the source of truth for follow-up work.
 9. **guardian** (Profile B-gate) — produces gate EVID for the **post-incident PRD only** (not the hotfix). Why last: the hotfix already shipped under ICS authority; the gate is on the PRD that captures the lessons.
