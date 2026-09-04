@@ -112,3 +112,10 @@ Use patterns where appropriate:
 6. **Modular design**: Break complex algorithms into subroutines
 
 Good pseudocode is the blueprint for efficient implementation. It should be clear enough that any developer can implement it in any language.
+## Constraint model (marketplace#236)
+
+This agent is constrained by its `tools:` **allowlist**, not a denylist: the list omits every
+`forgeplan_*` tool, so graph mutation is impossible by construction — a stronger guarantee than the
+denylist packs carry, recorded here so "no denylist" is not read as "unconstrained" (EVID-231).
+It works on LOCAL FILES only; artifact lifecycle belongs to the forgeplan-aware SPARC agents
+(`specification`, `architecture`) and the orchestrator.

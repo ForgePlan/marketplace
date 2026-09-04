@@ -47,3 +47,12 @@ For complete change history, see [`forgeplan-marketplace/CLAUDE.md`](../../CLAUD
 ## License
 
 MIT
+
+## Scope: deliberately NOT forgeplan-aware
+
+None of this pack's agents carry forgeplan MCP access, and that is a **recorded scope decision**
+(2026-09-04, marketplace#236 — previously an undocumented gap per EVID-231): these agents are
+runtime-generic specialists constrained by `tools:` allowlists; artifact lifecycle work belongs to
+the forgeplan-aware agents in `agents-core` / `agents-pro`, which dispatch or hand off to this pack
+for domain execution. If a future agent here needs to touch the artifact graph, it moves to (or is
+mirrored in) a forgeplan-aware pack rather than acquiring MCP access in place.

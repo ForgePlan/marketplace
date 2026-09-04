@@ -5,7 +5,7 @@ description: |
   RU: Детектор PII и учётных данных — сканирует код, конфигурационные файлы, журналы и тестовые фикстуры на предмет утечек чувствительных данных с использованием регулярных выражений для API-ключей, паттернов PII и сопоставления с требованиями соответствия (GDPR, HIPAA, PCI-DSS, SOC2). Используйте при проведении проверки безопасности перед публичным релизом, проверке конфигураций CI/CD на наличие утечек секретов или аудите тестовых фикстур на реальные PII. Передайте `security-expert` для более широкой оценки уязвимостей или `injection-analyst` для специфических рисков LLM.
   Triggers: "PII", "credentials leak", "secret scanning", "API key leak", "sensitive data", "GDPR scan", "HIPAA compliance", "PCI-DSS", "hardcoded secrets", "personal data", "data leak", "ПИД", "утечка данных", "чувствительные данные", "сканирование секретов"
 model: sonnet
-tools: [Read, Write, Edit, Bash, Glob, Grep]
+tools: [Read, Bash, Glob, Grep]
 color: '#FF5722'
 ---
 
