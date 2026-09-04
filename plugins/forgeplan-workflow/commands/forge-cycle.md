@@ -1180,20 +1180,6 @@ Stage all changes and commit using conventional commit format:
 
 Include the PRD reference in the commit body: `Refs: PRD-XXX`
 
-### Phase 7.3: Auto-changelog via forgeplan_release_notes (Sprint J+K — PRD-036)
-
-When creating PR after a Sprint, draft changelog automatically from artifacts touched since last tag:
-
-```python
-mcp__forgeplan__forgeplan_release_notes(since="v2.3.0", draft=False)
-```
-
-Returns a structured payload — touched PRDs grouped Added/Fixed/Security/Changed by kind. Inject into PR body as starting point; refine narrative manually.
-
-**Setup constraint** (Sprint J+K finding): tool requires `.forgeplan/` and `.git/` in the SAME directory. In multi-repo workspaces where `.forgeplan/` is at workspace root but git lives in a child repo, `forgeplan_release_notes` returns "git log failed: fatal: not a git repository". Workaround: run via shell `forgeplan release-notes --since v2.3.0` from inside the git repo (with `.forgeplan/` symlinked or co-located).
-
-**Quality gate**: by default only active artifacts with R_eff > 0 are included (`draft=False`). Pass `draft=True` to include all touched artifacts including drafts. Do not pass `draft=True` for production releases — that bypasses the quality gate.
-
 ### Step 9.5: Auto-generate changelog before PR (Sprint J — PRD-037)
 
 Before `gh pr create`, query the forgeplan artifact graph for a changelog block. Prefer MCP-first; CLI fallback when MCP not connected.
@@ -1219,6 +1205,37 @@ The tool returns a Keep-a-Changelog–shaped structured payload (Added/Changed/F
 **Anti-pattern**: do not pass `draft=True` for production releases — that bypasses the quality gate and includes incomplete artifacts.
 
 Cross-reference: `plugins/fpl-skills/skills/progress-dashboard/SKILL.md` includes a "Recent release notes" panel reading from this same tool.
+
+## Step 9.7: The `ship` sub-stage (Standard, Deep and Critical)
+
+The pipeline's shipping act, made a recorded act (ADR-024). Runs after the merge lands — a ship
+record for an unmerged change is a promise, not a record. **Skip at Tactical** — the depth bound is
+written in the sub-stage's own carriers (RFC-002 Conditional sub-stages row + Depth modifiers,
+Tactical row), not inherited from any stage: a Step in this executor inherits nothing (DD-10).
+
+Two actions, both cheap:
+
+1. **Fix what shipped.** One block in the final report: the git tag or merge SHA, the catalog
+   `metadata.version` if this cycle bumped it, and the PR number. This step calls no forgeplan
+   tool — the changelog was already produced at Step 9.5 and this step only references it
+   (the changelog tool is invoked in exactly one section of this file — Step 9.5, its MCP call and
+   its CLI fallback; EVID-243 N2).
+2. **Register the observation window.** If this cycle shipped something whose behaviour should be
+   watched (a threshold that might block honest work, a hook with a fail-open risk, a renamed
+   surface), write ONE row into NOTE-013, exactly in the parseable form — date FIRST, tail
+   mandatory, kind always `date` (event/metric rows surface as PENDING and are never forced — DD-8):
+
+   ```
+   - [ ] **Kind**: date — YYYY-MM-DD — <что наблюдаем и какой вопрос закрываем> — <source: PR/ADR> — last_checked YYYY-MM-DD
+   ```
+
+   `/decay-watch` Step 2b sweeps these rows every session start; the date row auto-fires. An
+   observation that lives only in the shipping cycle's chat log is not an observation (ADR-024
+   Decision п.2 — observe is a registration, not a stage).
+
+No SHIP NOTE artifact is created — the record lives in the final report and, when an observation is
+registered, in NOTE-013. A cycle that shipped nothing (docs-only, artifact-only) states that in one
+line and moves on.
 
 ## Step 10: The `wrap` stage — close the cycle (ADR-020)
 

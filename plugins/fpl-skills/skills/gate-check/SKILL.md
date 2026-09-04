@@ -93,10 +93,23 @@ argue with.
 |---|---|---|
 | pre-build (default) | after the `design` stage, before `build` | `pre_build.<depth>` |
 | `--post-build` | inside the `evidence` stage, Deep and Critical only | `post_build.<depth>` |
+| `--loop <name>` | closing an operational loop beside the pipeline (e.g. `/incident` Phase 2) | `loops.<name>` |
 
 If `--post-build` is asked for at Tactical or Standard depth, say the section does not exist and
 return PASS with that stated. Inventing thresholds for a depth the config deliberately omits is
 worse than skipping.
+
+`--loop` is structurally different on purpose (ADR-024 D5a): the `loops:` section is keyed by LOOP
+NAME, never by depth — depth does not apply to a loop, and keeping the key shapes disjoint means the
+two kinds of gate cannot be confused. Rules for the mode:
+
+- **An unknown loop name is a loud refusal, not a PASS.** `--loop rollout` against a config that
+  only defines `incident_close` returns FAIL with "no such loop gate defined" — a loop gate that
+  silently passes on a typo is the dead-watch failure again (EVID-249 G1).
+- Every check in a `loops.<name>.must` block is structural ("the author did it or did not");
+  evaluate each against the artifact named on the command line (for `incident_close`: the
+  post-mortem PROBLEM/record), report per check with the measured fact, PASS iff every must holds.
+- `--force` works the same as everywhere: allowed, requires `--reason`, writes the NOTE.
 
 ### Step 4 — Run the checks
 
