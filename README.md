@@ -10,6 +10,8 @@ Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/
 
 **23 plugins** | **42 marketplace-aware agents (95 total)** | **80+ skills** | **9+ knowledge bases**
 
+> **What is this, in one sentence?** A factory that can build, inspect itself, and honestly record where it went wrong — [docs/FACTORY.md](docs/FACTORY.md).
+
 > **ForgePlan ecosystem**: this marketplace + [`forgeplan` CLI](https://github.com/ForgePlan/forgeplan) (artifact lifecycle) + [`@forgeplan/web`](https://github.com/ForgePlan/forgeplan-web) (browser viewer with time-travel + graph). Three siblings; install what you need.
 
 ## 📚 Documentation

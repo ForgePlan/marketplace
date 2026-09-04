@@ -10,6 +10,8 @@
 
 **23 плагинов** | **42 marketplace-aware агентов (95 всего)** | **80+ скиллов** | **9+ баз знаний**
 
+> **Что это — одной фразой?** Фабрика, которая умеет строить, проверять саму себя и честно записывать, где она ошиблась — [docs/FACTORY-RU.md](docs/FACTORY-RU.md).
+
 > **Экосистема ForgePlan**: этот маркетплейс + [CLI `forgeplan`](https://github.com/ForgePlan/forgeplan) (lifecycle артефактов) + [`@forgeplan/web`](https://github.com/ForgePlan/forgeplan-web) (браузерный viewer с time-travel + графом). Три sibling-продукта; ставь что нужно.
 
 ## 📚 Документация
