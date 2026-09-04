@@ -330,9 +330,9 @@ Quick alphabetical lookup of every agent named in the 14 rows above. Each entry:
 | **error-detective** | `agents-core` | C† | Read-only stack-trace + log analyser; first responder for production bugs. |
 | **goal-planner** | `agents-pro` | A | Produces task DAG from PRD/RFC; precedes coder dispatch. |
 | **guardian** | `agents-pro` | B-gate | Last reviewer before activation; renders binary PASS/CONCERNS/BLOCKER verdict. |
-| **injection-analyst** | `agents-pro` | B† | Profile B reviewer specialised in injection vulnerabilities (SQL, prompt, command). |
-| **performance-engineer** | `agents-core` | B† | Profile B perf reviewer; produces baseline + post-change benchmarks. |
-| **pii-detector** | `agents-pro` | B† | Profile B reviewer for PII exposure surfaces. |
+| **injection-analyst** | `agents-pro` | B | Profile B reviewer specialised in injection vulnerabilities (SQL, prompt, command); allowlist-backed since 2026-09-05 (forgeplan EVID surface, activate denied by omission). |
+| **performance-engineer** | `agents-core` | B | Profile B perf reviewer; produces baseline + post-change benchmark EVIDs (templates/perf-baseline.md); allowlist-backed since 2026-09-05. |
+| **pii-detector** | `agents-pro` | B | Profile B reviewer for PII exposure surfaces; allowlist-backed since 2026-09-05 (forgeplan EVID surface, secrets stay masked in EVID bodies). |
 | **research-analyst** | `agents-pro` | **C** | Returns a synthesis of external research / prior art / codebase reconnaissance **to the orchestrator**. Cannot persist it — the denylist forbids `forgeplan_new`/`update`/`link`. To keep a finding, the orchestrator dispatches a Profile A agent after it. |
 | **security-expert** | `agents-pro` | B | Profile B adversarial security reviewer; STRIDE/OWASP/ASTRIDE coverage. |
 | **specification** | `agents-sparc` | A | SPARC phase-1 specification authoring; produces PRD-shaped artifacts. |
@@ -345,7 +345,12 @@ Quick alphabetical lookup of every agent named in the 14 rows above. Each entry:
 allowlist omits every `forgeplan_*` tool cannot mutate the graph at all. The letter fails only where
 the allowlist contradicts it: three B-labelled reviewers carried Write/Edit until 2026-09-04
 (injection-analyst, pii-detector, performance-engineer — write rights removed; a reviewer that can
-edit sources is not a reviewer), and error-detective's C was allowlist-backed all along. The
+edit sources is not a reviewer), and error-detective's C was allowlist-backed all along. The second
+half of that defect — the same three allowlists contained ZERO forgeplan_* tools, so Rows 8-9
+demanded an EVID the agents structurally could not create — was closed 2026-09-05: all three now
+carry the Profile B forgeplan surface (get/list/new/update/link/validate/score/claim/release) with
+activate/reason/claims/memory_retain enforced-by-omission, plus portable EVID-discipline HARD RULES
+in the body. The
 remaining `†` C-labels (code-analyzer, debugger, platform-engineer, ddd-domain-expert A) keep
 Write/Edit because their BODIES are fixer/author-shaped — for those the letter, not the agent, is
 the advisory part. See marketplace#236. (And note both keys are Claude Code frontmatter: in other
