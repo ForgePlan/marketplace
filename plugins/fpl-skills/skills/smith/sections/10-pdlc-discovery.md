@@ -18,11 +18,16 @@ the winner; then route the winner to section 03.
 
 ## Dispatch sequence
 
+**Entry point: `/discover-product`** (ADR-023 D2) — the walk below is what the skill performs; JTBD
+and assumption-mapping are its sub-modes (`/discover-product jtbd`, `/discover-product assumptions`),
+and the assumptions land as `hypothesis` artifacts moved with `forgeplan_hypothesis_promote`.
+Dispatch the chain manually only when the skill is unavailable.
+
 1. **brief-intake** (Profile A) — produces structured Brief NOTE capturing the user's hypothesis, target segment, and constraints. Why first: discovery without a starting hypothesis is open-ended and unmeasurable.
-2. **research-analyst** (Profile A) — produces NOTE consolidating user research, competitive analysis, internal data signals. Why second: discovery is evidence-driven; the analyst surfaces what the team already knows but hasn't synthesised.
+2. **research-analyst** (Profile C — read-only; its denylist forbids `forgeplan_new`/`update`/`link`, so it CANNOT persist anything) — returns a synthesis of user research, competitive analysis and internal data signals TO the orchestrator, who persists it as a discovery NOTE (via `artifact-author` or directly). Why second: discovery is evidence-driven; the analyst surfaces what the team already knows but hasn't synthesised. (An earlier revision of this line said Profile A — the routing-map row-10 mislabel, EVID-231 §3.1; the dispatch path was broken exactly here: the agent would run and be unable to save.)
 3. **goal-planner** (Profile A) — produces task DAG for the discovery experiments themselves (e.g. user interviews, prototype tests, landing-page test). Why third: discovery has work too; treat experiments as artifacts.
 4. **specification** (Profile A) — produces PRD-NNN framed in JTBD outcomes with explicit Non-Goals + measurable success criteria. Why fourth: even discovery outputs a PRD — the PRD becomes the test of whether discovery succeeded.
-5. **architect-reviewer** (Profile B) — produces EVID auditing the PRD against fitness: is the JTBD framing real or aspirational? Are the success criteria measurable? Is the MVP actually minimal? Why fifth: discovery PRDs are easy to write but hard to write *well*; this catches softness.
+5. **artifact-reviewer** (Profile B) — C4 verifier for the **discovery NOTE and the PROBLEM** (ADR-012 Invariant 3: every handoff gets an independent verifier — row 10 used to supply one only for the PRD). Then **architect-reviewer** (Profile B) — EVID auditing the PRD against fitness: is the JTBD framing real or aspirational? Are the success criteria measurable? Is the MVP actually minimal? Why fifth: discovery PRDs are easy to write but hard to write *well*; this catches softness.
 6. **guardian** (Profile B-gate) — produces gate EVID with PASS/CONCERNS/BLOCKER.
 
 Note: this row is **discovery-only** — no `coder` dispatch. If discovery
@@ -31,12 +36,15 @@ fresh row 03 (feature) PRD citing this one.
 
 ## Evidence requirements
 
-- [ ] Brief NOTE with starting hypothesis
-- [ ] Research NOTE (user interviews, competitive analysis, data signals)
-- [ ] PRD-NNN with explicit JTBD framing + explicit Non-Goals + measurable success criteria for the MVP
-- [ ] ADI EVID with ≥3 hypotheses (must include "do nothing", "scope smaller MVP", "scope larger MVP")
-- [ ] BMAD adversarial EVID with ≥1 finding from `architect-reviewer`
-- [ ] guardian Profile B EVID with verdict=PASS
+1. Brief NOTE with starting hypothesis
+2. Discovery NOTE (user interviews with pinned sources, competitive analysis, data signals) — persisted by the orchestrator, verified by `artifact-reviewer`
+3. PROBLEM artifact for the validated problem (or carrying an explicit «assumption, unvalidated» label)
+4. PRD-NNN with explicit JTBD framing + explicit Non-Goals + measurable success criteria for the MVP
+5. ADI EVID with ≥3 hypotheses (must include "do nothing", "scope smaller MVP", "scope larger MVP")
+6. BMAD adversarial EVID with ≥1 finding from `architect-reviewer`
+7. guardian Profile B EVID with verdict=PASS
+
+(Reference list, not a runtime checklist — numbered per the CLAUDE.md ban on empty `- [ ]` in committed files.)
 
 ## Failure modes
 
