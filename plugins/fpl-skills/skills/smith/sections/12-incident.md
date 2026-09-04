@@ -38,18 +38,22 @@ verbal go/no-go ships the hotfix. The artefacts above are NOTEs, not PRDs.
 
 Phase 1 (during fire):
 
-- [ ] NOTE with incident timeline + triage from error-detective + debugger + platform-engineer
-- [ ] Smoke EVID from tester (verdict=PASS for the specific symptom)
-- [ ] ICS Incident Commander verbal authorisation (recorded in the timeline NOTE)
+1. NOTE with incident timeline + triage from error-detective + debugger + platform-engineer
+2. Smoke EVID from tester (verdict=PASS for the specific symptom)
+3. ICS Incident Commander verbal authorisation (recorded in the timeline NOTE)
+(Reference list, not a runtime checklist — numbered per the CLAUDE.md ban on empty `- [ ]` in committed files.)
+
 
 Phase 2 (post-incident):
 
-- [ ] NOTE with full timeline + 5 Whys RCA (blameless framing)
-- [ ] PRD-NNN with lessons + action items + monitoring/test/playbook gaps
-- [ ] If systemic root cause: ADR-NNN + C4 L1+L2 if ≥3 modules + delta-spec if supersedes
-- [ ] ADI EVID with ≥3 hypotheses for the structural fix (per S10)
-- [ ] BMAD adversarial EVID with ≥1 finding from `artifact-reviewer` on the post-incident PRD
-- [ ] guardian Profile B EVID with verdict=PASS on the post-incident PRD
+1. NOTE with full timeline + 5 Whys RCA (blameless framing)
+2. PRD-NNN with lessons + action items + monitoring/test/playbook gaps
+3. If systemic root cause: ADR-NNN + C4 L1+L2 if ≥3 modules + delta-spec if supersedes
+4. ADI EVID with ≥3 hypotheses for the structural fix (per S10)
+5. BMAD adversarial EVID with ≥1 finding from `artifact-reviewer` on the post-incident PRD
+6. guardian Profile B EVID with verdict=PASS on the post-incident PRD
+(Reference list, not a runtime checklist — numbered per the CLAUDE.md ban on empty `- [ ]` in committed files.)
+
 
 ## Failure modes
 

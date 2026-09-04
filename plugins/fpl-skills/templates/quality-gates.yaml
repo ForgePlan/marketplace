@@ -207,6 +207,17 @@ loops:
     # no `should` block — the post-mortem's quality beyond structure is the reviewer chain's job
     # (blameless norms are social discipline, not parseable properties; CLAUDE.md G6 pattern)
 
+  debt_close:                      # gate on closing a tech-debt A3 sheet (ADR-024 wave 3 D8)
+    must:
+      a3_sheet_linked: true        # a NOTE/PROBLEM whose body carries the 7 A3 sections
+                                   # (templates/a3-problem-solving.md) is linked to the work
+      superseded_adrs_have_delta_spec: true
+                                   # every ADR the countermeasures superseded carries the
+                                   # ADDED/MODIFIED/REMOVED/UNCHANGED delta-spec — SAME check
+                                   # /decay-watch Step 2e already runs (Sprint Z8); reuse its
+                                   # classification, do not reimplement
+    # structural only, same bar as incident_close
+
 # ─── Override (PRD-024 FR-014) ──────────────────────────────────────────────────
 #
 # `--force` past a MUST failure is allowed and always leaves a record. An override that leaves no

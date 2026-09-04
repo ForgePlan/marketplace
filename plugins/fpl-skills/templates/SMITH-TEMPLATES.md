@@ -1,10 +1,10 @@
 # Smith Templates Guide
 
-> Five output templates used by the smith skill family (`/smith`, `/smith-bootstrap`, `/smith-plan`, `/smith-routing`). Each template has a hard line limit, mandatory sections, and a specific situation it fires in. Together they shape every artifact smith produces.
+> Seven output templates used by the smith skill family and its loop contexts. Each template has a hard line limit, mandatory sections, and a specific situation it fires in. Together they shape every artifact smith produces. (The count is restated here by hand — when adding a template, update BOTH tables and this line; an undercounting registry was the exact cohort defect of 2026-09-04, EVID-231 §5.)
 
 ---
 
-## The 5 templates
+## The 7 templates
 
 | Template | Used by | Purpose | Hard limit |
 |---|---|---|---|
@@ -13,6 +13,8 @@
 | [`smith-handoff.md`](./smith-handoff.md) | `/smith handoff` | End-of-session summary — what shipped, what's next, what's blocked, where to resume | ≤200 lines |
 | [`post-mortem.md`](./post-mortem.md) | smith bug-fix / incident contexts (rows 4 + 12) | Blameless post-mortem (Google SRE style) — 10 sections including parseable Action items table | ≤500 lines |
 | [`routing-decision.md`](./routing-decision.md) | smith ambiguity (`/smith-plan` Failure modes) | Mini-ADR for methodology choice when 2+ contexts genuinely tie — 7 sections incl. parseable revisit trigger | ≤250 lines |
+| [`a3-problem-solving.md`](./a3-problem-solving.md) | smith tech-debt context (row 11) | Toyota A3 one-sheet — 7 sections, parseable Plan table + `**Kind**: date` follow-up; gated by `--loop debt_close` | ≤300 lines |
+| [`perf-baseline.md`](./perf-baseline.md) | smith perf-audit context (row 9) | EVID body for the baseline — per-endpoint p50/p95/p99 + the reproduction command (a baseline without one is theatre) | ≤200 lines |
 
 ---
 
@@ -26,6 +28,8 @@
 | Production bug requires RCA (row 4) → debugger + error-detective produce the artifact body | `post-mortem.md` |
 | Live incident closed (row 12) → post-incident PRD body uses this template | `post-mortem.md` |
 | Two methodology contexts genuinely tie → smith returns a routing-decision artifact instead of a Plan | `routing-decision.md` |
+| Tech-debt portfolio decision (row 11) → the A3 sheet body for the debt NOTE/PROBLEM | `a3-problem-solving.md` |
+| Perf audit opens (row 9) → `performance-engineer`'s baseline EVID body | `perf-baseline.md` |
 
 The smith skills procedurally drive these templates — they fill the placeholders, mark `[x]` on the checklists, and verify the mandatory sections are present before returning to the orchestrator.
 

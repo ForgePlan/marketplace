@@ -18,7 +18,7 @@ that's a refactor inside the feature PRD (section 03 + 06), not this row.
 ## Dispatch sequence
 
 1. **code-analyzer** (Profile C) — produces NOTE with debt inventory: complexity hotspots, deprecated dependencies, TODO/FIXME density, test coverage gaps. Why first: portfolio decisions need a portfolio view.
-2. **research-analyst** (Profile A) — produces NOTE with A3 sheet (Background / Current state / Target state / Analysis / Countermeasures / Plan / Follow-up) + Fishbone diagram. Why second: turns the debt list into a coherent narrative with systemic-vs-local distinction.
+2. **research-analyst** (Profile C — read-only; the synthesis goes TO the orchestrator, who persists the NOTE) — A3 sheet analysis per **`templates/a3-problem-solving.md`** (the form this step promised since revision 1 and got in ADR-024 wave 3) + Fishbone. Why second: turns the debt list into a coherent narrative with systemic-vs-local distinction. Close via `/gate-check <ID> --loop debt_close`. (Third instance of the Profile-A mislabel this cohort carried — sections 10 and 12 were fixed the same day; EVID-231 §3.1.)
 3. **architect-reviewer** (Profile B) — produces EVID prioritising debt items: which cluster pays the most interest? Which is safest to touch first? Why third: priority must be defensible, not "items the team finds most annoying".
 4. **adr-architect** (Profile A) — produces ADR-NNN with the target architecture *and* any ADR-supersedes (with delta-spec per Sprint Z8) for the old decisions being walked back. Auto-dispatches `c4-diagram` for ≥3-module decisions.
 5. **goal-planner** (Profile A) — produces task DAG with debt items ordered by risk-weighted priority. Why fifth: parallelisation across coders.
@@ -28,14 +28,16 @@ that's a refactor inside the feature PRD (section 03 + 06), not this row.
 
 ## Evidence requirements
 
-- [ ] code-analyzer NOTE with debt inventory + baseline metrics
-- [ ] A3 sheet NOTE (single page: Background / Current / Target / Analysis / Countermeasures / Plan / Follow-up) + Fishbone diagram
-- [ ] PRD-NNN with explicit "no behaviour change" non-goal + measurable end-state (e.g. "complexity 287→<150 in PaymentService"; "coverage 76%→≥80%")
-- [ ] For each architectural change: ADR-NNN with delta-spec (Sprint Z8) for superseded ADRs; C4 L1+L2 if ≥3 modules
-- [ ] ADI EVID with ≥3 hypotheses (must include "do nothing — accept the debt")
-- [ ] BMAD adversarial EVID with ≥1 finding from `artifact-reviewer`
-- [ ] tester EVID with regression-green + coverage ≥ baseline
-- [ ] guardian Profile B EVID with verdict=PASS
+1. code-analyzer NOTE with debt inventory + baseline metrics
+2. A3 sheet NOTE (single page: Background / Current / Target / Analysis / Countermeasures / Plan / Follow-up) + Fishbone diagram
+3. PRD-NNN with explicit "no behaviour change" non-goal + measurable end-state (e.g. "complexity 287→<150 in PaymentService"; "coverage 76%→≥80%")
+4. For each architectural change: ADR-NNN with delta-spec (Sprint Z8) for superseded ADRs; C4 L1+L2 if ≥3 modules
+5. ADI EVID with ≥3 hypotheses (must include "do nothing — accept the debt")
+6. BMAD adversarial EVID with ≥1 finding from `artifact-reviewer`
+7. tester EVID with regression-green + coverage ≥ baseline
+8. guardian Profile B EVID with verdict=PASS
+(Reference list, not a runtime checklist — numbered per the CLAUDE.md ban on empty `- [ ]` in committed files.)
+
 
 ## Failure modes
 
