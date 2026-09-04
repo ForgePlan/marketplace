@@ -106,6 +106,7 @@ CANVAS agents (`plugins/agents-canvas/agents/`): `canvas-coordinator` (master) �
 | [`process-from-idea-to-delivery-EN.md`](process-from-idea-to-delivery-EN.md) (+RU) | full idea→commit process; §3.0 = the ADR-010 contract + 5 instances |
 | [`USAGE-GUIDE.md`](USAGE-GUIDE.md) (+RU) | command reference, hooks, agent activation, troubleshooting |
 | [`PLAYBOOK.md`](PLAYBOOK.md) (+RU) | which command for which scenario |
+| [`FACTORY.md`](FACTORY.md) / [`-RU`](FACTORY-RU.md) | the one-sentence answer to "what are we building" — three commitments and the mechanism behind each |
 | [`GUIDE-PIPELINE.md`](GUIDE-PIPELINE.md) | the eleven canonical stages, where the gates are, and what executes conditionally |
 | [`GETTING-STARTED-E2E.md`](GETTING-STARTED-E2E.md) / [`-RU`](GETTING-STARTED-E2E-RU.md) | end-to-end first walk through the pipeline on a fresh project |
 | [`PROCESS-GAP-MAP-RU.md`](PROCESS-GAP-MAP-RU.md) | measured map of process gaps; re-verified 2026-09-04 (EVID-231) — check the date before citing |
