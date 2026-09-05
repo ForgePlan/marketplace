@@ -53,7 +53,7 @@ Legend: ⚙ = forgeplan-aware (B2 paradigm — `disallowedTools` denylist + cano
 | `security-expert` ⚙ | B | Security audit — OWASP/STRIDE/CWE findings as EVIDENCE artifact |
 | `system-dev` ⚙ | B (staff) | Staff/principal-level final auditor — long-term maintainability, blast radius, system-wide review |
 
-### Security (3 specialists, non-canonical)
+### Security (3 specialists — injection-analyst and pii-detector are Profile B ⚙ since 2026-09-05, allowlist-backed forgeplan EVID surface; claims-authorizer stays non-canonical)
 
 | Agent | Description |
 |-------|-------------|

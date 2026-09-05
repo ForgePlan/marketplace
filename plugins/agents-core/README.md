@@ -21,7 +21,7 @@ Legend: ⚙ = forgeplan-aware (B2 paradigm — see [AGENT-AUTHORING-GUIDE.md](..
 | **tester** ⚙ | B | Test runner and coverage analyst — executes test suite via Bash, parses output, measures coverage delta against acceptance criteria, records verdict as EVIDENCE artifact linked `informs` to parent |
 | **debugger** | — | Expert debugger specializing in complex issue diagnosis, root cause analysis, and systematic problem-solving across multiple languages and environments |
 | **error-detective** | — | Forensic error investigator — root cause analysis, cascade mapping, log correlation, and anomaly detection across distributed and monolithic systems |
-| **performance-engineer** | — | Senior performance engineer covering profiling, bottleneck analysis, optimization techniques, monitoring, SLA management, and capacity planning |
+| **performance-engineer** | B ⚙ | Profile B perf reviewer — baseline + post-change benchmark EVIDs per `templates/perf-baseline.md` (p50/p95/p99 + reproduction command); forgeplan surface allowlist-backed since 2026-09-05. |
 | **production-validator** | — | Production readiness validator — detects mock implementations, verifies real integrations, validates deployment configuration, and ensures no stubs remain in release code |
 | **planner** | — | Strategic planning — decomposes complex tasks into actionable execution plans |
 | **researcher** | — | Deep research and analysis — investigates codebases, finds patterns, synthesizes knowledge |
