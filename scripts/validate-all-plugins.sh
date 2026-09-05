@@ -260,7 +260,9 @@ def check_agent(plugin, agent_path):
         findings.append(('LR-3', f"description is not a string"))
 
     # LR-4: no profile mixing
-    writes = tools_set & {'Write', 'Edit'}
+    # NotebookEdit added 2026-09-05: an allowlist Profile B with NotebookEdit + mutators
+    # passed all 8 rules and all 12 gates (rows-8/9 audit, blind spot (a)).
+    writes = tools_set & {'Write', 'Edit', 'NotebookEdit'}
     mutates = tools_set & {
         'mcp__forgeplan__forgeplan_new',
         'mcp__forgeplan__forgeplan_update',
@@ -318,6 +320,15 @@ def check_agent(plugin, agent_path):
         missing_blocks = file_write_blocks - disallowed_set
         if missing_blocks:
             findings.append(('LR-8', f"Profile A/B/D canon — disallowedTools missing file-write blocks: {sorted(missing_blocks)}"))
+
+    # LR-9: Prompt-defense baseline — REQUIRED verbatim in every forgeplan-aware body
+    # (AGENT-AUTHORING-GUIDE "Prompt-defense preamble (REQUIRED ...)": every agent body MUST
+    # open with the section; deliberately ASCII-only so presence is byte-checkable).
+    # Scoped to forgeplan-aware agents: the first three violators in history were the three
+    # allowlist reviewers promoted by the rows-8/9 fix — the class this rule now guards.
+    # Blind spot (c) of the 2026-09-05 audit: the canon said MUST, no gate checked it.
+    if is_fp_aware and body and '## Prompt-defense baseline' not in body:
+        findings.append(('LR-9', "forgeplan-aware body missing '## Prompt-defense baseline' section (REQUIRED verbatim per AGENT-AUTHORING-GUIDE)"))
 
     # Report findings
     for rule, msg in findings:

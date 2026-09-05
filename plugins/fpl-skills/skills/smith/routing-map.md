@@ -327,7 +327,7 @@ Quick alphabetical lookup of every agent named in the 14 rows above. Each entry:
 | **debugger** | `agents-core` | C† | Read-only debugger; pairs with `error-detective` on production bugs. |
 | **platform-engineer** | `agents-pro` | C† | Read-only infra investigator for live incidents; reads logs/metrics/deploy events, never mutates. (No `devops-troubleshooter` agent exists in marketplace — that role lives in `cicd-automation` / `incident-response` skill packs, not as a subagent.) |
 | **discover** | `forgeplan-brownfield-pack` | **A** | 7-phase MCP brownfield discovery; canonical entry for any "legacy" trigger. Body declares Profile A (creator: `forgeplan_discover_finding` + `forgeplan_new`); an earlier row here said "Body declares Profile B", which the body never did. |
-| **error-detective** | `agents-core` | C† | Read-only stack-trace + log analyser; first responder for production bugs. |
+| **error-detective** | `agents-core` | C | Read-only stack-trace + log analyser; first responder for production bugs. |
 | **goal-planner** | `agents-pro` | A | Produces task DAG from PRD/RFC; precedes coder dispatch. |
 | **guardian** | `agents-pro` | B-gate | Last reviewer before activation; renders binary PASS/CONCERNS/BLOCKER verdict. |
 | **injection-analyst** | `agents-pro` | B | Profile B reviewer specialised in injection vulnerabilities (SQL, prompt, command); allowlist-backed since 2026-09-05 (forgeplan EVID surface, activate denied by omission). |
@@ -350,8 +350,7 @@ half of that defect — the same three allowlists contained ZERO forgeplan_* too
 demanded an EVID the agents structurally could not create — was closed 2026-09-05: all three now
 carry the Profile B forgeplan surface (get/list/new/update/link/validate/score/claim/release) with
 activate/reason/claims/memory_retain enforced-by-omission, plus portable EVID-discipline HARD RULES
-in the body. The
-remaining `†` C-labels (code-analyzer, debugger, platform-engineer, ddd-domain-expert A) keep
+in the body. The remaining `†` labels (code-analyzer, debugger, platform-engineer, ddd-domain-expert A) keep
 Write/Edit because their BODIES are fixer/author-shaped — for those the letter, not the agent, is
 the advisory part. See marketplace#236. (And note both keys are Claude Code frontmatter: in other
 runtimes any profile constraint lapses unless restated in the body — `docs/CROSS-CLI.md`,
@@ -431,7 +430,7 @@ Tactical artifacts (row 5: trivial hotfix) are scoped to S12+S13 only; S10/S11 a
 |---|---|
 | Sprint | EPIC-002 Wave 1B |
 | Catalog version at write | v1.71.0 |
-| Forgeplan-aware agent count at write | 42 (of 95 agents; 8 index rows carry an unbacked letter — see †) |
+| Forgeplan-aware agent count at write | 42 denylist-carriers (of 95 agents — the catalog-check definition) + 3 allowlist-backed Profile B reviewers (rows 8-9, 2026-09-05); 4 index rows carry an unbacked letter — see † (re-derived 2026-09-05, was stale at 8) |
 | Rows | 14 (row 13 = TDD-first feature, RFC-012/ADR-010 — agents-tdd dispatch; row 14 = CANVAS design-system→code, RFC-021/ADR-010 — agents-canvas dispatch) |
 | Methodology cards | 33 |
 | Agent index entries | 26 (25 agents + 1 skill cross-reference) |

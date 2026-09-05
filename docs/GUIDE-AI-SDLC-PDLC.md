@@ -635,8 +635,8 @@ This part exists so the guide cannot be read as a certificate.
 
 ## 7.1 Profile labels not backed by frontmatter
 
-The routing map carries its own honesty device (the dagger footnote): for eight index rows the
-profile letter is **advisory**, not denylist-enforced, and most such agents carry a `tools:`
+The routing map carries its own honesty device (the dagger footnote): for four index rows (re-counted 2026-09-05
+after the rows-8/9 fix) the profile letter is **advisory**, not denylist-enforced, and most such agents carry a `tools:`
 **allowlist, which constrains harder**. What the footnote does **not** cover:
 
 - **The CANVAS agents** are not indexed at all: `canvas-designer` and `canvas-porter-storybook`

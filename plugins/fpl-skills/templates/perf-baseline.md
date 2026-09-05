@@ -21,11 +21,19 @@
 | Load profile | <e.g. "1000 RPS constant, 10 min, warm cache" — the SAME profile re-runs use> |
 | Baseline of | <PRD-NNN perf budget this anchors, or "pre-change baseline for RFC-NNN"> |
 
+## Verdict
+
+review_verdict: <PASS | CONCERNS | BLOCKER>
+
+<One paragraph: does the measurement meet the stated budget/target? For a post-change EVID: the
+delta vs baseline, stated as measured — a regression is recorded as a regression.>
+
 ## Structured Fields
 
 **Evidence type**: benchmark
-**Verdict**: supports
-**Congruence level**: 3
+**Verdict**: <supports | weakens | refutes — the EVIDENCE axis: does this measurement support the parent artifact's claim? A regression against a claimed improvement is `weakens`, never a pre-filled `supports`>
+**Congruence level**: <3 same context | 2 near | 1 far | 0 opposed>
+**Review verdict**: <PASS | CONCERNS | BLOCKER — mirrors the ## Verdict section>
 
 ## Measurements
 

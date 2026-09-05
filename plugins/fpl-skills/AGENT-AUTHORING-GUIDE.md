@@ -128,7 +128,7 @@ isolation: worktree                    # optional — Profile C-coder pattern; r
 
 - **`opus`** — agent makes decisions, runs ADI cycles, judges trade-offs. Examples: `adr-architect`, `pm`, `architect`, `security-expert`, `guardian`.
 - **`sonnet`** — agent does mechanical work that requires structure: scaffolding, drafting, formatting, applying lints. Examples: `tech-writer`, `coder`, `tester`, `research-analyst` (when it summarises rather than reasons).
-- **`haiku`** — agent does fast classification, scanning, simple yes/no. Examples: `pii-detector`, `injection-analyst` (per-input scan).
+- **`haiku`** — agent does fast classification, scanning, simple yes/no. (No marketplace reviewer currently sits here: `pii-detector` is `sonnet` — regex-driven but writes a Profile B EVID; `injection-analyst` moved to `opus` 2026-09-05 — sophistication scoring on hostile input is security-reasoner work, per the Profile B default above.)
 
 Defaulting to `opus` is wasteful; defaulting to `haiku` is unsafe. When in doubt, `sonnet`.
 
