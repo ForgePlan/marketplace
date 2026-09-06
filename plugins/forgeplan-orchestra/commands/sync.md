@@ -12,9 +12,27 @@ Never syncs automatically — always shows diff and waits for user confirmation.
 
 ## Procedure
 
-### Step 0: Pin the workspace
+### Step 0: Pin the server and the workspace
 
-Read the workspace UID and project UID from plugin configuration. Those are the target.
+Resolve **which Orchestra server** executes the calls, then **which workspace** they target.
+The canonical carrier for both is `.claude/orchestra.json` in the project:
+
+```json
+{
+  "servers": {
+    "default": { "mcp": "<server name from .mcp.json>", "spaceUid": "…", "userUid": "…" }
+  },
+  "chatWriting": false
+}
+```
+
+Tool names in this command are bare; the runtime name is `mcp__<that server name>__<tool>`. If the
+file is absent and exactly one connected server exposes the Orchestra signature (`query_entities` +
+`list_fields` + `get_current_context` under one prefix), use it. If several Orchestra servers are
+connected and nothing is pinned — stop and ask; a project may run them side by side on purpose
+(different workspaces, a human identity next to a scoped bot).
+
+The pinned workspace UID and project UID are the target.
 
 **Do NOT resolve the target from `get_current_context`.** It returns whichever
 workspace the user currently has open in the app, which can change mid-run — observed:

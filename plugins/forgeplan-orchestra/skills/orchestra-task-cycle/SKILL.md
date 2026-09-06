@@ -15,6 +15,21 @@ Where a project carries its own rules for Orchestra work, those rules take prior
 runbook. Rules state what is allowed; this states what to do and in what order. Neither restates
 the other, and where they disagree the project's rules win.
 
+**Which server executes these tools.** Tool names here are bare (`query_entities`); the runtime
+name is `mcp__<server>__<tool>`, and the server name is whatever the project's `.mcp.json`
+registered — it differs per project and there may be more than one Orchestra server (different
+workspaces, different identities, different rights). Resolve before Stage 0:
+
+1. If the project carries `.claude/orchestra.json`, use the server name, workspace UID and user UID
+   pinned there.
+2. No config and exactly one connected server exposes the Orchestra signature
+   (`query_entities` + `list_fields` + `get_current_context` under one prefix) — use it.
+3. No config and several Orchestra servers — **stop and ask.** Never pick one by similarity of name.
+
+Before the first write, call `get_current_context` on the chosen server and compare against the
+pinned workspace: on mismatch report it and stop — never silently retarget
+(`references/failure-modes.md` records why: the app endpoint follows the UI).
+
 ---
 
 ## Stage 0 — ORIENT
@@ -100,8 +115,11 @@ Every step lives in the checklist. Not in the reply prose, not in a private list
 artifact.
 
 ```js
-manage_checklist_item({ action:"update", itemUid:"<item>", isChecked:true })
+manage_checklist_item({ action:"update", checklistUid:"<checklist>", itemUid:"<item>", isChecked:true })
 ```
+
+`checklistUid` is required on every item action, including `update` — the item UID alone is
+rejected by the schema.
 
 Tick each item the moment its proof exists, not in a batch at the end — a list ticked all at once
 records nothing about what happened.
@@ -109,8 +127,9 @@ records nothing about what happened.
 Reconcile **additively**: match on item text, add what is missing, never untick, never delete.
 
 Promote a step to a **subtask** when it has its own status, executor and gate:
-`create_entity({ contextUid:"<parent task uid>", … })`. A checklist item tracks a step of one piece
-of work; a subtask is a piece of work.
+`create_entity({ entities:[{ type:"task", name:"…", contextUid:"<parent task uid>" }] })` —
+`contextUid` lives *inside* the `entities[]` item, never at the top level. A checklist item tracks
+a step of one piece of work; a subtask is a piece of work.
 
 For a gate that is one fact seen from several sides — "contract test green", "producer PR merged" —
 share a single item across tasks with `manage_checklist_item({ action:"link", checklistUid, itemUid })`.

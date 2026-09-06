@@ -25,8 +25,12 @@ Output should be brief and actionable — 10-15 lines max.
 Collect signals from all sources in parallel. This step is purely read-only and safe.
 
 **Orchestra signals:**
-- `query_entities(repoType:"folder", repoUid:"all")` — find tasks with Status = Doing or Review
-- Check for unread messages and @mentions on active tasks
+- `query_entities(repoType:"folder", repoUid:"all")` — find tasks with Status = Doing or Review.
+  For any count that will be reported, cross-check against `get_workspace_overview` — the
+  agent (token) endpoint has been observed to silently omit a whole project from `folder:"all"`.
+- Unread messages and @mentions: `get_unread_chats(type:"all")` and `get_mentions()`. Both exist
+  only in the app's own endpoint — the agent (token) endpoint answers "only available in
+  Electron/web-app context". Treat that error as "signal unavailable" and move on; do not retry.
 
 **Git signals:**
 - `git log --oneline --since="24 hours ago"` — recent commits (adjust timeframe based on last session)

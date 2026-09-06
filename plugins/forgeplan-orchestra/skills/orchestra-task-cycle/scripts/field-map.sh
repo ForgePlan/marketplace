@@ -19,9 +19,13 @@
 # ENDPOINT — the default is the Orchestra desktop app on this machine.
 #
 #   ORCH_MCP_URL=https://orchestra.example.com/mcp ./field-map.sh
+#   ORCH_MCP_TOKEN=<bearer> ORCH_MCP_URL=http://localhost:28174/mcp ./field-map.sh
 #
 # The address is NOT hardcoded: `http://localhost:28173/mcp` is only the fallback, used when
 # ORCH_MCP_URL is unset. Point it anywhere your Orchestra MCP server actually listens.
+# Orchestra ships TWO server variants: the app's own endpoint (no auth) and an agent endpoint
+# that requires `Authorization: Bearer <token>` — set ORCH_MCP_TOKEN for the latter, and take
+# the exact URL + token from the project's .mcp.json rather than guessing ports.
 # ===========================================================================
 set -euo pipefail
 
@@ -29,6 +33,11 @@ URL="${ORCH_MCP_URL:-http://localhost:28173/mcp}"
 WS="${1:-}"
 TARGET="${2:-task}"
 RAW="${3:-}"
+
+# Optional bearer auth. The ${AUTH[@]+…} expansion used below is the bash-3.2-safe way to pass
+# an empty array under `set -u` — macOS ships bash 3.2, where "${AUTH[@]}" on an empty array dies.
+AUTH=()
+[ -n "${ORCH_MCP_TOKEN:-}" ] && AUTH=(-H "Authorization: Bearer $ORCH_MCP_TOKEN")
 
 if [ -z "$WS" ]; then
   echo "usage: $0 <workspace-uid> [task|project] [--json]" >&2
@@ -42,6 +51,7 @@ HDR="$(mktemp)"; trap 'rm -f "$HDR"' EXIT
 curl -sS -D "$HDR" -o /dev/null -m 10 "$URL" -X POST \
   -H 'Content-Type: application/json' \
   -H 'Accept: application/json, text/event-stream' \
+  ${AUTH[@]+"${AUTH[@]}"} \
   -d '{"jsonrpc":"2.0","id":0,"method":"initialize","params":{
         "protocolVersion":"2025-03-26","capabilities":{},
         "clientInfo":{"name":"field-map","version":"1.0"}}}' \
@@ -57,6 +67,7 @@ curl -sS -m 10 "$URL" -X POST \
   -H 'Content-Type: application/json' \
   -H 'Accept: application/json, text/event-stream' \
   -H "Mcp-Session-Id: $SID" \
+  ${AUTH[@]+"${AUTH[@]}"} \
   -d '{"jsonrpc":"2.0","method":"notifications/initialized"}' >/dev/null
 
 # --- the actual call -------------------------------------------------------
@@ -64,6 +75,7 @@ RESP="$(curl -sS -m 30 "$URL" -X POST \
   -H 'Content-Type: application/json' \
   -H 'Accept: application/json, text/event-stream' \
   -H "Mcp-Session-Id: $SID" \
+  ${AUTH[@]+"${AUTH[@]}"} \
   -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":
        {\"name\":\"list_fields\",\"arguments\":
         {\"contextUid\":\"$WS\",\"targetType\":\"$TARGET\"}}}")"
