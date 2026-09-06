@@ -11,6 +11,32 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Backfill (marketplace#250)**: entries v1.133.0 through v1.139.0 were written after the fact, each from the commit that carried its catalog bump. Where a change merged between two bumps and shipped without a version of its own, it is recorded under the release that first delivered it — the plugin cache is keyed on version, so an unbumped change reaches no user until the next bump.
 
+## [1.159.0] - 2026-09-06
+
+### forgeplan-orchestra v1.11.0 — server resolution becomes a command, not a judgement call
+
+v1.10.0 wrote the resolution rule as prose and pinned it in a Claude-specific path. Both halves
+were wrong for where this is going: the same pin must serve Codex, OMP and Gemini, and "an agent
+follows a four-step rule reliably" is exactly the kind of claim this plugin exists to distrust.
+
+- **NEW `scripts/orch-verify.sh`** — one command that finds the project's `orchestra.json`
+  (walking up: `.agents/orchestra.json` canonical, `.claude/orchestra.json` legacy fallback),
+  resolves the requested role, handshakes the server over MCP and compares live
+  `get_current_context` against the pinned workspace **and** user. Exit 0 = safe to write;
+  65 = mismatch, do not write; 66 = no pin file; 69 = unreachable; 78 = broken config or missing
+  token env. All five paths exercised live, including the exact §4 scenario from the Orchestra
+  findings: config pinned to Gerts.ai, desktop endpoint answering as another space → 65.
+- **Pin schema v2, runtime-neutral.** The server's identity is its `url`; the per-runtime
+  registered name lives in a `names` map (`{"claude-code": "orchestra-elirum"}` here, `orch`
+  elsewhere — full tool name being `mcp__<name>__<tool>`), because one server is registered under
+  different names in different runtimes and OMP even spells the prefix differently. Tokens never
+  enter the file — `tokenEnv` names the environment variable instead. v1's `mcp` key is honoured
+  as an alias.
+- SKILL.md, `/sync` Step 0 and both READMEs now lead with the verifier and keep the manual order
+  only as the no-script fallback.
+
+Bumped: forgeplan-orchestra 1.10.0 → 1.11.0, catalog 1.158.0 → 1.159.0. Refs marketplace#282.
+
 ## [1.158.0] - 2026-09-06
 
 ### forgeplan-orchestra v1.10.0 — the docs re-measured against the server that actually answers
