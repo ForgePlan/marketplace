@@ -16,19 +16,30 @@ runbook. Rules state what is allowed; this states what to do and in what order. 
 the other, and where they disagree the project's rules win.
 
 **Which server executes these tools.** Tool names here are bare (`query_entities`); the runtime
-name is `mcp__<server>__<tool>`, and the server name is whatever the project's `.mcp.json`
-registered — it differs per project and there may be more than one Orchestra server (different
-workspaces, different identities, different rights). Resolve before Stage 0:
+name is `mcp__<server>__<tool>`, and the server name is per-project, per-runtime data — it differs
+between projects, between runtimes (Claude Code, Codex, OMP), and a project may run several
+Orchestra servers at once (different workspaces, different identities, different rights).
 
-1. If the project carries `.claude/orchestra.json`, use the server name, workspace UID and user UID
-   pinned there.
-2. No config and exactly one connected server exposes the Orchestra signature
-   (`query_entities` + `list_fields` + `get_current_context` under one prefix) — use it.
-3. No config and several Orchestra servers — **stop and ask.** Never pick one by similarity of name.
+Resolution is **deterministic, not a judgement call** — run the verifier before Stage 0 and before
+the first write:
 
-Before the first write, call `get_current_context` on the chosen server and compare against the
-pinned workspace: on mismatch report it and stop — never silently retarget
-(`references/failure-modes.md` records why: the app endpoint follows the UI).
+```
+${CLAUDE_PLUGIN_ROOT}/skills/orchestra-task-cycle/scripts/orch-verify.sh [role] [--json]
+```
+
+It finds the project's pin file (`.agents/orchestra.json` first — the runtime-neutral canonical
+path — then `.claude/orchestra.json`, walking up from the current directory), resolves the role to
+a server, performs the MCP handshake, and compares live `get_current_context` against the pinned
+workspace and user. **Exit 0 = safe to write. Any other exit = stop**: 65 mismatch (never retarget
+silently — `references/failure-modes.md` records why: the app endpoint follows the UI), 66 no
+config (then: exactly one connected server with the Orchestra signature — `query_entities` +
+`list_fields` + `get_current_context` under one prefix — may be used; several ⇒ ask), 69
+unreachable, 78 broken config or missing token env.
+
+The pin file (schema v2): per role — `url` (the server's identity), `auth`/`tokenEnv` (token
+lives in an env var, never in the file), `names` (runtime → registered server name, e.g.
+`{"claude-code": "orchestra-elirum"}`), `spaceUid`, `userUid`. Where the script cannot run,
+follow the same order by hand.
 
 ---
 
@@ -269,5 +280,8 @@ to return success and leave zero checklists.
 
 ### Scripts
 
+- **`scripts/orch-verify.sh`** — deterministic server resolution + write handshake against the
+  project's `orchestra.json` pin file. `./orch-verify.sh [role] [--runtime <rt>] [--json]`;
+  exit 0 = safe to write, anything else = stop.
 - **`scripts/field-map.sh`** — dumps the field and option UID map from a running Orchestra.
   `./field-map.sh <workspace-uid> [task|project] [--json]`
