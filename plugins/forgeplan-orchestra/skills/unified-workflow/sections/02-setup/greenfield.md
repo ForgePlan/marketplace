@@ -135,10 +135,12 @@ create_entity(entities: [{ type: "task", name: "[EPIC-001] Project Name",
 
 ## Quick Verification Checklist
 
-- [ ] 6 custom fields created at workspace level
-- [ ] Project structure matches chosen config
-- [ ] `forgeplan init` completed
-- [ ] First artifact created in Forgeplan
-- [ ] Matching task created in Orchestra with fields
-- [ ] `/session` shows both Forgeplan health and Orchestra tasks
-- [ ] `/sync` shows no discrepancies
+Reference list of what "set up" means — verify each point in your session, not by ticking boxes here:
+
+1. 6 custom fields created at workspace level
+2. Project structure matches chosen config
+3. `forgeplan init` completed
+4. First artifact created in Forgeplan
+5. Matching task created in Orchestra with fields
+6. `/session` shows both Forgeplan health and Orchestra tasks
+7. `/sync` shows no discrepancies

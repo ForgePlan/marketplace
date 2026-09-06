@@ -73,7 +73,7 @@ error; confirm with a query rather than retrying.
 Do the work. Tick each item the moment its proof exists, not at the end.
 
 ```js
-manage_checklist_item({ action:"update", itemUid:"<item 1>", isChecked:true })
+manage_checklist_item({ action:"update", checklistUid:"<Steps (gate)>", itemUid:"<item 1>", isChecked:true })
 ```
 
 If a step emerges that nobody anticipated, add it — never rewrite the list, never untick.
@@ -112,7 +112,9 @@ H1 и R4 стали startable. R4 обязан определить миграц
 (RFC-001 R7) — если это пропустить, у Runtime останутся две семантические идентичности.` })
 ```
 
-Task chats are pre-authorised. Channels, groups and DMs are not.
+This example assumes the operator has enabled chat writing for the workspace — the plugin default
+is **off**, in which case the report goes to the user in the session instead (SKILL.md Stage 5).
+Channels, groups and DMs are never written either way.
 
 **Gate 5 passed:** the report names what was not done.
 

@@ -11,6 +11,51 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Backfill (marketplace#250)**: entries v1.133.0 through v1.139.0 were written after the fact, each from the commit that carried its catalog bump. Where a change merged between two bumps and shipped without a version of its own, it is recorded under the release that first delivered it — the plugin cache is keyed on version, so an unbumped change reaches no user until the next bump.
 
+## [1.158.0] - 2026-09-06
+
+### forgeplan-orchestra v1.10.0 — the docs re-measured against the server that actually answers
+
+Every prior measurement in this plugin was taken against one Orchestra MCP server. There are two —
+the desktop app's own endpoint (33 tools, no auth) and a Bearer-token agent endpoint (36 tools,
+0.141-beta) — and their capabilities split hard. A live pass over both on 2026-09-06 falsified two
+shipped claims and surfaced call shapes that never validated. From marketplace#282.
+
+- **`failure-modes.md` stopped forbidding what works.** It said `add_relation` is not registered
+  for MCP and `manage_field` has no `config` — on the agent endpoint the first works bidirectionally
+  (`add_relation`/`remove_relation`, one call writes both sides) and the second is accepted
+  (NUMBER `children_sum`/`format`/`precision`/`auto_increment*`), though write-only: `list_fields`
+  never returns it. Both rows now say so, and the file opens with an endpoint-split table.
+- **The split itself is the new content.** Agent endpoint, measured: `create_entity` returns
+  PERMISSION_DENIED even for a workspace owner while field writes succeed; the document layer is
+  unimplemented (`Not implemented`, `service2.getBlocks is not a function`); `move_entity` errors;
+  `read_messages`/`search_messages` hang to transport timeout while their siblings honestly answer
+  "only available in Electron/web-app context"; and `folder:"all"` silently dropped a whole
+  19-task project that `get_workspace_overview`, `search_entities` and the project query all still
+  see. On the bright side: same-value writes return `unchangedFields` instead of a fake permission
+  error, unknown parameters come back as a `warning`, and a dangling chat-field UID is finally
+  rejected. The `null` field-filter row widened: live testing shows it matches nothing on ANY field
+  type, on both endpoints.
+- **Two example calls that never validated.** `manage_checklist_item(action:"update")` in SKILL.md
+  and the worked example omitted the required `checklistUid`; the subtask shorthand put `contextUid`
+  at `create_entity` top level where only `entities[]` exists. Both fixed to the schema shape.
+- **Server names are per-project data, not plugin constants.** One project registers `orch`,
+  another `orchestra-elirum`, and several Orchestra servers may run side by side (different
+  workspaces, a human identity next to a scoped bot). The plugin now resolves the server through
+  `.claude/orchestra.json` — pin the mcp name + workspace UID + user UID, verify with
+  `get_current_context` before the first write, stop on mismatch. SKILL.md, `/sync` Step 0 and both
+  READMEs carry the rule; the catalog's `requires.mcp` entry no longer demands a server literally
+  named `orch`.
+- **`field-map.sh` can reach the agent endpoint** — `ORCH_MCP_TOKEN` adds the Bearer header
+  (bash-3.2-safe empty-array expansion), verified live against both endpoints including the
+  clean-failure path without a token.
+- Also: `/session` names the tools behind "check unread/mentions" and degrades gracefully where
+  they don't exist; unified-workflow scenarios use the real parameter names (`content`, `chatUid`);
+  the greenfield checklist no longer ships committed empty checkboxes; README-RU gains the Skills
+  section EN had since 1.9.0; chat-writing default unified to off across SKILL.md, the worked
+  example and the RU report asset.
+
+Bumped: forgeplan-orchestra 1.9.0 → 1.10.0, catalog 1.157.0 → 1.158.0. Refs marketplace#282.
+
 ## [1.139.0] - 2026-09-02
 
 ### Frontmatter repaired in 16 files across 5 plugins — and the 8 bumps that actually deliver it

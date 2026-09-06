@@ -16,7 +16,9 @@ Each system does what it does best. We don't duplicate -- we link. Artifact ID i
 
 > **Note:** Requires **forgeplan CLI** (private ForgePlan application, access through project admin) + **Orchestra MCP server** configured. Product: [orch.so](https://orch.so)
 >
-> **Tool names in this plugin are written bare** — `query_entities`, not `mcp__orch__query_entities`. The prefix differs per runtime (Claude Code uses two underscores between server and tool, OMP uses one), so a prefixed name is wrong in one of them. If you search your tool list for `mcp__orch__*` and find nothing, the server is probably fine — check your host's `/mcp` listing before concluding it is down.
+> **Tool names in this plugin are written bare** — `query_entities`, never a prefixed form. The prefix is doubly unstable: the runtime spelling differs (Claude Code puts two underscores between server and tool, OMP one), and the **server name itself is whatever the project's `.mcp.json` registered** — `orch` in one project, `orchestra-elirum` in another, and a project may legitimately register several Orchestra servers at once (different workspaces, different identities and rights — a human's session next to a scoped bot). So: resolve the server per project, not per plugin. If the project carries `.claude/orchestra.json`, use the server pinned there; with exactly one connected server exposing the Orchestra signature (`query_entities` + `list_fields` + `get_current_context` under one prefix) use that one; with several and no config — ask, never guess by name. Before the first write, `get_current_context` on the chosen server must match the pinned workspace UID.
+>
+> **Orchestra also ships two server *variants*** with different tool sets: the desktop app's own endpoint (no auth; has `navigate_to`/`get_ui_context` and working message reads) and an agent endpoint behind a Bearer token (has `add_relation`/`remove_relation`/`approve_action`/`switch_workspace`/`list_workspaces`, but — as of 0.141-beta — no document layer, no entity creation, and hanging message reads). The capability split is catalogued in `skills/orchestra-task-cycle/references/failure-modes.md`.
 
 ## Quick Start
 
@@ -141,9 +143,12 @@ own machine. That is a fallback, not a fixed address:
 
 ```bash
 ORCH_MCP_URL=https://orchestra.example.com/mcp ./scripts/field-map.sh
+ORCH_MCP_TOKEN=<bearer> ORCH_MCP_URL=http://localhost:28174/mcp ./scripts/field-map.sh
 ```
 
-Set `ORCH_MCP_URL` and the script talks to whatever server you point it at.
+Set `ORCH_MCP_URL` and the script talks to whatever server you point it at; set `ORCH_MCP_TOKEN`
+too when the target is the Bearer-authenticated agent endpoint. Take both values from the
+project's `.mcp.json` rather than guessing ports.
 
 ## Credits
 
