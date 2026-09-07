@@ -17,7 +17,7 @@ Never syncs automatically — always shows diff and waits for user confirmation.
 Resolution is deterministic. Run it, read the exit code, obey it:
 
 ```
-${CLAUDE_PLUGIN_ROOT}/skills/orchestra-task-cycle/scripts/orch-verify.sh [role]
+${CLAUDE_PLUGIN_ROOT}/skills/orchestra-mcp/scripts/orch-verify.sh [role]
 ```
 
 Exit 0 → the resolved server, its runtime tool-prefix, and the pinned workspace/user are printed

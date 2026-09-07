@@ -18,7 +18,7 @@ Each system does what it does best. We don't duplicate -- we link. Artifact ID i
 >
 > **Tool names in this plugin are written bare** — `query_entities`, never a prefixed form. The prefix is doubly unstable: the runtime spelling differs (Claude Code puts two underscores between server and tool, OMP one), and the **server name itself is whatever the project's `.mcp.json` registered** — `orch` in one project, `orchestra-elirum` in another, and a project may legitimately register several Orchestra servers at once (different workspaces, different identities and rights — a human's session next to a scoped bot). So: resolve the server per project, not per plugin — and deterministically, not by judgement: run `scripts/orch-verify.sh` (ships with the `orchestra-task-cycle` skill). It finds the project's pin file — `.agents/orchestra.json` first (runtime-neutral: the same file serves Codex, OMP, Gemini), `.claude/orchestra.json` as legacy fallback — resolves the role to a server (`url` + `names` map runtime → registered name + `tokenEnv`, never a raw token), handshakes, and compares live `get_current_context` against the pinned workspace/user. Exit 0 = safe to write; 65 = mismatch, stop; 66 = no pin file (then: exactly one connected server with the Orchestra tool signature may be used, several — ask, never guess by name).
 >
-> **Orchestra also ships two server *variants*** with different tool sets and different identities. The desktop app's own endpoint (no auth) acts as the signed-in human and carries `navigate_to`/`get_ui_context`. An agent endpoint behind a Bearer token acts as a **deployed bot with its own uid** — every write lands under its name, not yours — and carries `add_relation`/`remove_relation`/`approve_action`/`switch_workspace`/`list_workspaces`/`add_members`/`get_agent_prompt`. Build `0.141-beta-0906` closed the agent endpoint's earlier gaps (creation, document layer, message reads, `move_entity`); older agent builds still have them. Run `scripts/orch-verify.sh` to see which variant, which version and whose identity you actually hold; the capability split and the failures still reproducing are catalogued in `skills/orchestra-task-cycle/references/failure-modes.md`.
+> **Orchestra also ships two server *variants*** with different tool sets and different identities. The desktop app's own endpoint (no auth) acts as the signed-in human and carries `navigate_to`/`get_ui_context`. An agent endpoint behind a Bearer token acts as a **deployed bot with its own uid** — every write lands under its name, not yours — and carries `add_relation`/`remove_relation`/`approve_action`/`switch_workspace`/`list_workspaces`/`add_members`/`get_agent_prompt`. Build `0.141-beta-0906` closed the agent endpoint's earlier gaps (creation, document layer, message reads, `move_entity`); older agent builds still have them. Run the `orchestra-mcp` skill's `scripts/orch-verify.sh` to see which variant, which version and whose identity you actually hold; the capability split and the failures still reproducing are catalogued in `skills/orchestra-mcp/references/failure-modes.md`.
 
 ## Quick Start
 
@@ -121,21 +121,38 @@ Loads on its own when you say "what should I do next", "take this task", "close 
 blocked", "что дальше", "возьми задачу", "закрой задачу", or name a board, task, status, phase or
 checklist.
 
-Progressive disclosure — `SKILL.md` stays under the 2000-word threshold and the depth sits beside it:
+Progressive disclosure — `SKILL.md` carries the stages, the depth sits beside it:
 
 | File | What is in it |
 |---|---|
 | `references/field-model.md` | eleven fields, the tag doctrine, the types that trap |
-| `references/query-recipes.md` | reverse dependency search, sweeps, audits |
-| `references/failure-modes.md` | how Orchestra refuses **silently** — the section to read before debugging |
+| `references/query-recipes.md` | the two board questions this field model exists to answer |
 | `examples/` | a full seven-stage pass, the `Blocked` variant, filing a task inline |
 | `assets/` | skeletons for a task description and a completion report |
+
+This skill is **our methodology**. It assumes the platform knowledge below rather than restating it.
+
+### `orchestra-mcp` — the platform field guide
+
+What the Orchestra MCP tools do, what they quietly do not do, and which server and identity you are
+holding. Zero methodology: it never says which task to take or when one is done. Loads on
+diagnostic questions — "why did this return empty", "the field did not stick", "what is
+`failedFields`", «почему счёт не сходится», «зависло удаление».
+
+| File | What is in it |
+|---|---|
+| `references/failure-modes.md` | how Orchestra refuses **silently** — the section to read before debugging |
+| `references/query-cookbook.md` | filtering, sweeps, cost control, cross-checking a count |
+| `references/fields.md` | value shapes on read and write, the two-container trap, types never to create |
+| `references/entities.md` | creating, updating, checklists, messages, deleting |
+| `references/rendering.md` | why written markdown never reads back identical |
 | `scripts/orch-verify.sh` | deterministic server resolution + write handshake against `orchestra.json` |
 | `scripts/field-map.sh` | dumps the field-UID and option map |
 
-Built from an audit of Orchestra's own sources and checked against a live board of 34 tasks — the
-behaviour in `failure-modes.md` and `query-recipes.md` was observed on a running server, not derived
-from documentation. One recipe was found wrong precisely because it was re-run rather than trusted.
+Measured against a running server, not derived from documentation — most recently against build
+`0.141.0-beta.20260906211602`, one MCP call at a time. One recipe was found wrong precisely because
+it was re-run rather than trusted. Being ecosystem-free, it is also published on its own for
+`npx skills add`.
 
 #### The endpoint is not hardcoded
 

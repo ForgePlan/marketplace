@@ -3,7 +3,7 @@
 Eleven custom fields, all workspace-scoped, so they survive project restructuring — plus `Status`,
 `Priority` and `Tags`, which a board normally already has. **Do not assume which of those three are
 system fields**: read `isSystem` from `list_fields`. This plugin's own field documentation was wrong
-about that once (marketplace#214), and `scripts/field-map.sh` groups by the live value for exactly
+about that once (marketplace#214), and `orchestra-mcp/scripts/field-map.sh` groups by the live value for exactly
 that reason.
 
 ## Five of the eleven are not created by the plugin's setup
@@ -20,15 +20,15 @@ that reason.
 | `Model` | option | Stage 2 claim | same |
 
 Create them the same way the plugin creates the other six (`custom-fields.md` → «Creating Fields via
-MCP»), then re-run `scripts/field-map.sh` so the UID map includes them.
+MCP»), then re-run `orchestra-mcp/scripts/field-map.sh` so the UID map includes them.
 
 Until they exist, Stage 0 filters on a field that is not there and Stage 2 reports a claim it did not
-make. Both fail quietly, which is the whole subject of `failure-modes.md`.
+make. Both fail quietly, which is the whole subject of `orchestra-mcp/references/failure-modes.md`.
 
 **Resolve every field and option UID at runtime.** Never hardcode. Never send an option *name* where
 a UID is required — it fails silently into `failedFields` for custom fields, and succeeds by
 coincidence for `Status`/`Priority`/`Tags`, which makes a name-based implementation look
-half-working. Use `scripts/field-map.sh` or `list_fields`.
+half-working. Use `orchestra-mcp/scripts/field-map.sh` or `list_fields`.
 
 ## Written at creation
 
