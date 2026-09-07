@@ -7,12 +7,14 @@ on:
       - 'plugins/**'
       - '.claude-plugin/marketplace.json'
       - '.github/workflows/**'
+      - 'scripts/**'
   push:
     branches: [main, dev]
     paths:
       - 'plugins/**'
       - '.claude-plugin/marketplace.json'
       - '.github/workflows/**'
+      - 'scripts/**'
 
 # The validate job only reads files (JSON validation + the scripts/ci gates).
 # Pin the workflow token to read-only so a compromised step cannot push, open
@@ -234,6 +236,8 @@ jobs:
           run_gate "frontmatter-check"            node scripts/ci/frontmatter-check.js
           run_gate "phase-canon-check"            node scripts/ci/phase-canon-check.js
           run_gate "verdict-axis-check"           node scripts/ci/verdict-axis-check.js
+          run_gate "standalone-mirror-check"      node scripts/ci/standalone-mirror-check.js
+          run_gate "standalone-mirror selftest"   bash scripts/ci/standalone-mirror-check.selftest.sh
           # Runs the runtime's OWN validator, not ours. Skips loudly (exit 0) when the `claude`
           # CLI is absent — the log then says SKIPPED rather than reporting a pass that never ran.
           run_gate "official-plugin-validate"     bash scripts/ci/official-plugin-validate.sh

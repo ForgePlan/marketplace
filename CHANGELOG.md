@@ -11,6 +11,42 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Backfill (marketplace#250)**: entries v1.133.0 through v1.139.0 were written after the fact, each from the commit that carried its catalog bump. Where a change merged between two bumps and shipped without a version of its own, it is recorded under the release that first delivered it — the plugin cache is keyed on version, so an unbumped change reaches no user until the next bump.
 
+## [1.162.0] - 2026-09-07
+
+### A gate for the mirrors, before the ninth one exists
+
+The previous release split an ecosystem-free skill out so it could be published on its own. That
+property — no `forgeplan`, no our-field vocabulary, no plugin-runtime variables — was secured by a
+hand grep, and a hand grep had **already missed a line** on the same 157-line file. This replaces it
+with a machine check. From marketplace#282.
+
+- **`scripts/standalone-mirrors.json`** — the pairing table, now written once. It already existed
+  twice inside `sync-standalone-skills.yml` (the matrix, and the `paths:` trigger filter) and a
+  third copy was about to appear. Nine rows: the eight live mirrors plus `orchestra-mcp` marked
+  `mirrored: false`.
+- **`scripts/ci/standalone-mirror-check.js`** — read-only, no clones, no network. Six assertions:
+  source exists, `installedName` equals the SKILL.md frontmatter `name`, no symlinks inside a
+  mirrored source, no `CLAUDE_PLUGIN_ROOT` residue, no per-mirror forbidden vocabulary, and
+  three-way parity between the manifest and all three hand-typed lists in the sync workflow.
+- **`mirrored: false` protects a skill from the day it is written**, not from the day its workflow
+  row lands. Content rules apply immediately; only the workflow-parity assertions wait. Otherwise
+  the first sync would be the first check — and that first sync is precisely the risky one.
+- **Why no comparison against the mirrors themselves.** The clones live outside this repository and
+  a CI runner can never see them. A gate printing OK for eight directories it never opened would be
+  a green check asserting nothing, so no such branch exists: every assertion runs from the
+  marketplace checkout, and there is no state in which this gate passes without checking something.
+- **The negative control asserts the deciding properties, not the rule name.** Seven cases — six
+  must-fire, one must-NOT-fire — and each must-fire checks four things: exit 1, the exact problem
+  code, the offending path in the output, and a non-zero *sources scanned* count, which is what
+  proves the fixture was opened rather than skipped by a path typo. Writing it immediately paid: the
+  must-NOT-fire case caught a mistake in the fixture data itself. Verified beyond fixtures by a live
+  mutation on a real file — the gate named `references/failure-modes.md:159` and exited 1.
+- **`scripts/**` added to both CI `paths:` filters.** Without it a scripts-only fix to a gate merges
+  without CI ever running that gate.
+
+Gates: 12 → 14, both wired into the local script and the workflow (`gate-parity-check` enforces
+both). Catalog 1.161.0 → 1.162.0; no plugin content changed.
+
 ## [1.161.0] - 2026-09-07
 
 ### forgeplan-orchestra v2.0.0 — the platform knowledge leaves our methodology

@@ -1,0 +1,3 @@
+{ "mirrors": [
+  { "id": "residue", "source": "residue-skill", "repo": "x/residue", "installedName": "residue-skill" }
+]}

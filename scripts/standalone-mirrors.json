@@ -1,0 +1,105 @@
+{
+  "_comment": [
+    "The single list of skill -> standalone-repo mirror pairs.",
+    "",
+    "WHY THIS FILE EXISTS. The pairing was already written down twice inside",
+    ".github/workflows/sync-standalone-skills.yml — once as the matrix and once as the paths:",
+    "trigger filter — and a third copy was about to be added. Two hand-maintained lists of the",
+    "same thing drift, and this pair drifts in the worst direction: a mirror missing from paths:",
+    "never fires, so the standalone silently stops updating while CI stays green.",
+    "",
+    "This file is the source of truth. scripts/ci/standalone-mirror-check.js asserts that all",
+    "three hand-typed lists in that workflow agree with it, and that every source is fit to be",
+    "mirrored at all (see the per-field notes below).",
+    "",
+    "FIELDS",
+    "  id             must equal the workflow's matrix `plugin:` value.",
+    "  source         path to the skill directory, relative to the repo root.",
+    "  repo           the GitHub repo the workflow rsyncs into.",
+    "  installedName  what `npx skills add` installs it as; must equal SKILL.md frontmatter `name`.",
+    "  sourceOwns     files at the mirror root that the PLUGIN owns and the rsync therefore",
+    "                 overwrites. Everything else at the mirror root (README.md, LICENSE,",
+    "                 .gitignore) is the mirror's own and is preserved. Declared, not guessed:",
+    "                 frontend-design's LICENSE.txt lives in the plugin and is derived, while",
+    "                 slopocop-code's LICENSE has no plugin counterpart and is furniture.",
+    "  forbiddenTokens  substrings that must not appear anywhere under source. For a skill",
+    "                 published as ecosystem-free, this is the property that decides whether the",
+    "                 split was worth doing — a hand grep already missed one line once.",
+    "  mirrored       false while a skill is being prepared for publication: its content is held",
+    "                 to every content rule, but the workflow is not yet expected to carry a row",
+    "                 for it. Content protection starts the day the skill is written, not the day",
+    "                 the workflow row lands — otherwise the first sync IS the first check."
+  ],
+  "mirrors": [
+    {
+      "id": "fpf",
+      "source": "plugins/fpf/skills/fpf-knowledge",
+      "repo": "ForgePlan/fpf",
+      "installedName": "fpf-knowledge"
+    },
+    {
+      "id": "loux",
+      "source": "plugins/laws-of-ux/skills/ux-laws",
+      "repo": "ForgePlan/loux",
+      "installedName": "ux-laws"
+    },
+    {
+      "id": "slopocop-code",
+      "source": "plugins/slopocop-code/skills/code-slop",
+      "repo": "ForgePlan/slopocop-code",
+      "installedName": "code-slop"
+    },
+    {
+      "id": "slopocop-humanizer-ru",
+      "source": "plugins/slopocop/skills/humanizer-ru",
+      "repo": "ForgePlan/slopocop-humanizer-ru",
+      "installedName": "humanizer-ru"
+    },
+    {
+      "id": "slopocop-humanizer-en",
+      "source": "plugins/slopocop/skills/slop-humanizer",
+      "repo": "ForgePlan/slopocop-humanizer-en",
+      "installedName": "slop-humanizer"
+    },
+    {
+      "id": "slopocop-hallmark",
+      "source": "plugins/slopocop-design/skills/hallmark",
+      "repo": "ForgePlan/slopocop-hallmark",
+      "installedName": "hallmark"
+    },
+    {
+      "id": "slopocop-frontend-design",
+      "source": "plugins/slopocop-design/skills/frontend-design",
+      "repo": "ForgePlan/slopocop-frontend-design",
+      "installedName": "frontend-design",
+      "sourceOwns": ["LICENSE.txt"]
+    },
+    {
+      "id": "slopocop-design-taste",
+      "source": "plugins/slopocop-design/skills/design-taste-frontend",
+      "repo": "ForgePlan/slopocop-design-taste",
+      "installedName": "design-taste-frontend"
+    },
+    {
+      "id": "orchestra-mcp",
+      "source": "plugins/forgeplan-orchestra/skills/orchestra-mcp",
+      "repo": "ForgePlan/orchestra-mcp",
+      "installedName": "orchestra-mcp",
+      "mirrored": false,
+      "forbiddenTokens": [
+        "forgeplan",
+        "Forgeplan",
+        "unified-workflow",
+        "`Blocked by`",
+        "`BlockedBy`",
+        "`Area`",
+        "`Phase`",
+        "`Artifact`",
+        "`Depth`",
+        "`Sprint`",
+        "`Executor`",
+        "`Role`"
+      ]
+    }
+  ]
+}

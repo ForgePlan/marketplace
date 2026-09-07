@@ -1,0 +1,1 @@
+../clean-skill/SKILL.md
