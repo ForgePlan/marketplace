@@ -72,7 +72,9 @@
       "source": "plugins/slopocop-design/skills/frontend-design",
       "repo": "ForgePlan/slopocop-frontend-design",
       "installedName": "frontend-design",
-      "sourceOwns": ["LICENSE.txt"]
+      "sourceOwns": [
+        "LICENSE.txt"
+      ]
     },
     {
       "id": "slopocop-design-taste",
@@ -85,7 +87,6 @@
       "source": "plugins/forgeplan-orchestra/skills/orchestra-mcp",
       "repo": "ForgePlan/orchestra-mcp",
       "installedName": "orchestra-mcp",
-      "mirrored": false,
       "forbiddenTokens": [
         "forgeplan",
         "Forgeplan",
@@ -98,7 +99,8 @@
         "`Depth`",
         "`Sprint`",
         "`Executor`",
-        "`Role`"
+        "`Role`",
+        "task-cycle"
       ]
     }
   ]
