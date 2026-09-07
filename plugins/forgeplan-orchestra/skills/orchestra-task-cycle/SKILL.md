@@ -1,6 +1,16 @@
 ---
 name: orchestra-task-cycle
-description: This skill should be used when the user asks to "what should I do next", "take this task", "start on X", "close the task", "update the status", "move it to done", "what is blocked", "what is ready", "file a task", "add a checklist", "report on the task", or mentions an Orchestra board, task, status, phase or checklist. Russian equivalents trigger it too — "что дальше", "возьми задачу", "закрой задачу", "обнови статус", "заведи задачу", "что заблокировано", "чеклист", "доска", "задача". Provides the seven-stage runbook for working an Orchestra task end to end, the field model, query recipes, and the failure modes that fail silently.
+description: >-
+  This skill should be used when the user asks "what should I do next", "take this task",
+  "start on X", "close the task", "update the status", "move it to done", "what is blocked",
+  "what is ready", "file a task", "add a checklist", "report on the task", or mentions an
+  Orchestra board, task, status, phase or checklist. Russian equivalents trigger it too —
+  "что дальше", "возьми задачу", "закрой задачу", "обнови статус", "заведи задачу",
+  "что заблокировано", "чеклист", "доска", "задача". Provides the seven-stage gated runbook
+  for working one Orchestra task end to end, this project's field model, and the evidence
+  path through forgeplan. It does not explain how the Orchestra MCP tools behave — when the
+  question is why a call returned empty, why a field did not stick, or which server you are
+  on, the `orchestra-mcp` skill owns that.
 ---
 
 # Orchestra task cycle
@@ -15,36 +25,20 @@ Where a project carries its own rules for Orchestra work, those rules take prior
 runbook. Rules state what is allowed; this states what to do and in what order. Neither restates
 the other, and where they disagree the project's rules win.
 
-**Which server executes these tools.** Tool names here are bare (`query_entities`); the runtime
-name is `mcp__<server>__<tool>`, and the server name is per-project, per-runtime data — it differs
-between projects, between runtimes (Claude Code, Codex, OMP), and a project may run several
-Orchestra servers at once (different workspaces, different identities, different rights).
+**Platform behaviour lives in the `orchestra-mcp` skill.** How the tools fail, which server you are
+on, whose identity you hold, what shapes field values take — all of it is there, and it is the
+authority when the two disagree. This runbook assumes it and does not restate it.
 
-Resolution is **deterministic, not a judgement call** — run the verifier before Stage 0 and before
-the first write:
+**Before Stage 0 and before the first write**, resolve and verify the server:
 
 ```
-${CLAUDE_PLUGIN_ROOT}/skills/orchestra-task-cycle/scripts/orch-verify.sh [role] [--json]
+${CLAUDE_PLUGIN_ROOT}/skills/orchestra-mcp/scripts/orch-verify.sh [role] [--json]
 ```
 
-It finds the project's pin file (`.agents/orchestra.json` first — the runtime-neutral canonical
-path — then `.claude/orchestra.json`, walking up from the current directory), resolves the role to
-a server, performs the MCP handshake, and compares live `get_current_context` against the pinned
-workspace and user. **Exit 0 = safe to write. Any other exit = stop**: 65 mismatch (never retarget
-silently — `references/failure-modes.md` records why: the app endpoint follows the UI), 66 no
-config (then: exactly one connected server with the Orchestra signature — `query_entities` +
-`list_fields` + `get_current_context` under one prefix — may be used; several ⇒ ask), 69
-unreachable, **75 not ready** (the server's workspace data is still loading and every tool refuses;
-tell the human to open that workspace in the app rather than retrying in a loop), 78 broken config
-or missing token env.
-
-It also prints whose identity you hold. On an agent endpoint that is the deployed **bot**, not you —
-every write lands under its name.
-
-The pin file (schema v2): per role — `url` (the server's identity), `auth`/`tokenEnv` (token
-lives in an env var, never in the file), `names` (runtime → registered server name, e.g.
-`{"claude-code": "orchestra-elirum"}`), `spaceUid`, `userUid`. Where the script cannot run,
-follow the same order by hand.
+Exit 0 means safe to write. **Any other exit stops the run** — 65 mismatch, 66 no pin file, 69
+unreachable, 75 the server is still loading and every tool refuses, 78 broken config. The exit table
+and the pin-file schema are in `orchestra-mcp/SKILL.md`; the failures each one protects you from are
+in `orchestra-mcp/references/failure-modes.md`.
 
 ---
 
@@ -54,7 +48,7 @@ Resolve field and option UIDs first, every session. They are per-workspace and m
 hardcoded.
 
 ```
-${CLAUDE_PLUGIN_ROOT}/skills/orchestra-task-cycle/scripts/field-map.sh <workspace-uid> task
+${CLAUDE_PLUGIN_ROOT}/skills/orchestra-mcp/scripts/field-map.sh <workspace-uid> task
 ```
 
 Or call `list_fields({ contextUid, targetType:"task" })` and build two maps: field name → uid, and
@@ -74,7 +68,7 @@ query_entities({ repoType:"folder", repoUid:"all",
 0.141-beta-0906 (it matched nothing at all, so this very step reported "nothing to take" on a full
 board). On an older server, drop the `null` filter and keep the entities whose `BlockedBy` is `[]`
 or absent client-side. Either way, when a number leaves this stage for a human, reconcile
-`filteredCount` against `get_workspace_overview` — see `references/failure-modes.md`.
+`filteredCount` against `get_workspace_overview` — see `orchestra-mcp/references/failure-modes.md`.
 
 More sweeps — overdue, recently closed, grouped by phase, stale — in `references/query-recipes.md`.
 
@@ -251,7 +245,7 @@ to return success and leave zero checklists.
 ## Never
 
 - `delete_entity` on a task — it destroys history. Use `Status=Done`; archiving is not reachable
-  from MCP (`references/failure-modes.md`), so Done is the close.
+  from MCP (`orchestra-mcp/references/failure-modes.md`), so Done is the close.
 - Set `Assignee` or `Members` automatically — it notifies a real person. Note the write can also be
   dropped silently while reporting success (assignee who is not a project member) — read it back.
 - Report a cleanup, a deletion or a batch as done without re-reading it. `delete_entity` has been
@@ -261,21 +255,31 @@ to return success and leave zero checklists.
 - Copy roadmaps into Orchestra documents — two sources of truth.
 - Create a task without `search_entities` first.
 - Assume the server acts as you. On an agent endpoint every write is attributed to the deployed bot,
-  not to the human — `orch-verify.sh` prints whose identity you are holding.
+  not to the human — `orchestra-mcp/scripts/orch-verify.sh` prints whose identity you are holding.
 
 ---
 
 ## Additional resources
 
-### References
+### References — this runbook
 
 - **`references/field-model.md`** — the eleven fields, which are written at creation versus at
   pickup, the tags doctrine, and the two field types never to create here.
-- **`references/query-recipes.md`** — reverse dependency lookup, session-start sweeps, protocol
-  compliance audits, cost control, and the integrity check after writing dependencies.
-- **`references/failure-modes.md`** — every way Orchestra fails silently, what is unreachable from
-  MCP, and what does not exist in the product at all. Consult before designing any workflow around
-  a feature.
+- **`references/query-recipes.md`** — the two board questions this field model exists to answer.
+
+### References — the platform (in the `orchestra-mcp` skill)
+
+Installed alongside this one. It is the authority on tool behaviour; where the two disagree, it wins.
+
+- **`orchestra-mcp/references/failure-modes.md`** — every way Orchestra fails silently, what is
+  unreachable from MCP, what does not exist in the product. Consult before designing any workflow
+  around a feature.
+- **`orchestra-mcp/references/query-cookbook.md`** — filtering, sweeps, cost control, and how to
+  cross-check a count before reporting it.
+- **`orchestra-mcp/references/fields.md`** — value shapes on read and write, the two containers
+  trap, field types never to create.
+- **`orchestra-mcp/references/entities.md`** — creating, updating, checklists, messages, deleting.
+- **`orchestra-mcp/references/rendering.md`** — why written markdown never reads back identical.
 
 ### Examples
 
@@ -289,10 +293,9 @@ to return success and leave zero checklists.
 - **`assets/task-description.md`** — the `Why / Done when / Notes` skeleton.
 - **`assets/completion-report.md`** — the report shape for stage 5.
 
-### Scripts
+### Scripts (both in the `orchestra-mcp` skill)
 
-- **`scripts/orch-verify.sh`** — deterministic server resolution + write handshake against the
-  project's `orchestra.json` pin file. `./orch-verify.sh [role] [--runtime <rt>] [--json]`;
-  exit 0 = safe to write, anything else = stop.
-- **`scripts/field-map.sh`** — dumps the field and option UID map from a running Orchestra.
-  `./field-map.sh <workspace-uid> [task|project] [--json]`
+- **`orchestra-mcp/scripts/orch-verify.sh`** — deterministic server resolution + write handshake
+  against the project's `orchestra.json` pin file. Exit 0 = safe to write, anything else = stop.
+- **`orchestra-mcp/scripts/field-map.sh`** — dumps the field and option UID map from a running
+  Orchestra. `field-map.sh <workspace-uid> [task|project] [--json]`

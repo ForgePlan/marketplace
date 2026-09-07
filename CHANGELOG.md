@@ -11,6 +11,53 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Backfill (marketplace#250)**: entries v1.133.0 through v1.139.0 were written after the fact, each from the commit that carried its catalog bump. Where a change merged between two bumps and shipped without a version of its own, it is recorded under the release that first delivered it — the plugin cache is keyed on version, so an unbumped change reaches no user until the next bump.
 
+## [1.161.0] - 2026-09-07
+
+### forgeplan-orchestra v2.0.0 — the platform knowledge leaves our methodology
+
+One skill was carrying two different things: hard-won truth about how the Orchestra MCP server
+behaves, and our own way of running a task through it. The first is useful to anyone with an
+Orchestra board; the second is useless without forgeplan. Kept together, the universal half could
+never be shared and the methodology half kept growing platform trivia. From marketplace#282.
+
+**Where the line actually falls.** The word `forgeplan` appeared in only 9 of 1302 lines, which
+tempts you to think the split is nine edits. It is not: the real coupling is the **field model** —
+`field-model.md` is built entirely on our eleven custom fields, which no other team has. So the cut
+is not "remove mentions of forgeplan", it is **truth-about-the-product** versus **our rules**.
+
+- **NEW skill `orchestra-mcp`** — 920 lines, zero occurrences of `forgeplan`, zero of our field
+  vocabulary, zero `${CLAUDE_PLUGIN_ROOT}`. It takes `failure-modes.md`, `orch-verify.sh` and
+  `field-map.sh` (all three already platform-generic — the two scripts moved verbatim, keeping their
+  git history and their executable bit), plus four new references written from material that was
+  scattered through the runbook: `fields.md` (value shapes, the two-container trap, field types
+  never to create), `entities.md` (creation, batch update, checklists, messages, deletion),
+  `rendering.md` (why written markdown never reads back identical), `query-cookbook.md` (filtering,
+  sweeps, cost control). Two lines in `failure-modes.md` that used our field names as examples were
+  generalised — including one an earlier hand-audit missed on a 157-line file.
+- **`orchestra-task-cycle` keeps the seven gated stages**, our field model, the evidence path
+  through forgeplan, and now names the universal skill as the authority on tool behaviour rather
+  than restating it.
+- **The two descriptions cannot compete for a trigger.** Each ends by naming the other as owner of
+  the excluded class: the runbook never answers "why did my query return empty"; the field guide
+  never answers "which task should I take". No `disable-model-invocation` on either — that would
+  silence the half users summon by phrase.
+- Everything pointing at the moved files was repointed: `/sync` Step 0, both READMEs (including the
+  in-prose path in the endpoint note), the runbook's own resource index, `field-model.md`.
+
+**Major, not minor**, because file paths moved out from under anyone referencing them — including
+copies outside this repo.
+
+**What this release deliberately does not contain.** The plan began with "build a standalone
+generator, the eight mirrors have drifted". Measurement refuted both halves: all eight mirrors match
+their plugin sources byte-for-byte, and a mirroring mechanism already exists —
+`.github/workflows/sync-standalone-skills.yml`, an 8-row rsync matrix. It has simply never run: each
+mirror has exactly one commit, and no marketplace commit has touched a mirrored skill path since the
+day they were seeded. Nothing changed, so nothing could drift. Building a second mechanism would
+have added a second untested path plus a third copy of the pairing table. The read-only gate that
+this split actually needs — residue of `${CLAUDE_PLUGIN_ROOT}`, vocabulary leaks, manifest↔workflow
+parity — lands separately, and lands *before* the ninth mirror row, because adding that row will be
+the first real execution of that workflow in its life.
+
 ## [1.160.0] - 2026-09-07
 
 ### forgeplan-orchestra v1.12.0 — the failure list re-measured against the build that fixed most of it
