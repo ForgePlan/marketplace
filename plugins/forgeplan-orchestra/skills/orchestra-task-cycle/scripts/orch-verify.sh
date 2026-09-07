@@ -21,6 +21,9 @@
 #   65  MISMATCH — the server answers as a different space/user; DO NOT WRITE
 #   66  no orchestra.json found (single-server fallback applies; see docs)
 #   69  server unreachable / handshake failed
+#   75  server reachable but NOT READY — its workspace data is still loading. Every
+#       tool refuses while this holds. Observed to persist >10 min and clear only
+#       once a human opened that workspace in the app: surface it, do not spin.
 #   78  config invalid, role missing, or the token env var is not set
 #
 # Schema v2 (per role): url (required), auth ("bearer"|"none"), tokenEnv,
@@ -127,10 +130,25 @@ except Exception as e:
     die(69, verdict="UNREACHABLE", url=url, error=f"{type(e).__name__}: {e}")
 
 server_info = ((init or {}).get("result") or {}).get("serverInfo") or {}
+raw = ""
 try:
-    ctx = json.loads(res["result"]["content"][0]["text"])
+    raw = res["result"]["content"][0]["text"]
 except Exception:
-    die(69, verdict="UNREACHABLE", url=url, error=f"get_current_context returned no parseable context: {str(res)[:200]}")
+    die(69, verdict="UNREACHABLE", url=url, error=f"get_current_context returned no content: {str(res)[:200]}")
+
+# The server answers every tool with this while its workspace data loads. It is reachable and
+# correctly configured — just not usable yet — so it is neither UNREACHABLE nor a MISMATCH.
+if "still loading" in raw:
+    die(75, verdict="NOT_READY", url=url,
+        serverName=server_info.get("name"), serverVersion=server_info.get("version"),
+        error=raw.strip()[:300],
+        hint="Every tool refuses while this holds, and it has been seen to persist >10 min. "
+             "Ask the human to open this workspace in the Orchestra app; do not spin on retries.")
+
+try:
+    ctx = json.loads(raw)
+except Exception:
+    die(69, verdict="UNREACHABLE", url=url, error=f"get_current_context returned no parseable context: {raw[:200]}")
 
 pin_space, pin_user = s.get("spaceUid"), s.get("userUid")
 space_ok = (not pin_space) or ctx.get("spaceUid") == pin_space

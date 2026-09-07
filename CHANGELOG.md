@@ -11,6 +11,48 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Backfill (marketplace#250)**: entries v1.133.0 through v1.139.0 were written after the fact, each from the commit that carried its catalog bump. Where a change merged between two bumps and shipped without a version of its own, it is recorded under the release that first delivered it — the plugin cache is keyed on version, so an unbumped change reaches no user until the next bump.
 
+## [1.160.0] - 2026-09-07
+
+### forgeplan-orchestra v1.12.0 — the failure list re-measured against the build that fixed most of it
+
+Orchestra shipped `0.141.0-beta.20260906211602` in answer to our findings, and it closed most of the
+list. A knowledge base that keeps warning about repaired defects is not merely stale — it forbids
+agents from using capabilities that now work, which is the same class of harm as documenting a
+capability that does not exist. Re-verified live, one MCP call at a time. From marketplace#282.
+
+- **Eleven behaviours confirmed fixed and removed from the warnings**: `folder:"all"` matches
+  `get_workspace_overview` again (was 128 of 147, silently); `null` in `fieldFilters` now means
+  "unset or empty" on every field type (arithmetic checks out — 119 unblocked + 28 blocked = 147);
+  `viewUid` still is not implemented but says so in an explicit warning instead of being ignored;
+  `update_entity` takes an `entities[]` batch up to 50 with a per-entity `failed` list; message reads
+  and search are instant on the agent endpoint; creation, `move_entity` and the document layer work
+  there; project queries return real `depth`/`hasChildren`; checklists appear immediately in creation
+  order. They are kept as a version-marker table, because an older agent build still has them.
+- **Three kept, because they still reproduce**: threads are writable and unreadable — re-verified
+  three ways (`read_messages`, `aroundMessageUid` on the reply's own uid, `search_messages` on text
+  unique to it), and the agent can *see* `threadStats.messagesCount` while being unable to read the
+  content; `manage_field`'s `config` is write-only (`list_fields` never returns it, and individual
+  keys can be refused while the field is still created); and `query_entities` vs `get_entity` still
+  disagree on the container shape for `fields`.
+- **Two new ones, both silent.** `delete_entity` stops working part-way through a session and then
+  hangs to transport timeout on *everything* — controls ruled out content, relations and entity type,
+  and a pristine empty project created seconds earlier hung while a rename on the same object
+  returned in milliseconds. The inference it invites ("this object is special, skip it") is the wrong
+  one. Separately, the daemon can answer every tool — including `get_current_context` — with "still
+  loading this workspace's data", hold it past ten minutes, and clear only when a human opens that
+  workspace in the app. That one is the *good* failure shape: an honest refusal replacing the silent
+  partial answer, just badly named by "retry in a moment".
+- **`orch-verify.sh` gains exit 75 `NOT_READY`**, so the loading state is no longer misreported as
+  `UNREACHABLE` — the server is reachable and correctly configured, just unusable. Its hint says to
+  ask the human rather than spin. Exercised against a stub server; the other five exit paths re-run.
+- **The agent endpoint is documented as an identity, not just a tool set.** It acts as a deployed bot
+  with its own uid, so every write lands under the bot's name; `orch-verify.sh` prints whose identity
+  is held and the pin file carries the expected `userUid`.
+- Stage 0 of the runbook, the query recipes and the worked example no longer teach the client-side
+  workaround for `null`; `/session` no longer promises `get_unread_chats`, which the newer build drops.
+
+Bumped: forgeplan-orchestra 1.11.0 → 1.12.0, catalog 1.159.0 → 1.160.0. Refs marketplace#282.
+
 ## [1.159.0] - 2026-09-06
 
 ### forgeplan-orchestra v1.11.0 — server resolution becomes a command, not a judgement call

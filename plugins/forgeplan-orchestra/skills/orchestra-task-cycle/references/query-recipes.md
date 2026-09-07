@@ -4,27 +4,24 @@ The two questions a dependency-ordered board exists to answer, plus the sweeps w
 session start. Resolve every UID at runtime first.
 
 `fieldFilters` accepts **CHAT-dataType fields**, which is what makes `Blocked by` pay off. Matching
-is OR-within-field, AND-across-fields. `null` matches genuinely-unset — see the warning below
-for why that is not the same as "empty".
+is OR-within-field, AND-across-fields. `null` matches "unset or empty" — including a multi-value
+field holding `[]`.
 
 ## What can start right now
 
-⚠ **`null` does not work here.** Tested 2026-09-03 on a live board: a multi-value chat field with no
-references stores `[]`, not unset, and `fieldFilters: { "<BlockedBy>": null }` returns **zero** rows
-while the same board has seven unblocked tasks. `null` matches genuinely-unset only.
-
-Fetch the field and filter client-side — on a board of tens of tasks this is one cheap call:
-
 ```js
 query_entities({ repoType:"folder", repoUid:"all",
-  fieldFilters:{ "<Area uid>": ["<System>","<Hub>","<Runtime>"] },
+  fieldFilters:{ "<Area uid>": ["<System>","<Hub>","<Runtime>"],
+                 "<BlockedBy uid>": null },
   excludeFilters:{ "status": "<Done option uid>" },
   includeFields:["<BlockedBy uid>","<Area uid>","<Role uid>"] })
-// then keep entities whose BlockedBy value is [] or absent
 ```
 
-The `Area` filter alone returns the full board correctly — the defect is specific to `null` against a
-populated-but-empty multi-value chat field.
+Verify the arithmetic once per board: `null` plus `excludeFilters` on the same field must add up to
+the unfiltered total (measured 119 + 28 = 147). If it does not, you are on a build where `null` is
+broken — before 0.141-beta-0906 it matched **nothing at all**, on every field type, so this query
+reported "nothing to take" on a full board. Workaround there: drop the `null` filter, keep the
+entities whose `BlockedBy` is `[]` or absent client-side.
 
 ## What unblocks when a task lands
 

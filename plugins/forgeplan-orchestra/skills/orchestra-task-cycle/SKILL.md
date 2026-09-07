@@ -34,7 +34,12 @@ workspace and user. **Exit 0 = safe to write. Any other exit = stop**: 65 mismat
 silently — `references/failure-modes.md` records why: the app endpoint follows the UI), 66 no
 config (then: exactly one connected server with the Orchestra signature — `query_entities` +
 `list_fields` + `get_current_context` under one prefix — may be used; several ⇒ ask), 69
-unreachable, 78 broken config or missing token env.
+unreachable, **75 not ready** (the server's workspace data is still loading and every tool refuses;
+tell the human to open that workspace in the app rather than retrying in a loop), 78 broken config
+or missing token env.
+
+It also prints whose identity you hold. On an agent endpoint that is the deployed **bot**, not you —
+every write lands under its name.
 
 The pin file (schema v2): per role — `url` (the server's identity), `auth`/`tokenEnv` (token
 lives in an env var, never in the file), `names` (runtime → registered server name, e.g.
@@ -59,17 +64,17 @@ Find what is startable:
 
 ```js
 query_entities({ repoType:"folder", repoUid:"all",
-  fieldFilters:{ "<Area uid>": ["<System>","<Hub>","<Runtime>"] },
+  fieldFilters:{ "<Area uid>": ["<System>","<Hub>","<Runtime>"],
+                 "<BlockedBy uid>": null },        // null = unset OR empty
   excludeFilters:{ "status": "<Done option uid>" },
   includeFields:["<BlockedBy uid>","<Area uid>","<Role uid>"] })
-// then keep entities whose BlockedBy value is [] or absent
 ```
 
-**Filter client-side, do not ask the server for unblocked.** `fieldFilters:{ "<BlockedBy>": null }`
-returns **zero** rows on a board that has unblocked tasks: a multi-value chat field with no
-references stores `[]`, and `null` matches genuinely-unset only. Tested on a live board — seven
-startable tasks, zero returned. It is the first silent refusal in `references/failure-modes.md`, and
-a runbook whose opening step hits it reports "nothing to take" on a full board.
+**Cross-check the count before reporting it.** `null` filtering was broken until build
+0.141-beta-0906 (it matched nothing at all, so this very step reported "nothing to take" on a full
+board). On an older server, drop the `null` filter and keep the entities whose `BlockedBy` is `[]`
+or absent client-side. Either way, when a number leaves this stage for a human, reconcile
+`filteredCount` against `get_workspace_overview` — see `references/failure-modes.md`.
 
 More sweeps — overdue, recently closed, grouped by phase, stale — in `references/query-recipes.md`.
 
@@ -247,10 +252,16 @@ to return success and leave zero checklists.
 
 - `delete_entity` on a task — it destroys history. Use `Status=Done`; archiving is not reachable
   from MCP (`references/failure-modes.md`), so Done is the close.
-- Set `Assignee` or `Members` automatically — it notifies a real person.
+- Set `Assignee` or `Members` automatically — it notifies a real person. Note the write can also be
+  dropped silently while reporting success (assignee who is not a project member) — read it back.
+- Report a cleanup, a deletion or a batch as done without re-reading it. `delete_entity` has been
+  observed to hang to timeout with no error, and once that starts it affects **every** subsequent
+  delete, not just the object you were on. `search_entities` on the name is the cheap re-read.
 - Put artifact bodies, scores or validation results in Orchestra — they stale instantly.
 - Copy roadmaps into Orchestra documents — two sources of truth.
 - Create a task without `search_entities` first.
+- Assume the server acts as you. On an agent endpoint every write is attributed to the deployed bot,
+  not to the human — `orch-verify.sh` prints whose identity you are holding.
 
 ---
 
