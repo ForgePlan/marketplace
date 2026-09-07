@@ -1,4 +1,8 @@
-# Field model
+# This project's field model
+
+The concrete instance of the field *roles* named in `SKILL.md` — status, stage marker, who, which
+model, blocked-by — as this project runs them on Orchestra. Another tracker fills the same roles
+under other names; the runbook stays the same, this file does not.
 
 Eleven custom fields, all workspace-scoped, so they survive project restructuring — plus `Status`,
 `Priority` and `Tags`, which a board normally already has. **Do not assume which of those three are

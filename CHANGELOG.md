@@ -11,6 +11,62 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Backfill (marketplace#250)**: entries v1.133.0 through v1.139.0 were written after the fact, each from the commit that carried its catalog bump. Where a change merged between two bumps and shipped without a version of its own, it is recorded under the release that first delivered it — the plugin cache is keyed on version, so an unbumped change reaches no user until the next bump.
 
+## [1.163.0] - 2026-09-07
+
+### The runbook stops being about one product
+
+`orchestra-task-cycle` said Orchestra in its name, in its tool calls and in its field names — so a
+project on Jira or Linear could read the seven stages, agree with every word, and have nothing to
+run. The stages were never Orchestra-specific; only the syntax was. This separates the two. From
+marketplace#282.
+
+- **`orchestra-task-cycle` → `task-cycle`** (breaking: paths move). The body now names **canonical
+  operations** — list startable / read one / claim / tick / report / close — and **canonical field
+  roles** — status / stage marker / who / which model / blocked-by. Fifty-five product-specific tool
+  calls in the stage bodies became four, and each survivor is either naming a detection signature or
+  quoting a safety rule verbatim.
+- **The project answers "which tracker", not the skill.** New `docs/agents/issue-tracker.md` carries
+  the mapping: which product, how each canonical operation resolves, which field plays which role,
+  and the standing rules for that tracker. Resolution order is: read that file → else ask the human
+  **once** → else detect by **bare tool-name signature** (`query_entities`+`get_current_context`
+  = Orchestra, `list_my_issues` = Linear, `search_issues` = Jira, `gh` = GitHub Issues) → else, on a
+  tie, **stop and ask**. Never guess: a write into the wrong system is not undone by apologising.
+  Bare names, because the `mcp__…__` prefix differs per runtime *and* the server name differs per
+  project.
+- **`references/field-model.md` → `references/project-fields.md`**, reframed as *this project's*
+  instance of the role table rather than the law. `query-recipes.md` and both worked examples now say
+  in their first lines that the calls are Orchestra's and the discipline is not.
+- **NEW agent `task-runner`** (Profile B-orchestrator scoped to the tracker). It drives the seven
+  gates, resolves the tracker and verifies **which server and whose identity** it holds before the
+  first write, and hands off everything that is not board-keeping: `smith` for the methodology, a
+  Profile A/B agent for artifacts, `coder` for source. It has no `Write`/`Edit` and no forgeplan
+  mutations. Twelve HARD RULES carry the constraints the denylist cannot travel with.
+- **Deliberately not a fifteenth routing row.** Each of smith's 14 rows answers *how do we build
+  this*; taking a task off a board answers *which unit are we on, and does the board still tell the
+  truth about it* — it composes with a row instead of replacing one. So the envelope is an agent that
+  dispatches smith, not a row that competes with smith's own: `task-runner → smith → the row`. The
+  fourteen rows are unchanged; routing-map gains a named note and one agent-index entry.
+- **The connection pin moved to `docs/agents/orchestra.json`**, beside `issue-tracker.md`, because
+  `.agents/` is the surface runtimes scan for *skills* and project configuration does not belong
+  there. `.agents/orchestra.json` and `.claude/orchestra.json` still resolve and print a deprecation
+  notice on **stderr only**. Verified live against two running Orchestra servers: canonical path
+  exit 0 MATCH; legacy path exit 0 with the notice and `--json` stdout still parseable; canonical
+  beats legacy when both exist; no pin anywhere still exits 66.
+- **`/setup` already wrote this file — its template just did not answer enough.** The convention
+  `docs/agents/issue-tracker.md` is not new; `/setup` has generated it from
+  `references/ISSUE-TRACKER-TEMPLATE.md` all along. But that template covered list-and-create and
+  nothing else, so a `/setup`-configured project answered two of the seven operations `task-cycle`
+  asks about, and the runbook would have quietly guessed the rest. The template now carries the
+  canonical-operations table, the field-role table, the connection / identity / comment-writing facts
+  and the standing rules; `/setup` Section A fills them, detects on **bare** tool names (its own
+  example wrote a prefixed `mcp__linear__list_issues`, against marketplace#212), requires **both**
+  Orchestra tools as the signature rather than one generically-named tool, and asks rather than picks
+  on a tie.
+
+- **The count gate caught the drift it exists for.** Adding one agent moved 42→43 forgeplan-aware and
+  95→96 total; `catalog-check` failed the run in three files until each header was re-derived by
+  hand (read-only — the gate never `--write`s).
+
 ## [1.162.0] - 2026-09-07
 
 ### A gate for the mirrors, before the ninth one exists

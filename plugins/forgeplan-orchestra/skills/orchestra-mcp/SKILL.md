@@ -8,7 +8,7 @@ description: >-
   you are holding before writing. Russian triggers too — «поле не записалось», «запрос
   вернул пусто», «почему счёт не сходится», «какой сервер Orchestra», «зависло удаление»,
   «что значит failedFields». Platform behaviour only: it never decides which task to take,
-  when a task is done, or how work should be organised — the `orchestra-task-cycle` skill
+  when a task is done, or how work should be organised — the `task-cycle` skill
   owns that.
 ---
 
@@ -55,8 +55,10 @@ swapped underneath you is otherwise invisible.
 
 ### The pin file
 
-`orchestra.json`, looked up walking upwards: `.agents/orchestra.json` first (runtime-neutral, shared
-with every runtime), then `.claude/orchestra.json`. Schema v2, per role:
+`orchestra.json`, looked up walking upwards: `docs/agents/orchestra.json` first — project
+configuration, runtime-neutral, sitting beside `docs/agents/issue-tracker.md`. Two legacy paths
+still resolve and print a deprecation notice on stderr: `.agents/orchestra.json` (`.agents/` is the
+runtime *skill* surface, not a config directory) and `.claude/orchestra.json`. Schema v2, per role:
 
 ```json
 {

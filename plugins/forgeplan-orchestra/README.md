@@ -16,7 +16,7 @@ Each system does what it does best. We don't duplicate -- we link. Artifact ID i
 
 > **Note:** Requires **forgeplan CLI** (private ForgePlan application, access through project admin) + **Orchestra MCP server** configured. Product: [orch.so](https://orch.so)
 >
-> **Tool names in this plugin are written bare** — `query_entities`, never a prefixed form. The prefix is doubly unstable: the runtime spelling differs (Claude Code puts two underscores between server and tool, OMP one), and the **server name itself is whatever the project's `.mcp.json` registered** — `orch` in one project, `orchestra-elirum` in another, and a project may legitimately register several Orchestra servers at once (different workspaces, different identities and rights — a human's session next to a scoped bot). So: resolve the server per project, not per plugin — and deterministically, not by judgement: run `scripts/orch-verify.sh` (ships with the `orchestra-task-cycle` skill). It finds the project's pin file — `.agents/orchestra.json` first (runtime-neutral: the same file serves Codex, OMP, Gemini), `.claude/orchestra.json` as legacy fallback — resolves the role to a server (`url` + `names` map runtime → registered name + `tokenEnv`, never a raw token), handshakes, and compares live `get_current_context` against the pinned workspace/user. Exit 0 = safe to write; 65 = mismatch, stop; 66 = no pin file (then: exactly one connected server with the Orchestra tool signature may be used, several — ask, never guess by name).
+> **Tool names in this plugin are written bare** — `query_entities`, never a prefixed form. The prefix is doubly unstable: the runtime spelling differs (Claude Code puts two underscores between server and tool, OMP one), and the **server name itself is whatever the project's `.mcp.json` registered** — `orch` in one project, `orchestra-elirum` in another, and a project may legitimately register several Orchestra servers at once (different workspaces, different identities and rights — a human's session next to a scoped bot). So: resolve the server per project, not per plugin — and deterministically, not by judgement: run `scripts/orch-verify.sh` (ships with the `orchestra-mcp` skill). It finds the project's pin file — `docs/agents/orchestra.json` first (project configuration, runtime-neutral: the same file serves Codex, OMP, Gemini; `.agents/orchestra.json` and `.claude/orchestra.json` still resolve as legacy paths with a deprecation notice) — resolves the role to a server (`url` + `names` map runtime → registered name + `tokenEnv`, never a raw token), handshakes, and compares live `get_current_context` against the pinned workspace/user. Exit 0 = safe to write; 65 = mismatch, stop; 66 = no pin file (then: exactly one connected server with the Orchestra tool signature may be used, several — ask, never guess by name).
 >
 > **Orchestra also ships two server *variants*** with different tool sets and different identities. The desktop app's own endpoint (no auth) acts as the signed-in human and carries `navigate_to`/`get_ui_context`. An agent endpoint behind a Bearer token acts as a **deployed bot with its own uid** — every write lands under its name, not yours — and carries `add_relation`/`remove_relation`/`approve_action`/`switch_workspace`/`list_workspaces`/`add_members`/`get_agent_prompt`. Build `0.141-beta-0906` closed the agent endpoint's earlier gaps (creation, document layer, message reads, `move_entity`); older agent builds still have them. Run the `orchestra-mcp` skill's `scripts/orch-verify.sh` to see which variant, which version and whose identity you actually hold; the capability split and the failures still reproducing are catalogued in `skills/orchestra-mcp/references/failure-modes.md`.
 
@@ -110,12 +110,18 @@ Apply changes? [y/n]
 
 How Orchestra tasks and forgeplan artifacts map onto one another.
 
-### `orchestra-task-cycle` — the runbook
+### `task-cycle` — the runbook
 
 Working a single task end to end: **orient → read → claim → work → evidence → report → close**.
 Seven stages, each with a gate — and a gate you cannot answer means the previous stage is not
 finished. Every expensive failure in this workflow comes from starting stage N+1 on an unfinished
 stage N.
+
+**Tracker-agnostic by construction.** The stages name *operations* — list startable, claim, tick,
+close — never a product's tool names, and what each operation concretely is comes from the project,
+not from this skill. It reads `docs/agents/issue-tracker.md` where the project has one; where it does
+not, it asks once, and only then falls back to detecting the tracker by bare tool-name signature. The
+same runbook drives Orchestra here and Jira, Linear or GitHub Issues elsewhere.
 
 Loads on its own when you say "what should I do next", "take this task", "close the task", "what is
 blocked", "что дальше", "возьми задачу", "закрой задачу", or name a board, task, status, phase or
@@ -125,12 +131,14 @@ Progressive disclosure — `SKILL.md` carries the stages, the depth sits beside 
 
 | File | What is in it |
 |---|---|
-| `references/field-model.md` | eleven fields, the tag doctrine, the types that trap |
-| `references/query-recipes.md` | the two board questions this field model exists to answer |
+| `references/project-fields.md` | this project's fields — the concrete instance of the role table |
+| `references/query-recipes.md` | the two board questions that field model exists to answer |
 | `examples/` | a full seven-stage pass, the `Blocked` variant, filing a task inline |
 | `assets/` | skeletons for a task description and a completion report |
 
-This skill is **our methodology**. It assumes the platform knowledge below rather than restating it.
+The references and examples are written against Orchestra, because that is the tracker this project
+runs — the seven stages are not. This skill is **our methodology**; it assumes the platform knowledge
+below rather than restating it.
 
 ### `orchestra-mcp` — the platform field guide
 
