@@ -13,8 +13,10 @@
 #   ./orch-verify.sh --config /path/to/orchestra.json [role]
 #
 # Config discovery (first hit wins), walking UP from the current directory:
-#   <dir>/.agents/orchestra.json      <- canonical, runtime-neutral
+#   <dir>/docs/agents/orchestra.json  <- canonical: project configuration, runtime-neutral
+#   <dir>/.agents/orchestra.json      <- legacy; .agents/ is the runtime SKILL surface
 #   <dir>/.claude/orchestra.json      <- legacy / Claude-specific fallback
+# The two legacy paths still work and print a one-line deprecation notice on stderr.
 #
 # Exit codes:
 #   0   resolved + workspace and user MATCH — safe to write
@@ -38,7 +40,7 @@ while [ $# -gt 0 ]; do
     --json) JSON=1 ;;
     --runtime) RUNTIME="${2:?--runtime needs a value}"; shift ;;
     --config) CONFIG="${2:?--config needs a path}"; shift ;;
-    -h|--help) sed -n '2,28p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,30p' "$0"; exit 0 ;;
     *) ROLE="$1" ;;
   esac
   shift
@@ -47,7 +49,9 @@ done
 if [ -z "$CONFIG" ]; then
   DIR="$PWD"
   while :; do
-    for cand in "$DIR/.agents/orchestra.json" "$DIR/.claude/orchestra.json"; do
+    # Canonical first. The two legacy paths keep working so an existing project does not
+    # break on upgrade — but they are announced, so the drift does not stay invisible.
+    for cand in "$DIR/docs/agents/orchestra.json" "$DIR/.agents/orchestra.json" "$DIR/.claude/orchestra.json"; do
       if [ -f "$cand" ]; then CONFIG="$cand"; break 2; fi
     done
     [ "$DIR" = "/" ] && break
@@ -55,10 +59,19 @@ if [ -z "$CONFIG" ]; then
   done
 fi
 if [ -z "$CONFIG" ]; then
-  echo "orch-verify: no orchestra.json found (searched .agents/ and .claude/ up from $PWD)" >&2
+  echo "orch-verify: no orchestra.json found (searched docs/agents/, .agents/ and .claude/ up from $PWD)" >&2
   echo "orch-verify: fallback rule — exactly ONE connected Orchestra server may be used; several => ask the user" >&2
   exit 66
 fi
+
+# Deprecation notice goes to stderr only, so --json stdout stays machine-parseable.
+case "$CONFIG" in
+  */.agents/orchestra.json|*/.claude/orchestra.json)
+    echo "orch-verify: NOTE — reading a legacy pin path ($CONFIG)." >&2
+    echo "orch-verify:   Move it to docs/agents/orchestra.json, beside docs/agents/issue-tracker.md." >&2
+    echo "orch-verify:   .agents/ is the runtime skill surface; project configuration does not belong there." >&2
+    ;;
+esac
 
 export ORCH_VERIFY_CONFIG="$CONFIG" ORCH_VERIFY_ROLE="$ROLE" ORCH_VERIFY_RUNTIME="$RUNTIME" ORCH_VERIFY_JSON="$JSON"
 exec python3 - <<'PY'

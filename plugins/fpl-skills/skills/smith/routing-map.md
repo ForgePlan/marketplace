@@ -69,6 +69,25 @@ this file for the canonical names and source plugins.
 
 > **Wider context**: For complete process reference on how these 14 routing rows map to the artifact lifecycle and 5-role agent dispatch, see [Process Reference (EN)](../../../../docs/process-from-idea-to-delivery-EN.md) / [(RU)](../../../../docs/process-from-idea-to-delivery-RU.md).
 
+### Deliberately not a row — the task-board envelope
+
+Working a task off a board (take it, claim it, keep its checklist honest, close it or block it with
+a trigger) is **not a fifteenth row**, and adding it as one would be a category error. Every row
+above answers *how do we build this*; smith picks exactly one and commits. Taking a task off a board
+answers *which unit of work are we on and does the board still tell the truth about it* — and it
+composes with a row rather than competing with one. You take the task **and** you build it under
+SPARC, or under RIPER, or under CANVAS.
+
+So the envelope is an agent, not a row: **`task-runner`** (`forgeplan-orchestra`, Profile
+B-orchestrator scoped to the tracker) drives the seven gated stages of the `task-cycle` skill —
+orient, read, claim, work, evidence, report, close — and at the WORK stage it **dispatches smith**
+to pick the methodology row for what the task actually asks for. It is tracker-agnostic by
+construction: it resolves the tracker from `docs/agents/issue-tracker.md`, never from a hardcoded
+product name, so the same envelope wraps Orchestra here and Jira, Linear or GitHub Issues elsewhere.
+
+Read the arrow as: **`task-runner` → smith → the row → the row's dispatch sequence.** Smith is never
+downstream of a row; it is downstream of the envelope. Nothing in the fourteen rows changes.
+
 ## Methodology cards
 
 Each methodology referenced in the table above. Five lines per card: one-sentence definition, when it shines, when NOT to use, and source link.
@@ -309,7 +328,9 @@ Each methodology referenced in the table above. Five lines per card: one-sentenc
 
 ## Agent index
 
-Quick alphabetical lookup of every agent named in the 14 rows above. Each entry: **name** (source plugin) — Profile — one-line description.
+Quick alphabetical lookup of every agent named in the 14 rows above, plus `task-runner` from the
+task-board-envelope note under the table. Each entry: **name** (source plugin) — Profile — one-line
+description.
 
 | Agent | Plugin | Profile | One-liner |
 |---|---|---|---|
@@ -338,6 +359,7 @@ Quick alphabetical lookup of every agent named in the 14 rows above. Each entry:
 | **specification** | `agents-sparc` | A | SPARC phase-1 specification authoring; produces PRD-shaped artifacts. |
 | **architecture** | `agents-sparc` | A | SPARC phase-3 architecture authoring; produces RFC-shaped artifacts. |
 | **system-dev** | `agents-pro` | B | Staff-level cross-Epic / long-horizon reviewer; pairs with guardian for system-wide go/no-go. |
+| **task-runner** | `forgeplan-orchestra` | B-orchestrator (tracker) | The task-board envelope, not a row — drives one task through the seven gated stages of `task-cycle` on whatever tracker the project configured, and dispatches smith at the WORK stage to pick the methodology row. Writes only to the tracker: no source files, no forgeplan mutations. |
 | **tester** | `agents-core` | B | Profile B test-coverage reviewer; produces tester EVID with coverage % vs `min_test_coverage` gate. |
 
 † **Profile letter is advisory, not enforced by a denylist.** Nuance measured in EVID-231: most

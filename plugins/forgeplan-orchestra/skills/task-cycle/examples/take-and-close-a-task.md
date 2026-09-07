@@ -1,7 +1,9 @@
-# Worked example — take a task, work it, close it
+# Worked example (Orchestra) — take a task, work it, close it
 
-A full pass through the seven stages on one real task. Field UIDs are shown as placeholders because
-they are per-workspace and must be resolved at runtime.
+A full pass through the seven stages on one real task, in Orchestra. The **stages and their gates**
+are the tracker-independent part; every call below is Orchestra's, and on another tracker only the
+syntax changes. Field UIDs are shown as placeholders because they are per-workspace and must be
+resolved at runtime.
 
 ## 0 — ORIENT
 

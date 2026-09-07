@@ -29,16 +29,32 @@ Use `references/*-TEMPLATE.md` as starting content; fill in user answers.
 
 ### Section A — Issue tracker
 
-Probe in this order, present the first match as default:
+Probe in this order, present the first match as default. Match on **bare tool names** — the
+`mcp__…__` prefix is per-runtime and the server segment is per-project, so a prefixed match is
+wrong in the next project:
 
-1. `get_current_context()` works → **Orchestra**
+1. `query_entities` **and** `get_current_context` available → **Orchestra** (both, not either — a
+   single generically-named tool is not a signature)
 2. `gh repo view` works → **GitHub Issues**
-3. `linear-cli` or Linear MCP available → **Linear**
-4. `find . -name 'TODO*.md' -maxdepth 3` non-empty → **Local markdown**
-5. None → ask user
+3. `list_my_issues` / `list_assigned_issues`, or `linear-cli` → **Linear**
+4. `search_issues` / `get_my_issues` → **Jira**
+5. `find . -name 'TODO*.md' -maxdepth 3` non-empty → **Local markdown**
+6. None → ask user
 
-Confirm with user. Then write `docs/agents/issue-tracker.md` based on `references/ISSUE-TRACKER-TEMPLATE.md`,
-filling in: type, identifier (repo URL / workspace), how-to-list, how-to-create, triage labels.
+Two candidates and no prior answer → **ask**, never pick. Writing into the wrong tracker is not
+undone by apologising.
+
+Confirm with user. Then write `docs/agents/issue-tracker.md` based on
+`references/ISSUE-TRACKER-TEMPLATE.md`, filling in: type, identifier (repo URL / workspace),
+connection config + how to verify it, whether the identity is a human or a bot, whether comment
+writing is allowed, the **canonical-operations table** (list startable / read one / claim / tick /
+report / close / file), the **field-role table** (status / stage marker / who / which model /
+blocked-by), triage labels, and the standing rules.
+
+The two tables are the load-bearing part: `task-cycle` reads this file **instead of probing**, so an
+operation left as a `{placeholder}` is a question an agent will end up guessing at. Leave a row out
+entirely rather than leaving it unfilled — an absent row reads as "this tracker has no such thing",
+which is honest; a placeholder reads as a value.
 
 ### Section B — Build & test commands
 

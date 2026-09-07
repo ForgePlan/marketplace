@@ -1,7 +1,9 @@
-# Query recipes
+# Query recipes — this project's board
 
 The two questions a dependency-ordered board exists to answer, plus the sweeps worth running at
-session start. Resolve every UID at runtime first.
+session start. Written against Orchestra, because that is the tracker this project runs; the
+questions are the tracker-independent part, the call syntax is not. Resolve every UID at runtime
+first.
 
 `fieldFilters` accepts **CHAT-dataType fields**, which is what makes `Blocked by` pay off. Matching
 is OR-within-field, AND-across-fields. `null` matches "unset or empty" — including a multi-value

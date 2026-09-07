@@ -1,4 +1,7 @@
-# Worked example — file a new task
+# Worked example (Orchestra) — file a new task
+
+The calls below are Orchestra's; the discipline they carry — search first, every field inline,
+checklist in the same turn, read the attach back — is the tracker-independent part.
 
 Filing is one call per object, with everything set inline. A field that requires coming back later
 does not get filled — measured 0 out of 32 for exactly those fields on a live board.

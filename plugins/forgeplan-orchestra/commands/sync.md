@@ -29,8 +29,9 @@ identity next to a scoped bot). Exit 75 → the server is up but its workspace d
 and every tool refuses; ask the human to open that workspace in the Orchestra app instead of
 retrying in a loop. Exit 69/78 → unreachable / broken config or missing token env: report and stop.
 
-The pin file is `orchestra.json` — canonical at `.agents/orchestra.json` (runtime-neutral, shared
-with Codex/OMP/Gemini), legacy fallback `.claude/orchestra.json`. Schema v2, per role:
+The pin file is `orchestra.json` — canonical at `docs/agents/orchestra.json`, runtime-neutral and
+shared with Codex/OMP/Gemini, beside `docs/agents/issue-tracker.md`. Legacy fallbacks that still
+resolve with a stderr notice: `.agents/orchestra.json`, `.claude/orchestra.json`. Schema v2, per role:
 
 ```json
 {
