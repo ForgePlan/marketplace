@@ -11,6 +11,32 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Backfill (marketplace#250)**: entries v1.133.0 through v1.139.0 were written after the fact, each from the commit that carried its catalog bump. Where a change merged between two bumps and shipped without a version of its own, it is recorded under the release that first delivered it — the plugin cache is keyed on version, so an unbumped change reaches no user until the next bump.
 
+## [1.164.0] - 2026-09-07
+
+### The ninth mirror goes live — and the sync that would carry it is dead
+
+`ForgePlan/orchestra-mcp` now exists, holds the skill, and is wired into all three hand-typed lists of
+`sync-standalone-skills.yml`, so the manifest's pre-publication guard `mirrored: false` is retired.
+Measuring the surrounding machinery turned up something worth more than the mirror itself.
+
+- **`STANDALONE_SYNC_TOKEN` is invalid.** Every one of the 8 mirror jobs in the last run
+  (2026-08-02, run `30768125258`) failed with `Bad credentials`. The workflow has run four times in
+  its life: one success in April, three failures. It is **not a required check**, so a red sync sits
+  beside a green PR and nobody is told.
+- **No drift has been caused yet — measured, not assumed.** All 8 live mirrors were compared to their
+  marketplace sources file-by-file **by git blob SHA**: 230/45/23/9/1/106/2/1 files, every one
+  identical. Nothing in those eight skill directories has changed since the token died, so the
+  failure is latent. The next edit to any of them is the one that silently does not ship.
+- **The ninth mirror was therefore seeded by hand**, not by the workflow — the repo carries real
+  content today rather than waiting on a credential.
+- **One real leak, caught only because the mirror tree was inspected after export.** The skill's
+  mutual-exclusion clause named a *sibling* skill; in a single-skill install that is a pointer to
+  nothing. It now defers to "whichever task runbook you use" without naming one, and the sibling's
+  name joined the mirror's `forbiddenTokens` — **proved by live mutation**: reintroducing the string
+  fails the gate with `[VOCABULARY-LEAK]` at file and line, and the tree is clean again after revert.
+  The gate had not caught it because nobody had told it to look, which is the honest reason a gate
+  misses anything.
+
 ## [1.163.0] - 2026-09-07
 
 ### The runbook stops being about one product

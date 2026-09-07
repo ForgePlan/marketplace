@@ -12,6 +12,7 @@ on:
       - 'plugins/slopocop-design/skills/hallmark/**'
       - 'plugins/slopocop-design/skills/frontend-design/**'
       - 'plugins/slopocop-design/skills/design-taste-frontend/**'
+      - 'plugins/forgeplan-orchestra/skills/orchestra-mcp/**'
       - '.github/workflows/sync-standalone-skills.yml'
   workflow_dispatch:
     inputs:
@@ -30,6 +31,7 @@ on:
           - slopocop-hallmark
           - slopocop-frontend-design
           - slopocop-design-taste
+          - orchestra-mcp
 
 permissions:
   contents: read
@@ -66,6 +68,9 @@ jobs:
           - plugin: slopocop-design-taste
             skill_path: plugins/slopocop-design/skills/design-taste-frontend
             target_repo: ForgePlan/slopocop-design-taste
+          - plugin: orchestra-mcp
+            skill_path: plugins/forgeplan-orchestra/skills/orchestra-mcp
+            target_repo: ForgePlan/orchestra-mcp
 
     steps:
       - name: Skip if not selected (manual run)

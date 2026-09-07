@@ -8,8 +8,8 @@ description: >-
   you are holding before writing. Russian triggers too — «поле не записалось», «запрос
   вернул пусто», «почему счёт не сходится», «какой сервер Orchestra», «зависло удаление»,
   «что значит failedFields». Platform behaviour only: it never decides which task to take,
-  when a task is done, or how work should be organised — the `task-cycle` skill
-  owns that.
+  when a task is done, or how work should be organised — that belongs to whichever task
+  runbook you use, and this skill defers to it.
 ---
 
 # Orchestra MCP — field guide
