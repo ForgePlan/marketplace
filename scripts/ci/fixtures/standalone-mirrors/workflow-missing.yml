@@ -1,0 +1,17 @@
+on:
+  push:
+    paths:
+      - "something-else/**"
+  workflow_dispatch:
+    inputs:
+      target:
+        options:
+          - all
+jobs:
+  sync:
+    strategy:
+      matrix:
+        include:
+          - plugin: other
+            skill_path: other-skill
+            target_repo: x/other

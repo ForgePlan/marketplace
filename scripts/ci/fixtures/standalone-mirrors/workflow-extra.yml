@@ -1,0 +1,20 @@
+on:
+  push:
+    paths:
+      - "clean-skill/**"
+  workflow_dispatch:
+    inputs:
+      target:
+        options:
+          - clean
+jobs:
+  sync:
+    strategy:
+      matrix:
+        include:
+          - plugin: clean
+            skill_path: clean-skill
+            target_repo: x/clean
+          - plugin: ghost
+            skill_path: ghost-skill
+            target_repo: x/ghost

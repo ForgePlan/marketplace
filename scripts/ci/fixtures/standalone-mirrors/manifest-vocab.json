@@ -1,0 +1,4 @@
+{ "mirrors": [
+  { "id": "vocab", "source": "vocab-skill", "repo": "x/vocab", "installedName": "vocab-skill",
+    "forbiddenTokens": ["forgeplan", "`Blocked by`"] }
+]}

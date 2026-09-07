@@ -1,0 +1,3 @@
+{ "mirrors": [
+  { "id": "clean", "source": "clean-skill", "repo": "x/clean", "installedName": "clean-skill" }
+]}

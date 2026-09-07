@@ -1,0 +1,3 @@
+{ "mirrors": [
+  { "id": "name", "source": "name-mismatch-skill", "repo": "x/name", "installedName": "name-mismatch-skill" }
+]}
