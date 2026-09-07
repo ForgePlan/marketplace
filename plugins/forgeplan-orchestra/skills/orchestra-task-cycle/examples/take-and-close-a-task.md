@@ -14,10 +14,9 @@ Build two maps from the response: field name → `uid`, and per option field, op
 
 ```js
 query_entities({ repoType:"folder", repoUid:"all",
-  fieldFilters:{ "<Area>": ["<System>","<Hub>","<Runtime>"] },
+  fieldFilters:{ "<Area>": ["<System>","<Hub>","<Runtime>"], "<BlockedBy>": null },
   excludeFilters:{ "status": "<Done>" },
   includeFields:["<BlockedBy>","<Area>","<Role>","<Artifact>"] })
-// keep the entities whose BlockedBy is [] or absent — `null` as a filter returns zero rows here
 ```
 
 → `S1 — Approve R1–R7, freeze and activate RFC-001` is unblocked, Area System, Role Guardian.

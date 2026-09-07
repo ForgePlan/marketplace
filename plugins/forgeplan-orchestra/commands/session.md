@@ -26,11 +26,14 @@ Collect signals from all sources in parallel. This step is purely read-only and 
 
 **Orchestra signals:**
 - `query_entities(repoType:"folder", repoUid:"all")` — find tasks with Status = Doing or Review.
-  For any count that will be reported, cross-check against `get_workspace_overview` — the
-  agent (token) endpoint has been observed to silently omit a whole project from `folder:"all"`.
-- Unread messages and @mentions: `get_unread_chats(type:"all")` and `get_mentions()`. Both exist
-  only in the app's own endpoint — the agent (token) endpoint answers "only available in
-  Electron/web-app context". Treat that error as "signal unavailable" and move on; do not retry.
+  For any count that will be reported, cross-check against `get_workspace_overview`: an agent build
+  before `0.141-beta-0906` silently omitted a whole project from `folder:"all"`.
+- Unread messages and @mentions: `get_mentions()`, plus `get_unread_chats(type:"all")` where the
+  server has it — it is absent from newer agent builds, and older ones answered "only available in
+  Electron/web-app context". Either way treat a miss as "signal unavailable" and move on; no retries.
+- If any tool answers that the daemon is **still loading this workspace's data**, stop the collection
+  and say so: every tool refuses while that holds, and it clears when a human opens that workspace in
+  the Orchestra app — not on its own.
 
 **Git signals:**
 - `git log --oneline --since="24 hours ago"` — recent commits (adjust timeframe based on last session)

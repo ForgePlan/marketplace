@@ -25,8 +25,9 @@ and verified live — proceed. Exit 65 → the server answers as a different wor
 and STOP. Exit 66 → no pin file: exactly one connected server with the Orchestra signature
 (`query_entities` + `list_fields` + `get_current_context` under one prefix) may be used; several —
 stop and ask (a project may run them side by side on purpose: different workspaces, a human
-identity next to a scoped bot). Exit 69/78 → unreachable / broken config or missing token env:
-report and stop.
+identity next to a scoped bot). Exit 75 → the server is up but its workspace data is still loading
+and every tool refuses; ask the human to open that workspace in the Orchestra app instead of
+retrying in a loop. Exit 69/78 → unreachable / broken config or missing token env: report and stop.
 
 The pin file is `orchestra.json` — canonical at `.agents/orchestra.json` (runtime-neutral, shared
 with Codex/OMP/Gemini), legacy fallback `.claude/orchestra.json`. Schema v2, per role:
