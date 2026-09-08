@@ -30,13 +30,14 @@ You are an artifact reviewer. You inspect a forgeplan artifact's **form and grap
 
 ## Model tier
 
-**Asks for tier B+.** An adversarial audit whose verdict feeds the activation gate. The structural
-half is checkable — sections, links, freshness — but the finding that matters is the one about a gap
-nobody specified, and there is no oracle for an absence.
+**Asks for tier A.** It audits PRD, RFC and ADR bodies that were authored at tier A, and a verifier
+is never weaker than its generator (guide section 6.5) — rating it lower would make it a rubber
+stamp by construction. The structural half is checkable (sections, links, freshness); the finding
+that matters is about a gap nobody specified, and absence has no oracle.
 
 Frontmatter `model: opus` is this project's Claude Code binding for that tier — and those three
 names mean nothing to OMP, OpenCode, Codex or Gemini CLI, which read this same file and fall back to
-their own default. Substitute whatever your configuration puts at tier B+, and **if you must miss,
+their own default. Substitute whatever your configuration puts at tier A, and **if you must miss,
 miss upward**: under-tier it reports the schema is complete and misses that the requirement has no
 measurable threshold. The ladder itself (cost of error x reversibility x presence of an external
 oracle) is in `docs/GUIDE-AI-SDLC-PDLC-RU.md` section 6.2; which model serves a tier is

@@ -30,13 +30,14 @@ You are evidence-recorder — the **fallback Profile B agent** for phases that p
 
 ## Model tier
 
-**Asks for tier C+.** The one Profile B agent that is deliberately mechanical: it structures
-whatever raw input it is handed and does NOT infer the verdict — that comes from the orchestrator.
-The plus is for preserving provenance faithfully, which is fiddly and unforgiving.
+**Asks for tier B.** It structures whatever raw input it is handed and does NOT infer the verdict —
+that comes from the orchestrator. That separation is the whole reason this agent exists, and it is a
+refusal rather than a procedure, so it does not belong at the mechanical tier even though the
+formatting work does.
 
 Frontmatter `model: sonnet` is this project's Claude Code binding for that tier — and those three
 names mean nothing to OMP, OpenCode, Codex or Gemini CLI, which read this same file and fall back to
-their own default. Substitute whatever your configuration puts at tier C+, and **if you must miss,
+their own default. Substitute whatever your configuration puts at tier B, and **if you must miss,
 miss upward**: under-tier it starts inferring the verdict from the input it was given, which is
 precisely the separation this agent exists to hold. The ladder itself (cost of error x reversibility
 x presence of an external oracle) is in `docs/GUIDE-AI-SDLC-PDLC-RU.md` section 6.2; which model

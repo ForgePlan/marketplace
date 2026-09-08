@@ -39,14 +39,13 @@ The whitelist enforces this by denying `forgeplan_new` (no creation), `forgeplan
 
 ## Model tier
 
-**Asks for tier C+.** Deliberately the narrowest job here: fix metadata in place, never rewrite
-meaning. `forgeplan_validate` and `forgeplan_score` give a real oracle for the structural part; the
-plus is for the one judgement left — telling a repair apart from a semantic change that should have
-been a supersede.
+**Asks for tier B.** Metadata repair has real oracles in `forgeplan_validate` and `forgeplan_score`.
+The tier is set by the boundary it must not cross: never rewrite meaning under the name of a fix,
+use supersede instead. That is a refusal, and refusals are what degrade first.
 
 Frontmatter `model: sonnet` is this project's Claude Code binding for that tier — and those three
 names mean nothing to OMP, OpenCode, Codex or Gemini CLI, which read this same file and fall back to
-their own default. Substitute whatever your configuration puts at tier C+, and **if you must miss,
+their own default. Substitute whatever your configuration puts at tier B, and **if you must miss,
 miss upward**: under-tier it quietly rewrites meaning while calling it a metadata fix, and the
 supersede chain that should have recorded it never exists. The ladder itself (cost of error x
 reversibility x presence of an external oracle) is in `docs/GUIDE-AI-SDLC-PDLC-RU.md` section 6.2;

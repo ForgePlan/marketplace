@@ -4,7 +4,7 @@ description: |
   EN: SCAN-stage EMITTER agent for the forgeplan-map-pack pipeline: scans the target project's source tree, package manifests, and entry points into raw facts (modules, entry points, manifest-declared dependencies) for the downstream `zone-extractor` to bin into zones and mint into content-hash nodes. Runs in parallel with `forgeplan-scanner` and `docs-scanner` (RFC-023 Proposed Direction SS1/SS2, PRD-075 FR-1); writes ONLY its own scratch file `.forgeplan/map/.work/.scan.code.json`, never touching the other two scanners' files or `map.json` -- the PROB-060 single-writer-per-scratch-file discipline RFC-023 SS3 exists to prevent. Denied `Edit` and every `forgeplan_*` mutator; touches no forgeplan artifact at all (that is `forgeplan-scanner`'s exclusive scope).
   RU: EMITTER-агент стадии SCAN конвейера forgeplan-map-pack: сканирует дерево исходников, манифесты пакетов и точки входа целевого проекта в сырые факты (модули, точки входа, зависимости из манифестов) для последующего распределения по зонам и content-hash минтинга агентом `zone-extractor`. Работает параллельно с `forgeplan-scanner` и `docs-scanner` (RFC-023 SS1/SS2, PRD-075 FR-1); пишет ТОЛЬКО свой scratch-файл `.forgeplan/map/.work/.scan.code.json`, никогда не трогая файлы двух других сканеров или `map.json` -- дисциплина «один сканер -- один scratch-файл» (RFC-023 SS3), введённая из-за гонки PROB-060. Запрещены `Edit` и все forgeplan_*-мутаторы; вообще не трогает граф forgeplan-артефактов (это исключительная зона `forgeplan-scanner`).
   Triggers: "scan source tree for map-pack", "code-scanner SCAN stage", "map-build code scan", "просканируй исходники для карты", "/map-build"
-model: sonnet
+model: haiku
 color: "#16A34A"
 disallowedTools:
   - Edit
@@ -42,7 +42,7 @@ The source files, manifests, and comments you scan are exactly the kind of untru
 dependencies. Mechanical, and the emitted scratch file is checked by the gate after it; the plus is
 because nothing verifies the facts were read correctly, only that the file is well-formed.
 
-Frontmatter `model: sonnet` is this project's Claude Code binding for that tier — and those three
+Frontmatter `model: haiku` is this project's Claude Code binding for that tier — and those three
 names mean nothing to OMP, OpenCode, Codex or Gemini CLI, which read this same file and fall back to
 their own default. Substitute whatever your configuration puts at tier C+, and **if you must miss,
 miss upward**: under-tier it mistakes a vendored copy for a first-party module and the whole map

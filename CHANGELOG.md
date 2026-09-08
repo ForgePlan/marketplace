@@ -11,6 +11,42 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Backfill (marketplace#250)**: entries v1.133.0 through v1.139.0 were written after the fact, each from the commit that carried its catalog bump. Where a change merged between two bumps and shipped without a version of its own, it is recorded under the release that first delivered it — the plugin cache is keyed on version, so an unbumped change reaches no user until the next bump.
 
+## [1.171.0] - 2026-09-08
+
+### Every agent is now bound to the tier it asks for — and the binding disproved four ratings
+
+Last release gave all 96 agents a stated tier. This one makes the frontmatter agree with it. The
+mapping is **derived, not chosen**: §6.2 of the guide gives a model tier per task tier, §6.4 names
+which model serves each, and Claude appears at exactly two of those rungs — Opus 5 at A+/A++ and
+Haiku 4.5 at C. Tiers A and B list no Claude model at all, so tier A has no exact rung in this
+runtime and resolves upward, per the ladder's own instruction to miss upward.
+
+**22 bindings moved: 7 up, 11 down, plus 4 ratings corrected by the exercise itself.**
+
+- **Up (7, to `opus`)** — `production-validator` and `claims-authorizer` (A+), `tdd-london` and
+  `canvas-porter-storybook` (A), `debugger`, `error-detective`, `platform-engineer` (B++). The first
+  is the one that mattered most: the last check before a deployment that does not roll back.
+- **Down (11)** — ten C+ agents to `haiku` (the four hook-triggered advisors, the map-pack scanners,
+  `search-specialist`, `api-docs-engineer`, `project-board-manager`) and `map-orchestrator` from
+  `opus` to `sonnet`, which is allowed because *not weaker* permits equal and its own generators sit
+  at `sonnet`. **No reviewer sits at `haiku`** — that boundary is the point, not an accident.
+- **Four ratings were wrong and the binding is what proved it.** Trying to bind them produced results
+  the guide's own rules forbid:
+  - `artifact-reviewer` B+ → **A**. It audits artifacts authored at tier A; binding it below the work
+    it reviews would make it a rubber stamp by construction (§6.5 rule 2: a verifier is never weaker
+    than its generator). The rating was wrong, not the rule.
+  - `docs-scanner`, `evidence-recorder`, `artifact-maintainer` C+ → **B**. Each one's load-bearing
+    rule is a **refusal** — never invent narration, never infer the verdict, never rewrite meaning
+    under the name of a fix. A refusal held under pressure is the first thing to soften on a smaller
+    model, so the mechanical tier was the wrong home. The other C+ agents kept their rating: their
+    risk is *being wrong*, not being talked out of a rule.
+- **The derived table now lives in `AGENT-AUTHORING-GUIDE.md`** beside the three model bullets, with
+  both overriding constraints written down. The bullets describe the shape of the work; the tier
+  decides the value. Leaving that mapping in someone's head is how the next agent drifts.
+
+Distribution afterwards: **60 `sonnet` · 32 `opus` · 10 `haiku`** across the 95 agents that carry a
+tier. 19 plugins minor-bumped.
+
 ## [1.170.0] - 2026-09-08
 
 ### Every agent now states the tier its work needs, not just the name of a Claude model

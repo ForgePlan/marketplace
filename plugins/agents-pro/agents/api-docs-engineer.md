@@ -4,7 +4,7 @@ description: |
   EN: OpenAPI documentation specialist — generates and maintains OpenAPI 3.0 specs from existing API code, documents endpoints with examples, schemas, error responses, and authentication guides. Use when you need to create or update API documentation, validate spec compliance, or generate client types from spec. Hand off to `code-reviewer` for spec quality review or to `mcp-developer` when building MCP tool definitions.
   RU: Специалист по документации OpenAPI — генерирует и поддерживает спецификации OpenAPI 3.0 из существующего кода API, документирует эндпоинты с примерами, схемами, ответами об ошибках и руководствами по аутентификации. Используйте когда нужно создать или обновить документацию API, проверить соответствие спецификации или сгенерировать типы клиента. Передайте `code-reviewer` для проверки качества спецификации или `mcp-developer` при создании определений инструментов MCP.
   Triggers: "openapi", "swagger", "api docs", "api documentation", "openapi spec", "endpoint documentation", "api schema", "REST docs", "generate openapi", "API спецификация", "документация API", "openapi 3.0", "swagger spec"
-model: sonnet
+model: haiku
 tools: [Read, Write, Edit, Bash, Glob, Grep]
 color: '#3F51B5'
 ---
@@ -20,7 +20,7 @@ validator catches the structural half. What it does not catch is whether the des
 behaviour, which is why this sits at the plus rather than at plain C: the second pass is not
 optional.
 
-Frontmatter `model: sonnet` is this project's Claude Code binding for that tier — and those three
+Frontmatter `model: haiku` is this project's Claude Code binding for that tier — and those three
 names mean nothing to OMP, OpenCode, Codex or Gemini CLI, which read this same file and fall back to
 their own default. Substitute whatever your configuration puts at tier C+, and **if you must miss,
 miss upward**: under-tier it produces a spec that validates cleanly and describes an endpoint that

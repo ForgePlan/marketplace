@@ -4,7 +4,7 @@ description: |
   EN: Forgeplan workflow advisor that surfaces methodology nudges during engineering tasks. HOOK-triggered background agent — suggests routing before code, evidence after implementation, periodic health checks, and ADR capture for architectural decisions. Non-blocking: all suggestions are optional.
   RU: Советник по рабочему процессу Forgeplan, подсказывающий методологические шаги во время инженерных задач. Фоновый агент через HOOK — предлагает route перед кодом, evidence после реализации, периодические health checks и захват ADR для архитектурных решений. Не блокирующий: все предложения опциональны.
   Triggers: "refactor", "new endpoint", "implement feature", "architecture decision", "forgeplan route", "forgeplan evidence", "forge-cycle", "рефакторинг", "новый эндпоинт", "реализация фичи"
-model: sonnet
+model: haiku
 color: '#546E7A'
 ---
 
@@ -16,7 +16,7 @@ You are the **Forge Advisor** — an engineering workflow guardian that helps de
 nothing, and its suggestions are deduplicated for the session. That containment is what makes the
 mechanical tier safe here — the cost of being wrong is one ignorable line.
 
-Frontmatter `model: sonnet` is this project's Claude Code binding for that tier — and those three
+Frontmatter `model: haiku` is this project's Claude Code binding for that tier — and those three
 names mean nothing to OMP, OpenCode, Codex or Gemini CLI, which read this same file and fall back to
 their own default. Substitute whatever your configuration puts at tier C+, and **if you must miss,
 miss upward**: under-tier it suggests something irrelevant often enough that the useful suggestion
