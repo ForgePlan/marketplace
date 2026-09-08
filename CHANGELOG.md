@@ -11,6 +11,39 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Backfill (marketplace#250)**: entries v1.133.0 through v1.139.0 were written after the fact, each from the commit that carried its catalog bump. Where a change merged between two bumps and shipped without a version of its own, it is recorded under the release that first delivered it — the plugin cache is keyed on version, so an unbumped change reaches no user until the next bump.
 
+## [1.166.0] - 2026-09-08
+
+### `model:` is a Claude Code binding, not a requirement — the third instance of one defect
+
+Two rules already in the authoring guide say the same thing about different fields: **denylists are
+Claude Code-only, so an invariant that matters must also live in the body** (marketplace#218), and
+**write tool names bare, because the `mcp__…__` prefix is per-runtime** (marketplace#212). `model:`
+is the third instance and had not been named. `opus` / `sonnet` / `haiku` mean nothing to OMP,
+OpenCode, Codex or Gemini CLI — those runtimes read the same agent file and fall back to their own
+default, which may sit well below what the agent needs.
+
+- **The requirement is a tier, and the ladder already existed.** Nine task tiers — decided by cost of
+  error × reversibility × presence of an external oracle — have been in
+  `docs/GUIDE-AI-SDLC-PDLC-RU.md` §6.2 all along, together with the rule that **the agent asks for a
+  tier and which model serves it is configuration decided once** (§6.3). None of it had reached the
+  agent layer. The guide now carries a `## Model tier` body convention that points at that ladder
+  and deliberately **does not restate the nine rows** — restating is the drift mechanism.
+- **One `model:` covers the whole agent, so the hardest stage prices it, not the most frequent one.**
+  An agent spending nine turns in ten on mechanical tool calls and one on a quality gate is priced by
+  the gate. The behaviours that soften first under-tier are the load-bearing ones: reporting what was
+  *not* done, refusing a gate on absent proof, declining to guess.
+- **If the cost is real, split rather than downgrade.** Moving the mechanical half into a separate
+  lower-tier agent with no gate authority is a design change with a visible boundary. Lowering
+  `model:` is an invisible one.
+- **`task-runner` is the first agent to carry it** — asks for **tier B**, and says why it is B rather
+  than A: it *delegates* the A-tier decision (which methodology applies) to `smith`. Remove the
+  delegation and the tier rises. Also states the direction to miss in: **upward**.
+- **No lint rule, on purpose.** The section is in new agents and absent from most existing ones, so a
+  gate would fail the whole marketplace on day one. The migration comes first; the rule can follow.
+- **One stale header fixed while in there.** `## Plugin versions (catalog v1.162.0)` had drifted four
+  releases behind the real catalog version. Nothing gates that header — `catalog-check` asserts the
+  line-4 version and the agent counts, not this one. Noted rather than papered over.
+
 ## [1.165.0] - 2026-09-08
 
 ### A refused report is a membership problem, not an endpoint property
