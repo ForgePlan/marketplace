@@ -11,6 +11,53 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Backfill (marketplace#250)**: entries v1.133.0 through v1.139.0 were written after the fact, each from the commit that carried its catalog bump. Where a change merged between two bumps and shipped without a version of its own, it is recorded under the release that first delivered it — the plugin cache is keyed on version, so an unbumped change reaches no user until the next bump.
 
+## [1.168.0] - 2026-09-08
+
+### The profile letter in the routing map is now a checkable claim
+
+Smith's Agent index tells the orchestrator which agents to dispatch and what evidence each row must
+produce. A row could demand an EVIDENCE artifact from an agent labelled **B** while nothing verified
+the agent could physically create one. That defect has already shipped once — three B-labelled
+reviewers carried allowlists containing zero `forgeplan_*` tools (marketplace#236, EVID-231) — and it
+was caught by a person reading files, not by CI. Since then the only thing standing between us and a
+repeat was the author's memory. Closes NOTE-013 **DEFER-033**.
+
+- **`scripts/ci/routing-profile-check.js`** — read-only, no `--write` mode. Per index row: the row
+  resolves to exactly one agent file; the frontmatter parses and carries `name`; the name matches what
+  the index advertises; the profile label is one the gate understands; and the tool surface honours the
+  letter — what the profile *requires* is reachable, what it *forbids* is not.
+- **The rules were measured, not imagined.** The reachability matrix for all 26 indexed agents was
+  built first; the invariants were written from it. Every non-dagger row already satisfies them, so the
+  gate is green today and holds a regression rather than listing a backlog.
+- **Two subtleties without which the gate would be wrong.** An **allowlist constrains harder than a
+  denylist** — anything unlisted is unreachable — and the gate reads both forms, because the allowlist
+  agents are precisely where the defect lived. And matching is on the **bare** tool name: the
+  `mcp__server__` prefix is runtime-specific, so matching only the prefixed spelling would make the
+  gate wrong in the next runtime (marketplace#212).
+- **Dagger rows are excluded from the letter check, deliberately.** The index footnote declares the
+  letter *advisory* for those and says the body carries the shape. Enforcing a label the document calls
+  advisory would manufacture findings against a recorded decision. They still get the structural checks.
+- **An unrecognised label fails loudly.** A checker that silently skips what it does not understand
+  reports success for work it never did.
+- **Proof that it can fail.** Self-test: 11 cases — 6 must-fire (one per problem class), 2 must-refuse
+  (an index with no rows; a renamed section) so it cannot pass vacuously, 2 must-NOT-fire, 1 parser
+  cross-check. The load-bearing case is a **controlled pair**: the same broken agent fires under a plain
+  row and does *not* fire under a dagger row — one difference, so the advisory skip is demonstrated
+  rather than assumed.
+- **The gate's own parser is verified, not trusted.** It carries a hand-written frontmatter reader to
+  stay dependency-free, and that reader is the one place it could go blind: mis-parse an allowlist into
+  null and every reachability question answers "inherited, therefore yes" while the gate still prints
+  OK. It is diffed against a real YAML parser across all 26 agents — identical. During development the
+  comparison once "passed" because *both* sides were empty; the self-test now fails an empty-vs-empty
+  comparison rather than counting it as a match.
+- **Live mutation, both declaration styles.** `guardian` loses its `activate` denial (inline denylist)
+  → fails, naming the file; `pii-detector` loses `forgeplan_new` from its allowlist (the DEFER-033 shape
+  itself) → fails. Both revert clean and the gate returns green.
+- Registered in **both** runners; `gate-parity-check` now sees 16 gates in each.
+
+**No plugin changed, so nothing new ships to users** — the catalog bump marks the repository release,
+not a plugin update.
+
 ## [1.167.0] - 2026-09-08
 
 ### Nine green ticks that asserted nothing
