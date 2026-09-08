@@ -11,6 +11,36 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Backfill (marketplace#250)**: entries v1.133.0 through v1.139.0 were written after the fact, each from the commit that carried its catalog bump. Where a change merged between two bumps and shipped without a version of its own, it is recorded under the release that first delivered it — the plugin cache is keyed on version, so an unbumped change reaches no user until the next bump.
 
+## [1.167.0] - 2026-09-08
+
+### Nine green ticks that asserted nothing
+
+The mirror-sync token was replaced and the workflow ran nine green jobs. Reading the logs rather than
+the ticks turned that into a much smaller claim, and then into a finding.
+
+- **Every one of the nine printed `No changes — skipping commit`.** The `git push` step never
+  executed, because the mirrors already matched. Green meant *did not crash*, not *synced*.
+- **The push path has never run once in this workflow's life.** Every mirror holds exactly one
+  commit — `orchestra-mcp` two, both placed by hand today — and **none authored by `forgeplan-bot`**.
+  The April run recorded as "successful" printed no `Pushed sync commit` line either. Every byte in
+  every mirror was put there by a human. The previous entry's "one success in April, three failures"
+  was true about run counts and misleading about outcomes; corrected here.
+- **What the token fix did prove**: authentication and checkout of all nine repos — precisely the
+  step that had been failing with `Bad credentials`. What it did not prove: write permission, which
+  went untested because there was nothing to write.
+- **The workflow now says which of three things happened.** Each job writes one line to the run
+  summary — `PUSHED n file(s) as forgeplan-bot`, `no change (mirror already matched)`, or `skipped`.
+  Indistinguishable outcomes are the reason a dead push path survived months of green: this is the
+  same rule `standalone-mirror-check` already follows when it refuses to pass vacuously.
+- **`failure-modes.md` freshness header corrected.** It claimed the last live re-verification was
+  2026-09-06 on build `…0906211602`, while 2026-09-08 spot-checks on `…0908001639` had measured the
+  chat-membership behaviour and **retired a row** (task ranges supposedly invisible to
+  `query_entities` / `search_entities`). The two dates are now named as different strengths of
+  evidence, with the explicit rule: when a row stops reproducing, delete it rather than soften it.
+- **DEFER-034 rewritten, not closed.** Its literal trigger ("a successful run with nine jobs") was
+  met, and closing on that would have been the rubber-stamp the repo's own G9 discipline warns about.
+  The new trigger is falsifiable: a commit authored by `forgeplan-bot` exists in some mirror.
+
 ## [1.166.0] - 2026-09-08
 
 ### `model:` is a Claude Code binding, not a requirement — the third instance of one defect

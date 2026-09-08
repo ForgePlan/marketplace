@@ -1,9 +1,18 @@
 # Failure modes and limits
 
-Everything here was confirmed by reading the Orchestra source, then re-verified live — most recently
-on **2026-09-06 against build `0.141.0-beta.20260906211602`**, the one that closed the bulk of the
-earlier list. Rows kept below are the ones still reproducing. They fail **silently**: they return
-success, or an empty result, and nothing indicates the call did not do what it appeared to.
+Everything here was confirmed by reading the Orchestra source, then re-verified live. The **full
+sweep** was **2026-09-06 against build `0.141.0-beta.20260906211602`**, the one that closed the bulk
+of the earlier list; rows kept below are the ones that still reproduced then. **Spot re-checks on
+2026-09-08 against `0.141.0-beta.20260908001639`** measured the chat-membership behaviour below and
+**retired one row** — a claim that whole task ranges came back from neither `query_entities` nor
+`search_entities` held on the older build and does not hold on the newer one.
+
+Read those two dates as different strengths of evidence: an unmarked row rests on the 09-06 sweep and
+has not been re-measured since. A guide that carries a fixed bug teaches a workaround for a problem
+the reader no longer has, so when a row stops reproducing, delete it rather than soften it.
+
+The rows below fail **silently**: they return success, or an empty result, and nothing indicates the
+call did not do what it appeared to.
 
 ## Which server you are on
 
