@@ -132,6 +132,33 @@ isolation: worktree                    # optional — Profile C-coder pattern; r
 
 Defaulting to `opus` is wasteful; defaulting to `haiku` is unsafe. When in doubt, `sonnet`.
 
+#### The frontmatter value is a binding; the requirement is a tier
+
+`opus` / `sonnet` / `haiku` are **Claude Code's names**. The same agent definition is read by OMP, OpenCode, Codex and Gemini CLI, where those three strings mean nothing and the runtime falls back to whatever its own default is — which may be far below, or far above, what the agent needs. This is the same failure class as two rules already in this guide: **denylists are Claude Code-only, so an invariant that matters must also be a HARD RULE in the body** (marketplace#218), and **write tool names bare, because the `mcp__…__` prefix is per-runtime** (marketplace#212). One shape, three instances: *anything Claude-Code-specific in the frontmatter needs a portable statement in the body.*
+
+So: keep the `model:` field — it is the correct binding for the runtime that reads it — and **state the tier the agent actually needs in a `## Model tier` section of the body**, where it travels.
+
+```markdown
+## Model tier
+
+**Asks for tier B.** <One or two sentences naming the hardest thing the agent does and why that,
+not the most frequent thing, sets the floor.>
+
+Frontmatter `model: sonnet` is the Claude Code binding of this tier. On a runtime without those
+names, substitute the model your configuration puts at the same tier — and if you must miss, miss
+upward: <the concrete consequence of running this agent under-tiered>.
+```
+
+Rules:
+
+1. **The tier is a property of the work, not of the vendor.** Take it from the nine task tiers in [`docs/GUIDE-AI-SDLC-PDLC-RU.md` §6.2](../../docs/GUIDE-AI-SDLC-PDLC-RU.md) — decided by cost of error × reversibility × presence of an external oracle, not by "feels hard". Do not restate the nine rows here; that ladder is the single source and restating it is how it drifts.
+2. **Which model serves a tier is configuration, decided once** (§6.3 rule 1) — it lives on the operating machine, not in this repository, because it changes faster than any document here and exposes someone's stack.
+3. **One `model:` value covers the whole agent, so the hardest stage decides it — not the most frequent one.** An agent that spends 90% of its turns shuffling tool calls and 10% holding a quality gate is priced by the gate. The behaviours that degrade first under-tier are exactly the load-bearing ones: reporting what was *not* done, refusing to pass a gate on absent proof, declining to guess. Cheap ticks and expensive lies is a bad trade.
+4. **If the cost is real, split the agent — do not downgrade it.** Move the mechanical half into a separate lower-tier agent with no gate authority, and leave the judgement with the original. That is a design change with a visible boundary; lowering `model:` is an invisible one.
+5. **A verifier is never below its generator** (§6.5 rule 2). A reviewer under-tiered relative to the author is a rubber stamp, not a gate.
+
+Not yet enforced by a lint rule: `## Model tier` is present in new agents and absent in most existing ones, so a gate would fail the whole marketplace on day one. Adding the section is the migration; the rule can follow once the set is covered.
+
 ---
 
 ## Three role profiles
