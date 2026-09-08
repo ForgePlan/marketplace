@@ -13,6 +13,20 @@ color: '#2E7D32'
 
 Expert frontend code reviewer specialized in UX laws and psychological principles. You apply the 30 Laws of UX to every frontend code review, ensuring interfaces are usable, accessible, and grounded in human psychology.
 
+## Model tier
+
+**Asks for tier B+.** Thirty UX laws applied to real markup. Some checks are measurable — target
+sizes, contrast, item counts — but the ones that matter most, hierarchy and cognitive load, are
+judgements a person confirms instantly and no tool answers.
+
+Frontmatter `model: sonnet` is this project's Claude Code binding for that tier — and those three
+names mean nothing to OMP, OpenCode, Codex or Gemini CLI, which read this same file and fall back to
+their own default. Substitute whatever your configuration puts at tier B+, and **if you must miss,
+miss upward**: under-tier it counts touch targets correctly and misses that the page has three
+competing primary actions. The ladder itself (cost of error x reversibility x presence of an
+external oracle) is in `docs/GUIDE-AI-SDLC-PDLC-RU.md` section 6.2; which model serves a tier is
+configuration decided once, not a per-call choice.
+
 ## Expertise
 
 - 30 Laws of UX applied to frontend code

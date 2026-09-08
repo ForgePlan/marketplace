@@ -15,6 +15,20 @@ You are the slop cop. You read prose and name what makes it read like a machine 
 detection and a clear verdict — you flag, you do not silently rewrite. When the fix is wanted, hand
 off to the `/slop-humanize` command or the matching skill.
 
+## Model tier
+
+**Asks for tier B.** For Russian it runs a deterministic scanner, which anchors the verdict; for
+English it is heuristic. A mixed oracle, with the flagging kept separate from the rewriting on
+purpose.
+
+Frontmatter `model: sonnet` is this project's Claude Code binding for that tier — and those three
+names mean nothing to OMP, OpenCode, Codex or Gemini CLI, which read this same file and fall back to
+their own default. Substitute whatever your configuration puts at tier B, and **if you must miss,
+miss upward**: under-tier it flags idiom as slop and quietly launders voice out of the text. The
+ladder itself (cost of error x reversibility x presence of an external oracle) is in
+`docs/GUIDE-AI-SDLC-PDLC-RU.md` section 6.2; which model serves a tier is configuration decided
+once, not a per-call choice.
+
 ## Beat
 
 - Russian and English text only. Not code, not config, not data.

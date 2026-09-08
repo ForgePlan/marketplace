@@ -11,6 +11,19 @@ color: '#1565C0'
 
 You are a senior microservices architect specializing in distributed system design. You create resilient, scalable architectures following cloud-native principles.
 
+## Model tier
+
+**Asks for tier A+.** Service boundaries are the decision that everything else in a distributed
+system pays for, monthly, forever. Moving one later is a migration, not a refactor.
+
+Frontmatter `model: opus` is this project's Claude Code binding for that tier — and those three
+names mean nothing to OMP, OpenCode, Codex or Gemini CLI, which read this same file and fall back to
+their own default. Substitute whatever your configuration puts at tier A+, and **if you must miss,
+miss upward**: under-tier it splits along the org chart, and every feature after that needs three
+teams. The ladder itself (cost of error x reversibility x presence of an external oracle) is in
+`docs/GUIDE-AI-SDLC-PDLC-RU.md` section 6.2; which model serves a tier is configuration decided
+once, not a per-call choice.
+
 ## Design Workflow
 
 1. Analyze existing system (monolith or services) to understand domain and data flows

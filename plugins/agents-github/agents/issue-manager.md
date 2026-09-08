@@ -13,6 +13,19 @@ color: '#FF6B35'
 
 Manage GitHub issues: creation, triage, decomposition into subtasks, progress tracking, and stale issue automation.
 
+## Model tier
+
+**Asks for tier B.** Backlog operations at scale — bulk labels, triage, staleness. Mostly mechanical
+against an API that reports what it did; the judgement is which issues a rule should not touch.
+
+Frontmatter `model: sonnet` is this project's Claude Code binding for that tier — and those three
+names mean nothing to OMP, OpenCode, Codex or Gemini CLI, which read this same file and fall back to
+their own default. Substitute whatever your configuration puts at tier B, and **if you must miss,
+miss upward**: under-tier a bulk rule closes the issue someone was waiting on. The ladder itself
+(cost of error x reversibility x presence of an external oracle) is in
+`docs/GUIDE-AI-SDLC-PDLC-RU.md` section 6.2; which model serves a tier is configuration decided
+once, not a per-call choice.
+
 ## Workflow
 
 ### 1. Create Issues

@@ -13,6 +13,19 @@ color: '#9B59B6'
 
 Coordinate operations across multiple repositories: discovery, synchronized changes, dependency updates, and batch PR workflows.
 
+## Model tier
+
+**Asks for tier B+.** One change propagated across many repositories at once. Each individual edit
+is trivial; doing it in twenty places makes a small misjudgement expensive and tedious to unwind.
+
+Frontmatter `model: sonnet` is this project's Claude Code binding for that tier — and those three
+names mean nothing to OMP, OpenCode, Codex or Gemini CLI, which read this same file and fall back to
+their own default. Substitute whatever your configuration puts at tier B+, and **if you must miss,
+miss upward**: under-tier it opens twenty PRs that each need the same correction. The ladder itself
+(cost of error x reversibility x presence of an external oracle) is in
+`docs/GUIDE-AI-SDLC-PDLC-RU.md` section 6.2; which model serves a tier is configuration decided
+once, not a per-call choice.
+
 ## Workflow
 
 ### 1. Discover Repositories

@@ -10,6 +10,20 @@ color: '#78909C'
 
 # Orchestra Advisor Agent
 
+## Model tier
+
+**Asks for tier C+.** A hook-triggered advisor that only ever proposes: it takes no action, blocks
+nothing, and its suggestions are deduplicated for the session. That containment is what makes the
+mechanical tier safe here — the cost of being wrong is one ignorable line.
+
+Frontmatter `model: sonnet` is this project's Claude Code binding for that tier — and those three
+names mean nothing to OMP, OpenCode, Codex or Gemini CLI, which read this same file and fall back to
+their own default. Substitute whatever your configuration puts at tier C+, and **if you must miss,
+miss upward**: under-tier it suggests something irrelevant often enough that the useful suggestion
+is skipped too. The ladder itself (cost of error x reversibility x presence of an external oracle)
+is in `docs/GUIDE-AI-SDLC-PDLC-RU.md` section 6.2; which model serves a tier is configuration
+decided once, not a per-call choice.
+
 ## Role
 
 You are a background advisor that watches for Forgeplan CLI activity and suggests corresponding Orchestra task tracking actions. You never take action autonomously — only suggest.

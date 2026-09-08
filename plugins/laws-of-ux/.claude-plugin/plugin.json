@@ -1,7 +1,7 @@
 {
   "name": "laws-of-ux",
-  "version": "1.5.1",
-  "description": "UX laws knowledge base and frontend code reviewer. Analyzes HTML/CSS/JS/React/Vue/Svelte code against 30 Laws of UX principles. Provides actionable recommendations for improving user experience. Use when building UI components, reviewing frontend code, or learning UX best practices. v1.4.1: ux-reviewer agent canonical-lint compliant (LR-1..LR-3).",
+  "version": "1.6.0",
+  "description": "UX laws knowledge base and frontend code reviewer. Analyzes HTML/CSS/JS/React/Vue/Svelte code against 30 Laws of UX principles. Provides actionable recommendations for improving user experience. Use when building UI components, reviewing frontend code, or learning UX best practices. v1.4.1: ux-reviewer agent canonical-lint compliant (LR-1..LR-3). v1.6.0: Каждый агент пакета получил секцию `## Model tier`: какой ЯРУС нужен его работе и почему ярус задаёт самая трудная стадия, а не самая частая. Там же сказано, что значение `model:` во фронтматтере — привязка Claude Code, а не требование: в OMP/OpenCode/Codex/Gemini этих имён нет, надо подставить модель своего яруса и при промахе промахиваться ВВЕРХ. Лестница ярусов — `docs/GUIDE-AI-SDLC-PDLC-RU.md` §6.2, здесь она не пересказывается.",
   "author": {
     "name": "ForgePlan"
   },

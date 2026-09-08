@@ -1,7 +1,7 @@
 {
   "name": "agents-github",
-  "version": "1.1.2",
-  "description": "GitHub operations agents: PR management, issue tracking, release automation, multi-repo coordination, project boards, workflow engineering, and repo architecture. v1.1.2: README records the scope decision — deliberately not forgeplan-aware (marketplace#236). v1.1: 7 agents canonical-lint compliant (LR-1..LR-3) — sonnet model, hex colors, bilingual EN/RU/Triggers descriptions.",
+  "version": "1.2.0",
+  "description": "GitHub operations agents: PR management, issue tracking, release automation, multi-repo coordination, project boards, workflow engineering, and repo architecture. v1.1.2: README records the scope decision — deliberately not forgeplan-aware (marketplace#236). v1.1: 7 agents canonical-lint compliant (LR-1..LR-3) — sonnet model, hex colors, bilingual EN/RU/Triggers descriptions. v1.2.0: Каждый агент пакета получил секцию `## Model tier`: какой ЯРУС нужен его работе и почему ярус задаёт самая трудная стадия, а не самая частая. Там же сказано, что значение `model:` во фронтматтере — привязка Claude Code, а не требование: в OMP/OpenCode/Codex/Gemini этих имён нет, надо подставить модель своего яруса и при промахе промахиваться ВВЕРХ. Лестница ярусов — `docs/GUIDE-AI-SDLC-PDLC-RU.md` §6.2, здесь она не пересказывается.",
   "author": {
     "name": "ForgePlan"
   },

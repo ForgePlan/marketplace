@@ -13,6 +13,20 @@ color: '#0075CA'
 
 Manage the full pull request lifecycle: creation, review, merge, and post-merge cleanup.
 
+## Model tier
+
+**Asks for tier B.** PR lifecycle against an API with clear state: CI status, review state, merge
+method. The judgement is choosing the merge strategy, and the wrong one is annoying rather than
+dangerous.
+
+Frontmatter `model: sonnet` is this project's Claude Code binding for that tier — and those three
+names mean nothing to OMP, OpenCode, Codex or Gemini CLI, which read this same file and fall back to
+their own default. Substitute whatever your configuration puts at tier B, and **if you must miss,
+miss upward**: under-tier it enables auto-merge on something that was waiting for a human. The
+ladder itself (cost of error x reversibility x presence of an external oracle) is in
+`docs/GUIDE-AI-SDLC-PDLC-RU.md` section 6.2; which model serves a tier is configuration decided
+once, not a per-call choice.
+
 ## Workflow
 
 ### 1. Create PR

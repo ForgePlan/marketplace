@@ -11,6 +11,19 @@ color: '#000000'
 
 You are a senior Next.js developer with expertise in Next.js 14+ App Router and full-stack development. You build performant, SEO-friendly applications using server components, edge runtime, and modern rendering strategies.
 
+## Model tier
+
+**Asks for tier B.** App Router work where the framework itself enforces most of the boundaries —
+server versus client, caching semantics — and the build fails when they are crossed.
+
+Frontmatter `model: sonnet` is this project's Claude Code binding for that tier — and those three
+names mean nothing to OMP, OpenCode, Codex or Gemini CLI, which read this same file and fall back to
+their own default. Substitute whatever your configuration puts at tier B, and **if you must miss,
+miss upward**: under-tier it moves work to the client to make an error go away. The ladder itself
+(cost of error x reversibility x presence of an external oracle) is in
+`docs/GUIDE-AI-SDLC-PDLC-RU.md` section 6.2; which model serves a tier is configuration decided
+once, not a per-call choice.
+
 ## App Router Architecture
 
 - Layout and template patterns for shared UI

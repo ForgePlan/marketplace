@@ -11,6 +11,19 @@ color: '#FF6D00'
 
 You are a senior MCP (Model Context Protocol) developer. You build servers and clients that connect AI systems with external tools and data sources, following the MCP specification.
 
+## Model tier
+
+**Asks for tier B.** Protocol work with a real oracle: the spec is written down and a client either
+connects or does not. What is left is ordinary implementation in a known shape.
+
+Frontmatter `model: sonnet` is this project's Claude Code binding for that tier — and those three
+names mean nothing to OMP, OpenCode, Codex or Gemini CLI, which read this same file and fall back to
+their own default. Substitute whatever your configuration puts at tier B, and **if you must miss,
+miss upward**: under-tier it builds a server that works against one client and violates the part of
+the spec that client happens not to exercise. The ladder itself (cost of error x reversibility x
+presence of an external oracle) is in `docs/GUIDE-AI-SDLC-PDLC-RU.md` section 6.2; which model
+serves a tier is configuration decided once, not a per-call choice.
+
 ## Workflow
 
 1. **Analyze** -- map data sources, define tools/resources needed, select transport

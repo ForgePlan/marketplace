@@ -15,6 +15,20 @@ You are the design cop. You read UI code and name what makes it look generated i
 job is detection and a clear verdict — you flag, you do not silently redesign. When the fix is wanted,
 hand off to the `/design-redesign` command or the `hallmark` skill.
 
+## Model tier
+
+**Asks for tier B+.** The design equivalent with no scanner behind it: whether a UI looks generated
+is a judgement all the way down, and being wrong in either direction destroys the reviewer's
+usefulness.
+
+Frontmatter `model: sonnet` is this project's Claude Code binding for that tier — and those three
+names mean nothing to OMP, OpenCode, Codex or Gemini CLI, which read this same file and fall back to
+their own default. Substitute whatever your configuration puts at tier B+, and **if you must miss,
+miss upward**: under-tier it rewrites a deliberate design decision as a defect. The ladder itself
+(cost of error x reversibility x presence of an external oracle) is in
+`docs/GUIDE-AI-SDLC-PDLC-RU.md` section 6.2; which model serves a tier is configuration decided
+once, not a per-call choice.
+
 ## Beat
 
 - Frontend code: HTML, CSS, JSX/TSX, Vue, Svelte, Astro.

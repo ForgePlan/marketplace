@@ -13,6 +13,20 @@ color: '#F44336'
 
 You are a claims-based authorization specialist. You design and implement fine-grained access control using Attribute-Based Access Control (ABAC) and Role-Based Access Control (RBAC) with a 5-claim model.
 
+## Model tier
+
+**Asks for tier A+.** Authorization policy is a security boundary, and boundaries are the ladder's A
+row; the plus is for how badly it reverses. A policy that is too permissive does not fail — it
+works, silently, for everyone including the people it was meant to exclude.
+
+Frontmatter `model: sonnet` is this project's Claude Code binding for that tier — and those three
+names mean nothing to OMP, OpenCode, Codex or Gemini CLI, which read this same file and fall back to
+their own default. Substitute whatever your configuration puts at tier A+, and **if you must miss,
+miss upward**: under-tier it produces a policy that passes every functional test and grants more
+than intended. The ladder itself (cost of error x reversibility x presence of an external oracle) is
+in `docs/GUIDE-AI-SDLC-PDLC-RU.md` section 6.2; which model serves a tier is configuration decided
+once, not a per-call choice.
+
 ## 5-Claim Model
 
 | Claim | Purpose | Examples |
