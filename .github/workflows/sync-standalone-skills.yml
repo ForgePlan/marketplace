@@ -83,6 +83,8 @@ jobs:
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
             if [ "$INPUT_TARGET" != "all" ] && [ "$INPUT_TARGET" != "$MATRIX_PLUGIN" ]; then
               echo "Skipping $MATRIX_PLUGIN (manual target=$INPUT_TARGET)"
+              echo "- \`$MATRIX_PLUGIN\` — _skipped_ (manual run targeted \`$INPUT_TARGET\`)" \
+                >> "$GITHUB_STEP_SUMMARY"
               echo "skip=true" >> "$GITHUB_OUTPUT"
               exit 0
             fi
@@ -150,11 +152,18 @@ jobs:
 
           git add -A
 
+          # A green job must say WHICH of the two things happened. Before this, "the mirror was
+          # already identical" and "the mirror was updated" both rendered as a plain green tick, so
+          # a run where nothing shipped was indistinguishable from a run where everything did — and
+          # the push path went un-exercised for months without anyone being able to notice.
           if git diff --cached --quiet; then
             echo "No changes — skipping commit"
+            echo "- \`${TARGET_REPO}\` — **no change** (mirror already matched the source)" \
+              >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
 
+          changed=$(git diff --cached --name-only | wc -l | tr -d ' ')
           short_sha="${SOURCE_SHA:0:7}"
 
           git commit -m "chore: sync from marketplace@${short_sha}
@@ -166,3 +175,5 @@ jobs:
 
           git push origin HEAD
           echo "Pushed sync commit to ${TARGET_REPO}"
+          echo "- \`${TARGET_REPO}\` — **PUSHED ${changed} file(s)** as forgeplan-bot from ${short_sha}" \
+            >> "$GITHUB_STEP_SUMMARY"
