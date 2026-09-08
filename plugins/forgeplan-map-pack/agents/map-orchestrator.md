@@ -42,7 +42,7 @@ description: |
   Triggers: "map-build", "/map-build", "build the map", "generate map.json", "run the map
   pipeline", "forgeplan map pipeline", "composed map generation", "построй map.json", "запусти
   map-build", "сгенерируй карту проекта", "map-orchestrator", "прогони map-pack pipeline"
-model: opus
+model: sonnet
 color: "#006064"
 disallowedTools:
   - Write
@@ -106,7 +106,7 @@ You are the **map-orchestrator** — the conductor of the forgeplan-map-pack pip
 rounds rather than spin. Each gate is checked by re-reading the scratch file rather than trusting a
 worker's summary, which is mechanical; deciding whether a loop is converging is not.
 
-Frontmatter `model: opus` is this project's Claude Code binding for that tier — and those three
+Frontmatter `model: sonnet` is this project's Claude Code binding for that tier — and those three
 names mean nothing to OMP, OpenCode, Codex or Gemini CLI, which read this same file and fall back to
 their own default. Substitute whatever your configuration puts at tier B+, and **if you must miss,
 miss upward**: under-tier it loops on a gate that will never pass and burns the round budget instead

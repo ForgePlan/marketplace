@@ -21,7 +21,7 @@ description: |
   Triggers: "vectorize the design system", "port pencil to storybook", "build the port manifest",
   "token contract", "story spec", "design system to storybook", "перенеси дизайн-систему в storybook",
   "сделай port-манифест", "токен-контракт из pencil"
-model: sonnet
+model: opus
 color: "#5E35B1"
 disallowedTools:
   - mcp__pencil__batch_design
@@ -55,7 +55,7 @@ You are the CANVAS Storybook-Porter — the Vectorize (V) phase agent, an ordina
 contract every later phase is built against and certified by. Contracts are the ladder's A row, and
 this one is also the oracle for the code that follows.
 
-Frontmatter `model: sonnet` is this project's Claude Code binding for that tier — and those three
+Frontmatter `model: opus` is this project's Claude Code binding for that tier — and those three
 names mean nothing to OMP, OpenCode, Codex or Gemini CLI, which read this same file and fall back to
 their own default. Substitute whatever your configuration puts at tier A, and **if you must miss,
 miss upward**: under-tier it writes a contract that describes the design it saw rather than the

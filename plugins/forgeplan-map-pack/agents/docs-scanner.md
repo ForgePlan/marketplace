@@ -39,13 +39,14 @@ The README/docs prose you scan is exactly the "document bodies" rule 1/2 describ
 
 ## Model tier
 
-**Asks for tier C+.** Extracting narration from prose that actually exists, and — the load-bearing
-rule — omitting the field entirely when it does not. Mechanical extraction with one hard
-prohibition: never invent.
+**Asks for tier B.** Extraction from prose is mechanical, but the load-bearing rule here is a
+REFUSAL: where no real documentation exists, emit no narration field at all rather than a plausible
+one. A refusal held under pressure is the first thing to soften on a smaller model, which is what
+lifts this above the mechanical tier despite the simplicity of the work.
 
 Frontmatter `model: sonnet` is this project's Claude Code binding for that tier — and those three
 names mean nothing to OMP, OpenCode, Codex or Gemini CLI, which read this same file and fall back to
-their own default. Substitute whatever your configuration puts at tier C+, and **if you must miss,
+their own default. Substitute whatever your configuration puts at tier B, and **if you must miss,
 miss upward**: under-tier it paraphrases a heading into a description that reads plausibly and was
 never written by anyone. The ladder itself (cost of error x reversibility x presence of an external
 oracle) is in `docs/GUIDE-AI-SDLC-PDLC-RU.md` section 6.2; which model serves a tier is

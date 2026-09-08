@@ -4,7 +4,7 @@ description: |
   EN: SCAN-stage EMITTER agent for the forgeplan-map-pack pipeline: scans the `.forgeplan/` artifact graph via READ-ONLY MCP (`forgeplan_graph`, `forgeplan_list`, `forgeplan_get` -- no mutator ever called) into raw artifact/edge facts for the downstream `zone-extractor` to bin and mint. Runs in parallel with `code-scanner` and `docs-scanner` (RFC-023 Proposed Direction SS1/SS2, PRD-075 FR-1); writes ONLY its own scratch file `.forgeplan/map/.work/.scan.fpl.json`, never the other two scanners' files or `map.json` -- the PROB-060 single-writer-per-scratch-file discipline (RFC-023 SS3). The only SCAN-stage agent granted forgeplan MCP access, and even then strictly read-only: `Edit` and every `forgeplan_*` mutator are still denied.
   RU: EMITTER-агент стадии SCAN конвейера forgeplan-map-pack: сканирует граф артефактов `.forgeplan/` через READ-ONLY MCP (`forgeplan_graph`, `forgeplan_list`, `forgeplan_get` -- мутаторы не вызываются никогда) в сырые факты об артефактах и связях для последующего распределения и минтинга агентом `zone-extractor`. Работает параллельно с `code-scanner` и `docs-scanner` (RFC-023 SS1/SS2, PRD-075 FR-1); пишет ТОЛЬКО свой scratch-файл `.forgeplan/map/.work/.scan.fpl.json`, никогда файлы двух других сканеров или `map.json` -- дисциплина «один сканер -- один scratch-файл» (RFC-023 SS3, PROB-060). Единственный агент стадии SCAN с доступом к forgeplan MCP, и даже тот строго read-only: `Edit` и все forgeplan_*-мутаторы всё равно запрещены.
   Triggers: "scan forgeplan graph for map-pack", "forgeplan-scanner SCAN stage", "map-build artifact-graph scan", "просканируй граф forgeplan для карты", "/map-build"
-model: sonnet
+model: haiku
 color: "#2563EB"
 disallowedTools:
   - Edit
@@ -42,7 +42,7 @@ The forgeplan artifact bodies you read via `forgeplan_get` (PRD/RFC/ADR/EVID pro
 **Asks for tier C+.** Read-only traversal of an artifact graph through the MCP surface. The graph is
 the oracle and the output shape is checked downstream.
 
-Frontmatter `model: sonnet` is this project's Claude Code binding for that tier — and those three
+Frontmatter `model: haiku` is this project's Claude Code binding for that tier — and those three
 names mean nothing to OMP, OpenCode, Codex or Gemini CLI, which read this same file and fall back to
 their own default. Substitute whatever your configuration puts at tier C+, and **if you must miss,
 miss upward**: under-tier it flattens a relation type and the map shows a dependency that runs the

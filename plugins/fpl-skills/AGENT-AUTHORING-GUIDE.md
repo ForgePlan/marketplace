@@ -128,9 +128,38 @@ isolation: worktree                    # optional — Profile C-coder pattern; r
 
 - **`opus`** — agent makes decisions, runs ADI cycles, judges trade-offs. Examples: `adr-architect`, `pm`, `architect`, `security-expert`, `guardian`.
 - **`sonnet`** — agent does mechanical work that requires structure: scaffolding, drafting, formatting, applying lints. Examples: `tech-writer`, `coder`, `tester`, `research-analyst` (when it summarises rather than reasons).
-- **`haiku`** — agent does fast classification, scanning, simple yes/no. (No marketplace reviewer currently sits here: `pii-detector` is `sonnet` — regex-driven but writes a Profile B EVID; `injection-analyst` moved to `opus` 2026-09-05 — sophistication scoring on hostile input is security-reasoner work, per the Profile B default above.)
+- **`haiku`** — agent does fast classification, scanning, simple yes/no. **Ten agents sit here** since the tier rollout (the four hook-triggered advisors, the map-pack scanners, `search-specialist`, `api-docs-engineer`, `project-board-manager`) and **none of them is a reviewer** — that boundary is the point, not an accident: `pii-detector` stays `sonnet` because it writes a Profile B EVID, and `injection-analyst` moved to `opus` on 2026-09-05 because sophistication scoring on hostile input is security-reasoner work.
 
 Defaulting to `opus` is wasteful; defaulting to `haiku` is unsafe. When in doubt, `sonnet`.
+
+Those three bullets describe the *shape* of the work. They do not decide the value — the **tier**
+does, and the mapping from tier to Claude Code name is derived rather than chosen:
+
+| Task tier (guide §6.2) | Model tier the ladder asks for | Claude Code binding |
+|---|---|---|
+| `C` `C+` `C++` | C | `haiku` |
+| `B` `B+` | B / B+ | `sonnet` |
+| `B++` | A — the ladder splits this row, and our B++ agents are its diagnosis half | `opus` |
+| `A` | A — **no Claude model sits at this rung**, so it resolves upward | `opus` |
+| `A+` `A++` | A+ / A++ | `opus` |
+
+Read the `A` row carefully: `docs/GUIDE-AI-SDLC-PDLC-RU.md` §6.4 names Claude at exactly two model
+tiers — Opus 5 at A+/A++ and Haiku 4.5 at C. Tiers A and B list no Claude model at all, so in this
+runtime tier A has no exact rung and takes the one above, per the ladder's own instruction to miss
+upward. That is a property of *this* runtime, not of the tier: on a configuration whose tier-A model
+is something else, use that.
+
+Two constraints override the table, and both have already corrected a rating here:
+
+1. **A verifier is never weaker than its generator** (§6.5 rule 2). `artifact-reviewer` audits
+   artifacts authored at tier A; rating it B+ would have bound it below the work it reviews, making
+   it a rubber stamp by construction. The rating was wrong, not the rule.
+2. **Where the load-bearing rule is a REFUSAL, the mechanical tier is the wrong home.** A refusal
+   held under pressure — "never invent narration", "never infer the verdict", "never rewrite meaning
+   under the name of a fix" — is the first thing to soften on a smaller model. `docs-scanner`,
+   `evidence-recorder` and `artifact-maintainer` moved from C+ to B for exactly this reason, while
+   the other C+ agents kept their rating because their risk is *being wrong*, not being talked out
+   of a rule.
 
 #### The frontmatter value is a binding; the requirement is a tier
 

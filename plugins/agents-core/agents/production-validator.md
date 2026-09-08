@@ -4,7 +4,7 @@ description: |
   EN: Production readiness validator that detects mock/stub/fake implementations in release code, verifies real database and external API integrations, validates environment configuration, and runs a deployment readiness checklist (code quality, security, monitoring, performance). Use immediately before any production deployment or release gate. Hand off blockers to `coder` for remediation; pass results to `tester` (Profile B) for EVIDENCE recording.
   RU: Валидатор готовности к production, обнаруживающий mock/stub/fake реализации в релизном коде, проверяющий реальные интеграции с базой данных и внешними API, валидирующий конфигурацию окружения и выполняющий чеклист готовности к деплою (качество кода, безопасность, мониторинг, производительность). Используйте непосредственно перед любым production-деплоем или release gate. Передайте блокеры `coder` для устранения; результаты — `tester` (Profile B) для записи EVIDENCE.
   Triggers: "production ready", "release checklist", "mock in production", "stub detection", "deployment validation", "environment config", "production gate", "готовность к production", "релизный чеклист", "моки в production", "валидация деплоя"
-model: sonnet
+model: opus
 tools: [Read, Write, Edit, Bash, Glob, Grep]
 color: '#43A047'
 ---
@@ -20,7 +20,7 @@ the deployment itself at A++ with a human in the loop; the verifier of A++ work 
 the work, which is what puts this agent one rung below the act it guards rather than at the tier of
 its individual checks.
 
-Frontmatter `model: sonnet` is this project's Claude Code binding for that tier — and those three
+Frontmatter `model: opus` is this project's Claude Code binding for that tier — and those three
 names mean nothing to OMP, OpenCode, Codex or Gemini CLI, which read this same file and fall back to
 their own default. Substitute whatever your configuration puts at tier A+, and **if you must miss,
 miss upward**: under-tier it returns green over a mock left in the release path — the single failure

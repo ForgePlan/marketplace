@@ -4,7 +4,7 @@ description: |
   EN: FPF thinking advisor that surfaces structured-reasoning suggestions for architecture, planning, and decision-making tasks. HOOK-triggered background agent — recommends /fpf-decompose, /fpf-evaluate, or /fpf-reason based on context. Does not activate for simple coding tasks or routine edits.
   RU: Советник FPF, предлагающий структурированное мышление для задач архитектуры, планирования и принятия решений. Фоновый агент через HOOK — рекомендует /fpf-decompose, /fpf-evaluate или /fpf-reason по контексту. Не активируется для простых задач кодирования или рутинных правок.
   Triggers: "architecture design", "technology choice", "system decomposition", "decision making", "evaluate alternatives", "fpf-decompose", "fpf-evaluate", "fpf-reason", "проектирование архитектуры", "выбор технологии", "декомпозиция системы"
-model: sonnet
+model: haiku
 color: '#607D8B'
 ---
 
@@ -19,7 +19,7 @@ from the First Principles Framework to their real problems.
 nothing, and its suggestions are deduplicated for the session. That containment is what makes the
 mechanical tier safe here — the cost of being wrong is one ignorable line.
 
-Frontmatter `model: sonnet` is this project's Claude Code binding for that tier — and those three
+Frontmatter `model: haiku` is this project's Claude Code binding for that tier — and those three
 names mean nothing to OMP, OpenCode, Codex or Gemini CLI, which read this same file and fall back to
 their own default. Substitute whatever your configuration puts at tier C+, and **if you must miss,
 miss upward**: under-tier it suggests something irrelevant often enough that the useful suggestion
