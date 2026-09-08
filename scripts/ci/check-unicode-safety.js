@@ -162,6 +162,8 @@ function collectDangerousInvisibleMatches(text) {
 }
 
 const violations = [];
+let scanned = 0;
+let unreadable = 0;
 
 for (const filePath of listFiles(repoRoot)) {
   const relativePath = path.relative(repoRoot, filePath);
@@ -169,8 +171,10 @@ for (const filePath of listFiles(repoRoot)) {
   try {
     text = fs.readFileSync(filePath, 'utf8');
   } catch {
+    unreadable += 1;
     continue;
   }
+  scanned += 1;
 
   for (const violation of collectDangerousInvisibleMatches(text)) {
     violations.push({ file: relativePath, ...violation });
@@ -185,4 +189,16 @@ if (violations.length > 0) {
   process.exit(1);
 }
 
-console.log('Unicode safety check passed: no dangerous invisible / smuggling codepoints.');
+// A pass must say what it covered. "passed" over zero files reads exactly like "passed" over the
+// whole repository, and a mis-pointed scan root is precisely how a gate goes quietly blind.
+if (scanned === 0) {
+  console.error(
+    `Unicode safety check scanned NO files under ${repoRoot} — refusing to report a pass. ` +
+    'Either the scan root is wrong or every candidate file was unreadable.');
+  process.exit(1);
+}
+
+console.log(
+  `Unicode safety check passed: ${scanned} text file(s) scanned` +
+  (unreadable ? `, ${unreadable} unreadable and skipped` : '') +
+  '; no dangerous invisible / smuggling codepoints.');

@@ -100,6 +100,8 @@ for (const target of TARGETS) {
 }
 
 let failures = 0;
+let scanned = 0;
+let unreadable = 0;
 for (const file of files) {
   if (!SCANNED_EXT.test(file)) continue;
 
@@ -107,8 +109,10 @@ for (const file of files) {
   try {
     content = fs.readFileSync(file, 'utf8');
   } catch {
+    unreadable += 1;
     continue;
   }
+  scanned += 1;
 
   for (const leak of findLeaks(content)) {
     console.error(`ERROR: personal path "${leak}" detected in ${repoRelative(file)}`);
@@ -121,4 +125,16 @@ if (failures > 0) {
   process.exit(1);
 }
 
-console.log('Validated: no personal absolute home paths in shipped docs / plugins / scripts.');
+// Same rule as every other gate here: a pass reports its coverage, and zero coverage is a
+// failure rather than a very fast success.
+if (scanned === 0) {
+  console.error(
+    `No scannable files found under ${ROOT} for targets [${TARGETS.join(', ')}] — refusing to ` +
+    'report a pass. The scan root or the target list is wrong.');
+  process.exit(1);
+}
+
+console.log(
+  `Validated: ${scanned} shipped file(s) scanned` +
+  (unreadable ? `, ${unreadable} unreadable and skipped` : '') +
+  '; no personal absolute home paths in docs / plugins / scripts.');

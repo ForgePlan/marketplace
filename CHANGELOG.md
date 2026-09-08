@@ -11,6 +11,34 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Backfill (marketplace#250)**: entries v1.133.0 through v1.139.0 were written after the fact, each from the commit that carried its catalog bump. Where a change merged between two bumps and shipped without a version of its own, it is recorded under the release that first delivered it — the plugin cache is keyed on version, so an unbumped change reaches no user until the next bump.
 
+## [1.169.0] - 2026-09-08
+
+### The last two gates that said "passed" without saying over what
+
+Twelve of the fourteen CI gates already reported their coverage — "425 files scanned", "27 index
+rows", "23 plugins". Two did not: `check-unicode-safety` and `validate-no-personal-paths` printed a
+bare "passed". Over zero files that sentence is still true and completely worthless, and a
+mis-pointed scan root is exactly how a scanner goes quietly blind — the same defect class as the
+mirror sync that stayed green for months while its push path never ran.
+
+- **Both gates now count what they actually opened** and print it: 2176 text files scanned for the
+  unicode check, 2043 shipped files for the personal-path check.
+- **Both refuse a zero-coverage pass.** No files found under the scan root is now an error naming the
+  root, not a very fast success.
+- **A negative control each, four cases apiece** — must-fire on a real violation, must-refuse on an
+  empty root, must-NOT-fire on a clean tree, and must-NOT-fire on the gate's **deliberate carve-out**:
+  VS16 after a status emoji for the unicode gate (banning it would break this repo's own house style),
+  a placeholder username for the path gate. Guarding a carve-out stops someone "tightening" a gate
+  back into a known bug.
+- **The fixtures are generated in a temp directory and the self-tests are written without the
+  dangerous characters in them.** The first draft embedded a literal zero-width space, and the real
+  gate caught it at `check-unicode-safety.selftest.sh:38` — test material that breaks the thing it
+  tests. Both self-tests now assemble their fixture content from codepoints and path fragments at
+  runtime, the same defence the path gate's own source already used on itself.
+- `gate-parity-check` now sees **18** gate files, all wired into both runners.
+
+**No plugin changed** — the catalog bump marks the repository release, not a plugin update.
+
 ## [1.168.0] - 2026-09-08
 
 ### The profile letter in the routing map is now a checkable claim
