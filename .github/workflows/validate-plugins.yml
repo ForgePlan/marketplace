@@ -242,6 +242,11 @@ jobs:
           # asserts each Profile letter is a claim the agent frontmatter can honour (DEFER-033).
           run_gate "routing-profile-check"        node scripts/ci/routing-profile-check.js
           run_gate "routing-profile selftest"     bash scripts/ci/routing-profile-check.selftest.sh
+          # Both gates below used to report a pass without saying over how many files. Over
+          # zero files that sentence is still true and worthless, so they now count their
+          # coverage and refuse a zero-coverage pass; these prove all three behaviours.
+          run_gate "unicode-safety selftest"      bash scripts/ci/check-unicode-safety.selftest.sh
+          run_gate "personal-paths selftest"      bash scripts/ci/validate-no-personal-paths.selftest.sh
           # Runs the runtime's OWN validator, not ours. Skips loudly (exit 0) when the `claude`
           # CLI is absent — the log then says SKIPPED rather than reporting a pass that never ran.
           run_gate "official-plugin-validate"     bash scripts/ci/official-plugin-validate.sh

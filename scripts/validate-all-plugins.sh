@@ -443,6 +443,8 @@ else
     run_gate "standalone-mirror selftest" bash "$CI_DIR/standalone-mirror-check.selftest.sh"
     run_gate "routing-profile-check"     node "$CI_DIR/routing-profile-check.js"
     run_gate "routing-profile selftest"  bash "$CI_DIR/routing-profile-check.selftest.sh"
+    run_gate "unicode-safety selftest"   bash "$CI_DIR/check-unicode-safety.selftest.sh"
+    run_gate "personal-paths selftest"   bash "$CI_DIR/validate-no-personal-paths.selftest.sh"
     run_gate "official-plugin-validate"  bash "$CI_DIR/official-plugin-validate.sh"
     run_gate "gate-parity-check"         node "$CI_DIR/gate-parity-check.js"
 fi
