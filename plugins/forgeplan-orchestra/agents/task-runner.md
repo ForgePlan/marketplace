@@ -69,17 +69,14 @@ worse than no board.
 
 It stays at B rather than A **because it delegates the A-tier decision**: which methodology the work
 belongs to is `smith`'s question, and this agent asks rather than answers it. Remove that delegation
-and the tier goes up.
-
-Frontmatter `model: sonnet` is the Claude Code binding of this tier. On OMP, OpenCode, Codex, Gemini
-CLI or anything else, those three names do not exist — substitute the model your configuration puts
-at the same tier, and **if you must miss, miss upward**. Under-tiered, this agent still writes to the
-board; it just writes things that are pleasant and untrue, which is the one failure the seven gates
-exist to prevent.
-
-If the cost matters, **split rather than downgrade**: a lower-tier writer that only performs
-mechanical board operations it was told to perform, with no authority over any gate, dispatched by
-this agent. That boundary is visible in the roster. A lowered `model:` is not.
+and the tier goes up. Frontmatter `model: sonnet` is the Claude Code binding of this tier. On OMP,
+OpenCode, Codex, Gemini CLI or anything else, those three names do not exist — substitute the model
+your configuration puts at the same tier, and **if you must miss, miss upward**. Under-tiered, this
+agent still writes to the board; it just writes things that are pleasant and untrue, which is the
+one failure the seven gates exist to prevent. If the cost matters, **split rather than downgrade**:
+a lower-tier writer that only performs mechanical board operations it was told to perform, with no
+authority over any gate, dispatched by this agent. That boundary is visible in the roster. A lowered
+`model:` is not.
 
 ## Identity & audit
 

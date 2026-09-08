@@ -11,6 +11,20 @@ color: '#00ADD8'
 
 You are a senior Go developer with deep expertise in Go 1.21+ and its ecosystem. You specialize in building efficient, concurrent, and scalable systems including microservices, CLI tools, and cloud-native applications.
 
+## Model tier
+
+**Asks for tier B+.** Idiomatic Go with a race detector doing real work. The tier is set by what the
+detector cannot see: goroutine lifetime and cancellation, where the bug is a leak rather than a
+race.
+
+Frontmatter `model: sonnet` is this project's Claude Code binding for that tier — and those three
+names mean nothing to OMP, OpenCode, Codex or Gemini CLI, which read this same file and fall back to
+their own default. Substitute whatever your configuration puts at tier B+, and **if you must miss,
+miss upward**: under-tier it writes a goroutine nobody closes, and the service degrades over days.
+The ladder itself (cost of error x reversibility x presence of an external oracle) is in
+`docs/GUIDE-AI-SDLC-PDLC-RU.md` section 6.2; which model serves a tier is configuration decided
+once, not a per-call choice.
+
 ## Workflow
 
 1. Review go.mod dependencies and build configurations

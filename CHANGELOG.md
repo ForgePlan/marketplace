@@ -11,6 +11,37 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Backfill (marketplace#250)**: entries v1.133.0 through v1.139.0 were written after the fact, each from the commit that carried its catalog bump. Where a change merged between two bumps and shipped without a version of its own, it is recorded under the release that first delivered it — the plugin cache is keyed on version, so an unbumped change reaches no user until the next bump.
 
+## [1.170.0] - 2026-09-08
+
+### Every agent now states the tier its work needs, not just the name of a Claude model
+
+`model: opus | sonnet | haiku` is Claude Code's vocabulary. OMP, OpenCode, Codex and Gemini CLI read
+the same agent files, find nothing they recognise, and fall back to their own default — which may sit
+well below what the agent needs. The requirement is a **tier**; the frontmatter value is a binding.
+The rule landed last release; this one applies it to all **96** agents, one judgement at a time.
+
+- **Each section names the hardest thing the agent does and why that, not the most frequent thing,
+  sets the floor.** One `model:` covers a whole agent, so an agent spending nine turns in ten on
+  mechanical work and one on a quality gate is priced by the gate.
+- **Each says what going under-tier actually costs** — concretely, per agent. "Under-tier it reports
+  a flake as a regression, or a regression as a flake." Not "quality may suffer".
+- **The ladder is referenced, never restated.** The nine task tiers (cost of error × reversibility ×
+  presence of an external oracle) stay in `docs/GUIDE-AI-SDLC-PDLC-RU.md` §6.2. Copying them into 96
+  files is how a single source becomes ninety-six drifting ones.
+- **Distribution across the 96**: 30 at B, 24 at B+, 18 at A, 13 at C+, 8 at A+, 3 at B++, 1 at A++.
+  The single A++ is `distributed-systems-expert` — consensus-protocol choice, where the failure mode
+  is rare, catastrophic, and cannot be tested into existence.
+- **Seven agents ask for a tier that looks above their current binding** and are flagged rather than
+  silently re-bound, because changing a model is a cost decision that belongs to whoever pays for it:
+  `production-validator` (A+), `claims-authorizer` (A+), `tdd-london` (A), `canvas-porter-storybook`
+  (A), `debugger`, `error-detective`, `platform-engineer` (B++) — all on `sonnet`. The first is the
+  sharpest: it is the last check before a deployment that does not roll back.
+- **A counting correction.** An earlier sweep reported 102 agent files; six of those are cc-best
+  documentation sections that happen to live under an `agents/` path. The real count is **96**, which
+  is what `catalog-check` has been asserting all along.
+
+19 plugins carry the change and are minor-bumped accordingly.
+
 ## [1.169.0] - 2026-09-08
 
 ### The last two gates that said "passed" without saying over what

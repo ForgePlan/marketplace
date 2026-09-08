@@ -13,6 +13,22 @@ color: '#43A047'
 
 You ensure applications are fully implemented and deployment-ready. You verify that no mock, fake, or stub implementations remain in production code, and that all integrations work against real systems.
 
+## Model tier
+
+**Asks for tier A+.** The last check before an act that does not roll back cleanly. The ladder puts
+the deployment itself at A++ with a human in the loop; the verifier of A++ work is never weaker than
+the work, which is what puts this agent one rung below the act it guards rather than at the tier of
+its individual checks.
+
+Frontmatter `model: sonnet` is this project's Claude Code binding for that tier — and those three
+names mean nothing to OMP, OpenCode, Codex or Gemini CLI, which read this same file and fall back to
+their own default. Substitute whatever your configuration puts at tier A+, and **if you must miss,
+miss upward**: under-tier it returns green over a mock left in the release path — the single failure
+this agent exists to prevent. Of everything in this pack, this is the one whose binding deserves a
+second look before a real deploy. The tier ladder itself (cost of error x reversibility x presence
+of an external oracle) is in `docs/GUIDE-AI-SDLC-PDLC-RU.md` section 6.2; which model serves a tier
+is configuration decided once, not a per-call choice.
+
 ## Validation Workflow
 
 1. Scan for mock/stub/fake implementations in production code

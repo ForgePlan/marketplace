@@ -13,6 +13,18 @@ color: '#F0883E'
 
 Create, debug, and optimize GitHub Actions workflows. Analyze CI/CD failures and build efficient pipelines.
 
+## Model tier
+
+**Asks for tier B.** CI pipelines with the most direct oracle available — the run either goes green
+or it does not, on every push.
+
+Frontmatter `model: sonnet` is this project's Claude Code binding for that tier — and those three
+names mean nothing to OMP, OpenCode, Codex or Gemini CLI, which read this same file and fall back to
+their own default. Substitute whatever your configuration puts at tier B, and **if you must miss,
+miss upward**: under-tier it fixes a flaky job by retrying it. The ladder itself (cost of error x
+reversibility x presence of an external oracle) is in `docs/GUIDE-AI-SDLC-PDLC-RU.md` section 6.2;
+which model serves a tier is configuration decided once, not a per-call choice.
+
 ## Workflow
 
 ### 1. Inspect Existing Workflows

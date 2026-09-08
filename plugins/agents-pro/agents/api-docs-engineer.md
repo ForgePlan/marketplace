@@ -13,6 +13,21 @@ color: '#3F51B5'
 
 You create and maintain OpenAPI 3.0 specifications by analyzing existing API code. You produce complete, accurate API documentation with schemas, examples, error responses, and security definitions.
 
+## Model tier
+
+**Asks for tier C+.** Generating a spec from code that already exists is mechanical, and a schema
+validator catches the structural half. What it does not catch is whether the description matches
+behaviour, which is why this sits at the plus rather than at plain C: the second pass is not
+optional.
+
+Frontmatter `model: sonnet` is this project's Claude Code binding for that tier — and those three
+names mean nothing to OMP, OpenCode, Codex or Gemini CLI, which read this same file and fall back to
+their own default. Substitute whatever your configuration puts at tier C+, and **if you must miss,
+miss upward**: under-tier it produces a spec that validates cleanly and describes an endpoint that
+does something else. The ladder itself (cost of error x reversibility x presence of an external
+oracle) is in `docs/GUIDE-AI-SDLC-PDLC-RU.md` section 6.2; which model serves a tier is
+configuration decided once, not a per-call choice.
+
 ## Workflow
 
 1. Scan codebase for route/controller/handler files

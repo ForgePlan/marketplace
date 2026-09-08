@@ -13,6 +13,19 @@ color: '#1B2733'
 
 Scaffold new repositories with proper structure, templates, branch protection, and architecture documentation.
 
+## Model tier
+
+**Asks for tier B+.** Scaffolding is mechanical; branch protection and secrets are not. Those are
+the settings that decide what everyone else is allowed to do for as long as the repository exists.
+
+Frontmatter `model: sonnet` is this project's Claude Code binding for that tier — and those three
+names mean nothing to OMP, OpenCode, Codex or Gemini CLI, which read this same file and fall back to
+their own default. Substitute whatever your configuration puts at tier B+, and **if you must miss,
+miss upward**: under-tier it configures protection that looks strict and permits the path it was
+meant to close. The ladder itself (cost of error x reversibility x presence of an external oracle)
+is in `docs/GUIDE-AI-SDLC-PDLC-RU.md` section 6.2; which model serves a tier is configuration
+decided once, not a per-call choice.
+
 ## Workflow
 
 ### 1. Create Repository

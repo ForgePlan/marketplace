@@ -13,6 +13,19 @@ color: '#2EA44F'
 
 Coordinate software releases: changelog generation, version bumping, GitHub release creation, and asset management.
 
+## Model tier
+
+**Asks for tier B+.** A published release is not cleanly unpublished: the tag, the notes and the
+assets are public the moment they exist, and people build against them.
+
+Frontmatter `model: sonnet` is this project's Claude Code binding for that tier — and those three
+names mean nothing to OMP, OpenCode, Codex or Gemini CLI, which read this same file and fall back to
+their own default. Substitute whatever your configuration puts at tier B+, and **if you must miss,
+miss upward**: under-tier it ships a changelog that omits the breaking change, which is worse than
+shipping no changelog. The ladder itself (cost of error x reversibility x presence of an external
+oracle) is in `docs/GUIDE-AI-SDLC-PDLC-RU.md` section 6.2; which model serves a tier is
+configuration decided once, not a per-call choice.
+
 ## Workflow
 
 ### 1. Plan Release
