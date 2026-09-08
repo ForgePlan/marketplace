@@ -441,6 +441,8 @@ else
     run_gate "verdict-axis-check"        node "$CI_DIR/verdict-axis-check.js"
     run_gate "standalone-mirror-check"   node "$CI_DIR/standalone-mirror-check.js"
     run_gate "standalone-mirror selftest" bash "$CI_DIR/standalone-mirror-check.selftest.sh"
+    run_gate "routing-profile-check"     node "$CI_DIR/routing-profile-check.js"
+    run_gate "routing-profile selftest"  bash "$CI_DIR/routing-profile-check.selftest.sh"
     run_gate "official-plugin-validate"  bash "$CI_DIR/official-plugin-validate.sh"
     run_gate "gate-parity-check"         node "$CI_DIR/gate-parity-check.js"
 fi

@@ -238,6 +238,10 @@ jobs:
           run_gate "verdict-axis-check"           node scripts/ci/verdict-axis-check.js
           run_gate "standalone-mirror-check"      node scripts/ci/standalone-mirror-check.js
           run_gate "standalone-mirror selftest"   bash scripts/ci/standalone-mirror-check.selftest.sh
+          # The routing map tells smith what to dispatch and what evidence to expect; this
+          # asserts each Profile letter is a claim the agent frontmatter can honour (DEFER-033).
+          run_gate "routing-profile-check"        node scripts/ci/routing-profile-check.js
+          run_gate "routing-profile selftest"     bash scripts/ci/routing-profile-check.selftest.sh
           # Runs the runtime's OWN validator, not ours. Skips loudly (exit 0) when the `claude`
           # CLI is absent — the log then says SKIPPED rather than reporting a pass that never ran.
           run_gate "official-plugin-validate"     bash scripts/ci/official-plugin-validate.sh
