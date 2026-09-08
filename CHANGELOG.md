@@ -11,6 +11,38 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Backfill (marketplace#250)**: entries v1.133.0 through v1.139.0 were written after the fact, each from the commit that carried its catalog bump. Where a change merged between two bumps and shipped without a version of its own, it is recorded under the release that first delivered it — the plugin cache is keyed on version, so an unbumped change reaches no user until the next bump.
 
+## [1.165.0] - 2026-09-08
+
+### A refused report is a membership problem, not an endpoint property
+
+A consuming project hit `7 PERMISSION_DENIED` posting a completion report as a bot, and its docs
+recorded that as a fact about the agent endpoint. It is not. The finding was re-measured here before
+publishing, and one of the two claims did not survive.
+
+- **What is true, and now documented.** Field writes and chat writes are governed **separately**. A
+  bot that had just updated a task's fields was refused `send_message` into that same task's chat;
+  `add_members` with its uid returned `added: true` and the identical message then posted.
+  **Independently verified here, read-only**: `get_members` shows the bot on that task with role
+  `editor`, and the message sits in the chat under its uid. So the gate is **membership**, and a
+  refused report is repairable.
+- **With the cost attached.** `add_members` **notifies everyone already on the task**. That makes it
+  the owner's decision, not a convenience an agent grants itself to get its report posted. Where it
+  still cannot be posted: produce the report and hand it back in session — the requirement is that
+  the report exists, not that the board carries it.
+- **Where it lives.** `orchestra-mcp/references/failure-modes.md` (the identity section, beside "the
+  agent endpoint is not the human") and `orchestra-mcp/references/entities.md` § Messages.
+  `task-cycle` stage 5 gains the consequence in one line: **your project authorising chat writes is
+  not the tracker permitting them**, and the recovery is not yours to perform unasked.
+- **What was refuted, and therefore not documented.** The same session recorded that whole task
+  ranges were returned by **no** `query_entities` call and that `search_entities` came back empty for
+  tasks that demonstrably existed. Re-measured here against build `0.141.0-beta.20260908001639`: the
+  project query returns all 13 of its tasks, the named one among them, and `search_entities` finds it
+  by name. The claim held on the older build and does not hold now — so it stays out. A field guide
+  that carries a fixed bug teaches a workaround for a problem the reader does not have.
+- **The dead sync token has its first concrete cost.** This edit touches a mirrored skill, so the
+  standalone had to be pushed by hand again (DEFER-034). Nothing about that is sustainable; it is the
+  latency the broken credential buys.
+
 ## [1.164.0] - 2026-09-07
 
 ### The ninth mirror goes live — and the sync that would carry it is dead

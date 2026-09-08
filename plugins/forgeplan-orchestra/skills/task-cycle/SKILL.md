@@ -198,6 +198,13 @@ team and usually pushes a notification.
 - **Enabled** — post it into **the task's own discussion**, and only there. Never a channel, a group
   or a direct message.
 
+**Your project allowing it is not the tracker permitting it.** A post can still be refused because
+the identity you hold does not belong to that discussion, even when field writes on the same task
+just succeeded — the two are governed separately (Orchestra: `orchestra-mcp/references/entities.md`
+§ Messages). Joining to fix it notifies everyone already there, so it is the owner's decision, not
+yours. Refused report, no owner to ask: hand it back in session and say why. The gate below is
+satisfied by the report existing.
+
 **Never mention a person.** A mention pushes a notification to a human who did not ask for it —
 including the mention syntax shown in `assets/completion-report.md`, which documents the format
 without licensing its use here.
