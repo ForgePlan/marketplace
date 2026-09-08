@@ -67,6 +67,12 @@ entity uid, or `personal-{memberUid}` for a direct message.
 
 - Messages are **visible to everyone in the chat and push a notification**. Never send one that a
   human did not ask for.
+- **Posting needs membership, and membership is separate from field access.** A bot that can write a
+  task's fields is not thereby allowed to post in its chat: `send_message` returns
+  `7 PERMISSION_DENIED` when the sender does not belong to that chat, seconds after `update_entity`
+  on the same task succeeded. `add_members` with that uid fixes it — and **notifies everyone already
+  on the task**, so it is the owner's call, not a convenience an agent grants itself. Verified
+  2026-09-08. Authorisation in your own config ("we allow chat reports") is not access.
 - Content is **always parsed as markdown** — escape `*`, `#` and friends if you mean them literally.
 - Mentions use `<!type@uid[Display Name]>` with types `task`, `project`, `member`, `channel`,
   `group`, `document`. An `@`-mention notifies a person; treat it as a deliberate act.

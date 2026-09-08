@@ -25,6 +25,17 @@ says "fixed in 0.141-beta-0906", an older agent build still has it.
 `get_agent_prompt` returns instructions the bot's owner deployed. Pin the identity you expect
 (`userUid` in `orchestra.json`) — a server swapped underneath you is otherwise invisible.
 
+**Field writes and chat writes are governed separately.** A bot can update a task's fields and tick
+its checklist while `send_message` into that same task returns `7 PERMISSION_DENIED` — measured
+2026-09-08, both calls seconds apart on one task. The gate is **membership**, not the endpoint: the
+bot was not a member of that chat. `add_members` with the bot's uid returned `added: true` and the
+identical message then posted, `senderUid` the bot.
+
+So a refused report is repairable — but repairing it is a **team-visible act**: `add_members`
+notifies everyone already on the task. Ask the owner first; never add the bot to be helpful. Where
+the report still cannot be posted, produce it and hand it to the human — the requirement is that the
+report exists, not that the board carries it.
+
 ## Silent failures
 
 | Do not | What actually happens |
