@@ -1,6 +1,6 @@
 {
   "name": "forgeplan-orchestra",
-  "version": "3.5.1",
+  "version": "3.6.0",
   "description": "Runs one tracked task end to end on whatever issue tracker a project uses — Orchestra, Jira, Linear, GitHub Issues — through seven gated stages, and carries the Orchestra MCP reference (field model, failure modes, query recipes) as a separate skill free of this ecosystem. Use when the board should tell the truth about work in flight: picking a task that can actually be started, keeping its checklist honest while the work happens, proving each acceptance line, and reporting what was NOT done alongside what was. Full history in CHANGELOG.md.",
   "author": {
     "name": "ForgePlan"

@@ -54,17 +54,29 @@ disallowedTools:
   - mcp__pencil__get_variables
   - mcp__pencil__set_variables
   - mcp__pencil__export_nodes
+  - mcp__hindsight__memory_retain
   - mcp__plugin_fpl-hsmem_hindsight__memory_retain
+  - mcp__hindsight__memory_set_mission
   - mcp__plugin_fpl-hsmem_hindsight__memory_set_mission
+  - mcp__hindsight__mental_model_create
   - mcp__plugin_fpl-hsmem_hindsight__mental_model_create
+  - mcp__hindsight__mental_model_update
   - mcp__plugin_fpl-hsmem_hindsight__mental_model_update
+  - mcp__hindsight__mental_model_delete
   - mcp__plugin_fpl-hsmem_hindsight__mental_model_delete
+  - mcp__hindsight__memory_invalidate
   - mcp__plugin_fpl-hsmem_hindsight__memory_invalidate
+  - mcp__hindsight__memory_reconsolidate
   - mcp__plugin_fpl-hsmem_hindsight__memory_reconsolidate
+  - mcp__hindsight__mental_model_clear
   - mcp__plugin_fpl-hsmem_hindsight__mental_model_clear
+  - mcp__hindsight__directive_create
   - mcp__plugin_fpl-hsmem_hindsight__directive_create
+  - mcp__hindsight__directive_delete
   - mcp__plugin_fpl-hsmem_hindsight__directive_delete
+  - mcp__hindsight__bank_config_set
   - mcp__plugin_fpl-hsmem_hindsight__bank_config_set
+  - mcp__hindsight__document_delete
   - mcp__plugin_fpl-hsmem_hindsight__document_delete
 skills: [canvas-port, react-expert, nuxt, typescript-pro]
 maxTurns: 60

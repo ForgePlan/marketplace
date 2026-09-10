@@ -1,6 +1,6 @@
 {
   "name": "agents-pro",
-  "version": "1.28.1",
+  "version": "1.29.0",
   "description": "Professional specialist agents: security and prompt-injection review, PII detection, architecture and staff-level system review, the pre-activation guardian gate, ADR and specification authors, research analysts and infrastructure roles. Use when a task needs a named expert rather than a generalist — an OWASP/STRIDE pass, an architectural fitness review, a decision recorded as an ADR, or the last gate before an artifact is activated. Full history in CHANGELOG.md.",
   "author": {
     "name": "ForgePlan"

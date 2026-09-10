@@ -1,6 +1,6 @@
 {
   "name": "agents-sparc",
-  "version": "1.7.1",
+  "version": "1.8.0",
   "description": "SPARC methodology agents — specification, pseudocode, architecture, refinement, and the orchestrator that walks a single feature through all five phases with a blocking quality gate between each. Use when adding one feature to an existing, active system and the design should be settled before code: the middle path between greenfield BMAD and a tactical fix. Full history in CHANGELOG.md.",
   "author": {
     "name": "ForgePlan"
