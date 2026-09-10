@@ -212,13 +212,13 @@ Output a short numbered plan. For each item: what it gives, what it costs, and
 the exact command. Then stop and let the user choose.
 
 ```
-For this repo (1,674 files, TypeScript, 3,200 commits, no index, no bank):
+For this repo (2,154 files, TypeScript, 3,200 commits, no index, no bank):
 
 1. Indexed text search      — repo-wide search goes from seconds to milliseconds
                               cost: one binary + an index refreshed on pull
                               → brew install <indexer> && <indexer> index .
 
-2. AST search + codemods    — pattern-shaped refactors across 1,674 files without sed
+2. AST search + codemods    — pattern-shaped refactors across 2,154 files without sed
                               cost: one binary
                               → brew install ast-grep
 

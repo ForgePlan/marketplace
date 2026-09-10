@@ -44,13 +44,13 @@ tell you roughly where to look and what to measure yourself.
 
 **Count what the tools count**, not what `find` counts. `git ls-files | wc -l` is the number that
 matters: the fast searchers respect `.gitignore`, so vendored dependencies are invisible to them
-and enormous to `grep`. On the repository measured here that is 1,674 tracked against 95,141 on
+and enormous to `grep`. On the repository measured here that is 2,154 tracked against 95,201 on
 disk, and that gap — not the index — is where most of the speedup came from.
 
 | Tracked files | Text search | Indexed search | Semantic search | Why |
 |---|---|---|---|---|
 | **under ~1,000** | plain `rg`, nothing else | **no** | **no** | a full scan is already instant; an index costs more to build and keep fresh than it can ever return |
-| **~1,000 – 10,000** | plain `rg` | **probably not** — measure | only if questions are genuinely abstract | measured at 1,674 files: unindexed **29 ms**, indexed **36 ms**. The index lost. It may win higher in this band; we did not measure that |
+| **~1,000 – 10,000** | plain `rg` | **probably not** — measure | only if questions are genuinely abstract | measured at 2,154 files: unindexed **36 ms**, indexed **39 ms** (best of three). The index lost. Re-measured independently on the same tree and it lost again — the direction reproduces, the earlier anchor did not. It may win higher in this band; we did not measure that |
 | **~10,000 – 100,000** | `rg` for one-off scans | **measure before adopting** — this is where the crossover lives | worth considering | the honest answer is that we have no data point in this band. Anyone who tells you otherwise is quoting a vendor |
 | **over ~100,000** | `rg` for a subdirectory | **likely yes** | likely yes | the vendor benchmark claims 52× at 388,000 files. UNVERIFIED by us — treat it as a reason to measure, not as a result |
 
