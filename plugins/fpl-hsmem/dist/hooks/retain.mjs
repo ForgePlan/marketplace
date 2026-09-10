@@ -32,20 +32,30 @@ function readTranscript(path) {
   return messages;
 }
 
-// src/lib/client.ts
+// src/lib/version.ts
 import { readFileSync as readFileSync2 } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 var __dirname = dirname(fileURLToPath(import.meta.url));
-function readPackageVersion() {
-  try {
-    const pkgPath = join(__dirname, "..", "..", "package.json");
-    return JSON.parse(readFileSync2(pkgPath, "utf-8")).version ?? "0.0.0";
-  } catch {
-    return "0.0.0";
+function pluginVersion() {
+  const candidates = [
+    join(__dirname, "..", "..", ".claude-plugin", "plugin.json"),
+    // from src/lib (dev)
+    join(__dirname, "..", ".claude-plugin", "plugin.json")
+    // from dist (bundled)
+  ];
+  for (const p of candidates) {
+    try {
+      const v = JSON.parse(readFileSync2(p, "utf-8")).version;
+      if (typeof v === "string" && v) return v;
+    } catch {
+    }
   }
+  return "unknown";
 }
-var USER_AGENT = `hindsight-mcp/${readPackageVersion()}`;
+
+// src/lib/client.ts
+var USER_AGENT = `hindsight-mcp/${pluginVersion()}`;
 var PATH_ID_RE = /^[A-Za-z0-9_][A-Za-z0-9._~-]*$/;
 function assertPathId(value, what = "id") {
   if (typeof value !== "string" || value.length === 0) {
