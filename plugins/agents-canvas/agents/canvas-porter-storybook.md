@@ -27,6 +27,17 @@ disallowedTools:
   - mcp__pencil__batch_design
   - mcp__pencil__set_variables
   - mcp__plugin_fpl-hsmem_hindsight__memory_retain
+  - mcp__plugin_fpl-hsmem_hindsight__memory_set_mission
+  - mcp__plugin_fpl-hsmem_hindsight__memory_invalidate
+  - mcp__plugin_fpl-hsmem_hindsight__memory_reconsolidate
+  - mcp__plugin_fpl-hsmem_hindsight__mental_model_create
+  - mcp__plugin_fpl-hsmem_hindsight__mental_model_update
+  - mcp__plugin_fpl-hsmem_hindsight__mental_model_delete
+  - mcp__plugin_fpl-hsmem_hindsight__mental_model_clear
+  - mcp__plugin_fpl-hsmem_hindsight__directive_create
+  - mcp__plugin_fpl-hsmem_hindsight__directive_delete
+  - mcp__plugin_fpl-hsmem_hindsight__bank_config_set
+  - mcp__plugin_fpl-hsmem_hindsight__document_delete
 # Intent-scope: a C3 phase generator (Vectorize), an ordinary Task sub-agent (Pencil MCP works in sub-agents, EVID-179).
 #   - It AUTHORS the tokens RFC (forgeplan_new/update/link — draft) AND writes the .canvas-port/ manifest files
 #     (Write). It does NOT activate — the coordinator emits NEEDS_ACTIVATION, the orchestrator activates (HARD RULE 6).

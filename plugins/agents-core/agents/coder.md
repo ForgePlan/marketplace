@@ -7,7 +7,7 @@ description: |
   Triggers: "implement", "write code", "build it", "make it work", "реализуй", "напиши код", "code this up", "программируй", "implement the RFC", "apply this refactor", "fix this bug per SPEC"
 model: sonnet
 color: "#00897B"
-disallowedTools: mcp__forgeplan__forgeplan_new, mcp__forgeplan__forgeplan_update, mcp__forgeplan__forgeplan_link, mcp__forgeplan__forgeplan_validate, mcp__forgeplan__forgeplan_activate, mcp__forgeplan__forgeplan_reason, mcp__forgeplan__forgeplan_claim, mcp__forgeplan__forgeplan_release, mcp__plugin_fpl-hsmem_hindsight__memory_retain, mcp__plugin_fpl-hsmem_hindsight__memory_set_mission, mcp__plugin_fpl-hsmem_hindsight__mental_model_create, mcp__plugin_fpl-hsmem_hindsight__mental_model_update, mcp__plugin_fpl-hsmem_hindsight__mental_model_delete
+disallowedTools: mcp__forgeplan__forgeplan_new, mcp__forgeplan__forgeplan_update, mcp__forgeplan__forgeplan_link, mcp__forgeplan__forgeplan_validate, mcp__forgeplan__forgeplan_activate, mcp__forgeplan__forgeplan_reason, mcp__forgeplan__forgeplan_claim, mcp__forgeplan__forgeplan_release, mcp__plugin_fpl-hsmem_hindsight__memory_retain, mcp__plugin_fpl-hsmem_hindsight__memory_set_mission, mcp__plugin_fpl-hsmem_hindsight__mental_model_create, mcp__plugin_fpl-hsmem_hindsight__mental_model_update, mcp__plugin_fpl-hsmem_hindsight__mental_model_delete, mcp__plugin_fpl-hsmem_hindsight__memory_invalidate, mcp__plugin_fpl-hsmem_hindsight__memory_reconsolidate, mcp__plugin_fpl-hsmem_hindsight__mental_model_clear, mcp__plugin_fpl-hsmem_hindsight__directive_create, mcp__plugin_fpl-hsmem_hindsight__directive_delete, mcp__plugin_fpl-hsmem_hindsight__bank_config_set, mcp__plugin_fpl-hsmem_hindsight__document_delete
 skills:
   - fp-cookbook
   - agentic-rag         # if building skills

@@ -39,6 +39,17 @@ disallowedTools:
   - mcp__pencil__batch_design
   - mcp__pencil__set_variables
   - mcp__pencil__export_nodes
+  - mcp__plugin_fpl-hsmem_hindsight__memory_set_mission
+  - mcp__plugin_fpl-hsmem_hindsight__memory_invalidate
+  - mcp__plugin_fpl-hsmem_hindsight__memory_reconsolidate
+  - mcp__plugin_fpl-hsmem_hindsight__mental_model_create
+  - mcp__plugin_fpl-hsmem_hindsight__mental_model_update
+  - mcp__plugin_fpl-hsmem_hindsight__mental_model_delete
+  - mcp__plugin_fpl-hsmem_hindsight__mental_model_clear
+  - mcp__plugin_fpl-hsmem_hindsight__directive_create
+  - mcp__plugin_fpl-hsmem_hindsight__directive_delete
+  - mcp__plugin_fpl-hsmem_hindsight__bank_config_set
+  - mcp__plugin_fpl-hsmem_hindsight__document_delete
 # Tool-posture note (RFC-021 FR-4 / Tool posture):
 #   - Bash IS allowed (unlike canvas-guardian/canvas-tester) — this gate must RUN the Storybook test
 #     harness (Vitest addon / test-runner) and read the result itself. Bash is for running the suite +

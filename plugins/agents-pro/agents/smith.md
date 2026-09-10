@@ -24,6 +24,13 @@ disallowedTools:
   - mcp__plugin_fpl-hsmem_hindsight__mental_model_create
   - mcp__plugin_fpl-hsmem_hindsight__mental_model_update
   - mcp__plugin_fpl-hsmem_hindsight__mental_model_delete
+  - mcp__plugin_fpl-hsmem_hindsight__memory_invalidate
+  - mcp__plugin_fpl-hsmem_hindsight__memory_reconsolidate
+  - mcp__plugin_fpl-hsmem_hindsight__mental_model_clear
+  - mcp__plugin_fpl-hsmem_hindsight__directive_create
+  - mcp__plugin_fpl-hsmem_hindsight__directive_delete
+  - mcp__plugin_fpl-hsmem_hindsight__bank_config_set
+  - mcp__plugin_fpl-hsmem_hindsight__document_delete
 # MCP dependencies (informational — Profile B-orchestrator inherits all reads from parent session):
 #   - forgeplan: forgeplan_health, forgeplan_list, forgeplan_get, forgeplan_search, forgeplan_graph,
 #                forgeplan_blocked, forgeplan_stale, forgeplan_blindspots, forgeplan_anomalies,

@@ -190,6 +190,47 @@ Not yet enforced by a lint rule: `## Model tier` is present in new agents and ab
 
 ---
 
+## The memory-write set — do not enumerate it from memory
+
+Several profiles below say "denies memory writes". That phrase used to be spelled out as three tool
+names, and this is what happened: the memory relay grew from 13 tools to 27, every denylist kept
+naming the old three, and **27 agents silently gained the ability to delete a document** (which
+cascades to every fact extracted from it, with no undo), rewrite the bank's behavioural
+configuration, retire arbitrary facts, and blank knowledge pages. Nothing announced it. The surface
+grew; the guards did not.
+
+A denylist that enumerates a growing set by hand is stale the day after it is written. So:
+
+**The canonical list lives in one place — `plugins/fpl-hsmem/src/lib/tool-names.ts`, export
+`MEMORY_WRITE_TOOLS`** — and `scripts/ci/memory-denylist-check.js` reads it and fails CI on any
+agent that denies `memory_retain` but not the rest. Adding a tool to the relay is now a decision
+("is this a write?") rather than an omission.
+
+The twelve, at the time of writing (verify against the file, not against this paragraph):
+
+```
+memory_retain          memory_set_mission     memory_invalidate      memory_reconsolidate
+mental_model_create    mental_model_update    mental_model_delete    mental_model_clear
+directive_create       directive_delete       bank_config_set        document_delete
+```
+
+Deliberately **not** on it: `document_ingest` / `document_ingest_file` (Profile A creators file
+artifacts — that is authorship), `mental_model_refresh` (a rebuild from facts already present), and
+every read (`*_list`, `*_get`, `memory_recall`, `memory_reflect`, `memory_status`,
+`memory_get_current_bank`, `bank_config_get`). **Never restrict the reads** — an agent that cannot
+call `memory_get_current_bank` cannot check which bank it is about to write to, and that check is
+the one that prevents the split-corpus failure.
+
+Two caveats that a denylist cannot fix on its own:
+
+- **Denylists are Claude Code-only** (see the section below). Any agent whose correctness depends on
+  not writing memory must also say so as a HARD RULE in its body, where it travels to other runtimes.
+- **A denylist matches the exact tool name, and the prefix depends on how the relay was wired.**
+  `mcp__plugin_fpl-hsmem_hindsight__document_delete` and `mcp__hindsight__document_delete` are
+  different strings. The marketplace convention is the plugin-install prefix; a project that
+  hand-wires the server under its own name defeats every denylist in this repository at once. That
+  is one more reason not to hand-wire a server the plugin already provides.
+
 ## Three role profiles
 
 Every forgeplan-aware agent matches **exactly one** profile. The profile dictates which subset of MCP tools belongs in the whitelist. Mixing profiles in one agent means it can no longer be safely composed in the pipeline — refuse and split into two agents.
@@ -226,7 +267,7 @@ disallowedTools: Write, Edit, NotebookEdit, mcp__forgeplan__forgeplan_activate
 ```yaml
 model: sonnet  # or opus for security/architecture reviewers
 color: "#1976D2"
-disallowedTools: Write, Edit, NotebookEdit, mcp__forgeplan__forgeplan_activate, mcp__forgeplan__forgeplan_reason, mcp__forgeplan__forgeplan_claims, mcp__plugin_fpl-hsmem_hindsight__memory_retain
+disallowedTools: Write, Edit, NotebookEdit, mcp__forgeplan__forgeplan_activate, mcp__forgeplan__forgeplan_reason, mcp__forgeplan__forgeplan_claims, <the memory-write set — see above; do not retype it from here>
 ```
 
 - `Write, Edit, NotebookEdit` — Profile B must not write to `.forgeplan/<kind>/` directly; EVID creation goes through MCP. Source-file writes are only allowed for `coder`-style agents (see Profile C-coder variant)
@@ -276,7 +317,7 @@ Authors may override when their domain demands different priors — document the
 ```yaml
 model: sonnet
 color: "#388E3C"
-disallowedTools: Write, Edit, NotebookEdit, Bash, mcp__forgeplan__forgeplan_new, mcp__forgeplan__forgeplan_update, mcp__forgeplan__forgeplan_link, mcp__forgeplan__forgeplan_validate, mcp__forgeplan__forgeplan_activate, mcp__forgeplan__forgeplan_reason, mcp__forgeplan__forgeplan_claim, mcp__forgeplan__forgeplan_release, mcp__plugin_fpl-hsmem_hindsight__memory_retain, mcp__plugin_fpl-hsmem_hindsight__memory_set_mission, mcp__plugin_fpl-hsmem_hindsight__mental_model_create, mcp__plugin_fpl-hsmem_hindsight__mental_model_update, mcp__plugin_fpl-hsmem_hindsight__mental_model_delete
+disallowedTools: Write, Edit, NotebookEdit, Bash, mcp__forgeplan__forgeplan_new, mcp__forgeplan__forgeplan_update, mcp__forgeplan__forgeplan_link, mcp__forgeplan__forgeplan_validate, mcp__forgeplan__forgeplan_activate, mcp__forgeplan__forgeplan_reason, mcp__forgeplan__forgeplan_claim, mcp__forgeplan__forgeplan_release, <the memory-write set — see above; do not retype it from here>
 ```
 
 If the agent thinks it needs to write, it should hand findings to a Profile A/B agent via the orchestrator instead.
@@ -290,7 +331,7 @@ If the agent thinks it needs to write, it should hand findings to a Profile A/B 
 **Examples**: `artifact-maintainer`
 
 **Tools** — uses `disallowedTools` denylist (B2 paradigm):
-- `disallowedTools: Write, Edit, NotebookEdit, Bash, mcp__forgeplan__forgeplan_new, mcp__forgeplan__forgeplan_activate, mcp__forgeplan__forgeplan_reason, mcp__plugin_fpl-hsmem_hindsight__memory_retain` (+ other hindsight write tools)
+- `disallowedTools: Write, Edit, NotebookEdit, Bash, mcp__forgeplan__forgeplan_new, mcp__forgeplan__forgeplan_activate, mcp__forgeplan__forgeplan_reason, <the memory-write set — see above; do not retype it from here>` + the memory-write set (enumerated in `plugins/fpl-hsmem/src/lib/tool-names.ts`, enforced by `scripts/ci/memory-denylist-check.js`)
 - **Allowed** via default inheritance: forgeplan_get, forgeplan_update, forgeplan_link, forgeplan_supersede, forgeplan_deprecate, forgeplan_validate, forgeplan_score, forgeplan_list, forgeplan_search, forgeplan_claim/release, Read/Grep/Glob, memory_recall, mental_model_get
 
 **Key constraint**: `forgeplan_new` DENIED. Profile D is "fix what exists", never "create from scratch".
@@ -315,7 +356,7 @@ A narrow exception: `coder`, `typescript-pro`, `golang-pro`, etc. — agents tha
 ```yaml
 model: sonnet
 color: "#388E3C"
-disallowedTools: mcp__forgeplan__forgeplan_new, mcp__forgeplan__forgeplan_update, mcp__forgeplan__forgeplan_link, mcp__forgeplan__forgeplan_activate, mcp__forgeplan__forgeplan_supersede, mcp__forgeplan__forgeplan_deprecate, mcp__forgeplan__forgeplan_reason, mcp__plugin_fpl-hsmem_hindsight__memory_retain, mcp__plugin_fpl-hsmem_hindsight__memory_set_mission, mcp__plugin_fpl-hsmem_hindsight__mental_model_create, mcp__plugin_fpl-hsmem_hindsight__mental_model_update, mcp__plugin_fpl-hsmem_hindsight__mental_model_delete
+disallowedTools: mcp__forgeplan__forgeplan_new, mcp__forgeplan__forgeplan_update, mcp__forgeplan__forgeplan_link, mcp__forgeplan__forgeplan_activate, mcp__forgeplan__forgeplan_supersede, mcp__forgeplan__forgeplan_deprecate, mcp__forgeplan__forgeplan_reason, <the memory-write set — see above; do not retype it from here>
 # Write/Edit/Bash are NOT denied — coder writes source files.
 # forgeplan_get/claim/release are inherited from parent — coder uses these.
 # If the build produces evidence, a Profile B agent records it.
@@ -739,7 +780,7 @@ description: |
   Triggers: "review this PR", "code review", "ревью кода"
 model: sonnet
 color: "#E53935"
-disallowedTools: Write, Edit, NotebookEdit, mcp__forgeplan__forgeplan_activate, mcp__forgeplan__forgeplan_reason, mcp__forgeplan__forgeplan_claims, mcp__plugin_fpl-hsmem_hindsight__memory_retain
+disallowedTools: Write, Edit, NotebookEdit, mcp__forgeplan__forgeplan_activate, mcp__forgeplan__forgeplan_reason, mcp__forgeplan__forgeplan_claims, <the memory-write set — see above; do not retype it from here>
 ---
 ```
 
@@ -760,7 +801,7 @@ description: |
   Triggers: "research", "compare alternatives", "найди prior art"
 model: sonnet
 color: "#1E88E5"
-disallowedTools: Write, Edit, NotebookEdit, Bash, mcp__forgeplan__forgeplan_new, mcp__forgeplan__forgeplan_update, mcp__forgeplan__forgeplan_link, mcp__forgeplan__forgeplan_validate, mcp__forgeplan__forgeplan_activate, mcp__forgeplan__forgeplan_reason, mcp__forgeplan__forgeplan_claim, mcp__forgeplan__forgeplan_release, mcp__plugin_fpl-hsmem_hindsight__memory_retain, mcp__plugin_fpl-hsmem_hindsight__memory_set_mission, mcp__plugin_fpl-hsmem_hindsight__mental_model_create, mcp__plugin_fpl-hsmem_hindsight__mental_model_update, mcp__plugin_fpl-hsmem_hindsight__mental_model_delete
+disallowedTools: Write, Edit, NotebookEdit, Bash, mcp__forgeplan__forgeplan_new, mcp__forgeplan__forgeplan_update, mcp__forgeplan__forgeplan_link, mcp__forgeplan__forgeplan_validate, mcp__forgeplan__forgeplan_activate, mcp__forgeplan__forgeplan_reason, mcp__forgeplan__forgeplan_claim, mcp__forgeplan__forgeplan_release, <the memory-write set — see above; do not retype it from here>
 ---
 ```
 
@@ -1823,11 +1864,12 @@ disallowedTools:
   - mcp__forgeplan__forgeplan_reason
   - mcp__forgeplan__forgeplan_claim
   - mcp__forgeplan__forgeplan_release
+  # …and every entry of the memory-write set. Do not retype the list from here — it is
+  # enumerated in plugins/fpl-hsmem/src/lib/tool-names.ts (MEMORY_WRITE_TOOLS) and enforced
+  # by scripts/ci/memory-denylist-check.js, which fails CI on a partial one.
   - mcp__plugin_fpl-hsmem_hindsight__memory_retain
   - mcp__plugin_fpl-hsmem_hindsight__memory_set_mission
-  - mcp__plugin_fpl-hsmem_hindsight__mental_model_create
-  - mcp__plugin_fpl-hsmem_hindsight__mental_model_update
-  - mcp__plugin_fpl-hsmem_hindsight__mental_model_delete
+  - # …the remaining ten
 ```
 
 Note: `forgeplan_claim`/`release` are denied because a Profile B-orchestrator does NOT claim a specific artifact — it reads broad state. Claims belong to agents that mutate one specific artifact. The orchestrator dispatching agents named in the plan handles claim/release at the per-agent layer.
