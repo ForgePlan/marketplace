@@ -1,0 +1,18 @@
+# Changelog
+
+All notable changes to `agents-canvas` are documented here.
+
+## Release notes migrated from the plugin manifest — 2026-09-10
+
+Until this file existed, every release appended its notes to the `description` field in
+`.claude-plugin/plugin.json`. That field is what a user reads when browsing the marketplace, and it
+had grown into a changelog — for this plugin, 2951 characters of it. The text below is that field,
+**preserved verbatim** at the moment it was moved here; the manifest now carries a description of
+what the plugin is and when to use it, per `CONTRIBUTING.md`.
+
+Nothing was rewritten or summarised on the way across. Entries are in the order they had accumulated,
+which is not strictly chronological — releases were appended wherever the previous author put them.
+
+---
+
+CANVAS design-system -> code methodology: the canvas-coordinator master walks Capture -> Audit -> Norm-check -> Vectorize -> Assemble (native single-framework), dispatching every phase and every verifier via Task with a blocking generator-not-verifier gate at each handoff (an instance of the AD/AID-PDLC sub-cycle contract, ADR-010 / RFC-021). hook-gate=Yes: a fail-closed PreToolUse hook blocks Write/Edit to the design-system source paths (per-framework guarded globs) until the tokens RFC is active (the C5 enforcement lever -- the tokens-before-code rule binds human edits, the hook-gate test that warrants the dedicated master, like BMAD's no-code-before-plan). Topology is native single-framework: CANVAS generates in the project's ONE declared framework (resolved via Step 0; Lit / Web-Components is one selectable target, not the canon); tokens are a single tokens.json -> CSS custom properties (the token tool is the project's; Style-Dictionary is one option). Ships one master + seven role agents (canvas-designer, canvas-guardian, canvas-tester, canvas-porter-storybook, canvas-coder, canvas-porter-framework, canvas-storybook-validator) -- all ordinary Task sub-agents (Pencil MCP works in dispatched sub-agents). An OPTIONAL multi-framework wrapper path (one canvas-porter-framework per package, git-worktree isolated) is out-of-default (ADR-016); the default native pipeline is serial (no fan-out). Discoverable by /smith as the design-system -> code stage-master. Reuses laws-of-ux ux-reviewer + agents-core code-reviewer/tester + agents-pro architect-reviewer + adds canvas-coordinator + /canvas + /canvas-init. v1.3.0: Каждый агент пакета получил секцию `## Model tier`: какой ЯРУС нужен его работе и почему ярус задаёт самая трудная стадия, а не самая частая. Там же сказано, что значение `model:` во фронтматтере — привязка Claude Code, а не требование: в OMP/OpenCode/Codex/Gemini этих имён нет, надо подставить модель своего яруса и при промахе промахиваться ВВЕРХ. Лестница ярусов — `docs/GUIDE-AI-SDLC-PDLC-RU.md` §6.2, здесь она не пересказывается. v1.4.0: Каждый агент пакета получил секцию `## Model tier`: какой ЯРУС нужен его работе и почему ярус задаёт самая трудная стадия, а не самая частая. Там же сказано, что значение `model:` во фронтматтере — привязка Claude Code, а не требование: в OMP/OpenCode/Codex/Gemini этих имён нет, надо подставить модель своего яруса и при промахе промахиваться ВВЕРХ. Лестница ярусов — `docs/GUIDE-AI-SDLC-PDLC-RU.md` §6.2, здесь она не пересказывается. Memory-denylist fix: the relay grew 13 -> 27 tools and every agent denylist kept naming the old three, so document_delete (irreversible, cascades to every fact from a document), bank_config_set, memory_invalidate, mental_model_clear and directive_delete became reachable by every memory-restricted agent. All denylists completed from one source (fpl-hsmem MEMORY_WRITE_TOOLS) and held there by a new CI gate with a 4-case self-test.

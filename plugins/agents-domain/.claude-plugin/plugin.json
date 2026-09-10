@@ -1,7 +1,7 @@
 {
   "name": "agents-domain",
-  "version": "1.2.0",
-  "description": "Domain-specific language and framework specialist agents. v1.1.2: README records the scope decision — deliberately not forgeplan-aware; previously an undocumented gap (marketplace#236, EVID-231). Provides expert-level guidance for TypeScript, Go, React, Next.js, Electron, embedded systems, fullstack, game dev, mobile, and WebSocket engineering. v1.1: 11 agents canonical-lint compliant (LR-1 model:sonnet, LR-2 hex colors, LR-3 bilingual descriptions with triggers). v1.2.0: Каждый агент пакета получил секцию `## Model tier`: какой ЯРУС нужен его работе и почему ярус задаёт самая трудная стадия, а не самая частая. Там же сказано, что значение `model:` во фронтматтере — привязка Claude Code, а не требование: в OMP/OpenCode/Codex/Gemini этих имён нет, надо подставить модель своего яруса и при промахе промахиваться ВВЕРХ. Лестница ярусов — `docs/GUIDE-AI-SDLC-PDLC-RU.md` §6.2, здесь она не пересказывается.",
+  "version": "1.2.1",
+  "description": "Domain specialist agents for languages and frameworks: TypeScript, Go, React, Next.js, Electron, embedded systems, fullstack, game development, mobile and WebSocket engineering. Deliberately not forgeplan-aware — they advise on code, not on the artifact graph. Use when the question is idiomatic within one stack, where a generalist answers plausibly but not idiomatically. Full history in CHANGELOG.md.",
   "author": {
     "name": "ForgePlan"
   },
