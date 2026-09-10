@@ -319,4 +319,196 @@ export class HindsightClient {
       updates: { reflect_mission: mission },
     });
   }
+
+  // ---------------------------------------------------------------------------------------------
+  // Browsing and correcting individual memories.
+  //
+  // `recall` answers "what is relevant to this question" and is what the hook calls on every
+  // prompt. These answer a different question — "which stored row is the wrong one" — and that is
+  // the question you must answer before you can correct anything. Without them the relay could
+  // add facts and never fix one.
+  // ---------------------------------------------------------------------------------------------
+
+  /**
+   * Enumerate stored memories by structured filter. `q` is a literal substring, not a search.
+   *
+   * Parameter names are MEASURED against the live API, not transcribed from documentation. Three
+   * plausible spellings are silently ignored by the server — it answers 200 and returns the
+   * unfiltered set — so a tool built on them would report "showing world facts" while showing
+   * everything. Verified honoured: `type` (SINGULAR — `types` is ignored), `state`, `document_id`,
+   * `q`, `tags`. Verified ignored: `types`, `fact_type`.
+   */
+  async listMemories(
+    options: {
+      q?: string;
+      type?: "world" | "experience" | "observation";
+      state?: "valid" | "invalidated" | "all";
+      documentId?: string;
+      tags?: string[];
+      limit?: number;
+      offset?: number;
+      timeoutMs?: number;
+    } = {},
+  ): Promise<{ items?: unknown[]; total?: number; [k: string]: unknown }> {
+    const query: Record<string, string> = {
+      limit: String(options.limit ?? 10),
+      offset: String(options.offset ?? 0),
+    };
+    if (options.q) query.q = options.q;
+    if (options.type) query.type = options.type;
+    if (options.state && options.state !== "all") query.state = options.state;
+    if (options.documentId) query.document_id = assertPathId(options.documentId, "document_id");
+    if (options.tags?.length) query.tags = options.tags.join(",");
+    return this.request(
+      "GET",
+      this.bankUrl(["memories", "list"], query),
+      undefined,
+      options.timeoutMs ?? 20000,
+    );
+  }
+
+  async getMemory(id: string): Promise<Record<string, unknown>> {
+    return this.request("GET", this.bankUrl(["memories", id]), undefined, 15000);
+  }
+
+  /**
+   * Mark a memory invalid, or restore one.
+   *
+   * This is deliberately the ONLY memory mutation the relay exposes. Rewriting a memory's text is
+   * irreversible upstream — it re-embeds, drops the derived observations and re-consolidates — so
+   * the correction path is "retire the wrong fact, write the right one", which leaves the wrong
+   * one readable and undoable. `reason` is what a future reader sees instead of a silent gap.
+   */
+  async invalidateMemory(id: string, reason?: string, restore = false): Promise<unknown> {
+    const body: Record<string, unknown> = restore
+      ? { state: "valid" }
+      : { state: "invalidated", ...(reason ? { invalidation_reason: reason } : {}) };
+    return this.request("PATCH", this.bankUrl(["memories", id]), body, 15000);
+  }
+
+  /**
+   * Drop one memory's derived observations so consolidation rebuilds them.
+   *
+   * The memory itself survives. Use after invalidating a fact that a belief was built on — the
+   * belief does not notice on its own, and recall keeps returning the conclusion drawn from the
+   * fact you just retired.
+   */
+  async reconsolidateMemory(id: string): Promise<unknown> {
+    return this.request("DELETE", this.bankUrl(["memories", id, "observations"]), undefined, 20000);
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // Asynchronous work. Retain returns before the server has finished thinking; these say whether
+  // it finished, and that is the answer to "why does recall still return the old fact".
+  // ---------------------------------------------------------------------------------------------
+
+  /**
+   * List async operations. The response array is `operations`, NOT `items` — this endpoint is
+   * shaped differently from every other list on the API.
+   *
+   * `status` is the only filter the server honours (measured: `status=failed` narrowed 1085 → 6).
+   * Filtering by kind is deliberately absent: `task_type`, `operation_type` and `kind` are all
+   * accepted with a 200 and then ignored, so offering a kind filter would mean reporting a
+   * narrowed view that was never narrowed. Callers that need it filter the returned page.
+   */
+  async listOperations(
+    options: { status?: string; limit?: number; offset?: number } = {},
+  ): Promise<{ operations?: unknown[]; total?: number; [k: string]: unknown }> {
+    const query: Record<string, string> = {
+      limit: String(options.limit ?? 20),
+      offset: String(options.offset ?? 0),
+    };
+    if (options.status) query.status = options.status;
+    return this.request("GET", this.bankUrl(["operations"], query), undefined, 20000);
+  }
+
+  async getOperation(id: string): Promise<Record<string, unknown>> {
+    return this.request("GET", this.bankUrl(["operations", id]), undefined, 15000);
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // Mental models: the two lifecycle operations that were missing.
+  // ---------------------------------------------------------------------------------------------
+
+  /** Force a rebuild now instead of waiting for consolidation. Returns an operation id. */
+  async refreshMentalModel(id: string): Promise<unknown> {
+    return this.request("POST", this.bankUrl(["mental-models", id, "refresh"]), {}, 20000);
+  }
+
+  /**
+   * Blank a page's content, keeping its configuration.
+   *
+   * Our pages are created in `delta` mode, which edits existing content rather than regenerating
+   * it — so a page that has drifted keeps drifting. Clearing removes the baseline, and the next
+   * refresh is a full rebuild. POST, not DELETE: DELETE on this resource removes the page itself.
+   */
+  async clearMentalModel(id: string): Promise<unknown> {
+    return this.request("POST", this.bankUrl(["mental-models", id, "clear"]), {}, 20000);
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // Directives — standing instructions that govern synthesis. Without them every reflect is
+  // ungoverned, which is the state this bank is in today.
+  // ---------------------------------------------------------------------------------------------
+
+  async listDirectives(): Promise<{ items?: unknown[]; [k: string]: unknown }> {
+    return this.request("GET", this.bankUrl(["directives"]), undefined, 15000);
+  }
+
+  async createDirective(args: {
+    name: string;
+    content: string;
+    priority?: number;
+    isActive?: boolean;
+    tags?: string[];
+  }): Promise<unknown> {
+    const body: Record<string, unknown> = { name: args.name, content: args.content };
+    if (args.priority !== undefined) body.priority = args.priority;
+    if (args.isActive !== undefined) body.is_active = args.isActive;
+    if (args.tags?.length) body.tags = args.tags;
+    return this.request("POST", this.bankUrl(["directives"]), body, 15000);
+  }
+
+  async deleteDirective(id: string): Promise<unknown> {
+    return this.request("DELETE", this.bankUrl(["directives", id]), undefined, 15000);
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // Bank configuration. `GET /profile` (which upstream's `get_bank` maps to) returns the name and
+  // mission; the behavioural switches live here and were unreachable from any tool.
+  // ---------------------------------------------------------------------------------------------
+
+  async getBankConfig(): Promise<Record<string, unknown>> {
+    return this.request("GET", `${this.bankPath()}/config`, undefined, 15000);
+  }
+
+  /**
+   * Write behavioural settings. The caller decides WHICH keys are allowed — see the allowlist in
+   * `index.ts`. This method deliberately does not police key names: one policy, one place, and
+   * that place is the tool handler where the refusal can be explained to the caller.
+   */
+  async setBankConfig(updates: Record<string, unknown>): Promise<unknown> {
+    return this.request("PATCH", `${this.bankPath()}/config`, { updates }, 15000);
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // Documents. `memory_unit_count` is the blast-radius number nothing else provides: it is how
+  // many memories die with the document.
+  // ---------------------------------------------------------------------------------------------
+
+  async listDocuments(
+    options: { q?: string; limit?: number; offset?: number } = {},
+  ): Promise<{ items?: unknown[]; total?: number; [k: string]: unknown }> {
+    const query: Record<string, string> = {
+      limit: String(options.limit ?? 10),
+      offset: String(options.offset ?? 0),
+    };
+    if (options.q) query.q = options.q;
+    return this.request("GET", this.bankUrl(["documents"], query), undefined, 20000);
+  }
+
+  /** Irreversible. Cascades to every memory extracted from the document. */
+  async deleteDocument(id: string): Promise<unknown> {
+    return this.request("DELETE", this.bankUrl(["documents", id]), undefined, 30000);
+  }
 }

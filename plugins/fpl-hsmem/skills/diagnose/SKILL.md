@@ -1,7 +1,9 @@
 ---
 name: diagnose
 description: Full Hindsight integration diagnostic. Checks Docker, API, bank state, hook state files, and config resolution. Use when the user reports "memory isn't working", "I don't see recall happening", "retain seems broken", or wants a comprehensive health report before changing settings.
-allowed-tools: mcp__hindsight__memory_status, mcp__hindsight__memory_get_current_bank, mcp__hindsight__mental_model_list, Bash, Read
+hindsight-tools: [memory_status, memory_get_current_bank, mental_model_list, memory_operations, bank_config_get]
+extra-tools: [Bash, Read]
+allowed-tools: mcp__hindsight__memory_status, mcp__plugin_fpl-hsmem_hindsight__memory_status, mcp__hindsight__memory_get_current_bank, mcp__plugin_fpl-hsmem_hindsight__memory_get_current_bank, mcp__hindsight__mental_model_list, mcp__plugin_fpl-hsmem_hindsight__mental_model_list, mcp__hindsight__memory_operations, mcp__plugin_fpl-hsmem_hindsight__memory_operations, mcp__hindsight__bank_config_get, mcp__plugin_fpl-hsmem_hindsight__bank_config_get, Bash, Read
 ---
 
 # Diagnose Hindsight integration

@@ -32,7 +32,7 @@ if [ ! -f "$LIB" ]; then
 fi
 
 node --input-type=module -e "
-import { assertPathId, assertBankId, stripMemoryTags, escapeMemoryMarkers } from '$LIB';
+import { assertPathId, assertBankId, stripMemoryTags, escapeMemoryMarkers, redact, redactionCount, TOOL_NAMES, isOwnTool } from '$LIB';
 
 let pass = 0, fail = 0;
 const ok = (l) => { console.log('  ok   ' + l); pass++; };
@@ -89,6 +89,67 @@ console.log('F4 — the envelope cannot be closed from inside');
   if (escapeMemoryMarkers(innocent) !== innocent)
     bad('leaves unrelated angle brackets alone', 'mangled: ' + escapeMemoryMarkers(innocent));
   else ok('leaves unrelated angle brackets alone');
+}
+
+console.log('R — the redactor masks shapes on the way out');
+{
+  // Built from codepoints and fragments so this FILE never contains a credential-looking literal:
+  // a test fixture that is itself a secret-shaped string poisons every scanner in the repository.
+  const fakeAws = 'AKIA' + 'Q'.repeat(16);
+  const fakeGh = 'ghp_' + 'a'.repeat(30);
+  const fakeJwt = 'eyJ' + 'a'.repeat(14) + '.' + 'b'.repeat(14) + '.' + 'c'.repeat(14);
+  const cases = [
+    [fakeAws, 'aws-key-id', 'masks an AWS key id'],
+    [fakeGh, 'github-token', 'masks a GitHub token'],
+    [fakeJwt, 'jwt', 'masks a JWT'],
+    ['export API_KEY=' + 'z'.repeat(24), 'assigned-secret', 'masks an assigned secret'],
+  ];
+  for (const [input, kind, label] of cases) {
+    const out = redact('before ' + input + ' after');
+    if (out.includes(input)) bad(label, 'the value survived');
+    else if (!out.includes('[redacted:' + kind + ']')) bad(label, 'wrong kind: ' + out);
+    else if (!out.startsWith('before ') || !out.endsWith(' after')) bad(label, 'ate the surroundings: ' + out);
+    else ok(label);
+  }
+
+  // The name must survive so a human can see WHAT was redacted.
+  const named = redact('API_KEY=' + 'z'.repeat(24));
+  if (!/API_KEY/i.test(named)) bad('keeps the field name visible', named);
+  else ok('keeps the field name visible');
+
+  // False positives are the reason a redactor gets turned off. Ordinary prose must pass through.
+  const prose = 'We decided the token budget is 4096 and the password policy is documented in ADR-9.';
+  if (redact(prose) !== prose) bad('leaves ordinary prose untouched', redact(prose));
+  else ok('leaves ordinary prose untouched');
+  if (redactionCount(prose) !== 0) bad('counts zero redactions in prose', String(redactionCount(prose)));
+  else ok('counts zero redactions in prose');
+
+  // Two secrets in one string: a shared global regex keeps lastIndex and skips every other match.
+  const two = redact(fakeAws + ' and ' + fakeAws);
+  if (two.includes(fakeAws)) bad('masks BOTH occurrences of the same shape', two);
+  else ok('masks BOTH occurrences of the same shape');
+}
+
+console.log('H4 — our own tools are never mistaken for chat');
+{
+  if (!isOwnTool('mcp__plugin_fpl-hsmem_hindsight__document_ingest'))
+    bad('recognises the plugin-install prefix', 'not recognised');
+  else ok('recognises the plugin-install prefix');
+
+  if (!isOwnTool('mcp__hindsight__document_ingest'))
+    bad('recognises the hand-wired prefix', 'not recognised');
+  else ok('recognises the hand-wired prefix');
+
+  if (!isOwnTool('memory_recall')) bad('recognises a bare name', 'not recognised');
+  else ok('recognises a bare name');
+
+  if (isOwnTool('mcp__orchestra__send_message'))
+    bad('does not claim someone else tool', 'claimed it');
+  else ok('does not claim someone else tool');
+
+  if (TOOL_NAMES.length !== new Set(TOOL_NAMES).size)
+    bad('the tool list has no duplicates', 'duplicate present');
+  else ok('the tool list has no duplicates');
 }
 
 console.log('');

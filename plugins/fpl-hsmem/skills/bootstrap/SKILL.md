@@ -1,7 +1,9 @@
 ---
 name: bootstrap
 description: Initialize Hindsight memory for a new project. Sets the bank mission, ingests existing formal artifacts (PRDs, RFCs, ADRs), and creates a small starter set of mental models. Use when the user says "set up memory for this project", "bootstrap hindsight here", "initialize Hindsight for <repo>", or when memory_status shows an empty bank in an active project.
-allowed-tools: mcp__hindsight__memory_status, mcp__hindsight__memory_get_current_bank, mcp__hindsight__memory_set_mission, mcp__hindsight__document_ingest_file, mcp__hindsight__mental_model_create, mcp__hindsight__mental_model_list, Read, Glob
+hindsight-tools: [memory_status, memory_get_current_bank, memory_set_mission, document_ingest_file, mental_model_create, mental_model_list, bank_config_get, directive_create]
+extra-tools: [Read, Glob]
+allowed-tools: mcp__hindsight__memory_status, mcp__plugin_fpl-hsmem_hindsight__memory_status, mcp__hindsight__memory_get_current_bank, mcp__plugin_fpl-hsmem_hindsight__memory_get_current_bank, mcp__hindsight__memory_set_mission, mcp__plugin_fpl-hsmem_hindsight__memory_set_mission, mcp__hindsight__document_ingest_file, mcp__plugin_fpl-hsmem_hindsight__document_ingest_file, mcp__hindsight__mental_model_create, mcp__plugin_fpl-hsmem_hindsight__mental_model_create, mcp__hindsight__mental_model_list, mcp__plugin_fpl-hsmem_hindsight__mental_model_list, mcp__hindsight__bank_config_get, mcp__plugin_fpl-hsmem_hindsight__bank_config_get, mcp__hindsight__directive_create, mcp__plugin_fpl-hsmem_hindsight__directive_create, Read, Glob
 ---
 
 # Bootstrap project memory

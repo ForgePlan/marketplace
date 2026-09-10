@@ -1098,11 +1098,11 @@ var require_util = __commonJS({
       return false;
     }
     exports.schemaHasRules = schemaHasRules;
-    function schemaHasRulesButRef(schema, RULES) {
+    function schemaHasRulesButRef(schema, RULES2) {
       if (typeof schema == "boolean")
         return !schema;
       for (const key in schema)
-        if (key !== "$ref" && RULES.all[key])
+        if (key !== "$ref" && RULES2.all[key])
           return true;
       return false;
     }
@@ -2496,17 +2496,17 @@ var require_validate = __commonJS({
     }
     function schemaKeywords(it, types, typeErrors, errsCount) {
       const { gen, schema, data, allErrors, opts, self } = it;
-      const { RULES } = self;
-      if (schema.$ref && (opts.ignoreKeywordsWithRef || !(0, util_1.schemaHasRulesButRef)(schema, RULES))) {
-        gen.block(() => keywordCode(it, "$ref", RULES.all.$ref.definition));
+      const { RULES: RULES2 } = self;
+      if (schema.$ref && (opts.ignoreKeywordsWithRef || !(0, util_1.schemaHasRulesButRef)(schema, RULES2))) {
+        gen.block(() => keywordCode(it, "$ref", RULES2.all.$ref.definition));
         return;
       }
       if (!opts.jtd)
         checkStrictTypes(it, types);
       gen.block(() => {
-        for (const group of RULES.rules)
+        for (const group of RULES2.rules)
           groupKeywords(group);
-        groupKeywords(RULES.post);
+        groupKeywords(RULES2.post);
       });
       function groupKeywords(group) {
         if (!(0, applicability_1.shouldUseGroup)(schema, group))
@@ -4604,10 +4604,10 @@ var require_core = __commonJS({
       }
       // Remove keyword
       removeKeyword(keyword) {
-        const { RULES } = this;
-        delete RULES.keywords[keyword];
-        delete RULES.all[keyword];
-        for (const group of RULES.rules) {
+        const { RULES: RULES2 } = this;
+        delete RULES2.keywords[keyword];
+        delete RULES2.all[keyword];
+        for (const group of RULES2.rules) {
           const i = group.rules.findIndex((rule) => rule.keyword === keyword);
           if (i >= 0)
             group.rules.splice(i, 1);
@@ -4775,9 +4775,9 @@ var require_core = __commonJS({
     }
     var KEYWORD_NAME = /^[a-z_$][a-z0-9_$:-]*$/i;
     function checkKeyword(keyword, def) {
-      const { RULES } = this;
+      const { RULES: RULES2 } = this;
       (0, util_1.eachItem)(keyword, (kwd) => {
-        if (RULES.keywords[kwd])
+        if (RULES2.keywords[kwd])
           throw new Error(`Keyword ${kwd} is already defined`);
         if (!KEYWORD_NAME.test(kwd))
           throw new Error(`Keyword ${kwd} has invalid name`);
@@ -4793,13 +4793,13 @@ var require_core = __commonJS({
       const post = definition === null || definition === void 0 ? void 0 : definition.post;
       if (dataType && post)
         throw new Error('keyword with "post" flag cannot have "type"');
-      const { RULES } = this;
-      let ruleGroup = post ? RULES.post : RULES.rules.find(({ type: t }) => t === dataType);
+      const { RULES: RULES2 } = this;
+      let ruleGroup = post ? RULES2.post : RULES2.rules.find(({ type: t }) => t === dataType);
       if (!ruleGroup) {
         ruleGroup = { type: dataType, rules: [] };
-        RULES.rules.push(ruleGroup);
+        RULES2.rules.push(ruleGroup);
       }
-      RULES.keywords[keyword] = true;
+      RULES2.keywords[keyword] = true;
       if (!definition)
         return;
       const rule = {
@@ -4814,7 +4814,7 @@ var require_core = __commonJS({
         addBeforeRule.call(this, ruleGroup, rule, definition.before);
       else
         ruleGroup.rules.push(rule);
-      RULES.all[keyword] = rule;
+      RULES2.all[keyword] = rule;
       (_a3 = definition.implements) === null || _a3 === void 0 ? void 0 : _a3.forEach((kwd) => this.addKeyword(kwd));
     }
     function addBeforeRule(ruleGroup, rule, before) {
@@ -6964,8 +6964,8 @@ var require_formats = __commonJS({
         return false;
       const year = +matches[1];
       const month = +matches[2];
-      const day = +matches[3];
-      return month >= 1 && month <= 12 && day >= 1 && day <= (month === 2 && isLeapYear(year) ? 29 : DAYS[month]);
+      const day2 = +matches[3];
+      return month >= 1 && month <= 12 && day2 >= 1 && day2 <= (month === 2 && isLeapYear(year) ? 29 : DAYS[month]);
     }
     function compareDate(d1, d2) {
       if (!(d1 && d2))
@@ -7420,7 +7420,193 @@ var HindsightClient = class {
       updates: { reflect_mission: mission }
     });
   }
+  // ---------------------------------------------------------------------------------------------
+  // Browsing and correcting individual memories.
+  //
+  // `recall` answers "what is relevant to this question" and is what the hook calls on every
+  // prompt. These answer a different question — "which stored row is the wrong one" — and that is
+  // the question you must answer before you can correct anything. Without them the relay could
+  // add facts and never fix one.
+  // ---------------------------------------------------------------------------------------------
+  /**
+   * Enumerate stored memories by structured filter. `q` is a literal substring, not a search.
+   *
+   * Parameter names are MEASURED against the live API, not transcribed from documentation. Three
+   * plausible spellings are silently ignored by the server — it answers 200 and returns the
+   * unfiltered set — so a tool built on them would report "showing world facts" while showing
+   * everything. Verified honoured: `type` (SINGULAR — `types` is ignored), `state`, `document_id`,
+   * `q`, `tags`. Verified ignored: `types`, `fact_type`.
+   */
+  async listMemories(options = {}) {
+    const query = {
+      limit: String(options.limit ?? 10),
+      offset: String(options.offset ?? 0)
+    };
+    if (options.q) query.q = options.q;
+    if (options.type) query.type = options.type;
+    if (options.state && options.state !== "all") query.state = options.state;
+    if (options.documentId) query.document_id = assertPathId(options.documentId, "document_id");
+    if (options.tags?.length) query.tags = options.tags.join(",");
+    return this.request(
+      "GET",
+      this.bankUrl(["memories", "list"], query),
+      void 0,
+      options.timeoutMs ?? 2e4
+    );
+  }
+  async getMemory(id) {
+    return this.request("GET", this.bankUrl(["memories", id]), void 0, 15e3);
+  }
+  /**
+   * Mark a memory invalid, or restore one.
+   *
+   * This is deliberately the ONLY memory mutation the relay exposes. Rewriting a memory's text is
+   * irreversible upstream — it re-embeds, drops the derived observations and re-consolidates — so
+   * the correction path is "retire the wrong fact, write the right one", which leaves the wrong
+   * one readable and undoable. `reason` is what a future reader sees instead of a silent gap.
+   */
+  async invalidateMemory(id, reason, restore = false) {
+    const body = restore ? { state: "valid" } : { state: "invalidated", ...reason ? { invalidation_reason: reason } : {} };
+    return this.request("PATCH", this.bankUrl(["memories", id]), body, 15e3);
+  }
+  /**
+   * Drop one memory's derived observations so consolidation rebuilds them.
+   *
+   * The memory itself survives. Use after invalidating a fact that a belief was built on — the
+   * belief does not notice on its own, and recall keeps returning the conclusion drawn from the
+   * fact you just retired.
+   */
+  async reconsolidateMemory(id) {
+    return this.request("DELETE", this.bankUrl(["memories", id, "observations"]), void 0, 2e4);
+  }
+  // ---------------------------------------------------------------------------------------------
+  // Asynchronous work. Retain returns before the server has finished thinking; these say whether
+  // it finished, and that is the answer to "why does recall still return the old fact".
+  // ---------------------------------------------------------------------------------------------
+  /**
+   * List async operations. The response array is `operations`, NOT `items` — this endpoint is
+   * shaped differently from every other list on the API.
+   *
+   * `status` is the only filter the server honours (measured: `status=failed` narrowed 1085 → 6).
+   * Filtering by kind is deliberately absent: `task_type`, `operation_type` and `kind` are all
+   * accepted with a 200 and then ignored, so offering a kind filter would mean reporting a
+   * narrowed view that was never narrowed. Callers that need it filter the returned page.
+   */
+  async listOperations(options = {}) {
+    const query = {
+      limit: String(options.limit ?? 20),
+      offset: String(options.offset ?? 0)
+    };
+    if (options.status) query.status = options.status;
+    return this.request("GET", this.bankUrl(["operations"], query), void 0, 2e4);
+  }
+  async getOperation(id) {
+    return this.request("GET", this.bankUrl(["operations", id]), void 0, 15e3);
+  }
+  // ---------------------------------------------------------------------------------------------
+  // Mental models: the two lifecycle operations that were missing.
+  // ---------------------------------------------------------------------------------------------
+  /** Force a rebuild now instead of waiting for consolidation. Returns an operation id. */
+  async refreshMentalModel(id) {
+    return this.request("POST", this.bankUrl(["mental-models", id, "refresh"]), {}, 2e4);
+  }
+  /**
+   * Blank a page's content, keeping its configuration.
+   *
+   * Our pages are created in `delta` mode, which edits existing content rather than regenerating
+   * it — so a page that has drifted keeps drifting. Clearing removes the baseline, and the next
+   * refresh is a full rebuild. POST, not DELETE: DELETE on this resource removes the page itself.
+   */
+  async clearMentalModel(id) {
+    return this.request("POST", this.bankUrl(["mental-models", id, "clear"]), {}, 2e4);
+  }
+  // ---------------------------------------------------------------------------------------------
+  // Directives — standing instructions that govern synthesis. Without them every reflect is
+  // ungoverned, which is the state this bank is in today.
+  // ---------------------------------------------------------------------------------------------
+  async listDirectives() {
+    return this.request("GET", this.bankUrl(["directives"]), void 0, 15e3);
+  }
+  async createDirective(args) {
+    const body = { name: args.name, content: args.content };
+    if (args.priority !== void 0) body.priority = args.priority;
+    if (args.isActive !== void 0) body.is_active = args.isActive;
+    if (args.tags?.length) body.tags = args.tags;
+    return this.request("POST", this.bankUrl(["directives"]), body, 15e3);
+  }
+  async deleteDirective(id) {
+    return this.request("DELETE", this.bankUrl(["directives", id]), void 0, 15e3);
+  }
+  // ---------------------------------------------------------------------------------------------
+  // Bank configuration. `GET /profile` (which upstream's `get_bank` maps to) returns the name and
+  // mission; the behavioural switches live here and were unreachable from any tool.
+  // ---------------------------------------------------------------------------------------------
+  async getBankConfig() {
+    return this.request("GET", `${this.bankPath()}/config`, void 0, 15e3);
+  }
+  /**
+   * Write behavioural settings. The caller decides WHICH keys are allowed — see the allowlist in
+   * `index.ts`. This method deliberately does not police key names: one policy, one place, and
+   * that place is the tool handler where the refusal can be explained to the caller.
+   */
+  async setBankConfig(updates) {
+    return this.request("PATCH", `${this.bankPath()}/config`, { updates }, 15e3);
+  }
+  // ---------------------------------------------------------------------------------------------
+  // Documents. `memory_unit_count` is the blast-radius number nothing else provides: it is how
+  // many memories die with the document.
+  // ---------------------------------------------------------------------------------------------
+  async listDocuments(options = {}) {
+    const query = {
+      limit: String(options.limit ?? 10),
+      offset: String(options.offset ?? 0)
+    };
+    if (options.q) query.q = options.q;
+    return this.request("GET", this.bankUrl(["documents"], query), void 0, 2e4);
+  }
+  /** Irreversible. Cascades to every memory extracted from the document. */
+  async deleteDocument(id) {
+    return this.request("DELETE", this.bankUrl(["documents", id]), void 0, 3e4);
+  }
 };
+
+// src/lib/tool-names.ts
+var TOOL_NAMES = [
+  // memory — write and read
+  "memory_retain",
+  "memory_recall",
+  "memory_reflect",
+  "memory_status",
+  "memory_get_current_bank",
+  "memory_set_mission",
+  // memory — browse and correct
+  "memory_list",
+  "memory_get",
+  "memory_invalidate",
+  "memory_reconsolidate",
+  "memory_operations",
+  // mental models
+  "mental_model_list",
+  "mental_model_get",
+  "mental_model_create",
+  "mental_model_update",
+  "mental_model_delete",
+  "mental_model_refresh",
+  "mental_model_clear",
+  // directives
+  "directive_list",
+  "directive_create",
+  "directive_delete",
+  // bank configuration
+  "bank_config_get",
+  "bank_config_set",
+  // documents
+  "document_ingest",
+  "document_ingest_file",
+  "document_list",
+  "document_delete"
+];
+var NAME_SET = new Set(TOOL_NAMES);
 
 // src/lib/content.ts
 var MEMORY_MARKERS = ["hindsight_memories", "relevant_memories"];
@@ -7430,6 +7616,61 @@ function escapeMemoryMarkers(text) {
     out = out.replace(new RegExp(`</?${marker}\\b`, "gi"), (m) => m.replace("<", "&lt;"));
   }
   return out;
+}
+
+// src/lib/redact.ts
+var RULES = [
+  { kind: "private-key", re: /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/g },
+  { kind: "private-key", re: /-----BEGIN [A-Z ]*PRIVATE KEY-----/g },
+  { kind: "jwt", re: /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/g },
+  { kind: "github-token", re: /\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}\b/g },
+  { kind: "github-token", re: /\bgithub_pat_[A-Za-z0-9_]{20,}\b/g },
+  { kind: "openai-key", re: /\bsk-(?:proj-)?[A-Za-z0-9_-]{20,}\b/g },
+  { kind: "anthropic-key", re: /\bsk-ant-[A-Za-z0-9_-]{20,}\b/g },
+  { kind: "aws-key-id", re: /\bAKIA[0-9A-Z]{16}\b/g },
+  { kind: "slack-token", re: /\bxox[baprs]-[A-Za-z0-9-]{10,}\b/g },
+  { kind: "hindsight-key", re: /\bhsk_[A-Za-z0-9_-]{16,}\b/g },
+  { kind: "google-key", re: /\bAIza[0-9A-Za-z_-]{30,}\b/g },
+  { kind: "bearer", re: /\b[Bb]earer\s+[A-Za-z0-9._~+/-]{16,}={0,2}/g },
+  {
+    // The catch-all: a credential-ish NAME, an assignment, and a long-enough value. The name and
+    // the separator are kept so the reader can still see WHAT was redacted — a line that reads
+    // `[redacted]` alone tells a debugging human nothing.
+    kind: "assigned-secret",
+    re: /\b(api[_-]?key|apikey|password|passwd|pwd|secret|token|access[_-]?key|private[_-]?key|client[_-]?secret)\b(\s*[:=]\s*|"\s*:\s*")(?!\s)([^\s"',;]{8,})/gi,
+    keep: 1
+  }
+];
+var MAX_SCAN = 512 * 1024;
+function redact(text) {
+  if (typeof text !== "string" || text.length === 0) return text;
+  if (text.length > MAX_SCAN) {
+    return `[not redacted: ${text.length} chars exceeds the ${MAX_SCAN}-char scan limit]`;
+  }
+  let out = text;
+  for (const rule of RULES) {
+    const re = new RegExp(rule.re.source, rule.re.flags);
+    out = out.replace(re, (...args) => {
+      if (rule.keep === void 0) return `[redacted:${rule.kind}]`;
+      const kept = String(args[rule.keep] ?? "");
+      const sep2 = String(args[rule.keep + 1] ?? "=");
+      return `${kept}${sep2}[redacted:${rule.kind}]`;
+    });
+  }
+  return out;
+}
+function redactDeep(value, depth = 0) {
+  if (depth > 12) return value;
+  if (typeof value === "string") return redact(value);
+  if (Array.isArray(value)) return value.map((v) => redactDeep(v, depth + 1));
+  if (value && typeof value === "object") {
+    const out = {};
+    for (const [k, v] of Object.entries(value)) {
+      out[k] = redactDeep(v, depth + 1);
+    }
+    return out;
+  }
+  return value;
 }
 
 // node_modules/zod/v4/core/util.js
@@ -17163,33 +17404,40 @@ if (isDisabled()) {
 }
 var config2 = loadConfig();
 var client = new HindsightClient(config2.url, config2.bankId, config2.apiKey);
+var server = new Server(
+  { name: "hindsight-mcp", version: "3.0.0" },
+  { capabilities: { tools: {} } }
+);
 var tools = [
+  // ---- memory: write and read -------------------------------------------------------------
   {
     name: "memory_retain",
-    description: "Save an arbitrary fact, decision, or lesson into the current bank's long-term memory.",
+    description: "Save a fact, decision, or lesson into the bank's long-term memory. Returns immediately by default: extraction happens server-side afterwards, so the fact is NOT searchable the instant this returns. Pass wait:true when the very next step depends on recalling it.",
+    annotations: { title: "Remember this", destructiveHint: false, openWorldHint: false },
     inputSchema: {
       type: "object",
       properties: {
         content: { type: "string", description: "Text to save" },
         tags: { type: "array", items: { type: "string" }, description: "Optional tags" },
-        context: { type: "string", description: "Optional context/source label" }
+        context: { type: "string", description: "Optional context/source label" },
+        wait: {
+          type: "boolean",
+          description: "Block until the server has finished extracting (slower, up to 60s)"
+        }
       },
       required: ["content"]
     }
   },
   {
     name: "memory_recall",
-    description: "Semantic search over memories. Returns relevant facts ranked by semantic similarity.",
+    description: "Semantic search over memories: returns the facts most relevant to a question, ranked by meaning. This is the tool for 'what do we know about X'. It is NOT the tool for finding a specific stored row in order to correct it \u2014 that is memory_list.",
+    annotations: { title: "Search memory", readOnlyHint: true, openWorldHint: false },
     inputSchema: {
       type: "object",
       properties: {
-        query: { type: "string", description: "Search query (full natural-language phrase works best)" },
+        query: { type: "string", description: "Search query (a full natural-language phrase works best)" },
         max_tokens: { type: "number", description: "Token budget (default 1024)" },
-        budget: {
-          type: "string",
-          enum: ["low", "mid", "high"],
-          description: "Search thoroughness"
-        },
+        budget: { type: "string", enum: ["low", "mid", "high"], description: "Search thoroughness" },
         types: {
           type: "array",
           items: { type: "string" },
@@ -17201,82 +17449,164 @@ var tools = [
   },
   {
     name: "memory_reflect",
-    description: "LLM-synthesized answer over the bank's memories. Use when you want a coherent summary, not raw facts.",
+    description: "LLM-synthesised answer over the bank's memories \u2014 a written conclusion, not a list of facts. Slow (a minute is normal). Use when you want the bank's view of a topic; use memory_recall when you want the underlying facts themselves.",
+    annotations: { title: "Ask the bank", destructiveHint: false, openWorldHint: false },
     inputSchema: {
       type: "object",
-      properties: {
-        query: { type: "string", description: "Question or topic to reflect on" }
-      },
+      properties: { query: { type: "string", description: "Question or topic to reflect on" } },
       required: ["query"]
     }
   },
   {
     name: "memory_status",
-    description: "Health check + statistics for the current bank (memory count, documents, links).",
+    description: "Health, statistics and privacy posture of the current bank: counts by fact type, where the bank id came from, and whether server-side secret masking is on.",
+    annotations: { title: "Bank status", readOnlyHint: true, openWorldHint: false },
     inputSchema: { type: "object", properties: {} }
   },
   {
     name: "memory_get_current_bank",
-    description: "Returns the bank currently in use. Useful for confirming the resolved bank ID.",
+    description: "Which bank this server writes to, and which configuration file decided that. Check it first when memory seems to have vanished \u2014 the usual cause is two configs naming two banks.",
+    annotations: { title: "Which bank", readOnlyHint: true, openWorldHint: false },
     inputSchema: { type: "object", properties: {} }
   },
   {
     name: "memory_set_mission",
-    description: "Set the mission/persona for the current bank (one-time). Affects how Hindsight phrases recall/reflect answers.",
+    description: "Set the bank's persona \u2014 how reflect phrases its answers. Does NOT change what gets extracted from conversations; that is an operator setting, deliberately not reachable here.",
+    annotations: { title: "Set bank persona", idempotentHint: true, openWorldHint: false },
     inputSchema: {
       type: "object",
-      properties: {
-        mission: { type: "string", description: "Bank's role/context description" }
-      },
+      properties: { mission: { type: "string", description: "Bank's role/context description" } },
       required: ["mission"]
     }
   },
+  // ---- memory: browse and correct ---------------------------------------------------------
+  {
+    name: "memory_list",
+    description: "Browse stored memories by structured filter \u2014 type, valid/invalidated state, source document, tags \u2014 and get their ids. This is how you find the specific wrong row before correcting it; memory_recall ranks by meaning and cannot enumerate. `q` is a literal substring match, not a search.",
+    annotations: { title: "Browse memories", readOnlyHint: true, openWorldHint: false },
+    inputSchema: {
+      type: "object",
+      properties: {
+        q: { type: "string", description: "Literal substring to match in the memory text" },
+        type: {
+          type: "string",
+          enum: ["world", "experience", "observation"],
+          description: "One fact type (the API ignores a list here)"
+        },
+        state: { type: "string", enum: ["valid", "invalidated", "all"], description: "Curation state" },
+        document_id: { type: "string", description: "Only memories extracted from this document" },
+        tags: { type: "array", items: { type: "string" } },
+        limit: { type: "number", description: "Default 10, max 50" },
+        offset: { type: "number", description: "For paging; total is always reported" },
+        acknowledge_unmasked: {
+          type: "boolean",
+          description: "Required with `q` while this bank stores unmasked text (see the refusal text)"
+        }
+      }
+    }
+  },
+  {
+    name: "memory_get",
+    description: "Read one memory in full by id, including why it was invalidated if it was. Use after memory_list has given you the id.",
+    annotations: { title: "Read one memory", readOnlyHint: true, openWorldHint: false },
+    inputSchema: {
+      type: "object",
+      properties: { id: { type: "string", description: "Memory id" } },
+      required: ["id"]
+    }
+  },
+  {
+    name: "memory_invalidate",
+    description: "Retire a wrong fact, or restore one you retired. The text is kept and stays readable \u2014 this marks it, it does not erase it, and it is undoable with restore:true. To correct a fact: invalidate the wrong one, then memory_retain the right one.",
+    annotations: {
+      title: "Retire a fact",
+      destructiveHint: true,
+      idempotentHint: true,
+      openWorldHint: false
+    },
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: { type: "string", description: "Memory id" },
+        reason: { type: "string", description: "Why it is wrong \u2014 a future reader sees this" },
+        restore: { type: "boolean", description: "Undo: mark the memory valid again" }
+      },
+      required: ["id"]
+    }
+  },
+  {
+    name: "memory_reconsolidate",
+    description: "Drop the conclusions the bank derived from one memory, so they are rebuilt from current facts. The memory itself survives. Use after invalidating a fact that a belief rests on \u2014 otherwise recall keeps returning the conclusion drawn from the fact you just retired.",
+    annotations: { title: "Rebuild derived beliefs", destructiveHint: false, openWorldHint: false },
+    inputSchema: {
+      type: "object",
+      properties: { id: { type: "string", description: "Memory id" } },
+      required: ["id"]
+    }
+  },
+  {
+    name: "memory_operations",
+    description: "Server-side jobs and their outcome. This answers 'why does recall still return the old fact' \u2014 a retain that failed leaves no trace anywhere else. Filter by status; the API ignores every filter except status, so kind is not offered.",
+    annotations: { title: "Background jobs", readOnlyHint: true, openWorldHint: false },
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: { type: "string", description: "One operation by id (omit to list)" },
+        status: {
+          type: "string",
+          enum: ["pending", "processing", "completed", "failed"],
+          description: "Status filter"
+        },
+        limit: { type: "number", description: "Default 20, max 50" },
+        offset: { type: "number" }
+      }
+    }
+  },
+  // ---- mental models ------------------------------------------------------------------------
   {
     name: "mental_model_list",
-    description: "List the bank's living knowledge pages (mental models). Each page is auto-re-synthesized after every memory consolidation.",
+    description: "List the bank's living knowledge pages. Each is rebuilt from memories after consolidation, so a page answers a recurring question without re-searching.",
+    annotations: { title: "List pages", readOnlyHint: true, openWorldHint: false },
     inputSchema: { type: "object", properties: {} }
   },
   {
     name: "mental_model_get",
-    description: "Read the contents of a specific mental model by ID.",
+    description: "Read one knowledge page's current content.",
+    annotations: { title: "Read page", readOnlyHint: true, openWorldHint: false },
     inputSchema: {
       type: "object",
-      properties: { id: { type: "string", description: "Mental model ID" } },
+      properties: { id: { type: "string", description: "Mental model id" } },
       required: ["id"]
     }
   },
   {
     name: "mental_model_create",
-    description: "Create a living knowledge page driven by a source_query. Hindsight rebuilds its content from memories after each consolidation.",
+    description: "Create a living knowledge page driven by a source query. Narrow questions produce good pages; 'everything about X' produces noise. Content starts empty and fills on the next consolidation.",
+    annotations: { title: "Create page", destructiveHint: false, openWorldHint: false },
     inputSchema: {
       type: "object",
       properties: {
-        id: { type: "string", description: "Unique page ID" },
+        id: { type: "string", description: "Unique page id (lowercase letters, digits, hyphens)" },
         name: { type: "string", description: "Human-readable name" },
-        source_query: {
-          type: "string",
-          description: "Query used to regenerate content (e.g. 'What do we know about auth?')"
-        }
+        source_query: { type: "string", description: "Query used to regenerate the content" }
       },
       required: ["id", "name", "source_query"]
     }
   },
   {
     name: "mental_model_update",
-    description: "Update a mental model's name or source_query.",
+    description: "Change a page's name or its source query. The existing content is kept.",
+    annotations: { title: "Edit page settings", idempotentHint: true, openWorldHint: false },
     inputSchema: {
       type: "object",
-      properties: {
-        id: { type: "string" },
-        name: { type: "string" },
-        source_query: { type: "string" }
-      },
+      properties: { id: { type: "string" }, name: { type: "string" }, source_query: { type: "string" } },
       required: ["id"]
     }
   },
   {
     name: "mental_model_delete",
-    description: "Delete a mental model.",
+    description: "Remove a page entirely \u2014 its configuration and its content. If the query is still right and only the content has gone stale, use mental_model_clear instead.",
+    annotations: { title: "Delete page", destructiveHint: true, openWorldHint: false },
     inputSchema: {
       type: "object",
       properties: { id: { type: "string" } },
@@ -17284,12 +17614,87 @@ var tools = [
     }
   },
   {
-    name: "document_ingest",
-    description: "Ingest a text document (PRD, RFC, note) into the bank as a single unit. The title becomes the document_id (re-ingest overwrites).",
+    name: "mental_model_refresh",
+    description: "Rebuild a page now instead of waiting for the next consolidation. Returns a job id.",
+    annotations: { title: "Rebuild page now", destructiveHint: false, openWorldHint: false },
+    inputSchema: {
+      type: "object",
+      properties: { id: { type: "string" } },
+      required: ["id"]
+    }
+  },
+  {
+    name: "mental_model_clear",
+    description: "Blank a page's content, keeping the page and its query. Pages are built in edit-in-place mode, so one that has drifted keeps drifting; clearing forces the next rebuild to start from scratch. Recovered by mental_model_refresh \u2014 unlike mental_model_delete.",
+    annotations: { title: "Blank page content", destructiveHint: true, openWorldHint: false },
+    inputSchema: {
+      type: "object",
+      properties: { id: { type: "string" } },
+      required: ["id"]
+    }
+  },
+  // ---- directives ---------------------------------------------------------------------------
+  {
+    name: "directive_list",
+    description: "Standing instructions that govern how the bank synthesises answers. An empty list means every reflect and every page is currently ungoverned.",
+    annotations: { title: "List directives", readOnlyHint: true, openWorldHint: false },
+    inputSchema: { type: "object", properties: {} }
+  },
+  {
+    name: "directive_create",
+    description: "Add a standing instruction for synthesis \u2014 e.g. 'prefer the most recent decision when two conflict'. Applies to future reflects and page rebuilds, not to stored facts.",
+    annotations: { title: "Add directive", destructiveHint: false, openWorldHint: false },
     inputSchema: {
       type: "object",
       properties: {
-        title: { type: "string", description: "Document name (becomes document_id)" },
+        name: { type: "string" },
+        content: { type: "string", description: "The instruction itself" },
+        priority: { type: "number" },
+        is_active: { type: "boolean" },
+        tags: { type: "array", items: { type: "string" } }
+      },
+      required: ["name", "content"]
+    }
+  },
+  {
+    name: "directive_delete",
+    description: "Remove a directive. Recreatable from directive_list output, so this is reversible.",
+    annotations: { title: "Remove directive", destructiveHint: true, openWorldHint: false },
+    inputSchema: {
+      type: "object",
+      properties: { id: { type: "string" } },
+      required: ["id"]
+    }
+  },
+  // ---- bank configuration ---------------------------------------------------------------------
+  {
+    name: "bank_config_get",
+    description: "The bank's behavioural and privacy settings \u2014 including whether secret masking is on and whether raw document text is stored. Read this on day one of a new bank.",
+    annotations: { title: "Read bank config", readOnlyHint: true, openWorldHint: false },
+    inputSchema: { type: "object", properties: {} }
+  },
+  {
+    name: "bank_config_set",
+    description: "Change a behavioural setting (retrieval budgets, consolidation switches, transcript storage, audit log). Echoes the previous value so the change is undoable. Settings that steer what the extractor keeps, or that gate tools, are refused here by design.",
+    annotations: { title: "Change bank setting", idempotentHint: true, openWorldHint: false },
+    inputSchema: {
+      type: "object",
+      properties: {
+        key: { type: "string", description: "Setting name as shown by bank_config_get" },
+        value: { description: "New value (boolean, number or string, matching the current type)" }
+      },
+      required: ["key", "value"]
+    }
+  },
+  // ---- documents -------------------------------------------------------------------------------
+  {
+    name: "document_ingest",
+    description: "Store a text document as one unit. The title becomes its id, and re-using a title REPLACES the existing document and everything extracted from it \u2014 the tool refuses when that would destroy memories.",
+    annotations: { title: "Ingest text", destructiveHint: true, openWorldHint: false },
+    inputSchema: {
+      type: "object",
+      properties: {
+        title: { type: "string", description: "Document name (becomes the document id)" },
         content: { type: "string", description: "Full text" },
         tags: { type: "array", items: { type: "string" } }
       },
@@ -17298,18 +17703,60 @@ var tools = [
   },
   {
     name: "document_ingest_file",
-    description: "Read a file from disk and ingest its full content as a document.",
+    description: "Read a file from inside the project and store it as a document. Paths outside the project root are refused, symlinks included.",
+    annotations: { title: "Ingest file", destructiveHint: true, openWorldHint: false },
     inputSchema: {
       type: "object",
       properties: {
-        path: { type: "string", description: "Absolute file path" },
+        path: { type: "string", description: "Path inside the project" },
         tags: { type: "array", items: { type: "string" } }
       },
       required: ["path"]
     }
+  },
+  {
+    name: "document_list",
+    description: "List stored documents with how many memories each produced. That count is the blast radius of deleting one, and nothing else reports it.",
+    annotations: { title: "List documents", readOnlyHint: true, openWorldHint: false },
+    inputSchema: {
+      type: "object",
+      properties: {
+        q: { type: "string", description: "Literal substring match on the id" },
+        limit: { type: "number", description: "Default 10, max 50" },
+        offset: { type: "number" }
+      }
+    }
+  },
+  {
+    name: "document_delete",
+    description: "Permanently delete a document and every memory extracted from it. No undo and no import path. Requires a human confirmation outside the conversation; refuses outright in clients that cannot ask. This is the only way to remove a leaked transcript from the bank.",
+    annotations: { title: "Delete document (irreversible)", destructiveHint: true, openWorldHint: false },
+    inputSchema: {
+      type: "object",
+      properties: { id: { type: "string", description: "Document id (exact, from document_list)" } },
+      required: ["id"]
+    }
   }
 ];
 var MAX_INGEST_BYTES = 2 * 1024 * 1024;
+var LIST_LIMIT_MAX = 50;
+function clampLimit(v, fallback) {
+  const n = typeof v === "number" && Number.isFinite(v) ? Math.floor(v) : fallback;
+  return Math.min(Math.max(n, 1), LIST_LIMIT_MAX);
+}
+function clampOffset(v) {
+  const n = typeof v === "number" && Number.isFinite(v) ? Math.floor(v) : 0;
+  return Math.max(n, 0);
+}
+function short(text, max = 200) {
+  const s = typeof text === "string" ? text : "";
+  const one = s.replace(/\s+/g, " ").trim();
+  return one.length > max ? one.slice(0, max) + "\u2026" : one;
+}
+function day(ts) {
+  const s = typeof ts === "string" ? ts : "";
+  return s ? s.slice(0, 10) : "\u2014";
+}
 function slugifyDocId(title) {
   const slug = title.toLowerCase().trim().replace(/[^a-z0-9._~-]+/g, "-").replace(/^[.\-]+/, "").replace(/[.\-]+$/, "");
   return assertPathId(slug, "document id");
@@ -17341,16 +17788,87 @@ async function guardDocumentOverwrite(docId) {
   }
   return null;
 }
+var configCache = null;
+var CONFIG_TTL_MS = 5 * 60 * 1e3;
+async function bankConfig() {
+  const now = Date.now();
+  if (configCache && now - configCache.at < CONFIG_TTL_MS) return configCache.value;
+  try {
+    const raw = await client.getBankConfig();
+    const cfg = raw.config ?? raw;
+    configCache = { at: now, value: cfg };
+    return cfg;
+  } catch {
+    return null;
+  }
+}
+var CONFIG_WRITABLE = {
+  enable_auto_consolidation: "boolean",
+  enable_observations: "boolean",
+  enable_reranking: "boolean",
+  enable_graph_retrieval: "boolean",
+  enable_temporal_retrieval: "boolean",
+  recall_include_chunks: "boolean",
+  recall_max_tokens: "number",
+  recall_chunks_max_tokens: "number",
+  recall_budget_function: "string",
+  recall_budget_fixed_low: "number",
+  recall_budget_fixed_mid: "number",
+  recall_budget_fixed_high: "number",
+  recall_budget_max: "number",
+  recall_budget_min: "number",
+  consolidation_max_memories_per_round: "number",
+  store_document_text: "boolean",
+  audit_log_enabled: "boolean"
+};
+var CONFIG_REFUSED = {
+  retain_mission: "it steers what the server extracts from every future conversation \u2014 a memory-rules rewrite disguised as a preference",
+  retain_custom_instructions: "same reason as retain_mission",
+  retain_extraction_mode: "same reason as retain_mission",
+  retain_default_strategy: "same reason as retain_mission",
+  retain_strategies: "same reason as retain_mission",
+  observations_mission: "it steers how raw facts become durable beliefs",
+  reflect_mission: "use memory_set_mission, which is the same setting with a narrower schema",
+  mcp_enabled_tools: "it gates which tools exist \u2014 a tool must not be able to edit the tool list",
+  memory_defense: "it is a security control whose policy shape is not verified by this relay; a malformed write to it is worse than no write"
+};
+function explainError(toolName, err) {
+  const msg = err instanceof Error ? err.message : String(err);
+  const status = /HTTP (\d{3})/.exec(msg)?.[1];
+  const body = redact(msg.length > 500 ? msg.slice(0, 500) + "\u2026" : msg);
+  const advice = {
+    "400": "the server rejected the arguments \u2014 check the field names against bank_config_get output",
+    "401": "no or invalid API key. Set HINDSIGHT_API_KEY for this project.",
+    "403": `this key is not allowed to touch bank "${client.bank}"`,
+    "404": `not found in bank "${client.bank}" \u2014 confirm the bank with memory_get_current_bank and the id with a list call`,
+    "409": "conflict \u2014 the same operation id is already in flight",
+    "413": "payload too large for the server",
+    "429": "rate limited \u2014 retry later",
+    "500": "the server failed internally; memory_operations may show the failed job",
+    "503": "the server is unavailable"
+  };
+  const hint = status ? advice[status] : void 0;
+  return hint ? `${toolName} failed: ${hint}
+
+${body}` : `${toolName} failed: ${body}`;
+}
 var handlers = {
   memory_retain: async (args) => {
     const content = String(args.content ?? "");
     if (!content) return "Error: content is required";
-    const result = await client.retain({
-      content,
-      tags: Array.isArray(args.tags) ? args.tags : void 0,
-      context: typeof args.context === "string" ? args.context : "mcp-manual"
-    });
-    return `Saved to bank "${client.bank}". Tokens: ${result.usage?.total_tokens ?? "n/a"}`;
+    const wait = args.wait === true;
+    const result = await client.retain(
+      {
+        content,
+        tags: Array.isArray(args.tags) ? args.tags : void 0,
+        context: typeof args.context === "string" ? args.context : "mcp-manual"
+      },
+      // The API's own default is synchronous; this relay inverts it, and `wait` is what makes that
+      // visible to a caller who needs the fact to be searchable on the next line.
+      { async: !wait, timeoutMs: wait ? 6e4 : 15e3 }
+    );
+    const tail = wait ? "Extraction finished \u2014 the fact is searchable now." : "Queued: extraction runs server-side, so recall may not see it for a few seconds. Pass wait:true when the next step depends on it.";
+    return `Saved to bank "${client.bank}". Tokens: ${result.usage?.total_tokens ?? "n/a"}. ${tail}`;
   },
   memory_recall: async (args) => {
     const query = String(args.query ?? "");
@@ -17362,10 +17880,11 @@ var handlers = {
     });
     const memories = result.results ?? [];
     if (memories.length === 0) return "No memories found for this query.";
-    const formatted = memories.map(
-      (m, i) => `[${i + 1}] ${escapeMemoryMarkers(m.text)}
-    type: ${m.type ?? "\u2014"} | entities: ${Array.isArray(m.entities) && m.entities.length > 0 ? m.entities.join(", ") : "\u2014"}`
-    ).join("\n\n");
+    const formatted = memories.map((m, i) => {
+      const id = typeof m.id === "string" ? `  ${String(m.id).slice(0, 8)}\u2026` : "";
+      return `[${i + 1}]${id} ${redact(escapeMemoryMarkers(m.text))}
+    type: ${m.type ?? "\u2014"} | entities: ${Array.isArray(m.entities) && m.entities.length > 0 ? m.entities.join(", ") : "\u2014"}`;
+    }).join("\n\n");
     return `Found ${memories.length} memories:
 
 ${formatted}`;
@@ -17383,7 +17902,7 @@ ${formatted}`;
       if (/abort/i.test(msg)) {
         return `Reflect aborted after ${secs}s \u2014 the server had not answered yet. This is a timeout, not an empty result.`;
       }
-      return `Reflect failed after ${secs}s: ${msg}`;
+      return `Reflect failed after ${secs}s: ${redact(msg.slice(0, 500))}`;
     }
     const text = typeof result.text === "string" ? result.text.trim() : "";
     if (!text) {
@@ -17391,7 +17910,7 @@ ${formatted}`;
     }
     return `Reflection:
 
-${text}`;
+${redact(escapeMemoryMarkers(text))}`;
   },
   memory_status: async () => {
     let stats = null;
@@ -17415,7 +17934,7 @@ ${text}`;
       );
     }
     if (!stats) {
-      lines.push(`Stats:     UNAVAILABLE \u2014 ${statsError}`);
+      lines.push(`Stats:     UNAVAILABLE \u2014 ${redact(statsError.slice(0, 300))}`);
     } else {
       const byType = stats.nodes_by_fact_type ?? {};
       lines.push(
@@ -17424,6 +17943,21 @@ ${text}`;
         `Links:     ${stats.total_links ?? "?"}`,
         `By type:   world=${byType.world ?? "?"}, experience=${byType.experience ?? "?"}, observation=${byType.observation ?? "?"}`
       );
+    }
+    const cfg = await bankConfig();
+    if (!cfg) {
+      lines.push("Privacy:   UNKNOWN \u2014 the config read failed, so masking state is unverified");
+    } else {
+      const masking = cfg.memory_defense == null ? "OFF" : "on";
+      const storing = cfg.store_document_text === true ? "yes" : "no";
+      const audit = cfg.audit_log_enabled === true ? "on" : "off";
+      lines.push(`Masking:   ${masking} (secret masking on writes) | raw transcripts stored: ${storing} | audit log: ${audit}`);
+      if (cfg.memory_defense == null) {
+        lines.push(
+          "           Masking applies to FUTURE writes only. Turning it on cleans nothing already",
+          "           stored; the only remediation for an exposed secret is rotation."
+        );
+      }
     }
     lines.push(`URL:       ${config2.url}`);
     return lines.join("\n");
@@ -17446,15 +17980,109 @@ ${text}`;
     await client.setMission(mission);
     return `Mission set for bank "${client.bank}"`;
   },
+  memory_list: async (args) => {
+    const q = typeof args.q === "string" && args.q.trim() ? args.q.trim() : void 0;
+    if (q && args.acknowledge_unmasked !== true) {
+      const cfg = await bankConfig();
+      if (!cfg || cfg.memory_defense == null) {
+        const why = cfg ? "this bank has secret masking OFF and auto-ingests raw session transcripts" : "the bank's masking state could not be read, so it must be assumed off";
+        return `Free-text search is gated: ${why}. A substring query can therefore surface credentials that were pasted into a session.
+
+Browse by type, state, document_id or tags instead \u2014 those are what finding a specific row actually needs. Or pass acknowledge_unmasked: true to search anyway.`;
+      }
+    }
+    const limit = clampLimit(args.limit, 10);
+    const offset = clampOffset(args.offset);
+    const res = await client.listMemories({
+      q,
+      type: args.type,
+      state: args.state,
+      documentId: typeof args.document_id === "string" ? args.document_id : void 0,
+      tags: Array.isArray(args.tags) ? args.tags : void 0,
+      limit,
+      offset
+    });
+    const items = Array.isArray(res.items) ? res.items : [];
+    const total = typeof res.total === "number" ? res.total : items.length;
+    if (items.length === 0) return `No memories match. total ${total}.`;
+    const rows = items.map((m, i) => {
+      const id = String(m.id ?? "");
+      const state = String(m.state ?? "valid");
+      const head = `[${offset + i + 1}] ${id}  ${m.fact_type ?? "\u2014"} \xB7 ${state} \xB7 ${day(m.mentioned_at ?? m.date)}`;
+      const text = `    ${redact(escapeMemoryMarkers(short(m.text)))}`;
+      const tags = Array.isArray(m.tags) && m.tags.length ? ` \xB7 tags: ${m.tags.join(", ")}` : "";
+      const doc = m.document_id ? ` \xB7 doc ${String(m.document_id).slice(0, 8)}\u2026` : "";
+      const why = state !== "valid" && m.invalidation_reason ? `
+    retired: ${redact(short(m.invalidation_reason, 120))}` : "";
+      return `${head}
+${text}${doc || tags ? `
+   ${doc}${tags}` : ""}${why}`;
+    });
+    const next = offset + items.length < total ? ` \xB7 next: offset=${offset + items.length}` : "";
+    return `${rows.join("\n\n")}
+
+total ${total} \xB7 showing ${offset + 1}-${offset + items.length}${next}`;
+  },
+  memory_get: async (args) => {
+    const id = String(args.id ?? "");
+    if (!id) return "Error: id is required";
+    const m = await client.getMemory(id);
+    return JSON.stringify(redactDeep(m), null, 2);
+  },
+  memory_invalidate: async (args) => {
+    const id = String(args.id ?? "");
+    if (!id) return "Error: id is required";
+    const restore = args.restore === true;
+    const reason = typeof args.reason === "string" ? args.reason : void 0;
+    if (!restore && !reason) {
+      return "Error: reason is required when retiring a fact (pass restore:true to undo instead)";
+    }
+    await client.invalidateMemory(id, reason, restore);
+    if (restore) return `Memory ${id} is valid again.`;
+    return `Memory ${id} retired. Its text is kept and still readable; undo with restore:true.
+If a derived belief rests on it, call memory_reconsolidate(${id}) \u2014 beliefs do not notice on their own.`;
+  },
+  memory_reconsolidate: async (args) => {
+    const id = String(args.id ?? "");
+    if (!id) return "Error: id is required";
+    await client.reconsolidateMemory(id);
+    return `Derived beliefs for memory ${id} dropped; a rebuild is queued server-side. Check memory_operations if recall still returns the old conclusion in a minute.`;
+  },
+  memory_operations: async (args) => {
+    const id = typeof args.id === "string" && args.id ? args.id : void 0;
+    if (id) {
+      const op = await client.getOperation(id);
+      return JSON.stringify(redactDeep(op), null, 2);
+    }
+    const limit = clampLimit(args.limit, 20);
+    const offset = clampOffset(args.offset);
+    const res = await client.listOperations({
+      status: typeof args.status === "string" ? args.status : void 0,
+      limit,
+      offset
+    });
+    const ops = Array.isArray(res.operations) ? res.operations : [];
+    const total = typeof res.total === "number" ? res.total : ops.length;
+    if (ops.length === 0) return `No operations match. total ${total}.`;
+    const rows = ops.map((o) => {
+      const err = o.error_message ? ` \xB7 error: ${redact(short(o.error_message, 120))}` : "";
+      const retries = typeof o.retry_count === "number" && o.retry_count > 0 ? ` \xB7 retries ${o.retry_count}` : "";
+      return `${String(o.id ?? "").slice(0, 8)}\u2026  ${o.task_type ?? "\u2014"} \xB7 ${o.status ?? "\u2014"} \xB7 ${day(o.created_at)}${retries}${err}`;
+    });
+    const next = offset + ops.length < total ? ` \xB7 next: offset=${offset + ops.length}` : "";
+    return `${rows.join("\n")}
+
+total ${total} \xB7 showing ${offset + 1}-${offset + ops.length}${next}`;
+  },
   mental_model_list: async () => {
     const result = await client.listMentalModels("metadata");
-    return JSON.stringify(result, null, 2);
+    return JSON.stringify(redactDeep(result), null, 2);
   },
   mental_model_get: async (args) => {
     const id = String(args.id ?? "");
     if (!id) return "Error: id is required";
     const result = await client.getMentalModel(id, "content");
-    return JSON.stringify(result, null, 2);
+    return JSON.stringify(redactDeep(result), null, 2);
   },
   mental_model_create: async (args) => {
     const id = String(args.id ?? "");
@@ -17462,9 +18090,9 @@ ${text}`;
     const sourceQuery = String(args.source_query ?? "");
     if (!id || !name || !sourceQuery) return "Error: id, name, source_query are required";
     const result = await client.createMentalModel({ id, name, sourceQuery });
-    return `Mental model created.
+    return `Mental model created. Content fills on the next consolidation.
 
-${JSON.stringify(result, null, 2)}`;
+${JSON.stringify(redactDeep(result), null, 2)}`;
   },
   mental_model_update: async (args) => {
     const id = String(args.id ?? "");
@@ -17475,13 +18103,86 @@ ${JSON.stringify(result, null, 2)}`;
     });
     return `Updated.
 
-${JSON.stringify(result, null, 2)}`;
+${JSON.stringify(redactDeep(result), null, 2)}`;
   },
   mental_model_delete: async (args) => {
     const id = String(args.id ?? "");
     if (!id) return "Error: id is required";
     await client.deleteMentalModel(id);
-    return `Deleted mental model "${id}"`;
+    return `Deleted mental model "${id}" \u2014 configuration and content both gone.`;
+  },
+  mental_model_refresh: async (args) => {
+    const id = String(args.id ?? "");
+    if (!id) return "Error: id is required";
+    const result = await client.refreshMentalModel(id);
+    return `Rebuild queued for "${id}".
+
+${JSON.stringify(redactDeep(result), null, 2)}`;
+  },
+  mental_model_clear: async (args) => {
+    const id = String(args.id ?? "");
+    if (!id) return "Error: id is required";
+    await client.clearMentalModel(id);
+    return `Content of "${id}" blanked; its query and settings are intact. The next rebuild starts from scratch \u2014 call mental_model_refresh to do it now.`;
+  },
+  directive_list: async () => {
+    const res = await client.listDirectives();
+    const items = Array.isArray(res.items) ? res.items : [];
+    if (items.length === 0) {
+      return "No directives. Every reflect and every page rebuild in this bank is currently ungoverned.";
+    }
+    return JSON.stringify(redactDeep(res), null, 2);
+  },
+  directive_create: async (args) => {
+    const name = String(args.name ?? "");
+    const content = String(args.content ?? "");
+    if (!name || !content) return "Error: name and content are required";
+    const result = await client.createDirective({
+      name,
+      content,
+      priority: typeof args.priority === "number" ? args.priority : void 0,
+      isActive: typeof args.is_active === "boolean" ? args.is_active : void 0,
+      tags: Array.isArray(args.tags) ? args.tags : void 0
+    });
+    return `Directive created.
+
+${JSON.stringify(redactDeep(result), null, 2)}`;
+  },
+  directive_delete: async (args) => {
+    const id = String(args.id ?? "");
+    if (!id) return "Error: id is required";
+    await client.deleteDirective(id);
+    return `Directive "${id}" removed.`;
+  },
+  bank_config_get: async () => {
+    const raw = await client.getBankConfig();
+    return JSON.stringify(redactDeep(raw), null, 2);
+  },
+  bank_config_set: async (args) => {
+    const key = String(args.key ?? "");
+    if (!key) return "Error: key is required";
+    if (key in CONFIG_REFUSED) {
+      return `Refusing to set "${key}": ${CONFIG_REFUSED[key]}.
+
+This is an operator setting. Change it deliberately, as a person, with a direct API call \u2014 see TROUBLESHOOTING.md.`;
+    }
+    const expected = CONFIG_WRITABLE[key];
+    if (!expected) {
+      return `Refusing to set "${key}": it is not on this relay's writable list.
+
+Writable: ${Object.keys(CONFIG_WRITABLE).sort().join(", ")}.
+Run bank_config_get to see every setting, including the read-only ones.`;
+    }
+    const value = args.value;
+    if (typeof value !== expected) {
+      return `Error: "${key}" expects a ${expected}, got ${typeof value}`;
+    }
+    const before = await bankConfig();
+    const previous = before ? before[key] : void 0;
+    await client.setBankConfig({ [key]: value });
+    configCache = null;
+    return `Set ${key} = ${JSON.stringify(value)}.
+Previous value: ${JSON.stringify(previous ?? null)} \u2014 pass it back to undo.`;
   },
   document_ingest: async (args) => {
     const title = String(args.title ?? "");
@@ -17529,36 +18230,114 @@ ${JSON.stringify(result, null, 2)}`;
       context: "document"
     });
     return `Ingested ${real} as document "${docId}" (${content.length} chars)`;
+  },
+  document_list: async (args) => {
+    const limit = clampLimit(args.limit, 10);
+    const offset = clampOffset(args.offset);
+    const res = await client.listDocuments({
+      q: typeof args.q === "string" && args.q.trim() ? args.q.trim() : void 0,
+      limit,
+      offset
+    });
+    const items = Array.isArray(res.items) ? res.items : [];
+    const total = typeof res.total === "number" ? res.total : items.length;
+    if (items.length === 0) return `No documents match. total ${total}.`;
+    const rows = items.map((d) => {
+      const tags = Array.isArray(d.tags) && d.tags.length ? ` \xB7 tags: ${d.tags.join(", ")}` : "";
+      return `${String(d.id ?? "")}
+    ${d.memory_unit_count ?? "?"} memories \xB7 ${d.text_length ?? "?"} chars \xB7 updated ${day(d.updated_at)}${tags}`;
+    });
+    const next = offset + items.length < total ? ` \xB7 next: offset=${offset + items.length}` : "";
+    return `${rows.join("\n")}
+
+total ${total} \xB7 showing ${offset + 1}-${offset + items.length}${next}
+The memory count is what dies with the document if you delete it.`;
+  },
+  document_delete: async (args) => {
+    const id = String(args.id ?? "");
+    if (!id) return "Error: id is required";
+    try {
+      assertPathId(id, "document id");
+    } catch (err) {
+      return `Error: ${err.message}`;
+    }
+    const listed = await client.listDocuments({ q: id, limit: 50 }).catch(() => null);
+    const doc = Array.isArray(listed?.items) ? listed.items.find((d) => String(d.id) === id) : void 0;
+    if (!doc) {
+      return `Refusing: no document with id "${id}" in bank "${client.bank}". Confirm with document_list.`;
+    }
+    const declared = typeof doc.memory_unit_count === "number" ? doc.memory_unit_count : null;
+    const crossCheck = await client.listMemories({ documentId: id, limit: 1 }).catch(() => null);
+    const counted = typeof crossCheck?.total === "number" ? crossCheck.total : null;
+    if (declared === null || counted === null) {
+      return `Refusing to delete "${id}": the blast radius could not be measured (document says ${declared ?? "unknown"}, memory count says ${counted ?? "unknown"}). A guard that cannot measure must not authorise.`;
+    }
+    if (declared !== counted) {
+      return `Refusing to delete "${id}": the two counts disagree \u2014 the document reports ${declared} memories, the memory index reports ${counted}. Investigate before destroying anything.`;
+    }
+    const caps = server.getClientCapabilities();
+    if (!caps?.elicitation) {
+      return `document_delete needs a human confirmation outside this conversation, and this client does not offer one.
+
+Nothing was changed. Target: "${id}" \u2014 ${counted} memories, ${doc.text_length ?? "?"} chars, updated ${day(doc.updated_at)}.
+
+Delete it deliberately with a direct API call (see TROUBLESHOOTING.md), or run this in a client that supports confirmation prompts.`;
+    }
+    const res = await server.request(
+      {
+        method: "elicitation/create",
+        params: {
+          mode: "form",
+          message: `Delete document "${id}" from bank "${client.bank}"? This destroys ${counted} memories extracted from it. There is no undo and no import path.`,
+          requestedSchema: {
+            type: "object",
+            properties: {
+              confirm: {
+                type: "boolean",
+                description: `Yes \u2014 delete the document and its ${counted} memories`
+              }
+            },
+            required: ["confirm"]
+          }
+        }
+      },
+      ElicitResultSchema
+    );
+    const accepted = res.action === "accept" && res.content?.confirm === true;
+    if (!accepted) return "Cancelled. Nothing was changed.";
+    await client.deleteDocument(id);
+    return `Deleted document "${id}" and the ${counted} memories extracted from it.`;
   }
 };
-var server = new Server(
-  { name: "hindsight-mcp", version: "2.0.0" },
-  { capabilities: { tools: {} } }
-);
+{
+  const declared = new Set(TOOL_NAMES);
+  const listed = new Set(tools.map((t) => t.name));
+  const handled = new Set(Object.keys(handlers));
+  const problems = [];
+  for (const n of declared) {
+    if (!listed.has(n)) problems.push(`${n}: in TOOL_NAMES, missing from the tools array`);
+    if (!handled.has(n)) problems.push(`${n}: in TOOL_NAMES, missing a handler`);
+  }
+  for (const n of listed) if (!declared.has(n)) problems.push(`${n}: listed but not in TOOL_NAMES`);
+  for (const n of handled) if (!declared.has(n)) problems.push(`${n}: handled but not in TOOL_NAMES`);
+  if (problems.length > 0) {
+    throw new Error(`hindsight-mcp registry mismatch:
+  ${problems.join("\n  ")}`);
+  }
+}
 server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools }));
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const name = request.params.name;
   const args = request.params.arguments ?? {};
   const handler = handlers[name];
   if (!handler) {
-    return {
-      content: [{ type: "text", text: `Unknown tool: ${name}` }],
-      isError: true
-    };
+    throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
   }
   try {
     const text = await handler(args);
     return { content: [{ type: "text", text }] };
   } catch (e) {
-    return {
-      content: [
-        {
-          type: "text",
-          text: `${name} failed: ${e.message}`
-        }
-      ],
-      isError: true
-    };
+    return { content: [{ type: "text", text: explainError(name, e) }], isError: true };
   }
 });
 var transport = new StdioServerTransport();

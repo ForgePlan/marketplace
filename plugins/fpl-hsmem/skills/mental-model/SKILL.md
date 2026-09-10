@@ -1,7 +1,8 @@
 ---
 name: mental-model
 description: Guided creation of a Hindsight mental model (a living knowledge page that auto-refreshes from memories). Use when the user says "create a mental model for X", "add a knowledge page about Y", or when you notice a recurring question that would benefit from an auto-updating synthesis.
-allowed-tools: mcp__hindsight__mental_model_list, mcp__hindsight__mental_model_create, mcp__hindsight__mental_model_get
+hindsight-tools: [mental_model_list, mental_model_create, mental_model_get, mental_model_update, mental_model_refresh, mental_model_clear]
+allowed-tools: mcp__hindsight__mental_model_list, mcp__plugin_fpl-hsmem_hindsight__mental_model_list, mcp__hindsight__mental_model_create, mcp__plugin_fpl-hsmem_hindsight__mental_model_create, mcp__hindsight__mental_model_get, mcp__plugin_fpl-hsmem_hindsight__mental_model_get, mcp__hindsight__mental_model_update, mcp__plugin_fpl-hsmem_hindsight__mental_model_update, mcp__hindsight__mental_model_refresh, mcp__plugin_fpl-hsmem_hindsight__mental_model_refresh, mcp__hindsight__mental_model_clear, mcp__plugin_fpl-hsmem_hindsight__mental_model_clear
 ---
 
 # Create a mental model

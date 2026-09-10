@@ -1,8 +1,19 @@
 import type { Message, ContentBlock, Role } from "./transcript.js";
 import type { RecallResult } from "./client.js";
+import { isOwnTool } from "./tool-names.js";
 
 const MESSAGE_TEXT_FIELDS = ["text", "body", "message", "content"] as const;
-const OPERATIONAL_TOOL_PATTERN = /(?:recall|retain|reflect|search|extract|create_|delete_|update_|get_|list_)/i;
+
+/**
+ * Heuristic for THIRD-PARTY tools: does this name read as an operation rather than a chat message?
+ *
+ * Two changes from the original. The verb alternatives no longer require a trailing underscore —
+ * `create_`, `get_`, `list_` meant every resource-first name (`entity_create`, `page_get`) evaded
+ * the pattern and had its arguments treated as chat text. And this is now only the FALLBACK: our
+ * own tools are matched by name above, not by guessing from their spelling.
+ */
+const OPERATIONAL_TOOL_PATTERN =
+  /\b(?:recall|retain|reflect|search|extract|query|fetch|read|write|create|delete|update|patch|get|list|ingest|upload|invalidate|refresh|clear|status|config)\b/i;
 
 /** The markers the recall hook wraps injected memory in. Both directions must know them. */
 const MEMORY_MARKERS = ["hindsight_memories", "relevant_memories"] as const;
@@ -53,6 +64,11 @@ function isString(v: unknown): v is string {
 function isChannelMessageTool(block: ContentBlock): boolean {
   const name = block.name ?? "";
   if (!name.startsWith("mcp__")) return false;
+  // Our own tools are never chat, whatever their arguments are called. `document_ingest` carries
+  // its payload in a field named `content`, so under the old spelling-only test every ingest was
+  // classified as a message and the whole document was spliced into the retained transcript — the
+  // document went into memory twice, once as itself and once as conversation.
+  if (isOwnTool(name)) return false;
   const suffix = name.split("__").pop() ?? "";
   if (OPERATIONAL_TOOL_PATTERN.test(suffix)) return false;
   const input = block.input;

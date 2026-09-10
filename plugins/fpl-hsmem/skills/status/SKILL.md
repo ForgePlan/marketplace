@@ -1,7 +1,8 @@
 ---
 name: status
 description: Show Hindsight memory health, current bank, and statistics for the active project. Use when the user asks "is memory working?", "what bank am I on?", "how many memories?", or wants a quick diagnostic of the Hindsight integration.
-allowed-tools: mcp__hindsight__memory_status, mcp__hindsight__memory_get_current_bank, mcp__hindsight__mental_model_list
+hindsight-tools: [memory_status, memory_get_current_bank, mental_model_list, memory_operations]
+allowed-tools: mcp__hindsight__memory_status, mcp__plugin_fpl-hsmem_hindsight__memory_status, mcp__hindsight__memory_get_current_bank, mcp__plugin_fpl-hsmem_hindsight__memory_get_current_bank, mcp__hindsight__mental_model_list, mcp__plugin_fpl-hsmem_hindsight__mental_model_list, mcp__hindsight__memory_operations, mcp__plugin_fpl-hsmem_hindsight__memory_operations
 ---
 
 # Hindsight status

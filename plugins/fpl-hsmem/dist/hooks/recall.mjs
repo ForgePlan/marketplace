@@ -249,6 +249,154 @@ var HindsightClient = class {
       updates: { reflect_mission: mission }
     });
   }
+  // ---------------------------------------------------------------------------------------------
+  // Browsing and correcting individual memories.
+  //
+  // `recall` answers "what is relevant to this question" and is what the hook calls on every
+  // prompt. These answer a different question — "which stored row is the wrong one" — and that is
+  // the question you must answer before you can correct anything. Without them the relay could
+  // add facts and never fix one.
+  // ---------------------------------------------------------------------------------------------
+  /**
+   * Enumerate stored memories by structured filter. `q` is a literal substring, not a search.
+   *
+   * Parameter names are MEASURED against the live API, not transcribed from documentation. Three
+   * plausible spellings are silently ignored by the server — it answers 200 and returns the
+   * unfiltered set — so a tool built on them would report "showing world facts" while showing
+   * everything. Verified honoured: `type` (SINGULAR — `types` is ignored), `state`, `document_id`,
+   * `q`, `tags`. Verified ignored: `types`, `fact_type`.
+   */
+  async listMemories(options = {}) {
+    const query = {
+      limit: String(options.limit ?? 10),
+      offset: String(options.offset ?? 0)
+    };
+    if (options.q) query.q = options.q;
+    if (options.type) query.type = options.type;
+    if (options.state && options.state !== "all") query.state = options.state;
+    if (options.documentId) query.document_id = assertPathId(options.documentId, "document_id");
+    if (options.tags?.length) query.tags = options.tags.join(",");
+    return this.request(
+      "GET",
+      this.bankUrl(["memories", "list"], query),
+      void 0,
+      options.timeoutMs ?? 2e4
+    );
+  }
+  async getMemory(id) {
+    return this.request("GET", this.bankUrl(["memories", id]), void 0, 15e3);
+  }
+  /**
+   * Mark a memory invalid, or restore one.
+   *
+   * This is deliberately the ONLY memory mutation the relay exposes. Rewriting a memory's text is
+   * irreversible upstream — it re-embeds, drops the derived observations and re-consolidates — so
+   * the correction path is "retire the wrong fact, write the right one", which leaves the wrong
+   * one readable and undoable. `reason` is what a future reader sees instead of a silent gap.
+   */
+  async invalidateMemory(id, reason, restore = false) {
+    const body = restore ? { state: "valid" } : { state: "invalidated", ...reason ? { invalidation_reason: reason } : {} };
+    return this.request("PATCH", this.bankUrl(["memories", id]), body, 15e3);
+  }
+  /**
+   * Drop one memory's derived observations so consolidation rebuilds them.
+   *
+   * The memory itself survives. Use after invalidating a fact that a belief was built on — the
+   * belief does not notice on its own, and recall keeps returning the conclusion drawn from the
+   * fact you just retired.
+   */
+  async reconsolidateMemory(id) {
+    return this.request("DELETE", this.bankUrl(["memories", id, "observations"]), void 0, 2e4);
+  }
+  // ---------------------------------------------------------------------------------------------
+  // Asynchronous work. Retain returns before the server has finished thinking; these say whether
+  // it finished, and that is the answer to "why does recall still return the old fact".
+  // ---------------------------------------------------------------------------------------------
+  /**
+   * List async operations. The response array is `operations`, NOT `items` — this endpoint is
+   * shaped differently from every other list on the API.
+   *
+   * `status` is the only filter the server honours (measured: `status=failed` narrowed 1085 → 6).
+   * Filtering by kind is deliberately absent: `task_type`, `operation_type` and `kind` are all
+   * accepted with a 200 and then ignored, so offering a kind filter would mean reporting a
+   * narrowed view that was never narrowed. Callers that need it filter the returned page.
+   */
+  async listOperations(options = {}) {
+    const query = {
+      limit: String(options.limit ?? 20),
+      offset: String(options.offset ?? 0)
+    };
+    if (options.status) query.status = options.status;
+    return this.request("GET", this.bankUrl(["operations"], query), void 0, 2e4);
+  }
+  async getOperation(id) {
+    return this.request("GET", this.bankUrl(["operations", id]), void 0, 15e3);
+  }
+  // ---------------------------------------------------------------------------------------------
+  // Mental models: the two lifecycle operations that were missing.
+  // ---------------------------------------------------------------------------------------------
+  /** Force a rebuild now instead of waiting for consolidation. Returns an operation id. */
+  async refreshMentalModel(id) {
+    return this.request("POST", this.bankUrl(["mental-models", id, "refresh"]), {}, 2e4);
+  }
+  /**
+   * Blank a page's content, keeping its configuration.
+   *
+   * Our pages are created in `delta` mode, which edits existing content rather than regenerating
+   * it — so a page that has drifted keeps drifting. Clearing removes the baseline, and the next
+   * refresh is a full rebuild. POST, not DELETE: DELETE on this resource removes the page itself.
+   */
+  async clearMentalModel(id) {
+    return this.request("POST", this.bankUrl(["mental-models", id, "clear"]), {}, 2e4);
+  }
+  // ---------------------------------------------------------------------------------------------
+  // Directives — standing instructions that govern synthesis. Without them every reflect is
+  // ungoverned, which is the state this bank is in today.
+  // ---------------------------------------------------------------------------------------------
+  async listDirectives() {
+    return this.request("GET", this.bankUrl(["directives"]), void 0, 15e3);
+  }
+  async createDirective(args) {
+    const body = { name: args.name, content: args.content };
+    if (args.priority !== void 0) body.priority = args.priority;
+    if (args.isActive !== void 0) body.is_active = args.isActive;
+    if (args.tags?.length) body.tags = args.tags;
+    return this.request("POST", this.bankUrl(["directives"]), body, 15e3);
+  }
+  async deleteDirective(id) {
+    return this.request("DELETE", this.bankUrl(["directives", id]), void 0, 15e3);
+  }
+  // ---------------------------------------------------------------------------------------------
+  // Bank configuration. `GET /profile` (which upstream's `get_bank` maps to) returns the name and
+  // mission; the behavioural switches live here and were unreachable from any tool.
+  // ---------------------------------------------------------------------------------------------
+  async getBankConfig() {
+    return this.request("GET", `${this.bankPath()}/config`, void 0, 15e3);
+  }
+  /**
+   * Write behavioural settings. The caller decides WHICH keys are allowed — see the allowlist in
+   * `index.ts`. This method deliberately does not police key names: one policy, one place, and
+   * that place is the tool handler where the refusal can be explained to the caller.
+   */
+  async setBankConfig(updates) {
+    return this.request("PATCH", `${this.bankPath()}/config`, { updates }, 15e3);
+  }
+  // ---------------------------------------------------------------------------------------------
+  // Documents. `memory_unit_count` is the blast-radius number nothing else provides: it is how
+  // many memories die with the document.
+  // ---------------------------------------------------------------------------------------------
+  async listDocuments(options = {}) {
+    const query = {
+      limit: String(options.limit ?? 10),
+      offset: String(options.offset ?? 0)
+    };
+    if (options.q) query.q = options.q;
+    return this.request("GET", this.bankUrl(["documents"], query), void 0, 2e4);
+  }
+  /** Irreversible. Cascades to every memory extracted from the document. */
+  async deleteDocument(id) {
+    return this.request("DELETE", this.bankUrl(["documents", id]), void 0, 3e4);
+  }
 };
 
 // src/lib/config.ts
@@ -442,9 +590,53 @@ function debugLog(config, ...args) {
   }
 }
 
+// src/lib/tool-names.ts
+var TOOL_NAMES = [
+  // memory — write and read
+  "memory_retain",
+  "memory_recall",
+  "memory_reflect",
+  "memory_status",
+  "memory_get_current_bank",
+  "memory_set_mission",
+  // memory — browse and correct
+  "memory_list",
+  "memory_get",
+  "memory_invalidate",
+  "memory_reconsolidate",
+  "memory_operations",
+  // mental models
+  "mental_model_list",
+  "mental_model_get",
+  "mental_model_create",
+  "mental_model_update",
+  "mental_model_delete",
+  "mental_model_refresh",
+  "mental_model_clear",
+  // directives
+  "directive_list",
+  "directive_create",
+  "directive_delete",
+  // bank configuration
+  "bank_config_get",
+  "bank_config_set",
+  // documents
+  "document_ingest",
+  "document_ingest_file",
+  "document_list",
+  "document_delete"
+];
+var NAME_SET = new Set(TOOL_NAMES);
+function isOwnTool(name) {
+  if (!name) return false;
+  if (NAME_SET.has(name)) return true;
+  const suffix = name.split("__").pop() ?? "";
+  return NAME_SET.has(suffix);
+}
+
 // src/lib/content.ts
 var MESSAGE_TEXT_FIELDS = ["text", "body", "message", "content"];
-var OPERATIONAL_TOOL_PATTERN = /(?:recall|retain|reflect|search|extract|create_|delete_|update_|get_|list_)/i;
+var OPERATIONAL_TOOL_PATTERN = /\b(?:recall|retain|reflect|search|extract|query|fetch|read|write|create|delete|update|patch|get|list|ingest|upload|invalidate|refresh|clear|status|config)\b/i;
 var MEMORY_MARKERS = ["hindsight_memories", "relevant_memories"];
 function stripMemoryTags(content) {
   let out = content;
@@ -471,6 +663,7 @@ function isString(v) {
 function isChannelMessageTool(block) {
   const name = block.name ?? "";
   if (!name.startsWith("mcp__")) return false;
+  if (isOwnTool(name)) return false;
   const suffix = name.split("__").pop() ?? "";
   if (OPERATIONAL_TOOL_PATTERN.test(suffix)) return false;
   const input = block.input;
