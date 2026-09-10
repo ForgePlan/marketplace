@@ -34,6 +34,49 @@ down** — not that memory did the job.
 
 ---
 
+## Size decides which layers are worth having
+
+**The rule, before the numbers: the ordering below is general, the timings are not.** Every measured
+figure in this document comes from **one repository on one machine on one day**. Read as thresholds
+they will make a small project pay for machinery it does not need — an index to maintain, an
+embedding model to run — for a saving that does not exist at its size. Read as what they are, they
+tell you roughly where to look and what to measure yourself.
+
+**Count what the tools count**, not what `find` counts. `git ls-files | wc -l` is the number that
+matters: the fast searchers respect `.gitignore`, so vendored dependencies are invisible to them
+and enormous to `grep`. On the repository measured here that is 1,674 tracked against 95,141 on
+disk, and that gap — not the index — is where most of the speedup came from.
+
+| Tracked files | Text search | Indexed search | Semantic search | Why |
+|---|---|---|---|---|
+| **under ~1,000** | plain `rg`, nothing else | **no** | **no** | a full scan is already instant; an index costs more to build and keep fresh than it can ever return |
+| **~1,000 – 10,000** | plain `rg` | **probably not** — measure | only if questions are genuinely abstract | measured at 1,674 files: unindexed **29 ms**, indexed **36 ms**. The index lost. It may win higher in this band; we did not measure that |
+| **~10,000 – 100,000** | `rg` for one-off scans | **measure before adopting** — this is where the crossover lives | worth considering | the honest answer is that we have no data point in this band. Anyone who tells you otherwise is quoting a vendor |
+| **over ~100,000** | `rg` for a subdirectory | **likely yes** | likely yes | the vendor benchmark claims 52× at 388,000 files. UNVERIFIED by us — treat it as a reason to measure, not as a result |
+
+**The measurement that decides it**, on your own repository, in a clean shell — three runs, take the
+best, warm cache, a literal that actually occurs:
+
+```bash
+time rg -l -F '<a literal in your code>' .
+time <indexer> -l -F '<the same literal>' .     # after building its index
+```
+
+If the difference is under 2×, the index is not paying for itself: it has to be built, kept fresh
+after every large pull, and remembered. **A stale index is worse than no index** — it answers with
+false negatives that look exactly like an honest "not found" (see the anti-patterns below).
+
+**Semantic search is not chosen by size.** It is chosen by the shape of your questions. If you can
+usually name the thing you are looking for, an embedding pipeline is theatre; if you routinely ask
+"where is X enforced" and cannot name X, it earns its place at any size above trivial.
+
+**Memory is not chosen by file count either — it is chosen by session count.** A bank fills from
+conversations, so a project that will run for two or three sessions never accumulates enough for
+recall to be worth reading. Past a dozen sessions the arithmetic reverses: the cost of re-deciding
+something already decided exceeds the cost of storing it.
+
+---
+
 ## Which layer answers which question
 
 First move **narrows**. Verification **confirms**. No layer is its own verification.

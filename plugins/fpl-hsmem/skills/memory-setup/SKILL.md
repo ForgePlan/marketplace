@@ -52,9 +52,14 @@ to reach for.
 
 ## Step 1 — measure the repository, do not guess about it
 
+**Count what the fast tools count.** `git ls-files` is the number that decides everything below:
+those tools respect `.gitignore`, so vendored dependencies are invisible to them and enormous to
+`grep`. Report both, because the gap is usually where a "speedup" actually comes from.
+
 ```bash
-# size and shape
-git ls-files 2>/dev/null | wc -l                     # tracked files
+# size and shape — the FIRST number is the one that decides
+git ls-files 2>/dev/null | wc -l                     # tracked files  ← use this
+find . -type f -not -path '*/.git/*' | wc -l          # files on disk (for contrast)
 git ls-files 2>/dev/null | sed 's/.*\.//' | sort | uniq -c | sort -rn | head -8
 du -sh .git 2>/dev/null                              # history weight
 git log --oneline 2>/dev/null | wc -l                # how much history exists to mine
@@ -79,6 +84,35 @@ bank_config_get              # privacy posture before you propose filling it fur
 **Report what you found before proposing anything.** A recommendation that does
 not name the repository's actual size and language reads as a template, and the
 user is right to distrust it.
+
+## Step 1b — say which size bracket this repository is in, and warn on borrowed numbers
+
+Before proposing anything, put the tracked-file count into a bracket **out loud**, and say what
+that means. This is the step that stops a small project from being handed a stack sized for
+somebody else's monorepo.
+
+| Tracked files | What to propose | What to say |
+|---|---|---|
+| **under ~1,000** | plain text search only | "A full scan here is already instant. An index would cost more to build and keep fresh than it can return — not recommended." |
+| **~1,000 – 10,000** | plain text search; index only if a measurement says so | "Measured on a repository of this size: unindexed 29 ms, indexed 36 ms — the index lost. Yours may differ; the command to check is below." |
+| **~10,000 – 100,000** | measure before adopting an index | "This is where the crossover lives and **we have no measurement in this band**. I am not going to guess it for you." |
+| **over ~100,000** | an index is likely to win | "The 52× figure comes from a vendor benchmark at 388,000 files and is UNVERIFIED here. It is a reason to measure, not a result." |
+
+**The warning is mandatory whenever a recommendation leans on a borrowed number.** Say it in these
+terms: *"the timings I am quoting come from one repository on one machine on one day — they tell
+you where to look, not what to do."* A recommendation that hides its provenance is how a team ends
+up maintaining an index for a saving that does not exist at their size.
+
+Hand the user the measurement rather than the conclusion:
+
+```bash
+time rg -l -F '<a literal that occurs in your code>' .
+time <indexer> -l -F '<the same literal>' .    # after building its index
+```
+
+**Under 2× difference means the index is not paying for itself.** It has to be built, refreshed
+after every large pull, and remembered — and a stale one returns false negatives that look exactly
+like an honest "not found".
 
 ## Step 2 — the search layers, in the order they earn their place
 
@@ -205,18 +239,27 @@ the one who pays for the model, the disk and the leaked transcript.
 
 ## Hard rules
 
-1. **Measure before recommending.** No proposal without the file count, the
-   language, and what is already installed.
-2. **Recommend against, out loud.** A layer that is not worth it here is a
+1. **Measure before recommending.** No proposal without the tracked-file count
+   (`git ls-files`, not `find`), the language, and what is already installed.
+2. **Name the size bracket, and warn when a number is borrowed.** Every timing
+   in this skill and in `RETRIEVAL-AND-MEMORY.md` comes from one repository on
+   one machine on one day. Quote them as a place to look, never as a threshold —
+   and say so in the reply, not only in your head. A recommendation whose
+   provenance is hidden is how a small project ends up maintaining an index that
+   costs more than it saves.
+3. **Never propose a layer this repository's size does not justify**, even when
+   the user asks for "everything". "Not this one, and here is the measurement"
+   is what makes the rest of the list credible.
+4. **Recommend against, out loud.** A layer that is not worth it here is a
    finding, not a silence. Saying "not this one, because…" is what makes the
    rest of the list credible.
-3. **Never install, never write config.** Propose commands; the user runs them.
-4. **Name the privacy state before proposing a bank**, not after.
-5. **Never propose two things that do the same job.** Two indexed searchers, or
+5. **Never install, never write config.** Propose commands; the user runs them.
+6. **Name the privacy state before proposing a bank**, not after.
+7. **Never propose two things that do the same job.** Two indexed searchers, or
    two memory relays, is not redundancy — it is a split corpus and a stale one
    of the pair. This exact failure has happened here: one project wrote to three
    banks at once because two servers and a hook each resolved the name
    differently.
-6. **If the project already has a bank, say who chose it.** `bank_id_source:
+8. **If the project already has a bank, say who chose it.** `bank_id_source:
    derived-from-directory` means nobody did, and renaming the directory will
    move the memory silently.
