@@ -65,18 +65,35 @@ else
   pass "must-fire      an empty description is caught"
 fi
 
-# 5. must-NOT-fire — no "Use when" is a WARNING, not a failure. 18 of 23 descriptions here are in
-#    that state; failing on them would be a reform imposed by a gate rather than decided.
-write "A probe plugin that does a thing and says nothing about when." "A probe plugin that does a thing and says nothing about when."
-if node "$work/scripts/ci/description-shape-check.js" >/dev/null 2>&1; then
-  pass "must-NOT-fire  a missing \"Use when\" warns, it does not fail"
+# 5. must-NOT-fire — a description that never says when to use it WARNS, it does not fail. Failing
+#    on it would be a reform imposed by a gate rather than decided.
+#
+#    Asserting only the exit code here would prove nothing: the check could have been deleted and
+#    this case would still pass. So the warning text itself must appear.
+write "A probe plugin that does a thing and never says the w-word." "A probe plugin that does a thing and never says the w-word."
+out="$(node "$work/scripts/ci/description-shape-check.js" 2>&1)"; rc=$?
+if [ "$rc" -ne 0 ]; then
+  fail "a missing when-to-use failed the build — that is a reform, not a gate"
+elif ! grep -q "when to use it" <<<"$out"; then
+  fail "no warning was emitted — the check is not running, and case 5 would pass with it deleted"
 else
-  fail "a missing \"Use when\" failed the build — that is a reform, not a gate"
+  pass "must-NOT-fire  a missing when-to-use warns (and the warning is emitted), it does not fail"
+fi
+
+# 6. must-NOT-fire — the check looks for the PROPERTY, not the phrase. "Use only if …" and
+#    "Use before …" both tell a reader when to reach for the plugin; an earlier version demanded
+#    the literal words "use when" and flagged two honest descriptions.
+write "A probe plugin that does a thing. Use only if you already depend on it." "A probe plugin that does a thing. Use only if you already depend on it."
+out="$(node "$work/scripts/ci/description-shape-check.js" 2>&1)"
+if grep -q "when to use it" <<<"$out"; then
+  fail "\"Use only if …\" was flagged — the check asserts wording, not the property"
+else
+  pass "must-NOT-fire  \"Use only if …\" counts as saying when"
 fi
 
 echo
 if [ "$fails" -eq 0 ]; then
-  echo "self-test OK: 5 cases (3 must-fire, 2 must-NOT-fire)"
+  echo "self-test OK: 6 cases (3 must-fire, 3 must-NOT-fire)"
   exit 0
 fi
 echo "self-test FAILED: $fails"

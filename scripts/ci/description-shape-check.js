@@ -74,8 +74,13 @@ function main() {
     if (cat !== undefined && cat !== desc) {
       errors.push(`${d.name}: the catalog description differs from the manifest — regenerate it`);
     }
-    if (!/\buse when\b/i.test(desc) && !/\bиспользу/i.test(desc)) {
-      warnings.push(`${d.name} (${desc.length} chars): no "Use when …" — a reader cannot tell if it is for them`);
+    // Look for a sentence that starts with "Use …", not for the literal phrase "use when". The
+    // first version of this check demanded the exact words and flagged two descriptions that say
+    // "Use only if you already depend on it" and "Use before a review or a merge" — both of which
+    // tell a reader exactly when to reach for the plugin. A check that asserts the wording rather
+    // than the property is how a gate ends up enforcing a house style nobody agreed to.
+    if (!/(^|[.!?]\s+)use\b/i.test(desc) && !/(^|[.!?]\s+)использу/i.test(desc)) {
+      warnings.push(`${d.name} (${desc.length} chars): no sentence saying when to use it — a reader cannot tell if it is for them`);
     }
   }
 
