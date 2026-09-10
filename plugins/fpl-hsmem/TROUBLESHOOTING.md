@@ -469,23 +469,31 @@ decisions about X and why") produce good ones.
 The symptom is quiet: mental models stay stale, the observation count stops moving, and nothing
 errors on your side. Server logs show `RuntimeError: Failed to search memories (TimeoutError)`.
 
-**The cause is the scope of the run, not the size of the bank.** Consolidation over the *whole*
-bank searches the whole graph for every candidate memory, and past some size that search stops
-fitting in the server's timeout. Three runs on the same bank — 41,972 memories, 2,063,526 links —
-measured in that order:
+**What the run has to search is what times out.** Consolidation searches the graph for every
+candidate memory, and past some bank size that search stops fitting in the server's timeout. Two
+knobs change how much work one job attempts — the **scope** (`observation_scopes`) and the **round
+size** (`consolidation_max_memories_per_round`). Measured on one bank — 41,972 memories,
+2,063,526 links — in this order:
 
-| Run | Result |
-|---|---|
-| whole bank, `consolidation_max_memories_per_round: 100` | wedged for a week, **305 retries**, never finished |
-| whole bank, round size cut to 25 | finished, but 7 retries over ~35 min for **+12** observations |
-| one tag scope at a time, round size back at default | **0 retries**, +37 observations in the first four minutes |
+| Scope | Round size | Result |
+|---|---|---|
+| whole bank | 100 | wedged for a week, **305 retries**, never finished |
+| whole bank | 25 | finished, but 7 retries over ~35 min for **+12** observations |
+| one tag | 25 | 3 of 5 jobs finished with **0 retries**; 1 failed, 1 kept retrying |
+| one tag | 100 | 1 of 1 failed |
 
-Cutting the round size keeps the job alive; it does not make it useful. Narrowing the scope is the
-actual fix.
+**Read this honestly: narrowing moves the boundary, it does not remove it.** The controlled
+comparison is rows 2 and 3 — same round size, only the scope changed, and the change is large. But
+a narrowed run on a thousand-memory slice still fails sometimes, and the single sample at round size
+100 failed. Both knobs matter; neither is a cure.
+
+**The real fix for a bank this size is to stop having a bank this size.** Smaller banks on the same
+deployment (4,863 and 7,011 memories) consolidate whole, with no narrowing and no tuning. If you are
+tuning these knobs repeatedly, that is the signal to split the bank, not to keep tuning.
 
 **Graph retrieval is not the culprit** — check this before you go turning it off. Disabling
-`enable_graph_retrieval` does cut recall sharply (23.8 s → 4.4 s on the bank above), but whole-bank
-consolidation kept timing out with it disabled, and the narrowed run succeeded with it back on.
+`enable_graph_retrieval` cuts recall sharply (23.8 s → 4.4 s on the bank above), but whole-bank
+consolidation kept timing out with it disabled, and the narrowed runs succeeded with it back on.
 Turning it off permanently degrades every future query to buy nothing.
 
 ### The narrowing

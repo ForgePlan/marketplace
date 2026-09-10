@@ -6,6 +6,28 @@ All notable changes to `fpl-hsmem` are documented here. Format:
 
 ## [Unreleased]
 
+## [3.6.2] — 2026-09-11
+
+### Fixed
+
+- **The consolidation chapter overstated its own conclusion, and that is corrected
+  here rather than quietly reworded.** 3.6.1 said narrowing the scope was "the
+  actual fix". It is not: it moves the boundary. Four measured combinations, not
+  three — scope × round size — now appear in the table, and the honest reading is
+  stated in the text: a narrowed run on a thousand-memory slice still fails
+  sometimes (3 of 5 clean at round size 25), and the one sample at round size 100
+  failed. Both knobs matter, neither is a cure.
+- **The row labels were wrong.** Every zero-retry narrowed run measured for 3.6.1
+  ran at round size **25**, not at the default — the chapter said otherwise. The
+  conclusion those rows support survives (rows 2 and 3 hold round size constant
+  and change only scope), but the label did not.
+
+### Added
+
+- **The conclusion the numbers actually point at**: smaller banks on the same
+  deployment (4,863 and 7,011 memories) consolidate whole, untuned. Repeatedly
+  turning these knobs is the signal to split the bank, not to keep turning them.
+
 ## [3.6.1] — 2026-09-10
 
 ### Added
