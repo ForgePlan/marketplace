@@ -1,6 +1,19 @@
 ---
 name: correct-memory
-description: Fix a wrong fact in long-term memory — find the exact stored row, retire it with a stated reason, write the correction, and rebuild the beliefs that rested on it. Use when the user says "that's wrong", "memory has the old value", "it keeps telling me X but we changed it", "forget that", or when recall returns something you know is stale. This is a curation workflow with side effects; invoke it deliberately.
+description: |
+  The workflow that makes a bank correctable instead of cumulative: find the exact stored row,
+  retire it with a stated reason, write the correction in full, rebuild the beliefs that rested on
+  it, and verify the background job finished. Deleting a wrong fact is the easy answer and the
+  wrong one — six months later nobody can tell why the mistake was ever believed.
+  EN: Fix a wrong fact without destroying the record. Use when memory returns something you know is
+  stale or false. Has side effects, so it is invoked deliberately, never inferred. NOT for a badly
+  SHAPED answer that is factually right — that is /fpl-hsmem:directives.
+  RU: Исправить неверный факт, не уничтожая след. Когда память отдаёт устаревшее или ложное. У него
+  есть последствия, поэтому вызывается осознанно, а не угадывается. НЕ для ответа, который верен по
+  фактам, но кривой по форме — это /fpl-hsmem:directives.
+  Triggers: "that's wrong", "memory has the old value", "it keeps telling me", "forget that",
+  "outdated memory", "fix the memory", "это неверно", "память помнит старое", "оно всё время
+  повторяет", "забудь это", "исправь память", "устаревший факт"
 disable-model-invocation: true
 hindsight-tools: [memory_list, memory_get, memory_invalidate, memory_retain, memory_reconsolidate, memory_operations, memory_recall, memory_get_current_bank]
 allowed-tools: mcp__hindsight__memory_list, mcp__plugin_fpl-hsmem_hindsight__memory_list, mcp__hindsight__memory_get, mcp__plugin_fpl-hsmem_hindsight__memory_get, mcp__hindsight__memory_invalidate, mcp__plugin_fpl-hsmem_hindsight__memory_invalidate, mcp__hindsight__memory_retain, mcp__plugin_fpl-hsmem_hindsight__memory_retain, mcp__hindsight__memory_reconsolidate, mcp__plugin_fpl-hsmem_hindsight__memory_reconsolidate, mcp__hindsight__memory_operations, mcp__plugin_fpl-hsmem_hindsight__memory_operations, mcp__hindsight__memory_recall, mcp__plugin_fpl-hsmem_hindsight__memory_recall, mcp__hindsight__memory_get_current_bank, mcp__plugin_fpl-hsmem_hindsight__memory_get_current_bank
@@ -17,6 +30,21 @@ along with the mistake. Keeping it is also wrong: recall goes on returning it.
 Hindsight's answer is a third thing — the fact stays readable, marked invalid,
 with a written reason, and stops being returned. Nothing is destroyed and
 nothing is silently wrong.
+
+
+## Model tier
+
+**This skill asks for tier B.**
+
+The hard call is deciding that a stored fact is WRONG, which needs the
+surrounding context weighed against what else the bank holds. The asymmetry sets the tier: retiring
+something still true is cheap and reversible, leaving a wrong fact standing means every future
+answer inherits it silently. There is a real oracle — the bank's own contents — which is what keeps
+this off the top tier.
+
+`model:` values like `opus` / `sonnet` / `haiku` are Claude Code names, not the
+requirement. On another runtime substitute whatever serves this tier there, and when you cannot
+tell, miss **upward**. Saving cost means giving a skill less work, not a weaker model.
 
 ## Before you start
 

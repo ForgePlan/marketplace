@@ -1,6 +1,19 @@
 ---
 name: bootstrap
-description: Initialize Hindsight memory for a new project. Sets the bank mission, ingests existing formal artifacts (PRDs, RFCs, ADRs), and creates a small starter set of mental models. Use when the user says "set up memory for this project", "bootstrap hindsight here", "initialize Hindsight for <repo>", or when memory_status shows an empty bank in an active project.
+description: |
+  One-time seeding of a bank for a project that has just been activated: set the bank's persona,
+  ingest the formal artifacts that already exist, and create a small starter set of knowledge pages.
+  Not the technical wiring — that is the setup CLI — but the layer that decides what this bank is
+  for before it accumulates thousands of facts nobody chose.
+  EN: Seed a new bank — mission, existing PRDs/RFCs/ADRs, two or three starter pages. Use on a fresh
+  project or when memory_status shows an empty bank in an active repo. Run /fpl-hsmem:audit-bank
+  first if the bank is NOT empty: bootstrap assumes it is starting from nothing.
+  RU: Засеять новый банк — миссия, существующие PRD/RFC/ADR, две-три стартовые страницы. Для нового
+  проекта или когда в активном репозитории банк пуст. Если банк НЕ пуст, сперва прогнать
+  /fpl-hsmem:audit-bank: bootstrap исходит из того, что начинает с нуля.
+  Triggers: "set up memory for this project", "bootstrap hindsight", "initialize memory",
+  "seed the bank", "новый проект память", "настрой память для проекта", "засей банк",
+  "инициализируй hindsight"
 hindsight-tools: [memory_status, memory_get_current_bank, memory_set_mission, document_ingest_file, mental_model_create, mental_model_list, bank_config_get, directive_create]
 extra-tools: [Read, Glob]
 allowed-tools: mcp__hindsight__memory_status, mcp__plugin_fpl-hsmem_hindsight__memory_status, mcp__hindsight__memory_get_current_bank, mcp__plugin_fpl-hsmem_hindsight__memory_get_current_bank, mcp__hindsight__memory_set_mission, mcp__plugin_fpl-hsmem_hindsight__memory_set_mission, mcp__hindsight__document_ingest_file, mcp__plugin_fpl-hsmem_hindsight__document_ingest_file, mcp__hindsight__mental_model_create, mcp__plugin_fpl-hsmem_hindsight__mental_model_create, mcp__hindsight__mental_model_list, mcp__plugin_fpl-hsmem_hindsight__mental_model_list, mcp__hindsight__bank_config_get, mcp__plugin_fpl-hsmem_hindsight__bank_config_get, mcp__hindsight__directive_create, mcp__plugin_fpl-hsmem_hindsight__directive_create, Read, Glob
@@ -11,6 +24,19 @@ allowed-tools: mcp__hindsight__memory_status, mcp__plugin_fpl-hsmem_hindsight__m
 One-time setup for a Hindsight bank when a project is newly activated.
 This is not the technical wiring (`.mcp.json`, hooks — that's done by
 `setup.js`); this is the **memory seeding** layer.
+
+
+## Model tier
+
+**This skill asks for tier B.**
+
+Choosing the mission and the first pages sets what this bank collects for its
+whole life. Cheap to redo on day one, expensive once thousands of facts have been extracted under
+the wrong instruction — which is why the tier is set by the decision, not by the number of calls.
+
+`model:` values like `opus` / `sonnet` / `haiku` are Claude Code names, not the
+requirement. On another runtime substitute whatever serves this tier there, and when you cannot
+tell, miss **upward**. Saving cost means giving a skill less work, not a weaker model.
 
 ## Stop conditions
 

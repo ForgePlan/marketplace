@@ -1,6 +1,17 @@
 ---
 name: status
-description: Show Hindsight memory health, current bank, and statistics for the active project. Use when the user asks "is memory working?", "what bank am I on?", "how many memories?", or wants a quick diagnostic of the Hindsight integration.
+description: |
+  A thirty-second read of one memory bank: which bank, who chose it, how much is in it, and whether
+  anything is silently broken. The first thing to run when memory "feels off" — most such feelings
+  turn out to be the session reading one bank while something else writes to another.
+  EN: Quick health + statistics for the active bank. Use for "is memory working", "what bank am I
+  on", "how many memories". NOT an audit — it does not look at privacy posture or failed jobs; that
+  is /fpl-hsmem:audit-bank.
+  RU: Быстрая проверка здоровья и статистика активного банка. Для вопросов «память работает?»,
+  «в каком мы банке?», «сколько там записей». НЕ аудит — приватность и упавшие задачи не смотрит,
+  это /fpl-hsmem:audit-bank.
+  Triggers: "memory status", "is memory working", "what bank", "how many memories", "hindsight health",
+  "статус памяти", "память работает", "в каком банке", "сколько воспоминаний", "проверь hindsight"
 hindsight-tools: [memory_status, memory_get_current_bank, mental_model_list, memory_operations]
 allowed-tools: mcp__hindsight__memory_status, mcp__plugin_fpl-hsmem_hindsight__memory_status, mcp__hindsight__memory_get_current_bank, mcp__plugin_fpl-hsmem_hindsight__memory_get_current_bank, mcp__hindsight__mental_model_list, mcp__plugin_fpl-hsmem_hindsight__mental_model_list, mcp__hindsight__memory_operations, mcp__plugin_fpl-hsmem_hindsight__memory_operations
 ---
@@ -8,6 +19,19 @@ allowed-tools: mcp__hindsight__memory_status, mcp__plugin_fpl-hsmem_hindsight__m
 # Hindsight status
 
 Quick health check and statistics for the active Hindsight bank.
+
+
+## Model tier
+
+**This skill asks for tier C.**
+
+Reads three tools and prints what they said. No judgement, no irreversible step,
+and the oracle is immediate — the numbers either match the bank or they do not. Give this the
+cheapest model that can read a table.
+
+`model:` values like `opus` / `sonnet` / `haiku` are Claude Code names, not the
+requirement. On another runtime substitute whatever serves this tier there, and when you cannot
+tell, miss **upward**. Saving cost means giving a skill less work, not a weaker model.
 
 ## Steps
 
