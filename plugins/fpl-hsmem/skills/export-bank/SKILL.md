@@ -1,7 +1,9 @@
 ---
 name: export-bank
 description: Export the current Hindsight bank's content for backup or audit — memories, documents, mental models. Use when the user says "back up memory", "export bank", "save Hindsight state", or before doing risky operations like deleting / re-bootstrapping a bank.
-allowed-tools: mcp__hindsight__memory_get_current_bank, mcp__hindsight__memory_status, mcp__hindsight__mental_model_list, mcp__hindsight__mental_model_get, mcp__hindsight__memory_recall, Bash, Write
+hindsight-tools: [memory_get_current_bank, memory_status, mental_model_list, mental_model_get, memory_recall, memory_list, document_list]
+extra-tools: [Bash, Write]
+allowed-tools: mcp__hindsight__memory_get_current_bank, mcp__plugin_fpl-hsmem_hindsight__memory_get_current_bank, mcp__hindsight__memory_status, mcp__plugin_fpl-hsmem_hindsight__memory_status, mcp__hindsight__mental_model_list, mcp__plugin_fpl-hsmem_hindsight__mental_model_list, mcp__hindsight__mental_model_get, mcp__plugin_fpl-hsmem_hindsight__mental_model_get, mcp__hindsight__memory_recall, mcp__plugin_fpl-hsmem_hindsight__memory_recall, mcp__hindsight__memory_list, mcp__plugin_fpl-hsmem_hindsight__memory_list, mcp__hindsight__document_list, mcp__plugin_fpl-hsmem_hindsight__document_list, Bash, Write
 ---
 
 # Export bank to disk
@@ -76,8 +78,27 @@ without restoring to a Postgres instance.
 
 ## What this is NOT
 
-- Not a memory **import** mechanism — Hindsight doesn't have a generic
-  import endpoint. Re-ingestion would re-run extraction LLM-side.
+- **Not the way to move memory between banks.** This markdown export is for a
+  human to read. Hindsight has a real transfer path — export the documents
+  from one bank and import that archive into another:
+
+  ```
+  POST /v1/default/banks/<source>/document-transfer/export   → job id
+  POST /v1/default/banks/<target>/document-transfer          → upload the archive
+  ```
+
+  It carries documents, chunks and extracted facts. It does **not** carry
+  embeddings, and it does not carry derived beliefs or knowledge pages — those
+  are recomputed against whatever the target bank already knows, so the
+  imported material integrates rather than sitting beside it. Run
+  `POST .../consolidate` on the target afterwards and rebuild the pages.
+
+  Two cautions from a live run here: an export of a large bank has been seen to
+  fail with a timeout after three retries, so check `memory_operations` rather
+  than assuming; and the admin CLI's `import-bank` is a different thing — it
+  restores a whole bank and **fails if the target already exists**, so it
+  cannot merge.
+
 - Not a substitute for backing up the Postgres volume — for true DR,
   back up the Docker volume / `~/.pg0/` directory.
 

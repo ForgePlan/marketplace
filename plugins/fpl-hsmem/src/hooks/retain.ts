@@ -15,7 +15,6 @@
 import { readTranscript } from "../lib/transcript.js";
 import { HindsightClient } from "../lib/client.js";
 import { loadConfig, debugLog, type HindsightConfig } from "../lib/config.js";
-import { deriveBankId } from "../lib/bank.js";
 import { prepareRetentionTranscript } from "../lib/content.js";
 import { incrementTurnCount, trackRetention } from "../lib/state.js";
 
@@ -88,7 +87,9 @@ export async function runRetain(hookInput: HookInput, force = false): Promise<vo
   }
   const documentId = chunkIndex === 0 ? sessionId : `${sessionId}-c${chunkIndex}`;
 
-  const bankId = deriveBankId(cwd);
+  // One resolver only. loadConfig() is a strict superset of deriveBankId(); using both is
+  // what split this project's memory across two banks.
+  const bankId = config.bankId;
   const client = new HindsightClient(config.url, bankId, config.apiKey);
 
   const timestamp = new Date().toISOString().replace(/\.\d+Z$/, "Z");
@@ -122,6 +123,11 @@ export async function runRetain(hookInput: HookInput, force = false): Promise<vo
       {
         content: prepared.transcript,
         document_id: documentId,
+        // `replace` on purpose: this re-retains a GROWING transcript under one id every cycle, so
+
+        // `append` would duplicate the whole conversation each time. Stated, never inherited.
+
+        update_mode: "replace" as const,
         context: config.retainContext,
         metadata,
         tags: tags.length > 0 ? tags : undefined,

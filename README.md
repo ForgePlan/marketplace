@@ -8,7 +8,7 @@
 
 Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/ForgePlan) — UX, workflow, engineering, and developer tools.
 
-**23 plugins** | **43 marketplace-aware agents (96 total)** | **80+ skills** | **9+ knowledge bases**
+**23 plugins** | **44 marketplace-aware agents (97 total)** | **80+ skills** | **9+ knowledge bases**
 
 > **What is this, in one sentence?** A factory that can build, inspect itself, and honestly record where it went wrong — [docs/FACTORY.md](docs/FACTORY.md).
 

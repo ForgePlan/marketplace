@@ -17,6 +17,9 @@ const entrypoints = [
   { in: "src/hooks/retain.ts", out: "dist/hooks/retain.mjs" },
   { in: "src/hooks/session-end.ts", out: "dist/hooks/session-end.mjs" },
   { in: "src/setup.ts", out: "dist/setup.mjs" },
+  // Test surface. Committed like the rest of dist/ so the security self-test runs on a clean
+  // checkout instead of skipping for want of node_modules. Adds no capability.
+  { in: "src/testable.ts", out: "dist/testable.mjs" },
 ];
 
 await Promise.all(

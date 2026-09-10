@@ -2,12 +2,12 @@
 
 // src/setup.ts
 import { readFileSync as readFileSync2, writeFileSync, existsSync as existsSync2, mkdirSync } from "node:fs";
-import { dirname, join as join2, resolve } from "node:path";
+import { dirname as dirname2, join as join2, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 // src/lib/bank.ts
 import { execFileSync } from "node:child_process";
-import { basename, normalize, join } from "node:path";
+import { basename, dirname, normalize, join } from "node:path";
 import { readFileSync, existsSync } from "node:fs";
 function resolveProjectName(cwd, resolveWorktrees = true) {
   if (!cwd) return "unknown";
@@ -31,7 +31,7 @@ function resolveProjectName(cwd, resolveWorktrees = true) {
 }
 
 // src/setup.ts
-var __dirname = dirname(fileURLToPath(import.meta.url));
+var __dirname = dirname2(fileURLToPath(import.meta.url));
 var HINDSIGHT_MCP_PATH = resolve(__dirname, "..");
 function parseArgs(argv) {
   const opts = {
@@ -103,7 +103,7 @@ function writeFile(path, content, force) {
   if (existsSync2(path) && !force) {
     return "skipped";
   }
-  mkdirSync(dirname(path), { recursive: true });
+  mkdirSync(dirname2(path), { recursive: true });
   writeFileSync(path, content);
   return "written";
 }

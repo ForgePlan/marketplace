@@ -46,6 +46,43 @@ function readPackageVersion() {
   }
 }
 var USER_AGENT = `hindsight-mcp/${readPackageVersion()}`;
+var PATH_ID_RE = /^[A-Za-z0-9_][A-Za-z0-9._~-]*$/;
+function assertPathId(value, what = "id") {
+  if (typeof value !== "string" || value.length === 0) {
+    throw new Error(`${what} must be a non-empty string`);
+  }
+  if (value.length > 200) {
+    throw new Error(`${what} is too long (${value.length} chars, max 200)`);
+  }
+  if (value.includes("..")) {
+    throw new Error(`${what} may not contain ".." (path traversal)`);
+  }
+  if (!PATH_ID_RE.test(value)) {
+    throw new Error(
+      `${what} must start with a letter, digit or underscore and contain only letters, digits, dot, underscore, tilde or hyphen (got ${JSON.stringify(value)})`
+    );
+  }
+  return value;
+}
+function assertBankId(value) {
+  if (typeof value !== "string" || value.trim().length === 0) {
+    throw new Error("bank id must be a non-empty string");
+  }
+  const v = value.trim();
+  if (v === "." || v === ".." || v.includes("..")) {
+    throw new Error(`bank id may not be a dot segment (got ${JSON.stringify(value)})`);
+  }
+  if (/[/\\%]/.test(v)) {
+    throw new Error(`bank id may not contain / \\ or % (got ${JSON.stringify(value)})`);
+  }
+  if (/[\u0000-\u001f\u007f]/.test(v)) {
+    throw new Error("bank id may not contain control characters");
+  }
+  if (v.length > 200) {
+    throw new Error(`bank id is too long (${v.length} chars, max 200)`);
+  }
+  return v;
+}
 var HindsightClient = class {
   url;
   apiKey;
@@ -67,18 +104,46 @@ var HindsightClient = class {
     return h;
   }
   bankPath(bankId) {
-    return `/v1/default/banks/${encodeURIComponent(bankId ?? this.bankId)}`;
+    return `/v1/default/banks/${encodeURIComponent(assertBankId(bankId ?? this.bankId))}`;
+  }
+  /**
+   * Build a bank-scoped path from an ARRAY of segments, never a joined string. Each segment is
+   * validated and encoded separately, and the assembled path is then checked to still sit under
+   * the bank prefix — so a segment that somehow escapes validation still cannot re-address the
+   * request at the bank base or above it.
+   */
+  bankUrl(segments, query, bankId) {
+    const prefix = this.bankPath(bankId);
+    const tail = segments.map((s, i) => encodeURIComponent(assertPathId(s, `segment ${i}`))).join("/");
+    const path = tail ? `${prefix}/${tail}` : prefix;
+    if (!path.startsWith(`${prefix}/`) || path.length <= prefix.length + 1) {
+      throw new Error(`refusing to build a request outside ${prefix}`);
+    }
+    const qs = query ? "?" + Object.entries(query).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join("&") : "";
+    return path + qs;
   }
   async request(method, path, body, timeoutMs = 15e3) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const res = await fetch(`${this.url}${path}`, {
-        method,
-        headers: this.headers(),
-        body: body ? JSON.stringify(body) : void 0,
-        signal: controller.signal
-      });
+      let res;
+      try {
+        res = await fetch(`${this.url}${path}`, {
+          method,
+          headers: this.headers(),
+          body: body ? JSON.stringify(body) : void 0,
+          signal: controller.signal,
+          redirect: "error"
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (/redirect/i.test(msg)) {
+          throw new Error(
+            `${method} ${path} was answered with a redirect, which this client refuses to follow (a redirect can downgrade the scheme and silently drop the Authorization header)`
+          );
+        }
+        throw err;
+      }
       const text = await res.text();
       if (!res.ok) {
         throw new Error(`HTTP ${res.status} from ${path}: ${text}`);
@@ -119,8 +184,28 @@ var HindsightClient = class {
       options.timeoutMs ?? 1e4
     );
   }
-  async reflect(query, timeoutMs = 3e4) {
-    return this.request("POST", `${this.bankPath()}/reflect`, { query }, timeoutMs);
+  /**
+   * Upstream reflect measured 49-70 s; the old 30 s ceiling aborted real answers and reported them
+   * as empty. The response field is `text` (ReflectResponse in the live OpenAPI), not `response`.
+   */
+  async reflect(query, options = {}) {
+    const body = { query };
+    if (options.maxTokens) body.max_tokens = options.maxTokens;
+    return this.request("POST", `${this.bankPath()}/reflect`, body, options.timeoutMs ?? 12e4);
+  }
+  /** Exact-id document lookup. The `q` list filter matches substrings, which is not existence. */
+  async getDocument(id) {
+    try {
+      return await this.request(
+        "GET",
+        this.bankUrl(["documents", id]),
+        void 0,
+        1e4
+      );
+    } catch (err) {
+      if (err instanceof Error && /HTTP 404/.test(err.message)) return null;
+      throw err;
+    }
   }
   async stats(timeoutMs = 5e3) {
     return this.request("GET", `${this.bankPath()}/stats`, void 0, timeoutMs);
@@ -129,11 +214,11 @@ var HindsightClient = class {
     return this.request("GET", `${this.bankPath()}/mental-models?detail=${detail}`);
   }
   async getMentalModel(id, detail = "content") {
-    return this.request("GET", `${this.bankPath()}/mental-models/${encodeURIComponent(id)}?detail=${detail}`);
+    return this.request("GET", this.bankUrl(["mental-models", id], { detail }));
   }
   async createMentalModel(args) {
     return this.request("POST", `${this.bankPath()}/mental-models`, {
-      id: args.id,
+      id: assertPathId(args.id, "mental model id"),
       name: args.name,
       source_query: args.sourceQuery,
       max_tokens: args.maxTokens ?? 4096,
@@ -149,15 +234,168 @@ var HindsightClient = class {
     const body = {};
     if (updates.name) body.name = updates.name;
     if (updates.sourceQuery) body.source_query = updates.sourceQuery;
-    return this.request("PATCH", `${this.bankPath()}/mental-models/${encodeURIComponent(id)}`, body);
+    return this.request("PATCH", this.bankUrl(["mental-models", id]), body);
   }
   async deleteMentalModel(id) {
-    return this.request("DELETE", `${this.bankPath()}/mental-models/${encodeURIComponent(id)}`);
+    return this.request("DELETE", this.bankUrl(["mental-models", id]));
   }
-  async setMission(mission, retainMission) {
-    const updates = { reflect_mission: mission };
-    if (retainMission) updates.retain_mission = retainMission;
-    return this.request("PATCH", `${this.bankPath()}/config`, { updates });
+  /**
+   * Only `reflect_mission`. `retain_mission` steers WHAT GETS EXTRACTED on every future retain, so
+   * an agent able to set it can rewrite the memory rules for everything that follows — through a
+   * tool that reads as cosmetic. Extraction control is an operator setting, not a tool argument.
+   */
+  async setMission(mission) {
+    return this.request("PATCH", `${this.bankPath()}/config`, {
+      updates: { reflect_mission: mission }
+    });
+  }
+  // ---------------------------------------------------------------------------------------------
+  // Browsing and correcting individual memories.
+  //
+  // `recall` answers "what is relevant to this question" and is what the hook calls on every
+  // prompt. These answer a different question — "which stored row is the wrong one" — and that is
+  // the question you must answer before you can correct anything. Without them the relay could
+  // add facts and never fix one.
+  // ---------------------------------------------------------------------------------------------
+  /**
+   * Enumerate stored memories by structured filter. `q` is a literal substring, not a search.
+   *
+   * Parameter names are MEASURED against the live API, not transcribed from documentation. Three
+   * plausible spellings are silently ignored by the server — it answers 200 and returns the
+   * unfiltered set — so a tool built on them would report "showing world facts" while showing
+   * everything. Verified honoured: `type` (SINGULAR — `types` is ignored), `state`, `document_id`,
+   * `q`, `tags`. Verified ignored: `types`, `fact_type`.
+   */
+  async listMemories(options = {}) {
+    const query = {
+      limit: String(options.limit ?? 10),
+      offset: String(options.offset ?? 0)
+    };
+    if (options.q) query.q = options.q;
+    if (options.type) query.type = options.type;
+    if (options.state && options.state !== "all") query.state = options.state;
+    if (options.documentId) query.document_id = assertPathId(options.documentId, "document_id");
+    if (options.tags?.length) query.tags = options.tags.join(",");
+    return this.request(
+      "GET",
+      this.bankUrl(["memories", "list"], query),
+      void 0,
+      options.timeoutMs ?? 2e4
+    );
+  }
+  async getMemory(id) {
+    return this.request("GET", this.bankUrl(["memories", id]), void 0, 15e3);
+  }
+  /**
+   * Mark a memory invalid, or restore one.
+   *
+   * This is deliberately the ONLY memory mutation the relay exposes. Rewriting a memory's text is
+   * irreversible upstream — it re-embeds, drops the derived observations and re-consolidates — so
+   * the correction path is "retire the wrong fact, write the right one", which leaves the wrong
+   * one readable and undoable. `reason` is what a future reader sees instead of a silent gap.
+   */
+  async invalidateMemory(id, reason, restore = false) {
+    const body = restore ? { state: "valid" } : { state: "invalidated", ...reason ? { invalidation_reason: reason } : {} };
+    return this.request("PATCH", this.bankUrl(["memories", id]), body, 15e3);
+  }
+  /**
+   * Drop one memory's derived observations so consolidation rebuilds them.
+   *
+   * The memory itself survives. Use after invalidating a fact that a belief was built on — the
+   * belief does not notice on its own, and recall keeps returning the conclusion drawn from the
+   * fact you just retired.
+   */
+  async reconsolidateMemory(id) {
+    return this.request("DELETE", this.bankUrl(["memories", id, "observations"]), void 0, 2e4);
+  }
+  // ---------------------------------------------------------------------------------------------
+  // Asynchronous work. Retain returns before the server has finished thinking; these say whether
+  // it finished, and that is the answer to "why does recall still return the old fact".
+  // ---------------------------------------------------------------------------------------------
+  /**
+   * List async operations. The response array is `operations`, NOT `items` — this endpoint is
+   * shaped differently from every other list on the API.
+   *
+   * `status` is the only filter the server honours (measured: `status=failed` narrowed 1085 → 6).
+   * Filtering by kind is deliberately absent: `task_type`, `operation_type` and `kind` are all
+   * accepted with a 200 and then ignored, so offering a kind filter would mean reporting a
+   * narrowed view that was never narrowed. Callers that need it filter the returned page.
+   */
+  async listOperations(options = {}) {
+    const query = {
+      limit: String(options.limit ?? 20),
+      offset: String(options.offset ?? 0)
+    };
+    if (options.status) query.status = options.status;
+    return this.request("GET", this.bankUrl(["operations"], query), void 0, 2e4);
+  }
+  async getOperation(id) {
+    return this.request("GET", this.bankUrl(["operations", id]), void 0, 15e3);
+  }
+  // ---------------------------------------------------------------------------------------------
+  // Mental models: the two lifecycle operations that were missing.
+  // ---------------------------------------------------------------------------------------------
+  /** Force a rebuild now instead of waiting for consolidation. Returns an operation id. */
+  async refreshMentalModel(id) {
+    return this.request("POST", this.bankUrl(["mental-models", id, "refresh"]), {}, 2e4);
+  }
+  /**
+   * Blank a page's content, keeping its configuration.
+   *
+   * Our pages are created in `delta` mode, which edits existing content rather than regenerating
+   * it — so a page that has drifted keeps drifting. Clearing removes the baseline, and the next
+   * refresh is a full rebuild. POST, not DELETE: DELETE on this resource removes the page itself.
+   */
+  async clearMentalModel(id) {
+    return this.request("POST", this.bankUrl(["mental-models", id, "clear"]), {}, 2e4);
+  }
+  // ---------------------------------------------------------------------------------------------
+  // Directives — standing instructions that govern synthesis. Without them every reflect is
+  // ungoverned, which is the state this bank is in today.
+  // ---------------------------------------------------------------------------------------------
+  async listDirectives() {
+    return this.request("GET", this.bankUrl(["directives"]), void 0, 15e3);
+  }
+  async createDirective(args) {
+    const body = { name: args.name, content: args.content };
+    if (args.priority !== void 0) body.priority = args.priority;
+    if (args.isActive !== void 0) body.is_active = args.isActive;
+    if (args.tags?.length) body.tags = args.tags;
+    return this.request("POST", this.bankUrl(["directives"]), body, 15e3);
+  }
+  async deleteDirective(id) {
+    return this.request("DELETE", this.bankUrl(["directives", id]), void 0, 15e3);
+  }
+  // ---------------------------------------------------------------------------------------------
+  // Bank configuration. `GET /profile` (which upstream's `get_bank` maps to) returns the name and
+  // mission; the behavioural switches live here and were unreachable from any tool.
+  // ---------------------------------------------------------------------------------------------
+  async getBankConfig() {
+    return this.request("GET", `${this.bankPath()}/config`, void 0, 15e3);
+  }
+  /**
+   * Write behavioural settings. The caller decides WHICH keys are allowed — see the allowlist in
+   * `index.ts`. This method deliberately does not police key names: one policy, one place, and
+   * that place is the tool handler where the refusal can be explained to the caller.
+   */
+  async setBankConfig(updates) {
+    return this.request("PATCH", `${this.bankPath()}/config`, { updates }, 15e3);
+  }
+  // ---------------------------------------------------------------------------------------------
+  // Documents. `memory_unit_count` is the blast-radius number nothing else provides: it is how
+  // many memories die with the document.
+  // ---------------------------------------------------------------------------------------------
+  async listDocuments(options = {}) {
+    const query = {
+      limit: String(options.limit ?? 10),
+      offset: String(options.offset ?? 0)
+    };
+    if (options.q) query.q = options.q;
+    return this.request("GET", this.bankUrl(["documents"], query), void 0, 2e4);
+  }
+  /** Irreversible. Cascades to every memory extracted from the document. */
+  async deleteDocument(id) {
+    return this.request("DELETE", this.bankUrl(["documents", id]), void 0, 3e4);
   }
 };
 
@@ -168,8 +406,28 @@ import { homedir } from "node:os";
 
 // src/lib/bank.ts
 import { execFileSync } from "node:child_process";
-import { basename, normalize, join as join2 } from "node:path";
+import { basename, dirname as dirname2, normalize, join as join2 } from "node:path";
 import { readFileSync as readFileSync3, existsSync as existsSync2 } from "node:fs";
+function resolveProjectRoot(cwd) {
+  if (!cwd) return process.cwd();
+  let dir = normalize(cwd);
+  for (; ; ) {
+    if (existsSync2(join2(dir, ".mcp.json")) || existsSync2(join2(dir, ".hindsight.json"))) return dir;
+    const parent = dirname2(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  try {
+    const out = execFileSync("git", ["-C", cwd, "rev-parse", "--show-toplevel"], {
+      encoding: "utf-8",
+      stdio: ["ignore", "pipe", "ignore"],
+      timeout: 5e3
+    }).trim();
+    if (out) return out;
+  } catch {
+  }
+  return normalize(cwd);
+}
 function resolveProjectName(cwd, resolveWorktrees = true) {
   if (!cwd) return "unknown";
   if (!resolveWorktrees) {
@@ -190,21 +448,11 @@ function resolveProjectName(cwd, resolveWorktrees = true) {
   }
   return basename(normalize(cwd));
 }
-function deriveBankId(cwd) {
-  const path = join2(cwd, ".mcp.json");
-  if (existsSync2(path)) {
-    try {
-      const raw = JSON.parse(readFileSync3(path, "utf-8"));
-      const declared = raw.mcpServers?.hindsight?.env?.HINDSIGHT_BANK_ID;
-      if (declared && declared.trim()) return declared.trim();
-    } catch {
-    }
-  }
-  return resolveProjectName(cwd);
-}
 
 // src/lib/config.ts
 var DEFAULTS = {
+  bankIdSource: "derived-from-directory",
+  projectRoot: "",
   url: "http://localhost:8888",
   bankId: "",
   apiKey: "",
@@ -295,24 +543,41 @@ function isDisabled(cwd = process.cwd()) {
 }
 function loadConfig(cwd = process.cwd()) {
   const config = { ...DEFAULTS };
+  const root = resolveProjectRoot(cwd);
+  config.projectRoot = root;
+  let source = "derived-from-directory";
   const userConfig = loadJsonFile(join3(homedir(), ".hindsight", "config.json"));
-  if (userConfig) Object.assign(config, userConfig);
-  const mcpBank = readMcpJsonBank(cwd);
+  if (userConfig) {
+    Object.assign(config, userConfig);
+    if (userConfig.bankId) source = "user-config";
+  }
+  const mcpBank = readMcpJsonBank(root);
   if (mcpBank.url) config.url = mcpBank.url;
-  if (mcpBank.bankId) config.bankId = mcpBank.bankId;
+  if (mcpBank.bankId) {
+    config.bankId = mcpBank.bankId;
+    source = "mcp.json";
+  }
   if (mcpBank.apiKey) config.apiKey = mcpBank.apiKey;
-  const projectConfig = loadJsonFile(join3(cwd, ".hindsight.json"));
-  if (projectConfig) Object.assign(config, projectConfig);
+  const projectConfig = loadJsonFile(join3(root, ".hindsight.json"));
+  if (projectConfig) {
+    Object.assign(config, projectConfig);
+    if (projectConfig.bankId) source = "hindsight.json";
+  }
   for (const [envName, [key, type]] of Object.entries(ENV_MAP)) {
     const raw = process.env[envName];
     if (raw === void 0) continue;
     const value = castEnv(raw, type);
-    if (value !== void 0) config[key] = value;
+    if (value !== void 0) {
+      config[key] = value;
+      if (key === "bankId") source = "env";
+    }
   }
   if (!config.bankId) {
-    config.bankId = resolveProjectName(cwd);
+    config.bankId = resolveProjectName(root);
+    source = "derived-from-directory";
   }
-  if (isDisabled(cwd)) {
+  config.bankIdSource = source;
+  if (isDisabled(root)) {
     config.enabled = false;
     config.autoRecall = false;
     config.autoRetain = false;
@@ -325,11 +590,68 @@ function debugLog(config, ...args) {
   }
 }
 
+// src/lib/tool-names.ts
+var TOOL_NAMES = [
+  // memory — write and read
+  "memory_retain",
+  "memory_recall",
+  "memory_reflect",
+  "memory_status",
+  "memory_get_current_bank",
+  "memory_set_mission",
+  // memory — browse and correct
+  "memory_list",
+  "memory_get",
+  "memory_invalidate",
+  "memory_reconsolidate",
+  "memory_operations",
+  // mental models
+  "mental_model_list",
+  "mental_model_get",
+  "mental_model_create",
+  "mental_model_update",
+  "mental_model_delete",
+  "mental_model_refresh",
+  "mental_model_clear",
+  // directives
+  "directive_list",
+  "directive_create",
+  "directive_delete",
+  // bank configuration
+  "bank_config_get",
+  "bank_config_set",
+  // documents
+  "document_ingest",
+  "document_ingest_file",
+  "document_list",
+  "document_delete"
+];
+var NAME_SET = new Set(TOOL_NAMES);
+function isOwnTool(name) {
+  if (!name) return false;
+  if (NAME_SET.has(name)) return true;
+  const suffix = name.split("__").pop() ?? "";
+  return NAME_SET.has(suffix);
+}
+
 // src/lib/content.ts
 var MESSAGE_TEXT_FIELDS = ["text", "body", "message", "content"];
-var OPERATIONAL_TOOL_PATTERN = /(?:recall|retain|reflect|search|extract|create_|delete_|update_|get_|list_)/i;
+var OPERATIONAL_TOOL_PATTERN = /\b(?:recall|retain|reflect|search|extract|query|fetch|read|write|create|delete|update|patch|get|list|ingest|upload|invalidate|refresh|clear|status|config)\b/i;
+var MEMORY_MARKERS = ["hindsight_memories", "relevant_memories"];
 function stripMemoryTags(content) {
-  return content.replace(/<hindsight_memories>[\s\S]*?<\/hindsight_memories>/g, "").replace(/<relevant_memories>[\s\S]*?<\/relevant_memories>/g, "");
+  let out = content;
+  for (const marker of MEMORY_MARKERS) {
+    out = out.replace(new RegExp(`<${marker}>[\\s\\S]*?</${marker}>`, "g"), "");
+    out = out.replace(new RegExp(`</?${marker}\\b[^>]*>`, "g"), "");
+  }
+  return out;
+}
+function escapeMemoryMarkers(text) {
+  let out = text;
+  for (const marker of MEMORY_MARKERS) {
+    out = out.replace(new RegExp(`</?${marker}\\b`, "gi"), (m) => m.replace("<", "&lt;"));
+  }
+  return out;
 }
 function stripChannelEnvelope(content) {
   const match = /<channel\b[^>]*>([\s\S]*?)<\/channel>/.exec(content);
@@ -341,6 +663,7 @@ function isString(v) {
 function isChannelMessageTool(block) {
   const name = block.name ?? "";
   if (!name.startsWith("mcp__")) return false;
+  if (isOwnTool(name)) return false;
   const suffix = name.split("__").pop() ?? "";
   if (OPERATIONAL_TOOL_PATTERN.test(suffix)) return false;
   const input = block.input;
@@ -439,7 +762,7 @@ ${latest}`;
 function formatMemories(results) {
   if (!results || results.length === 0) return "";
   const lines = results.map((r) => {
-    const text = r.text ?? "";
+    const text = escapeMemoryMarkers(r.text ?? "");
     const typeStr = r.type ? ` [${r.type}]` : "";
     const dateStr = r.mentioned_at ? ` (${r.mentioned_at})` : "";
     return `- ${text}${typeStr}${dateStr}`;
@@ -485,7 +808,7 @@ async function main() {
     debugLog(config, "Prompt too short for recall");
     return;
   }
-  const bankId = deriveBankId(cwd);
+  const bankId = config.bankId;
   const client = new HindsightClient(config.url, bankId, config.apiKey);
   let query = prompt;
   if (config.recallContextTurns > 1) {
