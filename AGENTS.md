@@ -340,16 +340,32 @@ Long-term memory across sessions, 27 MCP tools. The server sends usage `instruct
 so a runtime that reads them gets the causal chain without this section. What follows is for
 runtimes that do not.
 
-**The boundary that matters.** Code search answers *where is it, right now*. Memory answers *why,
-what was rejected, what was learned* — knowledge that never landed in the repository. Two rules
-follow, and both have been paid for:
+**The boundary that matters — and it separates THREE layers, not two.** An earlier version of this
+section said "never ask code search why", which was wrong in a way worth naming: ADRs, RFCs and PRDs
+are *files in the repository*. They are found by the same search tools, they are versioned with the
+code, and they outrank memory. The rule sent agents past a ratified written answer to go asking a
+layer with no clock and no provenance.
 
+| Layer | Holds | Reach for it |
+|---|---|---|
+| **Sources** | what won | "where is it, right now" |
+| **Recorded decisions** (`.forgeplan/`, ADR/RFC/PRD, PR bodies) | reasons that got as far as "decided" | "why is it like this" — **first** |
+| **Memory** | the long tail: discussions that decided nothing, rejected options, lessons | "why" when no record exists; "what did we try that failed" |
+
+Four rules, each paid for:
+
+- **Ask the recorded decisions before you ask memory.** If memory answers a "why" and no artifact
+  exists, that is a signal the decision should be written down — not that memory did the job.
 - **Never answer a "where is it" question from memory.** Memory is a snapshot of a past
-  conversation; it will confidently name a file that has since been renamed or deleted. When memory
-  names a code location, that is a lead — re-check it with the language server or a search tool
-  before acting on it.
-- **Never expect code search to answer "why".** The repository shows what won. It never shows what
-  lost, or what it cost to find out.
+  conversation. The easy failure is a path that no longer exists; the expensive one is a path that
+  is still valid while the claim about it is stale — the coordinate checks out and confirms
+  nothing. Verify in two steps: does the location exist, and does the claim still match the code.
+- **An empty result from an index-backed search is not proof of absence.** Trigram indexes yield
+  false *negatives* when stale — a symbol added after the last index build is simply not found, and
+  the exit code is indistinguishable from an honest "no such thing". Reproduced live. Before
+  concluding something is gone, repeat without the index.
+- **Do not verify with the layer you searched with.** Re-running the same index returns the same
+  snapshot. And when layers disagree, **the code wins**.
 
 **Three reads, not interchangeable.** `memory_recall` ranks by meaning — the only one that finds a
 fact you cannot name. `memory_list` enumerates by structured filter — the only one that yields the

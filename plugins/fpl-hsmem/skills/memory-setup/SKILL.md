@@ -100,12 +100,31 @@ prevents is the read-read-read cascade: opening ten files because the first
 search was the wrong kind.
 
 **Say the anti-pattern out loud when you propose the stack**, because each wrong
-pairing has a distinct symptom:
+pairing has a distinct symptom — and in every case the symptom is a *plausible
+answer*, not an error:
 
-- AST tool used for a literal → slow, and misses matches inside strings and comments.
-- Text search used for a rename → callsites silently left behind; the build passes and production does not.
-- Semantic search used for an exact identifier → plausible neighbours ranked above the exact hit.
-- Any search used to answer "why" → a confident answer assembled from code that cannot contain the reason.
+- **AST tool used for a literal** → a confident small number. Measured on one
+  repo: `rg -F` returned 192 files, `ast-grep` 4. Not an error, not a warning —
+  a 48× undercount that reads as a result. Slowness is NOT the symptom (167 ms
+  vs 53 ms; you will never notice). The cause is broader than "misses strings":
+  an AST tool parses only the language you named, so everything in Markdown,
+  JSON, YAML and config is invisible to it. And an invalid pattern exits **0**
+  with no matches, which is indistinguishable from a correct search that found
+  nothing.
+- **Text search used for a rename** → callsites silently left behind; the build
+  passes and production does not.
+- **Semantic search used for an exact identifier** → plausible neighbours
+  ranked above the exact hit, top score around 0.65, the definition itself
+  fourth or absent.
+- **A stale index believed** → the most expensive one. Trigram indexes give
+  false NEGATIVES: a symbol added after the last build is not found, and the
+  exit code is identical to an honest "no such thing". Reproduced live. An
+  empty result from an indexed search is not proof of absence — repeat without
+  the index before concluding anything is gone.
+- **Verifying with the layer you searched with** → the same snapshot, twice.
+- **Any search used to answer "why"** → *see the correction below*. Recorded
+  decisions live in the repository and ARE searchable; it is only the
+  undecided long tail that search cannot reach.
 
 ## Step 3 — the memory layers
 
@@ -116,10 +135,27 @@ pairing has a distinct symptom:
 | **Knowledge pages** (mental models) | a standing answer to a recurring question, rebuilt from memories | you can name a question that gets asked and re-researched repeatedly. Two or three, not ten |
 | **Formal decision records** (`.forgeplan/`, ADR/RFC/PRD files) | ratified decisions, with authority | a decision needs to outrank memory. These are the source of truth; memory is what surrounds them |
 
-**And the boundary rule, stated to the user as part of the proposal:** memory
-answers *why*, search answers *where*, and neither substitutes for the other. A
-memory that names a file is a lead, not a fact — files move, and memory is a
-snapshot of a past conversation.
+**The boundary rule, stated to the user as part of the proposal — and it
+separates three layers, not two.** "Search answers where, memory answers why"
+is the version people repeat, and it is wrong in a way that costs: **ADRs, RFCs
+and PRDs are files in the repository.** They are found by the same search tools,
+versioned with the code, and they outrank memory. Sending someone past a
+ratified written answer to go asking memory is the failure the neat version
+produces.
+
+    sources            → what won, no reasons
+    recorded decisions → reasons that reached "decided"   ← ask these FIRST
+    memory             → the long tail: discussions that decided nothing,
+                         rejected options, lessons
+
+If memory answers a "why" and no artifact exists, that is a signal the decision
+should be written down — not that memory did the job.
+
+And a memory that names a file is a lead, not a fact. The easy failure is a path
+that no longer exists; the expensive one is a path that is still valid while the
+claim about it is stale — the coordinate checks out and confirms nothing. Verify
+in two steps: does the location exist, and does the claim still match the code.
+When layers disagree, the code wins.
 
 ## Step 4 — privacy, before you propose filling anything
 

@@ -170,6 +170,7 @@ All three coexist — project-level `.mcp.json` wins over plugin-level config. *
 ## Documentation
 
 - [`GETTING-STARTED.md`](./GETTING-STARTED.md) — 10-minute walkthrough from zero
+- [`RETRIEVAL-AND-MEMORY.md`](./RETRIEVAL-AND-MEMORY.md) — which question goes to which layer: search answers *where*, recorded decisions and memory answer *why*. Anti-patterns by symptom, and why every timing in it carries its provenance
 - [`USAGE.md`](./USAGE.md) — real use cases + integration with `fpl-skills` and forgeplan artifacts
 - [`CONFIGURATION.md`](./CONFIGURATION.md) — full env-var reference, 3-mode setup recipes
 - [`TROUBLESHOOTING.md`](./TROUBLESHOOTING.md) — diagnostic recipes for common issues
