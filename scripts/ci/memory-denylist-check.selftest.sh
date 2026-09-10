@@ -11,7 +11,7 @@
 # of the rule it was written for. A negative control that does not test the DECIDING property
 # constrains nothing (EVID-257 F2). Case 5 below is that missing control.
 #
-# Nine cases: five must-fire, two must-refuse (rules it cannot trust), two must-NOT-fire
+# Eleven cases: six must-fire, two must-refuse (rules it cannot trust), three must-NOT-fire
 # (legitimate shapes that would be false positives if the checker were too eager). The count is
 # stated here and printed at the end; if those two disagree, the summary is lying about its own work.
 set -uo pipefail
@@ -147,7 +147,27 @@ else
 fi
 rm -f "$work/plugins/probe/agents/nobody.md"
 
-# 8. must-fire — shrinking the registry makes this gate GREENER, never redder. The pinned count is
+# 8. prefix symmetry OUTSIDE the completeness scope — the case the old gate could not see at all.
+#    An agent that legitimately retains (so it never enters scope) but denies some destructive tool
+#    must still name both spellings. `fpl-hsmem`'s own memory-curator is exactly this shape, and
+#    before this check nothing in the repository watched the file with the most bank-write authority
+#    in it (EVID-257 F3).
+write_agent "complete.md" "$BOTH"
+write_agent "curator.md" "mcp__plugin_fpl-hsmem_hindsight__document_delete, mcp__hindsight__document_delete"
+if node "$work/scripts/ci/memory-denylist-check.js" >/dev/null 2>&1; then
+  pass "must-NOT-fire  an out-of-scope agent denying one tool under BOTH spellings passes"
+else
+  fail "a symmetric partial denial was flagged — false positive on a legitimate shape"
+fi
+write_agent "curator.md" "mcp__plugin_fpl-hsmem_hindsight__document_delete"
+if node "$work/scripts/ci/memory-denylist-check.js" >/dev/null 2>&1; then
+  fail "gate PASSED on a half-written denial outside the completeness scope — nothing watches it"
+else
+  pass "must-fire      a one-spelling denial outside the completeness scope is caught"
+fi
+rm -f "$work/plugins/probe/agents/curator.md"
+
+# 9. must-fire — shrinking the registry makes this gate GREENER, never redder. The pinned count is
 #    the only thing that turns a silent shrink into a deliberate two-file edit.
 write_agent "complete.md" "$BOTH"
 python3 - "$work/plugins/fpl-hsmem/src/lib/tool-names.ts" <<'PY'
@@ -169,7 +189,7 @@ cp "$work/registry.bak" "$work/plugins/fpl-hsmem/src/lib/tool-names.ts"
 
 echo
 if [ "$fails" -eq 0 ]; then
-  echo "self-test OK: 9 cases (5 must-fire, 2 must-refuse, 2 must-NOT-fire)"
+  echo "self-test OK: 11 cases (6 must-fire, 2 must-refuse, 3 must-NOT-fire)"
   exit 0
 fi
 echo "self-test FAILED: $fails"

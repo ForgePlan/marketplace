@@ -122,9 +122,11 @@ const bare = (entry) => String(entry).trim().split("__").pop();
 function main() {
   const required = loadRequired();
   const problems = [];
+  const asymmetric = [];
   const misspelled = [];
   let scanned = 0;
   let inScope = 0;
+  let symmetryChecked = 0;
 
   const packs = fs.existsSync(PLUGINS)
     ? fs.readdirSync(PLUGINS, { withFileTypes: true }).filter((d) => d.isDirectory())
@@ -151,6 +153,26 @@ function main() {
       if (!deny) continue;
       const exact = new Set(deny.map((e) => String(e).trim()));
       const anyPrefix = new Set(deny.map(bare));
+
+      // CHECK ONE — prefix symmetry, applied to EVERY agent that denies any memory write tool,
+      // in scope or not. Denying a tool under one spelling and not the other is never a decision;
+      // it is always a half-written denial that stops working the moment the relay is wired the
+      // other way. This is the half of EVID-257 F3 that closes cleanly: `fpl-hsmem`'s own
+      // memory-curator legitimately retains (so it never enters the scope below) and is the ONLY
+      // file in the repository that got both spellings right — with nothing watching it. Now
+      // something does.
+      const asym = [];
+      for (const name of required) {
+        const present = PREFIXES.filter((p) => exact.has(p + name));
+        if (present.length === 1) {
+          asym.push(`${name} (has ${present[0]}, missing ${PREFIXES.find((p) => p !== present[0])})`);
+        }
+      }
+      if (asym.length) asymmetric.push({ rel, asym });
+      if (required.some((n) => anyPrefix.has(n))) symmetryChecked++;
+
+      // CHECK TWO — completeness, applied only to agents that have DECIDED they do not write
+      // memory. That decision is marked by denying `memory_retain`.
       if (!anyPrefix.has("memory_retain")) continue; // not in scope
       inScope++;
 
@@ -188,6 +210,19 @@ function main() {
     process.exit(1);
   }
 
+  if (asymmetric.length) {
+    console.error(
+      `memory-denylist-check FAILED: ${asymmetric.length} agent(s) deny a memory write tool under ` +
+        `ONE relay spelling only. A denylist matches an exact string, so half a denial is no denial ` +
+        `under the other wiring.\n`,
+    );
+    for (const a of asymmetric) {
+      console.error(`  ${a.rel}`);
+      for (const line of a.asym) console.error(`    ${line}`);
+    }
+    process.exit(1);
+  }
+
   if (problems.length) {
     console.error(
       `memory-denylist-check FAILED: ${problems.length} of ${inScope} memory-restricted agent(s) ` +
@@ -209,9 +244,10 @@ function main() {
   }
 
   console.log(
-    `Memory denylist OK: ${scanned} agent(s) scanned, ${inScope} restrict memory writes, ` +
-      `each denying all ${required.length} write tools under both relay prefixes ` +
-      `(${required.length * PREFIXES.length} entries).`,
+    `Memory denylist OK: ${scanned} agent(s) scanned. ${symmetryChecked} deny at least one memory ` +
+      `write tool and every such denial names both relay spellings. ${inScope} of those have ` +
+      `decided they do not write memory at all, and each denies all ${required.length} write tools ` +
+      `under both prefixes (${required.length * PREFIXES.length} entries).`,
   );
 }
 
