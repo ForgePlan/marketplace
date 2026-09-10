@@ -74,31 +74,63 @@ function loadRequired() {
   const src = fs.readFileSync(SOURCE_OF_TRUTH, "utf8");
   const block = /export const MEMORY_WRITE_TOOLS = \[([\s\S]*?)\] as const;/.exec(src);
   if (!block) throw new Error("MEMORY_WRITE_TOOLS not found in tool-names.ts");
-  const names = [...block[1].matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
+  const raw = [...block[1].matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
+  // DISTINCT, not raw count. Pinning the raw length catches one shrink shape (delete a line) and
+  // misses the other (substitute a duplicate): swapping `document_delete` for a second
+  // `memory_retain` keeps the count at 12, passes the pin, and silently stops requiring the single
+  // most destructive tool on the list — while the success sentence still says "all 12". Measured on
+  // a fixture, not imagined (EVID-258 N1).
+  const names = [...new Set(raw)];
   if (names.length === 0) {
     // An empty required set would make every agent pass. That is the vacuous green this repository
     // has been bitten by before; refuse rather than report a meaningless success.
     throw new Error("parsed zero required tools — refusing to report a pass on an empty rule");
   }
+  if (raw.length !== names.length) {
+    throw new Error(
+      `MEMORY_WRITE_TOOLS holds ${raw.length} entries but only ${names.length} distinct tools — ` +
+        `a duplicate is how a shrink hides behind an unchanged count. Remove the duplicate, or if a ` +
+        `tool was deliberately dropped, say so and update EXPECTED_REQUIRED_COUNT in the same commit.`,
+    );
+  }
   if (names.length !== EXPECTED_REQUIRED_COUNT) {
     throw new Error(
-      `MEMORY_WRITE_TOOLS holds ${names.length} tools, this gate expects ${EXPECTED_REQUIRED_COUNT}. ` +
-        `If a tool was deliberately added or removed, update EXPECTED_REQUIRED_COUNT in ` +
-        `scripts/ci/memory-denylist-check.js in the same commit and say why. Shrinking the rule to ` +
-        `make CI green is out of bounds.`,
+      `MEMORY_WRITE_TOOLS holds ${names.length} distinct tools, this gate expects ` +
+        `${EXPECTED_REQUIRED_COUNT}. If a tool was deliberately added or removed, update ` +
+        `EXPECTED_REQUIRED_COUNT in scripts/ci/memory-denylist-check.js in the same commit and say ` +
+        `why. Shrinking the rule to make CI green is out of bounds.`,
     );
   }
   return names;
 }
 
-/** Minimal frontmatter read: the key we need is a list or a comma-joined string. */
+/**
+ * Minimal frontmatter read.
+ *
+ * Leading blank lines are tolerated deliberately: requiring `---` at byte 0 meant one stray newline
+ * at the top of a file made the agent frontmatter-less, and it left this gate's scope in silence
+ * (EVID-258 N2b). Not live on the tree today — which is exactly when to close it, because the whole
+ * point of the gate is that an ordinary future edit must not quietly reduce coverage.
+ */
 function frontmatterOf(text) {
-  if (!text.startsWith("---")) return null;
-  const end = text.indexOf("\n---", 3);
+  // \uFEFF written as an escape, never as the literal character: a BOM typed into source is exactly
+  // the invisible-codepoint smuggling the repository's unicode gate exists to catch, and it caught
+  // this line on the first run.
+  const body = text.replace(/^[\s\uFEFF]*/, "");
+  if (!body.startsWith("---")) return null;
+  const end = body.indexOf("\n---", 3);
   if (end < 0) return null;
-  return text.slice(3, end);
+  return body.slice(3, end);
 }
 
+/**
+ * Returns an array of denylist entries, or `null` when the key is absent.
+ *
+ * Both YAML list indentations are accepted. The earlier version required leading whitespace on list
+ * items and treated a non-indented line as the end of the block — so a perfectly valid list written
+ * at column 0 parsed as EMPTY and the agent silently left scope, complete denylist or not
+ * (EVID-258 N2a).
+ */
 function denylistOf(fm) {
   const line = /^disallowedTools:(.*)$/m.exec(fm);
   if (!line) return null;
@@ -106,13 +138,12 @@ function denylistOf(fm) {
   if (inline && inline !== "|" && inline !== ">") {
     return inline.replace(/^\[|\]$/g, "").split(",").map((s) => s.trim()).filter(Boolean);
   }
-  // block list form: subsequent "  - value" lines
   const after = fm.slice(line.index + line[0].length);
   const out = [];
   for (const l of after.split("\n")) {
-    const m = /^\s+-\s+(.+?)\s*$/.exec(l);
+    const m = /^\s*-\s+(.+?)\s*$/.exec(l);          // column 0 allowed
     if (m) out.push(m[1]);
-    else if (l.trim() && !/^\s/.test(l)) break;
+    else if (l.trim() && /^\S/.test(l)) break;      // a new top-level key ends the list
   }
   return out;
 }
@@ -124,6 +155,8 @@ function main() {
   const problems = [];
   const asymmetric = [];
   const misspelled = [];
+  const unreadable = [];
+  const unknownPrefix = [];
   let scanned = 0;
   let inScope = 0;
   let symmetryChecked = 0;
@@ -151,6 +184,14 @@ function main() {
 
       const deny = denylistOf(fm);
       if (!deny) continue;
+      // The key is present but nothing parsed out of it. Either the list is genuinely empty or it
+      // is written in a shape this parser does not follow — and from the outside those look the
+      // same. Loud, per the principle F5 established: a shape the checker cannot read is a refusal,
+      // not a skip (EVID-258 N2).
+      if (deny.length === 0) {
+        unreadable.push(rel);
+        continue;
+      }
       const exact = new Set(deny.map((e) => String(e).trim()));
       const anyPrefix = new Set(deny.map(bare));
 
@@ -162,14 +203,22 @@ function main() {
       // file in the repository that got both spellings right — with nothing watching it. Now
       // something does.
       const asym = [];
+      let bothCount = 0;
       for (const name of required) {
         const present = PREFIXES.filter((p) => exact.has(p + name));
+        if (present.length === 2) bothCount++;
         if (present.length === 1) {
           asym.push(`${name} (has ${present[0]}, missing ${PREFIXES.find((p) => p !== present[0])})`);
         }
       }
       if (asym.length) asymmetric.push({ rel, asym });
-      if (required.some((n) => anyPrefix.has(n))) symmetryChecked++;
+      // Count an agent toward the symmetry tally only when it actually names BOTH spellings of
+      // something. The earlier tally counted "mentions a write tool under any prefix", so an agent
+      // naming its denials under a THIRD server name was counted in a sentence promising both known
+      // spellings — the summary line asserting more than the code checks (EVID-258 N3). Such an
+      // agent is now reported separately instead of silently inflating the compliant count.
+      if (bothCount > 0) symmetryChecked++;
+      else if (required.some((n) => anyPrefix.has(n))) unknownPrefix.push(rel);
 
       // CHECK TWO — completeness, applied only to agents that have DECIDED they do not write
       // memory. That decision is marked by denying `memory_retain`.
@@ -191,63 +240,86 @@ function main() {
     process.exit(1);
   }
 
+  // EVERY failure class is reported, then one exit. Reporting only the first meant an operator who
+  // fixed the asymmetry discovered a second, unrelated failure on the next run — the gate
+  // understating its own work, one round-trip at a time (EVID-258 N6).
+  let failed = false;
+  const fail = (headline, lines) => {
+    failed = true;
+    console.error(headline + "\n");
+    for (const l of lines) console.error(l);
+    console.error("");
+  };
+
   if (misspelled.length) {
-    console.error(
+    fail(
       `memory-denylist-check FAILED: ${misspelled.length} agent(s) spell the restricting key ` +
         `\`disallowed-tools\` (the SKILL form). For a subagent the field is \`disallowedTools\`; ` +
-        `spelled the other way it restricts nothing and the agent silently leaves this gate's scope.\n`,
+        `spelled the other way it restricts nothing and the agent silently leaves this gate's scope.`,
+      misspelled.map((rel) => `  ${rel}`),
     );
-    for (const rel of misspelled) console.error(`  ${rel}`);
-    process.exit(1);
+  }
+
+  if (unreadable.length) {
+    fail(
+      `memory-denylist-check FAILED: ${unreadable.length} agent(s) declare \`disallowedTools:\` and ` +
+        `nothing parsed out of it. An empty list and a list shape this checker cannot follow look ` +
+        `identical from here, and both would drop the agent out of scope in silence.`,
+      unreadable.map((rel) => `  ${rel}`),
+    );
+  }
+
+  if (unknownPrefix.length) {
+    fail(
+      `memory-denylist-check FAILED: ${unknownPrefix.length} agent(s) deny a memory write tool under ` +
+        `a relay prefix this gate does not know. Neither known spelling is present, so the denial ` +
+        `binds under no wiring this repository ships — and it must not be counted as compliant.`,
+      unknownPrefix.map((rel) => `  ${rel}`),
+    );
   }
 
   if (inScope === 0) {
-    console.error(
+    fail(
       `memory-denylist-check FAILED: ${scanned} agent(s) scanned, but NONE is in scope — no agent ` +
         `denies memory_retain. Either every restriction was dropped, or the frontmatter shape ` +
         `changed under this gate. Refusing to report a pass on a check that examined nothing.`,
+      [],
     );
-    process.exit(1);
   }
 
   if (asymmetric.length) {
-    console.error(
+    fail(
       `memory-denylist-check FAILED: ${asymmetric.length} agent(s) deny a memory write tool under ` +
         `ONE relay spelling only. A denylist matches an exact string, so half a denial is no denial ` +
-        `under the other wiring.\n`,
+        `under the other wiring.`,
+      asymmetric.flatMap((a) => [`  ${a.rel}`, ...a.asym.map((l) => `    ${l}`)]),
     );
-    for (const a of asymmetric) {
-      console.error(`  ${a.rel}`);
-      for (const line of a.asym) console.error(`    ${line}`);
-    }
-    process.exit(1);
   }
 
   if (problems.length) {
-    console.error(
+    fail(
       `memory-denylist-check FAILED: ${problems.length} of ${inScope} memory-restricted agent(s) ` +
-        `hold memory write tools their denylist does not mention.\n`,
+        `hold memory write tools their denylist does not mention.`,
+      [
+        ...problems.flatMap((p) => [`  ${p.rel}`, `    missing (${p.missing.length}): ${p.missing.join(", ")}`]),
+        "",
+        `An agent that denies memory_retain has decided it does not write memory. These tools write ` +
+          `memory. Every name must appear under BOTH relay spellings — a denylist matches an exact ` +
+          `string, so naming one spelling denies nothing under the other wiring. Required set is ` +
+          `derived from plugins/fpl-hsmem/src/lib/tool-names.ts (MEMORY_WRITE_TOOLS) — if one of ` +
+          `these is genuinely not a write, take it off that list, say why in the comment above it, ` +
+          `and bump EXPECTED_REQUIRED_COUNT in this gate in the same commit.`,
+      ],
     );
-    for (const p of problems) {
-      console.error(`  ${p.rel}`);
-      console.error(`    missing (${p.missing.length}): ${p.missing.join(", ")}`);
-    }
-    console.error(
-      `\nAn agent that denies memory_retain has decided it does not write memory. These tools ` +
-        `write memory.\nEvery name must appear under BOTH relay spellings — a denylist matches an ` +
-        `exact string, so naming one spelling denies nothing under the other wiring.\nRequired set ` +
-        `is derived from plugins/fpl-hsmem/src/lib/tool-names.ts (MEMORY_WRITE_TOOLS) — if one of ` +
-        `these is genuinely not a write, take it off that list, say why in the comment above it, ` +
-        `and bump EXPECTED_REQUIRED_COUNT in this gate in the same commit.`,
-    );
-    process.exit(1);
   }
+
+  if (failed) process.exit(1);
 
   console.log(
     `Memory denylist OK: ${scanned} agent(s) scanned. ${symmetryChecked} deny at least one memory ` +
-      `write tool and every such denial names both relay spellings. ${inScope} of those have ` +
-      `decided they do not write memory at all, and each denies all ${required.length} write tools ` +
-      `under both prefixes (${required.length * PREFIXES.length} entries).`,
+      `write tool under BOTH relay spellings, and none names only one. ${inScope} of those have ` +
+      `decided they do not write memory at all, and each denies all ${required.length} distinct ` +
+      `write tools under both prefixes (${required.length * PREFIXES.length} entries).`,
   );
 }
 

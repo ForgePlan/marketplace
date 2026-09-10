@@ -11,7 +11,7 @@
 # of the rule it was written for. A negative control that does not test the DECIDING property
 # constrains nothing (EVID-257 F2). Case 5 below is that missing control.
 #
-# Eleven cases: six must-fire, two must-refuse (rules it cannot trust), three must-NOT-fire
+# Sixteen cases: ten must-fire, three must-refuse (rules it cannot trust), three must-NOT-fire
 # (legitimate shapes that would be false positives if the checker were too eager). The count is
 # stated here and printed at the end; if those two disagree, the summary is lying about its own work.
 set -uo pipefail
@@ -187,9 +187,98 @@ else
 fi
 cp "$work/registry.bak" "$work/plugins/fpl-hsmem/src/lib/tool-names.ts"
 
+# 10. must-refuse — a shrink that HIDES behind an unchanged count. Deleting a line is caught by the
+#     pin; substituting a duplicate keeps the count at 12 and silently stops requiring the tool that
+#     was replaced. The first version of the pin caught only the first shape (EVID-258 N1).
+write_agent "complete.md" "$BOTH"
+python3 - "$work/plugins/fpl-hsmem/src/lib/tool-names.ts" <<'PY'
+import re, sys
+p = sys.argv[1]
+src = open(p, encoding="utf-8").read()
+block = re.search(r"export const MEMORY_WRITE_TOOLS = \[(.*?)\] as const;", src, re.S)
+names = re.findall(r'"([a-z0-9_]+)"', block.group(1))
+names[-1] = names[0]                                   # same count, one tool no longer required
+body = ",\n  ".join('"%s"' % n for n in names)
+open(p, "w", encoding="utf-8").write(
+    src[:block.start()] + "export const MEMORY_WRITE_TOOLS = [\n  %s,\n] as const;" % body + src[block.end():])
+PY
+if node "$work/scripts/ci/memory-denylist-check.js" >/dev/null 2>&1; then
+  fail "gate PASSED on a duplicate-substituted registry — the count pin can be walked around"
+else
+  pass "must-refuse    a duplicate hiding a shrink is refused, not counted as 12"
+fi
+cp "$work/registry.bak" "$work/plugins/fpl-hsmem/src/lib/tool-names.ts"
+
+# 11. must-fire — a complete denylist written as a valid YAML list at COLUMN 0. The earlier parser
+#     required indentation and treated a non-indented line as the end of the block, so this shape
+#     parsed as empty and the agent left scope in silence, complete or not (EVID-258 N2a).
+write_agent "complete.md" "$BOTH"
+{
+  echo "---"
+  echo "name: col0"
+  echo "description: column-zero list"
+  echo "disallowedTools:"
+  echo "- mcp__hindsight__memory_retain"
+  echo "- mcp__plugin_fpl-hsmem_hindsight__memory_retain"
+  echo "---"
+  echo
+  echo "# col0"
+} > "$work/plugins/probe/agents/col0.md"
+if node "$work/scripts/ci/memory-denylist-check.js" >/dev/null 2>&1; then
+  fail "gate PASSED over a column-0 denylist missing 11 tools — the agent was silently skipped"
+else
+  pass "must-fire      a column-0 YAML list is read, not silently skipped"
+fi
+rm -f "$work/plugins/probe/agents/col0.md"
+
+# 12. must-fire — one stray blank line before `---` made the file frontmatter-less and dropped the
+#     agent out of scope with no output at all (EVID-258 N2b).
+write_agent "complete.md" "$BOTH"
+{
+  echo ""
+  echo "---"
+  echo "name: blankfirst"
+  echo "description: leading blank line"
+  echo "disallowedTools: mcp__hindsight__memory_retain, mcp__plugin_fpl-hsmem_hindsight__memory_retain"
+  echo "---"
+  echo
+  echo "# blankfirst"
+} > "$work/plugins/probe/agents/blankfirst.md"
+if node "$work/scripts/ci/memory-denylist-check.js" >/dev/null 2>&1; then
+  fail "gate PASSED over a file whose --- is not at byte 0 — scope silently reduced"
+else
+  pass "must-fire      a leading blank line no longer hides an agent from the gate"
+fi
+rm -f "$work/plugins/probe/agents/blankfirst.md"
+
+# 13. must-fire — denials written under a THIRD server name bind under no wiring this repository
+#     ships. The earlier tally counted such an agent inside a sentence promising both known
+#     spellings, so the summary line asserted more than the code checked (EVID-258 N3).
+write_agent "complete.md" "$BOTH"
+write_agent "third.md" "mcp__hs__document_delete, mcp__hs__memory_retain"
+if node "$work/scripts/ci/memory-denylist-check.js" >/dev/null 2>&1; then
+  fail "gate PASSED counting an unknown-prefix agent as compliant — the summary line can lie"
+else
+  pass "must-fire      an unknown relay prefix is reported, not counted as compliant"
+fi
+rm -f "$work/plugins/probe/agents/third.md"
+
+# 14. must-fire, and it checks the REPORT rather than the verdict — two unrelated defects at once
+#     must both be named. Reporting only the first made an operator find the second on the next run
+#     (EVID-258 N6).
+write_agent "complete.md" "${BOTH%,*}"                                  # incomplete
+write_agent "half.md" "mcp__plugin_fpl-hsmem_hindsight__memory_retain"  # asymmetric
+out="$(node "$work/scripts/ci/memory-denylist-check.js" 2>&1 || true)"
+if grep -q "ONE relay spelling only" <<<"$out" && grep -q "does not mention" <<<"$out"; then
+  pass "must-fire      both failure classes are reported in one run, not one per round-trip"
+else
+  fail "only one failure class was reported — the gate understates its own work"
+fi
+rm -f "$work/plugins/probe/agents/half.md"
+
 echo
 if [ "$fails" -eq 0 ]; then
-  echo "self-test OK: 11 cases (6 must-fire, 2 must-refuse, 3 must-NOT-fire)"
+  echo "self-test OK: 16 cases (10 must-fire, 3 must-refuse, 3 must-NOT-fire)"
   exit 0
 fi
 echo "self-test FAILED: $fails"
