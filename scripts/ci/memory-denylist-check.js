@@ -203,6 +203,7 @@ function main() {
       // file in the repository that got both spellings right — with nothing watching it. Now
       // something does.
       const asym = [];
+      const alien = [];
       let bothCount = 0;
       for (const name of required) {
         const present = PREFIXES.filter((p) => exact.has(p + name));
@@ -210,15 +211,23 @@ function main() {
         if (present.length === 1) {
           asym.push(`${name} (has ${present[0]}, missing ${PREFIXES.find((p) => p !== present[0])})`);
         }
+        // PER TOOL, not per agent. The first version tested the unknown prefix once for the whole
+        // agent, in an `else` branch — so a single correct both-prefix denial suppressed the report
+        // for every other denial on the same file, and one binding under no wiring this repository
+        // ships went unnamed while the agent counted as compliant. Demonstrated on a fixture by the
+        // activation gate (EVID-259 G3), not reasoned about.
+        if (present.length === 0 && anyPrefix.has(name)) {
+          const seen = deny.filter((e) => bare(e) === name).map((e) => String(e).trim());
+          alien.push(`${name} (named as ${seen.join(", ")} — neither known relay spelling)`);
+        }
       }
       if (asym.length) asymmetric.push({ rel, asym });
+      if (alien.length) unknownPrefix.push({ rel, alien });
       // Count an agent toward the symmetry tally only when it actually names BOTH spellings of
       // something. The earlier tally counted "mentions a write tool under any prefix", so an agent
       // naming its denials under a THIRD server name was counted in a sentence promising both known
-      // spellings — the summary line asserting more than the code checks (EVID-258 N3). Such an
-      // agent is now reported separately instead of silently inflating the compliant count.
+      // spellings — the summary line asserting more than the code checks (EVID-258 N3).
       if (bothCount > 0) symmetryChecked++;
-      else if (required.some((n) => anyPrefix.has(n))) unknownPrefix.push(rel);
 
       // CHECK TWO — completeness, applied only to agents that have DECIDED they do not write
       // memory. That decision is marked by denying `memory_retain`.
@@ -272,9 +281,9 @@ function main() {
   if (unknownPrefix.length) {
     fail(
       `memory-denylist-check FAILED: ${unknownPrefix.length} agent(s) deny a memory write tool under ` +
-        `a relay prefix this gate does not know. Neither known spelling is present, so the denial ` +
-        `binds under no wiring this repository ships — and it must not be counted as compliant.`,
-      unknownPrefix.map((rel) => `  ${rel}`),
+        `a relay prefix this gate does not know. Neither known spelling is present for that tool, so ` +
+        `the denial binds under no wiring this repository ships.`,
+      unknownPrefix.flatMap((u) => [`  ${u.rel}`, ...u.alien.map((l) => `    ${l}`)]),
     );
   }
 
