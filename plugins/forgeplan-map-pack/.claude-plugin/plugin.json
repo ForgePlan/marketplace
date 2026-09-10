@@ -1,6 +1,6 @@
 {
   "name": "forgeplan-map-pack",
-  "version": "0.23.1",
+  "version": "0.24.0",
   "description": "Builds a navigable map of a project — zones, nodes and verified edges — as a `map.json`, through an eight-agent pipeline (scan -> extract -> verify -> emit -> validate) where every stage runs in a fresh isolated context and a deterministic guardian script, not an LLM, is the sole authority on whether the result can be trusted. Use when you need a structural view of a large or unfamiliar repository that a file tree cannot give, or when a project's forgeplan artifact graph should be shown alongside its code. Not a documentation generator: an edge is either sourced from the artifact graph or proven by a grep, and an unproven one is dropped rather than shipped as noise. Full history in CHANGELOG.md.",
   "author": {
     "name": "ForgePlan"

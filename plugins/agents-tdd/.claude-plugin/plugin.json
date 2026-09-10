@@ -1,6 +1,6 @@
 {
   "name": "agents-tdd",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Enforced test-driven development: an orchestrator drives plan -> failing tests -> independent validation -> implementation, with a fail-closed hook that blocks source writes until the tests exist, and a separate context that certifies the RED is real before GREEN may start. Use when a spec carries concrete scenarios and the tests should be the oracle rather than an afterthought — the validator exists because a test written by the same context that writes the code is not a check. Full history in CHANGELOG.md.",
   "author": {
     "name": "ForgePlan"

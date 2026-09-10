@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code — UX, frontend, workflow, and developer tools",
-    "version": "1.181.0"
+    "version": "1.182.0"
   },
   "plugins": [
     {
@@ -287,7 +287,7 @@
         "claude-code"
       ],
       "description": "Runs one tracked task end to end on whatever issue tracker a project uses — Orchestra, Jira, Linear, GitHub Issues — through seven gated stages, and carries the Orchestra MCP reference (field model, failure modes, query recipes) as a separate skill free of this ecosystem. Use when the board should tell the truth about work in flight: picking a task that can actually be started, keeping its checklist honest while the work happens, proving each acceptance line, and reporting what was NOT done alongside what was. Full history in CHANGELOG.md.",
-      "version": "3.5.1",
+      "version": "3.6.0",
       "category": "workflow",
       "requires": {
         "cli": [
@@ -381,7 +381,7 @@
         "claude-code"
       ],
       "description": "Core engineering agents: the source-mutating coder, the code reviewer and test runner that record evidence, plus debugger, planner, researcher, performance and production-readiness roles. Use when the work is ordinary engineering — implement this, review that diff, run the suite and report coverage against the acceptance criteria — and the reviewer should be a different context from the author. Full history in CHANGELOG.md.",
-      "version": "1.11.1",
+      "version": "1.12.0",
       "category": "developer-tools",
       "author": {
         "name": "ForgePlan"
@@ -417,7 +417,7 @@
         "claude-code"
       ],
       "description": "Professional specialist agents: security and prompt-injection review, PII detection, architecture and staff-level system review, the pre-activation guardian gate, ADR and specification authors, research analysts and infrastructure roles. Use when a task needs a named expert rather than a generalist — an OWASP/STRIDE pass, an architectural fitness review, a decision recorded as an ADR, or the last gate before an artifact is activated. Full history in CHANGELOG.md.",
-      "version": "1.28.1",
+      "version": "1.29.0",
       "category": "developer-tools",
       "author": {
         "name": "ForgePlan"
@@ -463,7 +463,7 @@
         "claude-code"
       ],
       "description": "SPARC methodology agents — specification, pseudocode, architecture, refinement, and the orchestrator that walks a single feature through all five phases with a blocking quality gate between each. Use when adding one feature to an existing, active system and the design should be settled before code: the middle path between greenfield BMAD and a tactical fix. Full history in CHANGELOG.md.",
-      "version": "1.7.1",
+      "version": "1.8.0",
       "category": "workflow",
       "author": {
         "name": "ForgePlan"
@@ -495,7 +495,7 @@
         "claude-code"
       ],
       "description": "Enforced test-driven development: an orchestrator drives plan -> failing tests -> independent validation -> implementation, with a fail-closed hook that blocks source writes until the tests exist, and a separate context that certifies the RED is real before GREEN may start. Use when a spec carries concrete scenarios and the tests should be the oracle rather than an afterthought — the validator exists because a test written by the same context that writes the code is not a check. Full history in CHANGELOG.md.",
-      "version": "0.5.1",
+      "version": "0.6.0",
       "category": "workflow",
       "author": {
         "name": "ForgePlan"
@@ -529,7 +529,7 @@
         "claude-code"
       ],
       "description": "BMAD greenfield methodology: a master orchestrator walks the persona arc — Analyst, PM, Architect, Scrum-Master, Dev, QA — as separate isolated contexts, with a blocking quality gate between every persona and a fail-closed no-code-before-plan hook. Use when building a new product or service from nothing; not for one feature in an existing system (that is SPARC), and not for modernising legacy (that is Strangler Fig). Full history in CHANGELOG.md.",
-      "version": "0.5.1",
+      "version": "0.6.0",
       "category": "workflow",
       "author": {
         "name": "ForgePlan"
@@ -600,7 +600,7 @@
         "claude-code"
       ],
       "description": "CANVAS design-system-to-code methodology: a coordinator walks a Pencil design through capture, audit, norm-check, vectorize and assemble, dispatching every phase and every verifier as a separate isolated context with a blocking generator-is-not-verifier gate at each handoff, plus a fail-closed hook that blocks source writes until the token contract is active. Use when a design system has to become working components in the project's own framework, with visual parity and token fidelity proven rather than asserted. Full history in CHANGELOG.md.",
-      "version": "1.5.1",
+      "version": "1.6.0",
       "requires": {
         "cli": [],
         "mcp": [
@@ -656,7 +656,7 @@
         "claude-code"
       ],
       "description": "Builds a navigable map of a project — zones, nodes and verified edges — as a `map.json`, through an eight-agent pipeline (scan -> extract -> verify -> emit -> validate) where every stage runs in a fresh isolated context and a deterministic guardian script, not an LLM, is the sole authority on whether the result can be trusted. Use when you need a structural view of a large or unfamiliar repository that a file tree cannot give, or when a project's forgeplan artifact graph should be shown alongside its code. Not a documentation generator: an edge is either sourced from the artifact graph or proven by a grep, and an unproven one is dropped rather than shipped as noise. Full history in CHANGELOG.md.",
-      "version": "0.23.1",
+      "version": "0.24.0",
       "requires": {
         "cli": [
           {

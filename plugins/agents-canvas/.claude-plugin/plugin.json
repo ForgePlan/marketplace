@@ -1,6 +1,6 @@
 {
   "name": "agents-canvas",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "description": "CANVAS design-system-to-code methodology: a coordinator walks a Pencil design through capture, audit, norm-check, vectorize and assemble, dispatching every phase and every verifier as a separate isolated context with a blocking generator-is-not-verifier gate at each handoff, plus a fail-closed hook that blocks source writes until the token contract is active. Use when a design system has to become working components in the project's own framework, with visual parity and token fidelity proven rather than asserted. Full history in CHANGELOG.md.",
   "author": {
     "name": "ForgePlan"

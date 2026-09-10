@@ -1,6 +1,6 @@
 {
   "name": "agents-bmad",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "BMAD greenfield methodology: a master orchestrator walks the persona arc — Analyst, PM, Architect, Scrum-Master, Dev, QA — as separate isolated contexts, with a blocking quality gate between every persona and a fail-closed no-code-before-plan hook. Use when building a new product or service from nothing; not for one feature in an existing system (that is SPARC), and not for modernising legacy (that is Strangler Fig). Full history in CHANGELOG.md.",
   "author": {
     "name": "ForgePlan"

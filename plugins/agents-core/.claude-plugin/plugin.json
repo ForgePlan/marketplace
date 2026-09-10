@@ -1,6 +1,6 @@
 {
   "name": "agents-core",
-  "version": "1.11.1",
+  "version": "1.12.0",
   "description": "Core engineering agents: the source-mutating coder, the code reviewer and test runner that record evidence, plus debugger, planner, researcher, performance and production-readiness roles. Use when the work is ordinary engineering — implement this, review that diff, run the suite and report coverage against the acceptance criteria — and the reviewer should be a different context from the author. Full history in CHANGELOG.md.",
   "author": {
     "name": "ForgePlan"

@@ -5,8 +5,15 @@
 # fail. This repository has shipped gates that reported "passed" while asserting nothing; the cure
 # is a control that breaks the property on a COPY and requires the checker to notice.
 #
-# Four cases: one must-fire, one must-refuse (a rule it cannot load), and two must-NOT-fire
-# (legitimate shapes that would be false positives if the checker were too eager).
+# WHY THIS FILE WAS REWRITTEN. Its first version had four cases and every fixture was generated with
+# ONE hard-coded prefix. So it could not tell a both-prefix denylist from a single-prefix one — the
+# exact property the gate exists to enforce — and it passed while the gate implemented the opposite
+# of the rule it was written for. A negative control that does not test the DECIDING property
+# constrains nothing (EVID-257 F2). Case 5 below is that missing control.
+#
+# Nine cases: five must-fire, two must-refuse (rules it cannot trust), two must-NOT-fire
+# (legitimate shapes that would be false positives if the checker were too eager). The count is
+# stated here and printed at the end; if those two disagree, the summary is lying about its own work.
 set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -25,40 +32,48 @@ mkdir -p "$work/scripts/ci" "$work/plugins/fpl-hsmem/src/lib" "$work/plugins/pro
 cp "$GATE" "$work/scripts/ci/"
 cp "$REPO_ROOT/plugins/fpl-hsmem/src/lib/tool-names.ts" "$work/plugins/fpl-hsmem/src/lib/"
 
-write_agent() {  # $1 = filename, $2 = extra denylist entries (comma-separated, may be empty)
-  local extra="$2"
+write_agent() {  # $1 = filename, $2 = denylist entries, $3 = field name (default disallowedTools)
+  local key="${3:-disallowedTools}"
   {
     echo "---"
     echo "name: probe"
     echo "description: probe agent"
-    echo "disallowedTools: Write, Edit, ${extra}"
+    echo "${key}: Write, Edit, $2"
     echo "---"
     echo
     echo "# probe"
   } > "$work/plugins/probe/agents/$1"
 }
 
-full_deny() {
-  python3 - "$work/plugins/fpl-hsmem/src/lib/tool-names.ts" <<'PY'
+# $1 = "both" | "plugin" | "manual"
+deny_set() {
+  python3 - "$work/plugins/fpl-hsmem/src/lib/tool-names.ts" "$1" <<'PY'
 import re, sys
 src = open(sys.argv[1], encoding="utf-8").read()
 block = re.search(r"export const MEMORY_WRITE_TOOLS = \[(.*?)\] as const;", src, re.S).group(1)
-print(", ".join("mcp__plugin_fpl-hsmem_hindsight__" + n for n in re.findall(r'"([a-z0-9_]+)"', block)))
+names = re.findall(r'"([a-z0-9_]+)"', block)
+which = sys.argv[2]
+prefixes = {"both": ["mcp__hindsight__", "mcp__plugin_fpl-hsmem_hindsight__"],
+            "plugin": ["mcp__plugin_fpl-hsmem_hindsight__"],
+            "manual": ["mcp__hindsight__"]}[which]
+print(", ".join(p + n for n in names for p in prefixes))
 PY
 }
 
-ALL="$(full_deny)"
+BOTH="$(deny_set both)"
+PLUGIN_ONLY="$(deny_set plugin)"
+MANUAL_ONLY="$(deny_set manual)"
 
-# 1. must-NOT-fire — a complete denylist is the healthy shape.
-write_agent "complete.md" "$ALL"
+# 1. must-NOT-fire — a complete denylist naming both spellings is the healthy shape.
+write_agent "complete.md" "$BOTH"
 if node "$work/scripts/ci/memory-denylist-check.js" >/dev/null 2>&1; then
-  pass "must-NOT-fire  a complete denylist passes"
+  pass "must-NOT-fire  a complete both-prefix denylist passes"
 else
   fail "a complete denylist was rejected — false positive"
 fi
 
-# 2. must-fire — drop exactly ONE required tool. This is the defect the gate exists for.
-write_agent "complete.md" "${ALL%,*}"   # strip the last entry
+# 2. must-fire — drop exactly ONE required entry. This is the defect the gate exists for.
+write_agent "complete.md" "${BOTH%,*}"   # strip the last entry
 if node "$work/scripts/ci/memory-denylist-check.js" >/dev/null 2>&1; then
   fail "gate PASSED with a required tool missing — it is not checking anything"
 else
@@ -67,7 +82,7 @@ fi
 
 # 3. must-NOT-fire — an agent with no memory restriction at all is out of scope, deliberately.
 #    Flagging it would turn this gate into a different, unstated policy.
-write_agent "complete.md" "$ALL"
+write_agent "complete.md" "$BOTH"
 write_agent "unrestricted.md" "Bash"
 if node "$work/scripts/ci/memory-denylist-check.js" >/dev/null 2>&1; then
   pass "must-NOT-fire  an agent with no memory denial is out of scope"
@@ -93,9 +108,68 @@ else
 fi
 cp "$work/registry.bak" "$work/plugins/fpl-hsmem/src/lib/tool-names.ts"
 
+# 5. must-fire ×2 — THE DECIDING PROPERTY. A denylist matches an exact string, so naming only one
+#    spelling denies nothing under the other wiring. Both single-prefix shapes must be caught, and
+#    the check runs in BOTH directions so a gate hard-coded to one prefix cannot pass this case.
+write_agent "complete.md" "$PLUGIN_ONLY"
+if node "$work/scripts/ci/memory-denylist-check.js" >/dev/null 2>&1; then
+  fail "gate PASSED on a plugin-prefix-only denylist — it denies nothing under .mcp.json wiring"
+else
+  pass "must-fire      plugin-prefix-only denylist is caught"
+fi
+write_agent "complete.md" "$MANUAL_ONLY"
+if node "$work/scripts/ci/memory-denylist-check.js" >/dev/null 2>&1; then
+  fail "gate PASSED on a manual-prefix-only denylist — it denies nothing under a plugin install"
+else
+  pass "must-fire      manual-prefix-only denylist is caught"
+fi
+
+# 6. must-fire — the SKILL spelling of the key. `disallowed-tools` on a subagent restricts nothing
+#    and would silently drop the agent out of scope; a repo-wide rename would leave CI green with
+#    zero agents checked.
+write_agent "complete.md" "$BOTH"
+write_agent "kebab.md" "$BOTH" "disallowed-tools"
+if node "$work/scripts/ci/memory-denylist-check.js" >/dev/null 2>&1; then
+  fail "gate PASSED on an agent whose restricting key is the skill spelling — silent scope loss"
+else
+  pass "must-fire      the skill spelling of the key is caught, not skipped"
+fi
+rm -f "$work/plugins/probe/agents/kebab.md"
+
+# 7. must-refuse — scanned > 0, required > 0, but NOTHING in scope. The gate examined nothing and
+#    must say so rather than print a success sentence about zero agents.
+rm -f "$work/plugins/probe/agents/complete.md"
+write_agent "nobody.md" "Bash"
+if node "$work/scripts/ci/memory-denylist-check.js" >/dev/null 2>&1; then
+  fail "gate PASSED with ZERO agents in scope — a success message about nothing"
+else
+  pass "must-refuse    zero in-scope agents is refused, not reported as a pass"
+fi
+rm -f "$work/plugins/probe/agents/nobody.md"
+
+# 8. must-fire — shrinking the registry makes this gate GREENER, never redder. The pinned count is
+#    the only thing that turns a silent shrink into a deliberate two-file edit.
+write_agent "complete.md" "$BOTH"
+python3 - "$work/plugins/fpl-hsmem/src/lib/tool-names.ts" <<'PY'
+import re, sys
+p = sys.argv[1]
+src = open(p, encoding="utf-8").read()
+block = re.search(r"export const MEMORY_WRITE_TOOLS = \[(.*?)\] as const;", src, re.S)
+names = re.findall(r'"([a-z0-9_]+)"', block.group(1))[:-1]          # drop one
+body = ",\n  ".join('"%s"' % n for n in names)
+src = src[:block.start()] + "export const MEMORY_WRITE_TOOLS = [\n  %s,\n] as const;" % body + src[block.end():]
+open(p, "w", encoding="utf-8").write(src)
+PY
+if node "$work/scripts/ci/memory-denylist-check.js" >/dev/null 2>&1; then
+  fail "gate PASSED on a SHRUNK registry — the one edit the control can never catch"
+else
+  pass "must-fire      a shrunk registry is refused by the pinned count"
+fi
+cp "$work/registry.bak" "$work/plugins/fpl-hsmem/src/lib/tool-names.ts"
+
 echo
 if [ "$fails" -eq 0 ]; then
-  echo "self-test OK: 4 cases (1 must-fire, 1 must-refuse, 2 must-NOT-fire)"
+  echo "self-test OK: 9 cases (5 must-fire, 2 must-refuse, 2 must-NOT-fire)"
   exit 0
 fi
 echo "self-test FAILED: $fails"
