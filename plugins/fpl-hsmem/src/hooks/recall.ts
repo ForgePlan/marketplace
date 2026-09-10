@@ -15,7 +15,6 @@
 import { readTranscript } from "../lib/transcript.js";
 import { HindsightClient, type RecallResult } from "../lib/client.js";
 import { loadConfig, debugLog } from "../lib/config.js";
-import { deriveBankId } from "../lib/bank.js";
 import {
   composeRecallQuery,
   formatCurrentTime,
@@ -66,7 +65,9 @@ async function main(): Promise<void> {
     return;
   }
 
-  const bankId = deriveBankId(cwd);
+  // One resolver only. loadConfig() is a strict superset of deriveBankId(); using both is
+  // what split this project's memory across two banks.
+  const bankId = config.bankId;
   const client = new HindsightClient(config.url, bankId, config.apiKey);
 
   let query = prompt;

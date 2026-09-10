@@ -4,10 +4,41 @@ import type { RecallResult } from "./client.js";
 const MESSAGE_TEXT_FIELDS = ["text", "body", "message", "content"] as const;
 const OPERATIONAL_TOOL_PATTERN = /(?:recall|retain|reflect|search|extract|create_|delete_|update_|get_|list_)/i;
 
+/** The markers the recall hook wraps injected memory in. Both directions must know them. */
+const MEMORY_MARKERS = ["hindsight_memories", "relevant_memories"] as const;
+
+/**
+ * Remove memory envelopes from text on the way IN (before it is retained).
+ *
+ * The old version removed only MATCHED PAIRS, so a lone closing tag inside retained text survived
+ * — and since recall injects memories wrapped in those same markers, one stored `</hindsight_memories>`
+ * closed the envelope early and everything after it read as un-delimited instruction, in a
+ * privileged position. Memory content is attacker-influenceable by construction: anything the
+ * agent reads can end up in the transcript the Stop hook retains.
+ *
+ * So: paired blocks first, then any surviving bare opening AND closing tags, each on its own.
+ */
 export function stripMemoryTags(content: string): string {
-  return content
-    .replace(/<hindsight_memories>[\s\S]*?<\/hindsight_memories>/g, "")
-    .replace(/<relevant_memories>[\s\S]*?<\/relevant_memories>/g, "");
+  let out = content;
+  for (const marker of MEMORY_MARKERS) {
+    out = out.replace(new RegExp(`<${marker}>[\\s\\S]*?</${marker}>`, "g"), "");
+    out = out.replace(new RegExp(`</?${marker}\\b[^>]*>`, "g"), "");
+  }
+  return out;
+}
+
+/**
+ * Neutralise envelope markers on the way OUT (as memory is rendered into a prompt).
+ *
+ * Stripping on the way in cannot be complete — memories retained before this fix are already in
+ * the bank. Escaping on the way out is the half that holds regardless of what is stored.
+ */
+export function escapeMemoryMarkers(text: string): string {
+  let out = text;
+  for (const marker of MEMORY_MARKERS) {
+    out = out.replace(new RegExp(`</?${marker}\\b`, "gi"), (m) => m.replace("<", "&lt;"));
+  }
+  return out;
 }
 
 export function stripChannelEnvelope(content: string): string {
@@ -139,7 +170,9 @@ export function truncateRecallQuery(query: string, latestQuery: string, maxChars
 export function formatMemories(results: RecallResult[]): string {
   if (!results || results.length === 0) return "";
   const lines = results.map((r) => {
-    const text = r.text ?? "";
+    // Recalled memory is UNTRUSTED DATA rendered into a privileged position. It may not carry a
+    // marker that terminates the envelope around it.
+    const text = escapeMemoryMarkers(r.text ?? "");
     const typeStr = r.type ? ` [${r.type}]` : "";
     const dateStr = r.mentioned_at ? ` (${r.mentioned_at})` : "";
     return `- ${text}${typeStr}${dateStr}`;

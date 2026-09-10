@@ -2984,7 +2984,7 @@ var require_compile = __commonJS({
       const schOrFunc = root.refs[ref];
       if (schOrFunc)
         return schOrFunc;
-      let _sch = resolve.call(this, root, ref);
+      let _sch = resolve2.call(this, root, ref);
       if (_sch === void 0) {
         const schema = (_a3 = root.localRefs) === null || _a3 === void 0 ? void 0 : _a3[ref];
         const { schemaId } = this.opts;
@@ -3011,7 +3011,7 @@ var require_compile = __commonJS({
     function sameSchemaEnv(s1, s2) {
       return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
     }
-    function resolve(root, ref) {
+    function resolve2(root, ref) {
       let sch;
       while (typeof (sch = this.refs[ref]) == "string")
         ref = sch;
@@ -3841,7 +3841,7 @@ var require_fast_uri = __commonJS({
       }
       return uri;
     }
-    function resolve(baseURI, relativeURI, options) {
+    function resolve2(baseURI, relativeURI, options) {
       const schemelessOptions = options ? Object.assign({ scheme: "null" }, options) : { scheme: "null" };
       const {
         parsed: baseParsed,
@@ -4209,7 +4209,7 @@ var require_fast_uri = __commonJS({
     var fastUri = {
       SCHEMES,
       normalize: normalize2,
-      resolve,
+      resolve: resolve2,
       resolveComponent,
       equal,
       serialize,
@@ -7200,6 +7200,237 @@ var require_dist = __commonJS({
 
 // src/index.ts
 import { readFileSync as readFileSync4 } from "node:fs";
+import { realpathSync, statSync } from "node:fs";
+import { resolve, sep } from "node:path";
+
+// src/lib/client.ts
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+var __dirname = dirname(fileURLToPath(import.meta.url));
+function readPackageVersion() {
+  try {
+    const pkgPath = join(__dirname, "..", "..", "package.json");
+    return JSON.parse(readFileSync(pkgPath, "utf-8")).version ?? "0.0.0";
+  } catch {
+    return "0.0.0";
+  }
+}
+var USER_AGENT = `hindsight-mcp/${readPackageVersion()}`;
+var PATH_ID_RE = /^[A-Za-z0-9_][A-Za-z0-9._~-]*$/;
+function assertPathId(value, what = "id") {
+  if (typeof value !== "string" || value.length === 0) {
+    throw new Error(`${what} must be a non-empty string`);
+  }
+  if (value.length > 200) {
+    throw new Error(`${what} is too long (${value.length} chars, max 200)`);
+  }
+  if (value.includes("..")) {
+    throw new Error(`${what} may not contain ".." (path traversal)`);
+  }
+  if (!PATH_ID_RE.test(value)) {
+    throw new Error(
+      `${what} must start with a letter, digit or underscore and contain only letters, digits, dot, underscore, tilde or hyphen (got ${JSON.stringify(value)})`
+    );
+  }
+  return value;
+}
+function assertBankId(value) {
+  if (typeof value !== "string" || value.trim().length === 0) {
+    throw new Error("bank id must be a non-empty string");
+  }
+  const v = value.trim();
+  if (v === "." || v === ".." || v.includes("..")) {
+    throw new Error(`bank id may not be a dot segment (got ${JSON.stringify(value)})`);
+  }
+  if (/[/\\%]/.test(v)) {
+    throw new Error(`bank id may not contain / \\ or % (got ${JSON.stringify(value)})`);
+  }
+  if (/[\u0000-\u001f\u007f]/.test(v)) {
+    throw new Error("bank id may not contain control characters");
+  }
+  if (v.length > 200) {
+    throw new Error(`bank id is too long (${v.length} chars, max 200)`);
+  }
+  return v;
+}
+var HindsightClient = class {
+  url;
+  apiKey;
+  bankId;
+  constructor(url, bankId, apiKey = "") {
+    this.url = url.replace(/\/$/, "");
+    this.bankId = bankId;
+    this.apiKey = apiKey;
+  }
+  get bank() {
+    return this.bankId;
+  }
+  headers() {
+    const h = {
+      "Content-Type": "application/json",
+      "User-Agent": USER_AGENT
+    };
+    if (this.apiKey) h["Authorization"] = `Bearer ${this.apiKey}`;
+    return h;
+  }
+  bankPath(bankId) {
+    return `/v1/default/banks/${encodeURIComponent(assertBankId(bankId ?? this.bankId))}`;
+  }
+  /**
+   * Build a bank-scoped path from an ARRAY of segments, never a joined string. Each segment is
+   * validated and encoded separately, and the assembled path is then checked to still sit under
+   * the bank prefix — so a segment that somehow escapes validation still cannot re-address the
+   * request at the bank base or above it.
+   */
+  bankUrl(segments, query, bankId) {
+    const prefix = this.bankPath(bankId);
+    const tail = segments.map((s, i) => encodeURIComponent(assertPathId(s, `segment ${i}`))).join("/");
+    const path = tail ? `${prefix}/${tail}` : prefix;
+    if (!path.startsWith(`${prefix}/`) || path.length <= prefix.length + 1) {
+      throw new Error(`refusing to build a request outside ${prefix}`);
+    }
+    const qs = query ? "?" + Object.entries(query).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join("&") : "";
+    return path + qs;
+  }
+  async request(method, path, body, timeoutMs = 15e3) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      let res;
+      try {
+        res = await fetch(`${this.url}${path}`, {
+          method,
+          headers: this.headers(),
+          body: body ? JSON.stringify(body) : void 0,
+          signal: controller.signal,
+          redirect: "error"
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (/redirect/i.test(msg)) {
+          throw new Error(
+            `${method} ${path} was answered with a redirect, which this client refuses to follow (a redirect can downgrade the scheme and silently drop the Authorization header)`
+          );
+        }
+        throw err;
+      }
+      const text = await res.text();
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status} from ${path}: ${text}`);
+      }
+      return text ? JSON.parse(text) : {};
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  async health(timeoutMs = 5e3) {
+    try {
+      await this.request("GET", "/health", void 0, timeoutMs);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  async retain(items, options = {}) {
+    const list = Array.isArray(items) ? items : [items];
+    return this.request(
+      "POST",
+      `${this.bankPath(options.bankId)}/memories`,
+      { items: list, async: options.async ?? true },
+      options.timeoutMs ?? 15e3
+    );
+  }
+  async recall(query, options = {}) {
+    const body = {
+      query,
+      max_tokens: options.maxTokens ?? 1024
+    };
+    if (options.budget) body.budget = options.budget;
+    if (options.types && options.types.length > 0) body.types = options.types;
+    return this.request(
+      "POST",
+      `${this.bankPath(options.bankId)}/memories/recall`,
+      body,
+      options.timeoutMs ?? 1e4
+    );
+  }
+  /**
+   * Upstream reflect measured 49-70 s; the old 30 s ceiling aborted real answers and reported them
+   * as empty. The response field is `text` (ReflectResponse in the live OpenAPI), not `response`.
+   */
+  async reflect(query, options = {}) {
+    const body = { query };
+    if (options.maxTokens) body.max_tokens = options.maxTokens;
+    return this.request("POST", `${this.bankPath()}/reflect`, body, options.timeoutMs ?? 12e4);
+  }
+  /** Exact-id document lookup. The `q` list filter matches substrings, which is not existence. */
+  async getDocument(id) {
+    try {
+      return await this.request(
+        "GET",
+        this.bankUrl(["documents", id]),
+        void 0,
+        1e4
+      );
+    } catch (err) {
+      if (err instanceof Error && /HTTP 404/.test(err.message)) return null;
+      throw err;
+    }
+  }
+  async stats(timeoutMs = 5e3) {
+    return this.request("GET", `${this.bankPath()}/stats`, void 0, timeoutMs);
+  }
+  async listMentalModels(detail = "metadata") {
+    return this.request("GET", `${this.bankPath()}/mental-models?detail=${detail}`);
+  }
+  async getMentalModel(id, detail = "content") {
+    return this.request("GET", this.bankUrl(["mental-models", id], { detail }));
+  }
+  async createMentalModel(args) {
+    return this.request("POST", `${this.bankPath()}/mental-models`, {
+      id: assertPathId(args.id, "mental model id"),
+      name: args.name,
+      source_query: args.sourceQuery,
+      max_tokens: args.maxTokens ?? 4096,
+      trigger: {
+        mode: "delta",
+        refresh_after_consolidation: true,
+        fact_types: ["observation"],
+        exclude_mental_models: true
+      }
+    });
+  }
+  async updateMentalModel(id, updates) {
+    const body = {};
+    if (updates.name) body.name = updates.name;
+    if (updates.sourceQuery) body.source_query = updates.sourceQuery;
+    return this.request("PATCH", this.bankUrl(["mental-models", id]), body);
+  }
+  async deleteMentalModel(id) {
+    return this.request("DELETE", this.bankUrl(["mental-models", id]));
+  }
+  /**
+   * Only `reflect_mission`. `retain_mission` steers WHAT GETS EXTRACTED on every future retain, so
+   * an agent able to set it can rewrite the memory rules for everything that follows — through a
+   * tool that reads as cosmetic. Extraction control is an operator setting, not a tool argument.
+   */
+  async setMission(mission) {
+    return this.request("PATCH", `${this.bankPath()}/config`, {
+      updates: { reflect_mission: mission }
+    });
+  }
+};
+
+// src/lib/content.ts
+var MEMORY_MARKERS = ["hindsight_memories", "relevant_memories"];
+function escapeMemoryMarkers(text) {
+  let out = text;
+  for (const marker of MEMORY_MARKERS) {
+    out = out.replace(new RegExp(`</?${marker}\\b`, "gi"), (m) => m.replace("<", "&lt;"));
+  }
+  return out;
+}
 
 // node_modules/zod/v4/core/util.js
 var util_exports = {};
@@ -15492,7 +15723,7 @@ var Protocol = class {
           return;
         }
         const pollInterval = task2.pollInterval ?? this._options?.defaultTaskPollInterval ?? 1e3;
-        await new Promise((resolve) => setTimeout(resolve, pollInterval));
+        await new Promise((resolve2) => setTimeout(resolve2, pollInterval));
         options?.signal?.throwIfAborted();
       }
     } catch (error2) {
@@ -15509,7 +15740,7 @@ var Protocol = class {
    */
   request(request, resultSchema, options) {
     const { relatedRequestId, resumptionToken, onresumptiontoken, task, relatedTask } = options ?? {};
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve2, reject) => {
       const earlyReject = (error2) => {
         reject(error2);
       };
@@ -15587,7 +15818,7 @@ var Protocol = class {
           if (!parseResult.success) {
             reject(parseResult.error);
           } else {
-            resolve(parseResult.data);
+            resolve2(parseResult.data);
           }
         } catch (error2) {
           reject(error2);
@@ -15848,12 +16079,12 @@ var Protocol = class {
       }
     } catch {
     }
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve2, reject) => {
       if (signal.aborted) {
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
         return;
       }
-      const timeoutId = setTimeout(resolve, interval);
+      const timeoutId = setTimeout(resolve2, interval);
       signal.addEventListener("abort", () => {
         clearTimeout(timeoutId);
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
@@ -16729,143 +16960,14 @@ var StdioServerTransport = class {
     this.onclose?.();
   }
   send(message) {
-    return new Promise((resolve) => {
+    return new Promise((resolve2) => {
       const json = serializeMessage(message);
       if (this._stdout.write(json)) {
-        resolve();
+        resolve2();
       } else {
-        this._stdout.once("drain", resolve);
+        this._stdout.once("drain", resolve2);
       }
     });
-  }
-};
-
-// src/lib/client.ts
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-var __dirname = dirname(fileURLToPath(import.meta.url));
-function readPackageVersion() {
-  try {
-    const pkgPath = join(__dirname, "..", "..", "package.json");
-    return JSON.parse(readFileSync(pkgPath, "utf-8")).version ?? "0.0.0";
-  } catch {
-    return "0.0.0";
-  }
-}
-var USER_AGENT = `hindsight-mcp/${readPackageVersion()}`;
-var HindsightClient = class {
-  url;
-  apiKey;
-  bankId;
-  constructor(url, bankId, apiKey = "") {
-    this.url = url.replace(/\/$/, "");
-    this.bankId = bankId;
-    this.apiKey = apiKey;
-  }
-  get bank() {
-    return this.bankId;
-  }
-  headers() {
-    const h = {
-      "Content-Type": "application/json",
-      "User-Agent": USER_AGENT
-    };
-    if (this.apiKey) h["Authorization"] = `Bearer ${this.apiKey}`;
-    return h;
-  }
-  bankPath(bankId) {
-    return `/v1/default/banks/${encodeURIComponent(bankId ?? this.bankId)}`;
-  }
-  async request(method, path, body, timeoutMs = 15e3) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-    try {
-      const res = await fetch(`${this.url}${path}`, {
-        method,
-        headers: this.headers(),
-        body: body ? JSON.stringify(body) : void 0,
-        signal: controller.signal
-      });
-      const text = await res.text();
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status} from ${path}: ${text}`);
-      }
-      return text ? JSON.parse(text) : {};
-    } finally {
-      clearTimeout(timer);
-    }
-  }
-  async health(timeoutMs = 5e3) {
-    try {
-      await this.request("GET", "/health", void 0, timeoutMs);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-  async retain(items, options = {}) {
-    const list = Array.isArray(items) ? items : [items];
-    return this.request(
-      "POST",
-      `${this.bankPath(options.bankId)}/memories`,
-      { items: list, async: options.async ?? true },
-      options.timeoutMs ?? 15e3
-    );
-  }
-  async recall(query, options = {}) {
-    const body = {
-      query,
-      max_tokens: options.maxTokens ?? 1024
-    };
-    if (options.budget) body.budget = options.budget;
-    if (options.types && options.types.length > 0) body.types = options.types;
-    return this.request(
-      "POST",
-      `${this.bankPath(options.bankId)}/memories/recall`,
-      body,
-      options.timeoutMs ?? 1e4
-    );
-  }
-  async reflect(query, timeoutMs = 3e4) {
-    return this.request("POST", `${this.bankPath()}/reflect`, { query }, timeoutMs);
-  }
-  async stats(timeoutMs = 5e3) {
-    return this.request("GET", `${this.bankPath()}/stats`, void 0, timeoutMs);
-  }
-  async listMentalModels(detail = "metadata") {
-    return this.request("GET", `${this.bankPath()}/mental-models?detail=${detail}`);
-  }
-  async getMentalModel(id, detail = "content") {
-    return this.request("GET", `${this.bankPath()}/mental-models/${encodeURIComponent(id)}?detail=${detail}`);
-  }
-  async createMentalModel(args) {
-    return this.request("POST", `${this.bankPath()}/mental-models`, {
-      id: args.id,
-      name: args.name,
-      source_query: args.sourceQuery,
-      max_tokens: args.maxTokens ?? 4096,
-      trigger: {
-        mode: "delta",
-        refresh_after_consolidation: true,
-        fact_types: ["observation"],
-        exclude_mental_models: true
-      }
-    });
-  }
-  async updateMentalModel(id, updates) {
-    const body = {};
-    if (updates.name) body.name = updates.name;
-    if (updates.sourceQuery) body.source_query = updates.sourceQuery;
-    return this.request("PATCH", `${this.bankPath()}/mental-models/${encodeURIComponent(id)}`, body);
-  }
-  async deleteMentalModel(id) {
-    return this.request("DELETE", `${this.bankPath()}/mental-models/${encodeURIComponent(id)}`);
-  }
-  async setMission(mission, retainMission) {
-    const updates = { reflect_mission: mission };
-    if (retainMission) updates.retain_mission = retainMission;
-    return this.request("PATCH", `${this.bankPath()}/config`, { updates });
   }
 };
 
@@ -16876,8 +16978,28 @@ import { homedir } from "node:os";
 
 // src/lib/bank.ts
 import { execFileSync } from "node:child_process";
-import { basename, normalize, join as join2 } from "node:path";
+import { basename, dirname as dirname2, normalize, join as join2 } from "node:path";
 import { readFileSync as readFileSync2, existsSync } from "node:fs";
+function resolveProjectRoot(cwd) {
+  if (!cwd) return process.cwd();
+  let dir = normalize(cwd);
+  for (; ; ) {
+    if (existsSync(join2(dir, ".mcp.json")) || existsSync(join2(dir, ".hindsight.json"))) return dir;
+    const parent = dirname2(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  try {
+    const out = execFileSync("git", ["-C", cwd, "rev-parse", "--show-toplevel"], {
+      encoding: "utf-8",
+      stdio: ["ignore", "pipe", "ignore"],
+      timeout: 5e3
+    }).trim();
+    if (out) return out;
+  } catch {
+  }
+  return normalize(cwd);
+}
 function resolveProjectName(cwd, resolveWorktrees = true) {
   if (!cwd) return "unknown";
   if (!resolveWorktrees) {
@@ -16901,6 +17023,8 @@ function resolveProjectName(cwd, resolveWorktrees = true) {
 
 // src/lib/config.ts
 var DEFAULTS = {
+  bankIdSource: "derived-from-directory",
+  projectRoot: "",
   url: "http://localhost:8888",
   bankId: "",
   apiKey: "",
@@ -16991,24 +17115,41 @@ function isDisabled(cwd = process.cwd()) {
 }
 function loadConfig(cwd = process.cwd()) {
   const config3 = { ...DEFAULTS };
+  const root = resolveProjectRoot(cwd);
+  config3.projectRoot = root;
+  let source = "derived-from-directory";
   const userConfig = loadJsonFile(join3(homedir(), ".hindsight", "config.json"));
-  if (userConfig) Object.assign(config3, userConfig);
-  const mcpBank = readMcpJsonBank(cwd);
+  if (userConfig) {
+    Object.assign(config3, userConfig);
+    if (userConfig.bankId) source = "user-config";
+  }
+  const mcpBank = readMcpJsonBank(root);
   if (mcpBank.url) config3.url = mcpBank.url;
-  if (mcpBank.bankId) config3.bankId = mcpBank.bankId;
+  if (mcpBank.bankId) {
+    config3.bankId = mcpBank.bankId;
+    source = "mcp.json";
+  }
   if (mcpBank.apiKey) config3.apiKey = mcpBank.apiKey;
-  const projectConfig = loadJsonFile(join3(cwd, ".hindsight.json"));
-  if (projectConfig) Object.assign(config3, projectConfig);
+  const projectConfig = loadJsonFile(join3(root, ".hindsight.json"));
+  if (projectConfig) {
+    Object.assign(config3, projectConfig);
+    if (projectConfig.bankId) source = "hindsight.json";
+  }
   for (const [envName, [key, type]] of Object.entries(ENV_MAP)) {
     const raw = process.env[envName];
     if (raw === void 0) continue;
     const value = castEnv(raw, type);
-    if (value !== void 0) config3[key] = value;
+    if (value !== void 0) {
+      config3[key] = value;
+      if (key === "bankId") source = "env";
+    }
   }
   if (!config3.bankId) {
-    config3.bankId = resolveProjectName(cwd);
+    config3.bankId = resolveProjectName(root);
+    source = "derived-from-directory";
   }
-  if (isDisabled(cwd)) {
+  config3.bankIdSource = source;
+  if (isDisabled(root)) {
     config3.enabled = false;
     config3.autoRecall = false;
     config3.autoRetain = false;
@@ -17085,11 +17226,7 @@ var tools = [
     inputSchema: {
       type: "object",
       properties: {
-        mission: { type: "string", description: "Bank's role/context description" },
-        retain_mission: {
-          type: "string",
-          description: "Optional: instructions for the fact-extraction LLM"
-        }
+        mission: { type: "string", description: "Bank's role/context description" }
       },
       required: ["mission"]
     }
@@ -17172,6 +17309,38 @@ var tools = [
     }
   }
 ];
+var MAX_INGEST_BYTES = 2 * 1024 * 1024;
+function slugifyDocId(title) {
+  const slug = title.toLowerCase().trim().replace(/[^a-z0-9._~-]+/g, "-").replace(/^[.\-]+/, "").replace(/[.\-]+$/, "");
+  return assertPathId(slug, "document id");
+}
+function assertIngestPath(input, projectRoot) {
+  const root = realpathSync(resolve(projectRoot));
+  let real;
+  try {
+    real = realpathSync(resolve(input));
+  } catch (err) {
+    throw new Error(`cannot resolve ${input}: ${err.message}`);
+  }
+  if (real !== root && !real.startsWith(root + sep)) {
+    throw new Error(
+      `refusing to ingest ${input}: it resolves to ${real}, which is outside the project root ${root}. Symlinks are followed before this check, so a link pointing out of the project is refused too.`
+    );
+  }
+  const size = statSync(real).size;
+  if (size > MAX_INGEST_BYTES) {
+    throw new Error(`refusing to ingest ${real}: ${size} bytes exceeds the ${MAX_INGEST_BYTES}-byte cap`);
+  }
+  return real;
+}
+async function guardDocumentOverwrite(docId) {
+  const existing = await client.getDocument(docId).catch(() => null);
+  const units = typeof existing?.memory_unit_count === "number" ? existing.memory_unit_count : 0;
+  if (existing && units > 0) {
+    return `Refusing to ingest as "${docId}": that document already exists and carries ${units} memory unit(s). Ingesting would replace it and delete those memories. Choose a different title, or remove the document deliberately first.`;
+  }
+  return null;
+}
 var handlers = {
   memory_retain: async (args) => {
     const content = String(args.content ?? "");
@@ -17194,7 +17363,7 @@ var handlers = {
     const memories = result.results ?? [];
     if (memories.length === 0) return "No memories found for this query.";
     const formatted = memories.map(
-      (m, i) => `[${i + 1}] ${m.text}
+      (m, i) => `[${i + 1}] ${escapeMemoryMarkers(m.text)}
     type: ${m.type ?? "\u2014"} | entities: ${Array.isArray(m.entities) && m.entities.length > 0 ? m.entities.join(", ") : "\u2014"}`
     ).join("\n\n");
     return `Found ${memories.length} memories:
@@ -17204,38 +17373,77 @@ ${formatted}`;
   memory_reflect: async (args) => {
     const query = String(args.query ?? "");
     if (!query) return "Error: query is required";
-    const result = await client.reflect(query);
+    const started = Date.now();
+    let result;
+    try {
+      result = await client.reflect(query);
+    } catch (err) {
+      const secs = ((Date.now() - started) / 1e3).toFixed(1);
+      const msg = err instanceof Error ? err.message : String(err);
+      if (/abort/i.test(msg)) {
+        return `Reflect aborted after ${secs}s \u2014 the server had not answered yet. This is a timeout, not an empty result.`;
+      }
+      return `Reflect failed after ${secs}s: ${msg}`;
+    }
+    const text = typeof result.text === "string" ? result.text.trim() : "";
+    if (!text) {
+      return "Reflect returned no text. The bank may hold nothing relevant to this query.";
+    }
     return `Reflection:
 
-${result.response ?? JSON.stringify(result, null, 2)}`;
+${text}`;
   },
   memory_status: async () => {
-    const healthy = await client.health();
-    if (!healthy) {
-      return `Hindsight is unreachable at ${config2.url}. Check:
-  docker ps | grep hindsight
-  curl ${config2.url}/health`;
+    let stats = null;
+    let statsError = "";
+    try {
+      stats = await client.stats(15e3);
+    } catch (err) {
+      statsError = err instanceof Error ? err.message : String(err);
     }
-    const stats = await client.stats().catch(() => ({}));
-    return [
+    const derived = config2.bankIdSource === "derived-from-directory";
+    const lines = [
       "Hindsight status",
       "----------------",
-      `Bank:      ${client.bank}`,
-      `Memories:  ${stats.total_nodes ?? 0}`,
-      `Documents: ${stats.total_documents ?? 0}`,
-      `Links:     ${stats.total_links ?? 0}`,
-      `By type:   world=${stats.nodes_by_fact_type?.world ?? 0}, observation=${stats.nodes_by_fact_type?.observation ?? 0}, opinion=${stats.nodes_by_fact_type?.opinion ?? 0}`,
-      `URL:       ${config2.url}`
-    ].join("\n");
+      `Bank:      ${client.bank}  (from ${config2.bankIdSource})`,
+      `Root:      ${config2.projectRoot || "(cwd)"}`
+    ];
+    if (derived) {
+      lines.push(
+        "WARNING:   this bank id was derived from the directory name, not declared. Rename the",
+        "           directory and the memory silently moves to a new bank. Declare it in .mcp.json."
+      );
+    }
+    if (!stats) {
+      lines.push(`Stats:     UNAVAILABLE \u2014 ${statsError}`);
+    } else {
+      const byType = stats.nodes_by_fact_type ?? {};
+      lines.push(
+        `Memories:  ${stats.total_nodes ?? "?"}`,
+        `Documents: ${stats.total_documents ?? "?"}`,
+        `Links:     ${stats.total_links ?? "?"}`,
+        `By type:   world=${byType.world ?? "?"}, experience=${byType.experience ?? "?"}, observation=${byType.observation ?? "?"}`
+      );
+    }
+    lines.push(`URL:       ${config2.url}`);
+    return lines.join("\n");
   },
   memory_get_current_bank: async () => {
-    return JSON.stringify({ bank_id: client.bank, url: config2.url }, null, 2);
+    return JSON.stringify(
+      {
+        bank_id: client.bank,
+        bank_id_source: config2.bankIdSource,
+        project_root: config2.projectRoot,
+        url: config2.url
+      },
+      null,
+      2
+    );
   },
   memory_set_mission: async (args) => {
     const mission = String(args.mission ?? "");
     if (!mission) return "Error: mission is required";
-    const retainMission = typeof args.retain_mission === "string" ? args.retain_mission : void 0;
-    await client.setMission(mission, retainMission);
+    await client.setMission(mission);
     return `Mission set for bank "${client.bank}"`;
   },
   mental_model_list: async () => {
@@ -17279,10 +17487,18 @@ ${JSON.stringify(result, null, 2)}`;
     const title = String(args.title ?? "");
     const content = String(args.content ?? "");
     if (!title || !content) return "Error: title and content are required";
-    const docId = title.toLowerCase().replace(/\s+/g, "-");
+    let docId;
+    try {
+      docId = slugifyDocId(title);
+    } catch (err) {
+      return `Error: ${err.message}`;
+    }
+    const refusal = await guardDocumentOverwrite(docId);
+    if (refusal) return refusal;
     await client.retain({
       content,
       document_id: docId,
+      update_mode: "replace",
       tags: Array.isArray(args.tags) ? args.tags : void 0,
       context: "document"
     });
@@ -17291,22 +17507,28 @@ ${JSON.stringify(result, null, 2)}`;
   document_ingest_file: async (args) => {
     const path = String(args.path ?? "");
     if (!path) return "Error: path is required";
+    let real;
     let content;
+    let docId;
     try {
-      content = readFileSync4(path, "utf-8");
+      real = assertIngestPath(path, config2.projectRoot || process.cwd());
+      content = readFileSync4(real, "utf-8");
+      const filename = real.split(sep).pop() ?? "doc";
+      docId = slugifyDocId(filename.replace(/\.[^.]+$/, ""));
     } catch (e) {
-      return `Cannot read file: ${e.message}`;
+      return `Error: ${e.message}`;
     }
-    if (!content.trim()) return `File is empty: ${path}`;
-    const filename = path.split("/").pop() ?? "doc";
-    const docId = filename.replace(/\.[^.]+$/, "").toLowerCase().replace(/\s+/g, "-");
+    if (!content.trim()) return `File is empty: ${real}`;
+    const refusal = await guardDocumentOverwrite(docId);
+    if (refusal) return refusal;
     await client.retain({
       content,
       document_id: docId,
+      update_mode: "replace",
       tags: Array.isArray(args.tags) ? args.tags : void 0,
       context: "document"
     });
-    return `Ingested ${path} as document "${docId}" (${content.length} chars)`;
+    return `Ingested ${real} as document "${docId}" (${content.length} chars)`;
   }
 };
 var server = new Server(

@@ -57,7 +57,10 @@ on first run, then `curl http://localhost:8888/health`.
 
 The fact-extraction LLM is choosing bad facts. Two levers:
 
-1. **Set a better `retainMission`**:
+1. **Set a better `retainMission`** — an **operator** setting, deliberately not an agent-callable
+   tool argument. It steers what the extractor keeps on every future retain, so an agent able to set
+   it could rewrite the memory rules for everything that follows. Set it in the environment or the
+   bank config; `memory_set_mission` accepts only the persona:
    ```bash
    HINDSIGHT_RETAIN_MISSION="Extract concrete technical decisions, \
      bug root causes, and explicit user preferences. Ignore generic \

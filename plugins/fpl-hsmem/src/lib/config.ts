@@ -1,7 +1,7 @@
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { homedir } from "node:os";
-import { resolveProjectName } from "./bank.js";
+import { resolveProjectName, resolveProjectRoot } from "./bank.js";
 
 export interface HindsightConfig {
   url: string;
@@ -26,9 +26,15 @@ export interface HindsightConfig {
   bankMission: string;
   retainMission: string;
   debug: boolean;
+  /** Where bankId came from. Reported by memory_status so a derived id is visible, not silent. */
+  bankIdSource: "mcp.json" | "hindsight.json" | "user-config" | "env" | "derived-from-directory";
+  /** The directory the identity was anchored to. */
+  projectRoot: string;
 }
 
 const DEFAULTS: HindsightConfig = {
+  bankIdSource: "derived-from-directory",
+  projectRoot: "",
   url: "http://localhost:8888",
   bankId: "",
   apiKey: "",
@@ -147,30 +153,49 @@ export function isDisabled(cwd: string = process.cwd()): boolean {
  */
 export function loadConfig(cwd: string = process.cwd()): HindsightConfig {
   const config: HindsightConfig = { ...DEFAULTS };
+  // Anchor on the project root, never on raw cwd: the same project must resolve to one bank no
+  // matter which subdirectory the agent was started from.
+  const root = resolveProjectRoot(cwd);
+  config.projectRoot = root;
+  let source: HindsightConfig["bankIdSource"] = "derived-from-directory";
 
   const userConfig = loadJsonFile(join(homedir(), ".hindsight", "config.json"));
-  if (userConfig) Object.assign(config, userConfig);
+  if (userConfig) {
+    Object.assign(config, userConfig);
+    if (userConfig.bankId) source = "user-config";
+  }
 
-  const mcpBank = readMcpJsonBank(cwd);
+  const mcpBank = readMcpJsonBank(root);
   if (mcpBank.url) config.url = mcpBank.url;
-  if (mcpBank.bankId) config.bankId = mcpBank.bankId;
+  if (mcpBank.bankId) {
+    config.bankId = mcpBank.bankId;
+    source = "mcp.json";
+  }
   if (mcpBank.apiKey) config.apiKey = mcpBank.apiKey;
 
-  const projectConfig = loadJsonFile(join(cwd, ".hindsight.json"));
-  if (projectConfig) Object.assign(config, projectConfig);
+  const projectConfig = loadJsonFile(join(root, ".hindsight.json"));
+  if (projectConfig) {
+    Object.assign(config, projectConfig);
+    if (projectConfig.bankId) source = "hindsight.json";
+  }
 
   for (const [envName, [key, type]] of Object.entries(ENV_MAP)) {
     const raw = process.env[envName];
     if (raw === undefined) continue;
     const value = castEnv(raw, type);
-    if (value !== undefined) (config as unknown as Record<string, unknown>)[key] = value;
+    if (value !== undefined) {
+      (config as unknown as Record<string, unknown>)[key] = value;
+      if (key === "bankId") source = "env";
+    }
   }
 
   if (!config.bankId) {
-    config.bankId = resolveProjectName(cwd);
+    config.bankId = resolveProjectName(root);
+    source = "derived-from-directory";
   }
+  config.bankIdSource = source;
 
-  if (isDisabled(cwd)) {
+  if (isDisabled(root)) {
     config.enabled = false;
     config.autoRecall = false;
     config.autoRetain = false;
