@@ -5,8 +5,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/dist/hooks/recall.mjs",
-            "timeout": 12
+            "command": "node",
+            "timeout": 12,
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/dist/hooks/recall.mjs"
+            ]
           }
         ]
       }
@@ -16,8 +19,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/dist/hooks/retain.mjs",
-            "timeout": 15
+            "command": "node",
+            "timeout": 15,
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/dist/hooks/retain.mjs"
+            ]
           }
         ]
       }
@@ -27,8 +33,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/dist/hooks/session-end.mjs",
-            "timeout": 15
+            "command": "node",
+            "timeout": 15,
+            "args": [
+              "${CLAUDE_PLUGIN_ROOT}/dist/hooks/session-end.mjs"
+            ]
           }
         ]
       }

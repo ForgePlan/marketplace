@@ -1,6 +1,6 @@
 {
   "name": "fpl-hsmem",
-  "version": "2.0.0",
+  "version": "3.3.0",
   "description": "ForgePlan Hindsight memory plugin for Claude Code — MCP server + auto-recall/retain hooks + skills",
   "type": "module",
   "main": "dist/index.mjs",

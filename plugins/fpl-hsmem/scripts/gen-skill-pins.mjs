@@ -2,19 +2,31 @@
 /**
  * Expand each skill's `hindsight-tools:` list into its `allowed-tools:` line.
  *
- * WHY THIS EXISTS. `allowed-tools` needs the tool name exactly as the RUNTIME spells it, and this
- * relay is reachable under two different spellings depending on how it was wired:
+ * WHAT `allowed-tools` ACTUALLY DOES — corrected 2026-09-10, and the correction matters.
+ *
+ * An earlier version of this header claimed a mis-spelled pin "silently withholds the tool" and
+ * that a plugin install "denied every one of them". That was WRONG. The documentation is explicit:
+ * "The `allowed-tools` field grants permission for the listed tools during the turn that invokes
+ * the skill, so Claude can use them without prompting you for approval", and "It does not restrict
+ * which tools are available: every tool remains callable, and your permission settings still govern
+ * tools that are not listed." Restriction is `disallowed-tools`, a different field.
+ *
+ * So a pin is a PRE-APPROVAL, not a gate. The failure mode of a wrong or missing pin is not denial
+ * — it is a permission prompt in the middle of a workflow that was supposed to run unattended.
+ * Milder than the original claim, and still worth fixing.
+ *
+ * WHY BOTH PREFIXES. This relay is reachable under two spellings depending on how it was wired:
  *
  *   mcp__hindsight__memory_status                 — a project that hand-wires the server in .mcp.json
  *   mcp__plugin_fpl-hsmem_hindsight__memory_status — the same relay installed as a plugin
  *
- * All five shipped skills pinned only the first. That binds in this repository, which hand-wires
- * the server — which is exactly why nobody noticed that a plugin install denied every one of them.
- * A pin that names a tool the runtime does not have does not error; it silently withholds the tool.
+ * The shipped skills pinned only the first, which is the spelling this repository happens to use.
+ * On a plugin install every one of their calls would have prompted. Listing both means the skill
+ * runs unattended under either wiring.
  *
  * So each skill declares the BARE names it needs, next to itself, and this generator writes the
- * prefixed forms. `--check` fails when a file has drifted, which is what CI runs. Hand-maintaining
- * eight skills times two prefixes is the same silent-denial trap one level up.
+ * prefixed forms. `--check` fails when a file has drifted, which is what CI runs — hand-maintaining
+ * nine skills times two prefixes is exactly the kind of enumeration that goes stale unnoticed.
  */
 
 import { readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";

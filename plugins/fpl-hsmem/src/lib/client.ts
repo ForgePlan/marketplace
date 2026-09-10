@@ -1,19 +1,9 @@
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { pluginVersion } from "./version.js";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-function readPackageVersion(): string {
-  try {
-    const pkgPath = join(__dirname, "..", "..", "package.json");
-    return JSON.parse(readFileSync(pkgPath, "utf-8")).version ?? "0.0.0";
-  } catch {
-    return "0.0.0";
-  }
-}
-
-const USER_AGENT = `hindsight-mcp/${readPackageVersion()}`;
+// One source for the version, shared with the handshake string. It used to read package.json,
+// which was two releases behind plugin.json — so the User-Agent identified a build that had not
+// existed for weeks.
+const USER_AGENT = `hindsight-mcp/${pluginVersion()}`;
 
 /**
  * A path-segment id we are willing to interpolate into a URL.

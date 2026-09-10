@@ -334,6 +334,50 @@ Pipeline tools available via MCP (`mcp__forgeplan__*`):
 
 66 tools in total. Per-pipeline-phase mapping — see RFC-003 Layer 2 (Agent Pack Dispatch Matrix).
 
+## Memory integration (`fpl-hsmem`)
+
+Long-term memory across sessions, 27 MCP tools. The server sends usage `instructions` at handshake,
+so a runtime that reads them gets the causal chain without this section. What follows is for
+runtimes that do not.
+
+**The boundary that matters.** Code search answers *where is it, right now*. Memory answers *why,
+what was rejected, what was learned* — knowledge that never landed in the repository. Two rules
+follow, and both have been paid for:
+
+- **Never answer a "where is it" question from memory.** Memory is a snapshot of a past
+  conversation; it will confidently name a file that has since been renamed or deleted. When memory
+  names a code location, that is a lead — re-check it with the language server or a search tool
+  before acting on it.
+- **Never expect code search to answer "why".** The repository shows what won. It never shows what
+  lost, or what it cost to find out.
+
+**Three reads, not interchangeable.** `memory_recall` ranks by meaning — the only one that finds a
+fact you cannot name. `memory_list` enumerates by structured filter — the only one that yields the
+*id* you need in order to correct anything. `memory_reflect` writes a conclusion over many facts
+and takes about a minute; never use it to look something up. Picking wrong does not look like a
+mistake, it looks like an empty bank.
+
+**Correcting a wrong fact** is five steps, and the last two are the ones that get skipped:
+`memory_list` → `memory_get` → `memory_invalidate` with a stated reason (reversible; the text stays
+readable) → `memory_retain` the correction in full → `memory_reconsolidate` (a derived belief does
+not notice its premise was retired) → `memory_operations` (a retain that failed is invisible
+everywhere else — a conversation that never became memory looks exactly like one that did).
+
+**Before writing, know which bank you are in.** More than one config can name it, and when two
+disagree nobody is told: the project's memory silently splits. `memory_get_current_bank` reports
+the id and `memory_status` reports where it came from. One project, one declared bank id, named in
+exactly one file.
+
+**Agents that do not write memory must deny the whole write set**, not the three tools that
+existed when their denylist was written — `plugins/fpl-hsmem/src/lib/tool-names.ts`
+(`MEMORY_WRITE_TOOLS`) is the list, and `scripts/ci/memory-denylist-check.js` enforces it. Reads
+are deliberately never restricted: an agent that cannot ask which bank it is in cannot avoid the
+failure above.
+
+Skills: `/fpl-hsmem:audit-bank` (posture, read-only), `/fpl-hsmem:correct-memory` (the workflow
+above), `/fpl-hsmem:memory-setup` (what a project should install), `/fpl-hsmem:diagnose`,
+`/fpl-hsmem:status`. Agent: `memory-curator`.
+
 ## Three orchestrator entrypoints
 
 1. **`/forge-cycle <task>`** — reactive methodology enforcer. Per-task invocation, full pipeline to completion, halts on conflicts.
