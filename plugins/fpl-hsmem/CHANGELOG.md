@@ -6,7 +6,31 @@ All notable changes to `fpl-hsmem` are documented here. Format:
 
 ## [Unreleased]
 
-## [3.6.2] — 2026-09-11
+## [3.6.3] — 2026-09-11
+
+### Fixed
+
+- **The anchor number was never measured.** Every size claim in
+  `RETRIEVAL-AND-MEMORY.md` rested on "~1,674 tracked files". The disk figure
+  beside it (~95,141) was real — it reproduces to within 0.06%. The git figure
+  was not: it was carried over from `AGENTS.md` in the very repository this
+  document corrects for two *other* unverified conclusions. On the stated
+  measurement date that tree held **2,154** tracked files, and 1,674 appears at
+  no point in the observable window (1,926 → 2,102 → 2,117 → 2,154).
+
+  Corrected to 2,154 / 95,201 in all five places it had spread to: the
+  provenance paragraph, the size-bracket table, `/memory-setup`'s worked
+  example, the plugin description, and the catalog.
+
+  **The conclusion survives; only the anchor was wrong.** 2,154 sits in the same
+  bracket, and an independent re-measurement on the same tree has the index
+  losing again — 36 ms unindexed against 39 ms indexed, best of three. Both the
+  earlier and the later measurement point the same way.
+
+  Worth naming plainly: this is the exact failure the document exists to warn
+  about — a plausible number carried forward without re-measuring, then reused
+  as a bracket boundary. It was found by an independent review, not by its
+  author, and it had already shipped.
 
 ### Fixed
 
@@ -56,7 +80,7 @@ All notable changes to `fpl-hsmem` are documented here. Format:
 - **Retrieval advice now depends on project size.** `RETRIEVAL-AND-MEMORY.md`
   gains "Size decides which layers are worth having" — brackets by *tracked*
   file count (`git ls-files`, not `find`), with the measurements marked as one
-  repository's observations rather than thresholds. At 1,674 tracked files the
+  repository's observations rather than thresholds. At 2,154 tracked files the
   index **lost** (29 ms unindexed vs 36 ms indexed); most of the often-quoted
   speedup came from not scanning vendored code, which the unindexed searcher
   gets for free. `/memory-setup` counts the project and tells the user which
