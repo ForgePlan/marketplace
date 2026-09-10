@@ -1,6 +1,19 @@
 ---
 name: diagnose
-description: Full Hindsight integration diagnostic. Checks Docker, API, bank state, hook state files, and config resolution. Use when the user reports "memory isn't working", "I don't see recall happening", "retain seems broken", or wants a comprehensive health report before changing settings.
+description: |
+  The full diagnostic when memory is not doing what it should: server reachable, bank resolved as
+  intended, hooks actually firing, config not overridden somewhere you forgot, and jobs completing.
+  Written to distinguish the failure modes that look identical from the outside — a dead server and
+  an empty bank both return nothing.
+  EN: Six-step integration diagnostic with a remediation per finding. Use for "recall never fires",
+  "retain seems broken", "I do not see memory happening", or before changing settings. NOT a
+  content audit — whether the bank is worth having is /fpl-hsmem:audit-bank.
+  RU: Диагностика интеграции в шесть шагов, с лечением на каждую находку. Для «recall не срабатывает»,
+  «retain не сохраняет», «память вообще не работает» или перед правкой настроек. НЕ аудит содержимого
+  — стоит ли этот банк держать, отвечает /fpl-hsmem:audit-bank.
+  Triggers: "memory isn't working", "recall never fires", "retain is broken", "diagnose hindsight",
+  "hooks not running", "память не работает", "recall не срабатывает", "retain сломан",
+  "диагностика hindsight", "хуки не запускаются"
 hindsight-tools: [memory_status, memory_get_current_bank, mental_model_list, memory_operations, bank_config_get]
 extra-tools: [Bash, Read]
 allowed-tools: mcp__hindsight__memory_status, mcp__plugin_fpl-hsmem_hindsight__memory_status, mcp__hindsight__memory_get_current_bank, mcp__plugin_fpl-hsmem_hindsight__memory_get_current_bank, mcp__hindsight__mental_model_list, mcp__plugin_fpl-hsmem_hindsight__mental_model_list, mcp__hindsight__memory_operations, mcp__plugin_fpl-hsmem_hindsight__memory_operations, mcp__hindsight__bank_config_get, mcp__plugin_fpl-hsmem_hindsight__bank_config_get, Bash, Read
@@ -10,6 +23,19 @@ allowed-tools: mcp__hindsight__memory_status, mcp__plugin_fpl-hsmem_hindsight__m
 
 Run a structured 5-step diagnostic. Each step produces a status line.
 At the end, summarize as "all green" / list of issues + remediation.
+
+
+## Model tier
+
+**This skill asks for tier C for the checks, B for the diagnosis.**
+
+Running the six checks is mechanical. The
+value is in distinguishing failures that look identical from outside — a dead server and an empty
+bank both return nothing, and reporting the wrong one sends someone to fix the wrong thing.
+
+`model:` values like `opus` / `sonnet` / `haiku` are Claude Code names, not the
+requirement. On another runtime substitute whatever serves this tier there, and when you cannot
+tell, miss **upward**. Saving cost means giving a skill less work, not a weaker model.
 
 ## Step 1 — Server reachability
 

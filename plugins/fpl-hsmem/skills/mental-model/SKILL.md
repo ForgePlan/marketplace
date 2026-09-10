@@ -1,6 +1,20 @@
 ---
 name: mental-model
-description: Guided creation of a Hindsight mental model (a living knowledge page that auto-refreshes from memories). Use when the user says "create a mental model for X", "add a knowledge page about Y", or when you notice a recurring question that would benefit from an auto-updating synthesis.
+description: |
+  Guided creation of a living knowledge page — a standing answer to a recurring question, rebuilt
+  from memories after every consolidation. The whole value is in the source query: a narrow question
+  produces a page worth reading for months, "everything about X" produces noise that nobody opens.
+  EN: Create, retune, rebuild or blank a knowledge page. Use when the same question keeps being
+  asked and re-searched. Content starts empty and fills on the next consolidation — that is normal,
+  not a failure. NOT a place to write facts by hand; pages are derived, and anything typed into one
+  is overwritten on the next rebuild.
+  RU: Создать, перенастроить, пересобрать или обнулить страницу знаний. Когда один и тот же вопрос
+  задают снова и снова и каждый раз ищут заново. Контент сначала пустой и наполняется на следующей
+  консолидации — это норма, а не поломка. Писать факты руками сюда нельзя: страница выводится, и
+  вписанное затрётся при пересборке.
+  Triggers: "create a mental model", "knowledge page", "living page", "recurring question",
+  "page is stale", "rebuild the page", "создай mental model", "страница знаний", "живая страница",
+  "повторяющийся вопрос", "страница устарела", "пересобери страницу"
 hindsight-tools: [mental_model_list, mental_model_create, mental_model_get, mental_model_update, mental_model_refresh, mental_model_clear]
 allowed-tools: mcp__hindsight__mental_model_list, mcp__plugin_fpl-hsmem_hindsight__mental_model_list, mcp__hindsight__mental_model_create, mcp__plugin_fpl-hsmem_hindsight__mental_model_create, mcp__hindsight__mental_model_get, mcp__plugin_fpl-hsmem_hindsight__mental_model_get, mcp__hindsight__mental_model_update, mcp__plugin_fpl-hsmem_hindsight__mental_model_update, mcp__hindsight__mental_model_refresh, mcp__plugin_fpl-hsmem_hindsight__mental_model_refresh, mcp__hindsight__mental_model_clear, mcp__plugin_fpl-hsmem_hindsight__mental_model_clear
 ---
@@ -10,6 +24,19 @@ allowed-tools: mcp__hindsight__mental_model_list, mcp__plugin_fpl-hsmem_hindsigh
 A mental model is a **living knowledge page** in a Hindsight bank.
 Hindsight rebuilds its content from accumulated memories after every
 consolidation, so the page stays current without manual updates.
+
+
+## Model tier
+
+**This skill asks for tier B.**
+
+The source query decides whether the page is read for months or ignored,
+and the failure is silent — a too-broad query produces a page that looks fine and says nothing.
+Narrow-question authorship is the skill; the tool calls around it are trivial.
+
+`model:` values like `opus` / `sonnet` / `haiku` are Claude Code names, not the
+requirement. On another runtime substitute whatever serves this tier there, and when you cannot
+tell, miss **upward**. Saving cost means giving a skill less work, not a weaker model.
 
 ## Pre-flight check
 

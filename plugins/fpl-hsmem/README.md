@@ -2,7 +2,7 @@
 
 # fpl-hsmem
 
-> Long-term, cross-session memory for Claude Code. Wraps [Hindsight](https://github.com/vectorize-io/hindsight) with 27 MCP tools, 3 auto hooks, 8 helper skills and a curator agent — Claude remembers context across sessions, projects, and weeks.
+> Long-term, cross-session memory for Claude Code. Wraps [Hindsight](https://github.com/vectorize-io/hindsight) with 27 MCP tools, 3 auto hooks, 9 helper skills and a curator agent — Claude remembers context across sessions, projects, and weeks.
 
 Install once, every project gets a private memory bank. Auto-recall injects relevant history before every prompt; auto-retain captures the conversation after every response. Manual MCP tools cover synthesis (`memory_reflect`), living knowledge pages (`mental_model_*`), and document ingestion.
 
@@ -125,18 +125,23 @@ conversation, and refuses outright in clients that cannot ask.
 | `retain.mjs` | Stop | Saves transcript after every response. Throttling via `retainEveryNTurns` (default 10). **Compaction detection** — preserves prior long document when Claude Code compacts a session. |
 | `session-end.mjs` | SessionEnd | Force-retain on close. Safety net for short sessions (< `retainEveryNTurns`). |
 
-### 8 skills
+### 9 skills
 
-| Skill | Purpose |
-|-------|---------|
-| `/fpl-hsmem:status` | Quick health check + bank statistics + active mental models. |
-| `/fpl-hsmem:bootstrap` | One-shot setup for a new bank — mission, ingest existing artifacts, create starter mental models. |
-| `/fpl-hsmem:mental-model` | Guided mental-model creation with source-query validation. |
-| `/fpl-hsmem:diagnose` | 6-step diagnostic (server, bank, content, hooks, config, opt-out). |
-| `/fpl-hsmem:export-bank` | Markdown snapshot of a bank for backup or audit. |
-| `/fpl-hsmem:correct-memory` | Fix a wrong fact without destroying the record — find, retire with a reason, write the correction, rebuild what rested on it, verify the job finished. Invoke deliberately; it has side effects. |
-| `/fpl-hsmem:audit-bank` | Read-only posture audit — is masking on, what did a document cost, what silently failed. Run it on day one of a new bank. |
-| `/fpl-hsmem:directives` | The rules synthesis follows. A consistently badly-shaped answer is a directive problem, not a fact problem. |
+Every skill's description is bilingual (EN + RU) with trigger phrases in both, so it fires on a
+Russian request as readily as an English one, and each states the **model tier** its hardest step
+needs — the tier is the requirement, `opus`/`sonnet`/`haiku` are just Claude Code's names for it.
+
+| Skill | Purpose | Tier |
+|-------|---------|:----:|
+| `/fpl-hsmem:memory-setup` | Look at a project and propose the retrieval + memory layers it should have — what each answers, what it never will, and what is *not* worth it here. Proposes; never installs. | B |
+| `/fpl-hsmem:status` | Quick health check + bank statistics + active mental models. | C |
+| `/fpl-hsmem:bootstrap` | One-shot setup for a new bank — mission, ingest existing artifacts, create starter mental models. | B |
+| `/fpl-hsmem:mental-model` | Guided mental-model creation with source-query validation. | B |
+| `/fpl-hsmem:diagnose` | 6-step diagnostic (server, bank, content, hooks, config, opt-out). | C/B |
+| `/fpl-hsmem:export-bank` | Markdown snapshot of a bank for backup or audit. | C |
+| `/fpl-hsmem:correct-memory` | Fix a wrong fact without destroying the record — find, retire with a reason, write the correction, rebuild what rested on it, verify the job finished. Invoke deliberately; it has side effects. | B |
+| `/fpl-hsmem:audit-bank` | Read-only posture audit — is masking on, what did a document cost, what silently failed. Run it on day one of a new bank. | C/B |
+| `/fpl-hsmem:directives` | The rules synthesis follows. A consistently badly-shaped answer is a directive problem, not a fact problem. | B |
 
 ### 1 agent
 

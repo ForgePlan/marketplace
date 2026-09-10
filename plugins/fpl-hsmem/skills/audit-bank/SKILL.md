@@ -1,6 +1,20 @@
 ---
 name: audit-bank
-description: Read-only audit of a memory bank — what it stores, whether secret masking is on, which background jobs failed, and how much a single document is worth. Use when the user asks "what is in memory", "is memory safe", "did that get saved", "why does recall still say the old thing", or before enabling auto-retain on a new project. Changes nothing.
+description: |
+  Read-only audit of a bank in six calls, ending in a written verdict rather than a number. Answers
+  the three questions a count cannot: is it safe to keep filling, is it actually working, and did
+  anyone choose this bank on purpose.
+  EN: Posture audit — masking on or off, what a single document is worth if deleted, which jobs
+  failed silently, whether the bank id was chosen or derived. Run on day one of a new bank and
+  whenever the answer to "is this safe" is a shrug. Changes nothing. NOT a quick health check —
+  that is /fpl-hsmem:status.
+  RU: Аудит состояния — включено ли маскирование секретов, сколько стоит удаление одного документа,
+  какие задачи упали молча, выбрал ли кто-то этот банк осознанно. Прогонять в первый день нового
+  банка и всякий раз, когда на вопрос «это безопасно?» ответа нет. Ничего не меняет. НЕ быстрая
+  проверка — это /fpl-hsmem:status.
+  Triggers: "audit memory", "is memory safe", "what is in the bank", "did that get saved",
+  "why does recall still say the old thing", "проверь банк", "аудит памяти", "память безопасна",
+  "что лежит в банке", "это сохранилось", "почему память отдаёт старое"
 hindsight-tools: [bank_config_get, memory_status, document_list, memory_operations, memory_list, memory_get_current_bank]
 allowed-tools: mcp__hindsight__bank_config_get, mcp__plugin_fpl-hsmem_hindsight__bank_config_get, mcp__hindsight__memory_status, mcp__plugin_fpl-hsmem_hindsight__memory_status, mcp__hindsight__document_list, mcp__plugin_fpl-hsmem_hindsight__document_list, mcp__hindsight__memory_operations, mcp__plugin_fpl-hsmem_hindsight__memory_operations, mcp__hindsight__memory_list, mcp__plugin_fpl-hsmem_hindsight__memory_list, mcp__hindsight__memory_get_current_bank, mcp__plugin_fpl-hsmem_hindsight__memory_get_current_bank
 ---
@@ -10,6 +24,20 @@ allowed-tools: mcp__hindsight__bank_config_get, mcp__plugin_fpl-hsmem_hindsight_
 Six read calls, in this order, ending in a written verdict. Nothing here
 writes. Run it on day one of a new bank and any time the answer to "is this
 safe" is a shrug.
+
+
+## Model tier
+
+**This skill asks for tier C for the reads, B for the verdict.**
+
+Collecting the six readings is mechanical.
+Turning them into "safe to keep filling / not safe" is not: it weighs masking state against what is
+already stored, and the cost of getting it wrong is asymmetric — a false "safe" keeps a bank
+accumulating credentials for months. Run it at B; the reads are cheap either way.
+
+`model:` values like `opus` / `sonnet` / `haiku` are Claude Code names, not the
+requirement. On another runtime substitute whatever serves this tier there, and when you cannot
+tell, miss **upward**. Saving cost means giving a skill less work, not a weaker model.
 
 ## Step 1 — which bank, and who decided
 

@@ -1,6 +1,18 @@
 ---
 name: export-bank
-description: Export the current Hindsight bank's content for backup or audit — memories, documents, mental models. Use when the user says "back up memory", "export bank", "save Hindsight state", or before doing risky operations like deleting / re-bootstrapping a bank.
+description: |
+  A readable markdown snapshot of a bank for backup, audit or handing context to a person. Says
+  plainly what it is not: this is for humans, and moving memory between banks is a different
+  mechanism entirely.
+  EN: Snapshot a bank to disk before something risky, or to share context without giving out server
+  access. NOT the way to move memory between banks — that is the document-transfer path, documented
+  in this skill. NOT disaster recovery either; for that, back up the database volume.
+  RU: Снимок банка на диск перед рискованной операцией или чтобы передать контекст человеку без
+  доступа к серверу. НЕ способ переносить память между банками — для этого есть document-transfer,
+  он описан в этом же скилле. И не резервная копия для восстановления: для неё нужен том базы.
+  Triggers: "back up memory", "export bank", "save hindsight state", "snapshot the bank",
+  "share memory context", "бэкап памяти", "выгрузи банк", "сохрани состояние памяти",
+  "снимок банка", "передать контекст памяти"
 hindsight-tools: [memory_get_current_bank, memory_status, mental_model_list, mental_model_get, memory_recall, memory_list, document_list]
 extra-tools: [Bash, Write]
 allowed-tools: mcp__hindsight__memory_get_current_bank, mcp__plugin_fpl-hsmem_hindsight__memory_get_current_bank, mcp__hindsight__memory_status, mcp__plugin_fpl-hsmem_hindsight__memory_status, mcp__hindsight__mental_model_list, mcp__plugin_fpl-hsmem_hindsight__mental_model_list, mcp__hindsight__mental_model_get, mcp__plugin_fpl-hsmem_hindsight__mental_model_get, mcp__hindsight__memory_recall, mcp__plugin_fpl-hsmem_hindsight__memory_recall, mcp__hindsight__memory_list, mcp__plugin_fpl-hsmem_hindsight__memory_list, mcp__hindsight__document_list, mcp__plugin_fpl-hsmem_hindsight__document_list, Bash, Write
@@ -15,6 +27,18 @@ useful for:
 - Sharing context with a teammate (without giving them Docker access)
 - Pre-deletion safety net
 - Auditing what the bank actually contains
+
+
+## Model tier
+
+**This skill asks for tier C.**
+
+Mechanical: read, format, write to disk. Nothing is decided and nothing is
+destroyed.
+
+`model:` values like `opus` / `sonnet` / `haiku` are Claude Code names, not the
+requirement. On another runtime substitute whatever serves this tier there, and when you cannot
+tell, miss **upward**. Saving cost means giving a skill less work, not a weaker model.
 
 ## Steps
 

@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code — UX, frontend, workflow, and developer tools",
-    "version": "1.172.0"
+    "version": "1.173.0"
   },
   "plugins": [
     {
@@ -18,8 +18,8 @@
       "targets": [
         "claude-code"
       ],
-      "description": "ForgePlan Hindsight memory plugin for Claude Code. v3.0.0 (BREAKING): the relay stopped being write-only. 13 tools -> 27 — memory can now be BROWSED by structured filter (memory_list / memory_get), CORRECTED without destroying the record (memory_invalidate retires a fact with a stated reason, reversible; memory_reconsolidate rebuilds the beliefs that rested on it), and VERIFIED (memory_operations is the only place a failed retain is visible — a conversation that never became memory looks identical to one that did). Plus knowledge-page lifecycle (refresh/clear), directives that govern synthesis, bank configuration, and a document layer whose delete quotes the measured blast radius and requires an out-of-band human confirmation, refusing outright in clients that cannot ask. New src/lib/redact.ts masks credential shapes on every path that emits stored text — this bank stores transcripts unmasked, so the formatter is the last place a secret can be caught. Registry integrity is asserted at startup across three literals. BREAKING: retain_mission removed as a tool argument (it rewrote extraction rules for everything that followed); bank identity now anchors on the project root, not raw cwd; unknown tool is a protocol error, not a retryable result. NEW agent memory-curator + 3 skills (correct-memory, audit-bank, directives); all 8 skills now pin BOTH tool-name prefixes from a generator with a CI check — every shipped skill previously pinned a server name that only exists in a hand-wired project, so a plugin install silently denied all of them. 3 auto-hooks unchanged. Source under plugins/fpl-hsmem/src/.",
-      "version": "3.0.0",
+      "description": "ForgePlan Hindsight memory plugin for Claude Code. v3.1.0: the relay now EXPLAINS ITSELF. The MCP server sends `instructions` at handshake — the protocol's own place for the causal chain a tool description cannot carry: which of the three reads answers which question (recall ranks, list enumerates, reflect concludes), the five-step correction sequence and the two steps everyone skips, and the two facts that surprise people (retain returns before extraction; a failed retain is invisible outside memory_operations). All 9 skills now carry bilingual EN/RU descriptions with triggers in both languages — matching the house canon that 60 of the marketplace's 96 skills already follow, which fpl-hsmem did not — plus a `## Model tier` section stating the tier its hardest step needs rather than only a model name. NEW skill /memory-setup: inspects a repository and proposes the retrieval layers (LSP, indexed text, AST, semantic) and memory layers it should have, says plainly which are NOT worth it there, and never installs anything. TROUBLESHOOTING gains the bank-identity chapter: the five-minute check, two servers in one project (including a frozen plugin-cache binary), and the undocumented merge rule measured here — document-transfer SKIPS a document whose id already exists in the target and still reports success (1 of 8 moved). 27 MCP tools, 3 auto-hooks, 9 skills, 1 curator agent. Source under plugins/fpl-hsmem/src/.",
+      "version": "3.1.0",
       "requires": {
         "hindsight_server": "Hindsight server reachable at HINDSIGHT_URL (default https://hindsight.tools.orch.so or self-hosted via Docker). HINDSIGHT_API_KEY env var required. HINDSIGHT_BANK_ID env var optional (derived from cwd if unset)."
       },

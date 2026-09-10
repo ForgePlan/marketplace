@@ -76,45 +76,171 @@ The fact-extraction LLM is choosing bad facts. Two levers:
 
 ---
 
-## Bank ID issues
+## Bank identity — the failure class that eats memory silently
 
-### "Wrong bank ID is being used"
+Everything in this chapter is one failure wearing different hats: **more than one
+thing can decide which bank you write to, and when they disagree nobody is told.**
+Recall keeps answering, statistics keep looking healthy, and the corpus quietly
+splits in two. Every recipe below was written after living through it.
 
-Symptoms:
-- Working in `/Users/me/Work/project-a`, but `memory_get_current_bank`
-  returns `project-b`
-- Or recall surfaces memories from a different project
+### The five-minute check — run this first
 
-Diagnose:
-
-```bash
-# What bank does the resolver pick?
-cd /your/project/path
-git rev-parse --git-common-dir   # shows main repo path
+```
+memory_get_current_bank      # in a plain session
+memory_status                # names the SOURCE of the bank id, and warns when it was derived
 ```
 
-The plugin uses `basename` of `git rev-parse --git-common-dir` to derive
-the project name. Common causes:
+Then find everything that can set the name:
 
-| Cause | Fix |
-|-------|-----|
-| You're inside a git worktree linked to a different repo | Expected behavior — worktrees share one bank. To force isolation, pin `HINDSIGHT_BANK_ID` in this directory's `.mcp.json` |
-| Monorepo subdirectory shares bank with parent | Add nested `.mcp.json` with `HINDSIGHT_BANK_ID=submodule-specific` |
-| Old `.mcp.json` pins a stale bank ID | Edit `.mcp.json` → `mcpServers.hindsight.env.HINDSIGHT_BANK_ID` |
-| Auto-derive picked a generic name (e.g. `Work` for `/Users/me/Work`) | Pin explicit `HINDSIGHT_BANK_ID` via env or `.mcp.json` |
+```bash
+grep -rn HINDSIGHT_BANK_ID \
+  .mcp.json .claude/settings.json .claude/settings.local.json \
+  ~/.hindsight/config.json .hindsight.json 2>/dev/null
+```
 
-### "Bank ID changed without me changing anything"
+**One line is healthy. Two lines is the bug**, even when both name the same
+bank — the second one is a trap waiting for the day they diverge.
 
-If you renamed your project directory or moved git worktrees, the
-derived bank ID changes. Memory from the old name is still on the
-Hindsight server — it's just orphaned. Two options:
+Resolution order, highest wins: environment → `.mcp.json` (that server only) →
+`.hindsight.json` → `~/.hindsight/config.json` → derived from the project root's
+directory name. `.mcp.json`'s `env` block applies **only to the server declared
+in it**, which is exactly how one project ends up with a server on one bank and
+its background hooks on another.
 
-1. **Pin the old bank ID** in `.mcp.json`:
-   ```json
-   "env": { "HINDSIGHT_BANK_ID": "old-project-name" }
-   ```
-2. **Migrate manually** — there's no built-in rename. Use the web UI
-   at http://localhost:9999 to inspect and copy memories if needed.
+### "Memory forgot something I know it was told"
+
+The single most common report, and it is almost never amnesia.
+
+| What to check | What it means |
+|---|---|
+| `memory_get_current_bank` returns a bank you did not choose | something is naming it for you — run the grep above |
+| `memory_status` says `bank_id_source: derived-from-directory` | nobody chose it; rename the directory and the memory moves |
+| Two sets of hindsight tools in the tool list, different prefixes | two servers are registered — see the next recipe |
+| `memory_operations status=failed` returns rows | the conversation genuinely never became memory; this is loss, not misplacement |
+
+### "There are two hindsight servers in my tool list"
+
+Symptom: both `mcp__hindsight__*` and `mcp__plugin_<something>_hindsight__*`
+appear. Ask each which bank it holds:
+
+```
+memory_get_current_bank    # via the plugin's tools
+memory_get_current_bank    # via the hand-wired server's tools
+```
+
+Different answers mean the project has been writing to two banks in parallel.
+
+Worse, check **which binary** the hand-wired one runs:
+
+```bash
+python3 -c "import json;print(json.load(open('.mcp.json'))['mcpServers']['hindsight']['args'])"
+```
+
+A path under `~/.claude/plugins/cache/<marketplace>/<plugin>/<version>/` pins a
+**frozen old version of the very plugin you have installed**. It does not update
+when the plugin updates, so every fix shipped since that version is absent from
+that path while looking identical from the outside.
+
+**Fix:** delete the hand-wired `hindsight` block from `.mcp.json` and let the
+plugin provide the server. Keep a copy of the file first. Verify by restarting
+the session and confirming only one set of memory tools is present.
+
+### "I have several banks for one project — how do I merge them?"
+
+Read this before running anything. The merge path has a rule that is in no
+documentation and costs an afternoon to discover.
+
+**`document-transfer` SKIPS a document whose id already exists in the target.**
+It reports `completed` either way. A run here moved 1 document out of 8 and
+reported success:
+
+```json
+{"documents_imported": 1, "documents_skipped": 7, "facts_imported": 4}
+```
+
+Why: the background hook writes each session's transcript under the **session
+UUID**. Two banks that both received hook writes therefore hold the *same ids*
+with *different contents*, and the importer refuses to touch a colliding id.
+
+**So measure the overlap before you transfer.** The useful size of a transfer is
+not how many documents the source has — it is how many of the source's document
+ids the target does *not* already have:
+
+```bash
+# list ids on both sides, compare
+curl -s -H "Authorization: Bearer $HINDSIGHT_API_KEY" \
+  "$HINDSIGHT_URL/v1/default/banks/<source>/documents?limit=50" | jq -r '.items[].id' | sort > /tmp/src.ids
+curl -s -H "Authorization: Bearer $HINDSIGHT_API_KEY" \
+  "$HINDSIGHT_URL/v1/default/banks/<target>/documents?limit=50" | jq -r '.items[].id' | sort > /tmp/tgt.ids
+comm -23 /tmp/src.ids /tmp/tgt.ids     # these are the only ones that will move
+```
+
+Two outcomes, and they call for opposite actions:
+
+- **High overlap (session-UUID ids on both sides).** The banks are not two
+  corpora, they are two partial copies of the same conversation history. There is
+  little to merge; pick the one that is ahead and stop writing to the other.
+  Do **not** delete the target's copy to force the source's in — measure first,
+  the target's copy is often the larger one.
+- **Zero overlap (named documents: `prd-024-…`, `master-reference`).** These are
+  ingested artifacts, not transcripts. The transfer will move all of them.
+
+The procedure, once you know it is worth doing:
+
+```
+POST /v1/default/banks/<source>/document-transfer/export   → operation_id
+GET  /v1/default/banks/<source>/operations/<id>            → poll to completed
+                                                             → result_metadata.download_url
+# download the archive, then
+POST /v1/default/banks/<target>/document-transfer          → multipart upload → operation_id
+GET  /v1/default/banks/<target>/operations/<id>            → poll to completed
+POST /v1/default/banks/<target>/consolidate                → rebuild derived beliefs
+# then rebuild each knowledge page: mental_model_refresh
+```
+
+Notes earned the hard way:
+
+- **Poll to a terminal state; never assume.** A poller that dies of a network
+  hiccup is not evidence about the job it was watching. Read
+  `result_metadata` — `documents_imported` is the only number that means anything.
+- **Observations do not travel and do not need to.** Every memory outside a
+  document is a derived belief (measured: exactly, to the unit, in three separate
+  banks). The target recomputes them from the facts it now has, which is what
+  `/consolidate` is for.
+- **The source bank is untouched.** Transfer copies; nothing is deleted. If the
+  import disappoints, the source is still the source.
+- The admin CLI's `import-bank` is a *different thing*: it restores a whole bank
+  and fails if the target already exists. It cannot merge.
+
+### "I have banks I never created"
+
+A bank materialises on first touch — any string that reaches the server becomes
+one. A deployment audited here held **61 banks**, among them `src`, `docs`,
+`dev`, `repo`, `shared`, `old`, `k8s`: directory names that leaked in from a
+session started one level too deep.
+
+There is no server-side guard against this. Prevention is on the client:
+
+- Declare `HINDSIGHT_BANK_ID` explicitly in every project, so nothing is derived.
+- Treat `bank_id_source: derived-from-directory` in `memory_status` as a defect
+  to fix, not a note.
+- A typo in a declared name still creates a bank. If that matters to you, keep a
+  short allowlist of known bank ids and check against it before writing.
+
+Junk banks are harmless but not free: they are indistinguishable from real ones
+in `GET /v1/default/banks`, so the next person auditing cannot tell what is live.
+
+### "The bank id changed without me changing anything"
+
+You renamed the project directory, or a session started from a subdirectory that
+resolves differently. Memory under the old name is still on the server — orphaned,
+not lost.
+
+1. **Point back at it**: declare the old `HINDSIGHT_BANK_ID` explicitly.
+2. **Or move what matters across** with the transfer procedure above — after
+   measuring the id overlap.
+
+Renaming a bank in place is not supported.
 
 ---
 
