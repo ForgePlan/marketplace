@@ -464,6 +464,82 @@ decisions about X and why") produce good ones.
 
 ---
 
+## Consolidation stops keeping up on a large bank
+
+The symptom is quiet: mental models stay stale, the observation count stops moving, and nothing
+errors on your side. Server logs show `RuntimeError: Failed to search memories (TimeoutError)`.
+
+**The cause is the scope of the run, not the size of the bank.** Consolidation over the *whole*
+bank searches the whole graph for every candidate memory, and past some size that search stops
+fitting in the server's timeout. Three runs on the same bank — 41,972 memories, 2,063,526 links —
+measured in that order:
+
+| Run | Result |
+|---|---|
+| whole bank, `consolidation_max_memories_per_round: 100` | wedged for a week, **305 retries**, never finished |
+| whole bank, round size cut to 25 | finished, but 7 retries over ~35 min for **+12** observations |
+| one tag scope at a time, round size back at default | **0 retries**, +37 observations in the first four minutes |
+
+Cutting the round size keeps the job alive; it does not make it useful. Narrowing the scope is the
+actual fix.
+
+**Graph retrieval is not the culprit** — check this before you go turning it off. Disabling
+`enable_graph_retrieval` does cut recall sharply (23.8 s → 4.4 s on the bank above), but whole-bank
+consolidation kept timing out with it disabled, and the narrowed run succeeded with it back on.
+Turning it off permanently degrades every future query to buy nothing.
+
+### The narrowing
+
+`POST /consolidate` accepts `observation_scopes` — a list of tag sets. Only unconsolidated memories
+whose tags contain every tag of at least one set get processed:
+
+```bash
+curl -sX POST "$H/v1/default/banks/$BANK/consolidate" \
+  -H "Authorization: Bearer $KEY" -H 'Content-Type: application/json' \
+  -d '{"observation_scopes": [["<one-tag>"]]}'
+```
+
+Auto-retain tags every memory with the **Claude Code session id**, so a session id is a ready-made
+slice — roughly a thousand memories instead of forty thousand. Read the backlog before and after:
+
+```bash
+# how many memories are waiting; valid states are pending, done, failed
+curl -s "$H/v1/default/banks/$BANK/memories/list?limit=1&consolidation_state=pending" \
+  -H "Authorization: Bearer $KEY" | jq .total
+```
+
+### The dedup trap — why one bad job blocks everything
+
+While a consolidation job is `pending`, every new `POST /consolidate` returns **that same job** with
+`deduplicated: true` instead of starting a new one. So a job that can never finish blocks
+consolidation permanently, and the block is invisible: your request returns `200`.
+
+```bash
+# is something already queued?
+curl -s "$H/v1/default/banks/$BANK/operations?type=consolidation&status=pending" \
+  -H "Authorization: Bearer $KEY"
+
+# cancel it — ONLY works while status is 'pending'
+curl -sX DELETE "$H/v1/default/banks/$BANK/operations/<id>" -H "Authorization: Bearer $KEY"
+```
+
+A job already in `processing` **cannot be cancelled** (`409`, "only 'pending' operations can be
+cancelled"). Wait it out — it does reach a terminal state, and its per-round timeouts are retries,
+not death.
+
+### `consolidation/recover` — check before you call it
+
+`POST /consolidation/recover` resets memories that were *permanently marked failed* after exhausting
+retries, so the next run picks them up again. It deletes nothing. But it only has work to do if
+something is actually in that state — check first, or you will "fix" a problem you do not have:
+
+```bash
+curl -s "$H/v1/default/banks/$BANK/memories/list?limit=1&consolidation_state=failed" \
+  -H "Authorization: Bearer $KEY" | jq .total   # 0 → recover is a no-op
+```
+
+---
+
 ## Web UI diagnostics
 
 For everything else — the Hindsight web UI is a memory graph

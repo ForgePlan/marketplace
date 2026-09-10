@@ -6,6 +6,125 @@ All notable changes to `fpl-hsmem` are documented here. Format:
 
 ## [Unreleased]
 
+## [3.6.1] — 2026-09-10
+
+### Added
+
+- **`TROUBLESHOOTING.md` — "Consolidation stops keeping up on a large bank".**
+  The symptom is quiet: mental models stay stale, the observation count stops
+  moving, nothing errors on your side. Three measured runs on the same bank
+  (41,972 memories, 2,063,526 links) locate the cause in the *scope* of the run,
+  not the size of the bank, and name the fix: `observation_scopes` narrows
+  consolidation to one tag set at a time. Also documents the trap that cost a
+  week here — while a consolidation job sits queued, every later
+  `POST /consolidate` returns **that same job** and answers `200`, so one job
+  that can never finish blocks consolidation permanently and silently.
+
+### Fixed
+
+- **This file.** Versions 3.1.0 through 3.6.0 shipped with no changelog entries —
+  six releases recorded nowhere except the merge commits. Reconstructed below
+  from those commits. A changelog that skips releases is worse than none: it
+  reads as "nothing happened" rather than "nobody wrote it down".
+
+## [3.6.0] — 2026-09-10
+
+### Added
+
+- **Retrieval advice now depends on project size.** `RETRIEVAL-AND-MEMORY.md`
+  gains "Size decides which layers are worth having" — brackets by *tracked*
+  file count (`git ls-files`, not `find`), with the measurements marked as one
+  repository's observations rather than thresholds. At 1,674 tracked files the
+  index **lost** (29 ms unindexed vs 36 ms indexed); most of the often-quoted
+  speedup came from not scanning vendored code, which the unindexed searcher
+  gets for free. `/memory-setup` counts the project and tells the user which
+  layers are worth installing at that size — and which are theatre.
+
+## [3.5.0] — 2026-09-10
+
+### Fixed
+
+- **Three plugin descriptions had been truncated mid-word** by a `[:6000]` slice
+  in an earlier bump script — `…StructuredOutput-`, `…is a membe`,
+  `…the _content_s`. Restored verbatim from the pre-truncation commit.
+
+### Added
+
+- **`scripts/ci/description-shape-check.js`** + self-test (6 cases) so a
+  description that ends mid-sentence fails the build instead of shipping.
+
+## [3.4.0] — 2026-09-10
+
+### Added
+
+- **`RETRIEVAL-AND-MEMORY.md`** — which question goes to which layer, and which
+  layer verifies which. Corrects the tempting two-layer split ("search answers
+  where, memory answers why"): ADRs, RFCs and PRDs are *files in the
+  repository*, found by the same tools, and they **outrank** memory. Carries an
+  anti-pattern table indexed by symptom, because every one of these failures
+  produces a plausible answer rather than an error.
+- **`docs/HINDSIGHT-BANK-ACCESS-CONTROL.md`** — seven options for per-bank
+  access on a self-hosted deployment, each with what it does **not** enforce, a
+  recommendation with its seven limits stated plainly, and six phases each
+  carrying its own proof.
+
+## [3.3.0] — 2026-09-10
+
+### Fixed
+
+- **A claim of ours was wrong and had spread.** `allowed-tools` is a
+  *pre-approval*, not a restriction — the documentation states every tool
+  remains callable. Only `disallowed-tools` restricts. The wrong claim had
+  reached a generator header and a CI-guarded test; all corrected, with the
+  header now naming what was claimed wrongly.
+- **Plugin skills must be referenced as `plugin:skill`** in a subagent's
+  `skills:` field; a bare name is skipped silently. A skill carrying
+  `disable-model-invocation: true` cannot be preloaded at all.
+
+### Added
+
+- **`src/lib/version.ts`** — one version source, read from the plugin manifest,
+  returning `"unknown"` rather than a plausible-looking `0.0.0`; plus
+  `tests/test-version-consistency.sh`, which asserts the running server reports
+  the manifest version at handshake and carries its own negative control.
+
+### Removed
+
+- 2,888 lines of superseded working documents (`ARCHITECTURE.md`, a dated
+  handoff, a findings file, a docs-expansion spec) that described a shape the
+  plugin no longer had.
+
+## [3.2.0] — 2026-09-10
+
+### Fixed
+
+- **27 agent denylists across 8 packs had silently fallen out of date.** Seven
+  memory-write tools added to the relay were absent from every one of them — the
+  lists looked complete and were not. Found by comparing against the registry,
+  not by reading: an absent line is indistinguishable from a deliberate omission.
+
+### Added
+
+- **`src/lib/tool-names.ts` → `MEMORY_WRITE_TOOLS`** as the single source, and
+  **`scripts/ci/memory-denylist-check.js`** + self-test (4 cases) that derives
+  each denylist from it and fails the build on a gap. Hand-maintained lists
+  drift; a derived one cannot.
+
+## [3.1.0] — 2026-09-10
+
+### Added
+
+- **The relay explains itself.** MCP `instructions` on the initialize result now
+  carry the causal chain — which read is not interchangeable with which, and why
+  a correction needs four calls rather than an edit. This is the protocol's place
+  for context that no per-tool description can hold.
+- **Errors say what to do.** `explainError` maps a status to an instruction
+  instead of surfacing a bare code.
+- **`/memory-setup`** — proposes what a given project should actually install,
+  by layer, instead of assuming everything is worth having.
+- **Bilingual skill descriptions** across the skill set, so the agent recognises
+  them semantically in either language.
+
 ## [3.0.0] — 2026-09-10
 
 The relay stopped being write-only. Until now it could add facts and read them
