@@ -53,6 +53,44 @@ export const TOOL_NAMES = [
 
 export type ToolName = (typeof TOOL_NAMES)[number];
 
+/**
+ * The memory tools an agent that is NOT trusted to write memory must not hold.
+ *
+ * WHY THIS LIST EXISTS. Across the marketplace, an agent's `disallowedTools` denylist expresses
+ * "this role does not write memory" by naming the write tools one by one. That worked while there
+ * were three of them. When this relay went from 13 tools to 27, every one of those denylists kept
+ * naming the old three — so a surface that grew for good reasons silently widened what 27 agents
+ * could do to a bank, including deleting a document (irreversible, cascades to every fact
+ * extracted from it) and rewriting the bank's behavioural configuration.
+ *
+ * A denylist that enumerates by hand goes stale the moment the thing it enumerates grows. So the
+ * list lives here, next to the tools, and `scripts/ci/memory-denylist-check.js` reads it — the
+ * next tool added to the relay is either on this list or deliberately off it, and CI says which.
+ *
+ * DELIBERATELY NOT ON THIS LIST, and why:
+ *  - `document_ingest` / `document_ingest_file` — Profile A creators legitimately file artifacts
+ *    into the bank; that is authorship, not curation.
+ *  - `mental_model_refresh` — rebuilds a page from facts that are already there. It writes nothing
+ *    a reader did not already have.
+ *  - every `*_list` / `*_get`, `memory_recall`, `memory_reflect`, `memory_status`,
+ *    `memory_get_current_bank`, `bank_config_get` — reads. Restricting reads would stop an agent
+ *    from checking which bank it is in before acting, which is the opposite of safe.
+ */
+export const MEMORY_WRITE_TOOLS = [
+  "memory_retain",
+  "memory_set_mission",
+  "memory_invalidate",
+  "memory_reconsolidate",
+  "mental_model_create",
+  "mental_model_update",
+  "mental_model_delete",
+  "mental_model_clear",
+  "directive_create",
+  "directive_delete",
+  "bank_config_set",
+  "document_delete",
+] as const;
+
 const NAME_SET: ReadonlySet<string> = new Set(TOOL_NAMES);
 
 /**

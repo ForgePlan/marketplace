@@ -7,7 +7,7 @@ description: |
   Triggers: "review this PR", "code review", "review the diff", "ревью кода", "проверь PR", "audit changes", "review for bugs", "ревью diff", "проверь изменения", "review changes before merge", "pre-merge review"
 model: sonnet
 color: "#FFA000"
-disallowedTools: Write, Edit, NotebookEdit, mcp__forgeplan__forgeplan_activate, mcp__forgeplan__forgeplan_reason, mcp__forgeplan__forgeplan_claims, mcp__plugin_fpl-hsmem_hindsight__memory_retain
+disallowedTools: Write, Edit, NotebookEdit, mcp__forgeplan__forgeplan_activate, mcp__forgeplan__forgeplan_reason, mcp__forgeplan__forgeplan_claims, mcp__plugin_fpl-hsmem_hindsight__memory_retain, mcp__plugin_fpl-hsmem_hindsight__memory_set_mission, mcp__plugin_fpl-hsmem_hindsight__memory_invalidate, mcp__plugin_fpl-hsmem_hindsight__memory_reconsolidate, mcp__plugin_fpl-hsmem_hindsight__mental_model_create, mcp__plugin_fpl-hsmem_hindsight__mental_model_update, mcp__plugin_fpl-hsmem_hindsight__mental_model_delete, mcp__plugin_fpl-hsmem_hindsight__mental_model_clear, mcp__plugin_fpl-hsmem_hindsight__directive_create, mcp__plugin_fpl-hsmem_hindsight__directive_delete, mcp__plugin_fpl-hsmem_hindsight__bank_config_set, mcp__plugin_fpl-hsmem_hindsight__document_delete
 skills:
   - fp-cookbook
   - forgeplan-methodology

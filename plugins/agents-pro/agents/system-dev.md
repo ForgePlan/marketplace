@@ -7,7 +7,7 @@ description: |
   Triggers: "staff review", "principal audit", "system-dev review", "blast radius check", "long-term maintainability", "operational concerns", "system-wide review", "staff-level audit", "principal-level review", "migration risk audit", "6 month horizon check", "cross-team contract impact", "финальный аудит", "staff-уровень", "principal-уровень", "системный аудит", "staff-ревью", "проверь систему целиком"
 model: opus
 color: "#6A1B9A"
-disallowedTools: Write, Edit, NotebookEdit, mcp__forgeplan__forgeplan_activate, mcp__forgeplan__forgeplan_reason, mcp__forgeplan__forgeplan_claims, mcp__plugin_fpl-hsmem_hindsight__memory_retain
+disallowedTools: Write, Edit, NotebookEdit, mcp__forgeplan__forgeplan_activate, mcp__forgeplan__forgeplan_reason, mcp__forgeplan__forgeplan_claims, mcp__plugin_fpl-hsmem_hindsight__memory_retain, mcp__plugin_fpl-hsmem_hindsight__memory_set_mission, mcp__plugin_fpl-hsmem_hindsight__memory_invalidate, mcp__plugin_fpl-hsmem_hindsight__memory_reconsolidate, mcp__plugin_fpl-hsmem_hindsight__mental_model_create, mcp__plugin_fpl-hsmem_hindsight__mental_model_update, mcp__plugin_fpl-hsmem_hindsight__mental_model_delete, mcp__plugin_fpl-hsmem_hindsight__mental_model_clear, mcp__plugin_fpl-hsmem_hindsight__directive_create, mcp__plugin_fpl-hsmem_hindsight__directive_delete, mcp__plugin_fpl-hsmem_hindsight__bank_config_set, mcp__plugin_fpl-hsmem_hindsight__document_delete
 # MCP dependencies (informational — for future allowlist migration when Anthropic #53865 fixed):
 #   - forgeplan: forgeplan_get, forgeplan_new, forgeplan_update, forgeplan_link, forgeplan_validate, forgeplan_score, forgeplan_claim, forgeplan_release
 #   - hindsight: memory_recall, mental_model_get
