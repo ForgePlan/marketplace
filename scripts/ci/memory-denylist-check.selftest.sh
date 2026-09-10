@@ -11,7 +11,7 @@
 # of the rule it was written for. A negative control that does not test the DECIDING property
 # constrains nothing (EVID-257 F2). Case 5 below is that missing control.
 #
-# Sixteen cases: ten must-fire, three must-refuse (rules it cannot trust), three must-NOT-fire
+# Seventeen cases: eleven must-fire, three must-refuse (rules it cannot trust), three must-NOT-fire
 # (legitimate shapes that would be false positives if the checker were too eager). The count is
 # stated here and printed at the end; if those two disagree, the summary is lying about its own work.
 set -uo pipefail
@@ -263,6 +263,19 @@ else
 fi
 rm -f "$work/plugins/probe/agents/third.md"
 
+# 13b. must-fire — the SAME agent gets one tool right under both spellings and another under a third
+#      server name. The first version of the unknown-prefix check ran once per AGENT in an `else`
+#      branch, so the correct denial suppressed the report for the bad one and the agent counted as
+#      compliant. Per tool now (EVID-259 G3, demonstrated on a fixture before this case existed).
+write_agent "complete.md" "$BOTH"
+write_agent "mixed.md" "mcp__hindsight__document_delete, mcp__plugin_fpl-hsmem_hindsight__document_delete, mcp__hs__bank_config_set"
+if node "$work/scripts/ci/memory-denylist-check.js" >/dev/null 2>&1; then
+  fail "gate PASSED on an agent mixing a correct denial with a third-prefix one — one right answer hid the wrong one"
+else
+  pass "must-fire      a third-prefix denial is caught even beside a correct both-prefix denial"
+fi
+rm -f "$work/plugins/probe/agents/mixed.md"
+
 # 14. must-fire, and it checks the REPORT rather than the verdict — two unrelated defects at once
 #     must both be named. Reporting only the first made an operator find the second on the next run
 #     (EVID-258 N6).
@@ -278,7 +291,7 @@ rm -f "$work/plugins/probe/agents/half.md"
 
 echo
 if [ "$fails" -eq 0 ]; then
-  echo "self-test OK: 16 cases (10 must-fire, 3 must-refuse, 3 must-NOT-fire)"
+  echo "self-test OK: 17 cases (11 must-fire, 3 must-refuse, 3 must-NOT-fire)"
   exit 0
 fi
 echo "self-test FAILED: $fails"
