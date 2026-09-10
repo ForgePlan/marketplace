@@ -9,9 +9,10 @@
 #   - the deliberate carve-out survives (bank ids come from directory
 #     basenames, so spaces and non-ASCII must keep working)
 #
-# It bundles the SOURCE into a temp module rather than importing dist/, which
-# is the MCP entrypoint and exports nothing. Testing the shipped bundle's
-# public surface would test the shop window, not the code.
+# It imports dist/testable.mjs — a committed build output that re-exports the
+# validators. dist/index.mjs is the MCP entrypoint and exports nothing, and
+# bundling the source at test time needs node_modules, which is not committed:
+# that version skipped on every clean checkout, so it never ran in CI.
 #
 # Runs entirely offline. No call reaches a bank.
 # ===========================================================================
@@ -19,29 +20,19 @@ set -uo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN="$(dirname "$HERE")"
-TMP="$(mktemp -d)"
-trap 'rm -rf "$TMP"' EXIT
+LIB="$PLUGIN/dist/testable.mjs"
 
-cat > "$TMP/entry.ts" <<'TS'
-export { assertPathId, assertBankId } from "./src/lib/client.js";
-export { stripMemoryTags, escapeMemoryMarkers } from "./src/lib/content.js";
-TS
-cp "$TMP/entry.ts" "$PLUGIN/.selftest-entry.ts"
-
-ESBUILD="$PLUGIN/node_modules/.bin/esbuild"
-[ -x "$ESBUILD" ] || ESBUILD="$(command -v esbuild || true)"
-
-if [ -z "$ESBUILD" ] || ! "$ESBUILD" "$PLUGIN/.selftest-entry.ts" \
-      --bundle --format=esm --platform=node --outfile="$TMP/lib.mjs" 2>"$TMP/esbuild.err"; then
-  rm -f "$PLUGIN/.selftest-entry.ts"
-  echo "  SKIP: could not bundle the source — reason below (announced, never silently passed)"
-  sed "s/^/         /" "$TMP/esbuild.err" 2>/dev/null | head -6
-  exit 0
+# dist/ is committed, so this runs on a clean checkout. The first version of this test bundled the
+# TypeScript source with esbuild from node_modules — which is NOT committed — so it skipped on every
+# clean checkout and would never once have run in CI. A test that always skips is decoration.
+if [ ! -f "$LIB" ]; then
+  echo "  FAIL: $LIB is missing. Run 'npm run build' — the test surface is a build output and is"
+  echo "        committed with the rest of dist/. Refusing to report a pass without running."
+  exit 1
 fi
-rm -f "$PLUGIN/.selftest-entry.ts"
 
 node --input-type=module -e "
-import { assertPathId, assertBankId, stripMemoryTags, escapeMemoryMarkers } from '$TMP/lib.mjs';
+import { assertPathId, assertBankId, stripMemoryTags, escapeMemoryMarkers } from '$LIB';
 
 let pass = 0, fail = 0;
 const ok = (l) => { console.log('  ok   ' + l); pass++; };
