@@ -240,6 +240,8 @@ jobs:
           run_gate "standalone-mirror selftest"   bash scripts/ci/standalone-mirror-check.selftest.sh
           # The routing map tells smith what to dispatch and what evidence to expect; this
           # asserts each Profile letter is a claim the agent frontmatter can honour (DEFER-033).
+          run_gate "description-shape-check"      node scripts/ci/description-shape-check.js
+          run_gate "description-shape selftest"   bash scripts/ci/description-shape-check.selftest.sh
           run_gate "memory-denylist-check"       node scripts/ci/memory-denylist-check.js
           run_gate "memory-denylist selftest"     bash scripts/ci/memory-denylist-check.selftest.sh
           run_gate "routing-profile-check"        node scripts/ci/routing-profile-check.js

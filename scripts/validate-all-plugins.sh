@@ -441,6 +441,8 @@ else
     run_gate "verdict-axis-check"        node "$CI_DIR/verdict-axis-check.js"
     run_gate "standalone-mirror-check"   node "$CI_DIR/standalone-mirror-check.js"
     run_gate "standalone-mirror selftest" bash "$CI_DIR/standalone-mirror-check.selftest.sh"
+    run_gate "description-shape-check"  node "$CI_DIR/description-shape-check.js"
+    run_gate "description-shape selftest" bash "$CI_DIR/description-shape-check.selftest.sh"
     run_gate "memory-denylist-check"    node "$CI_DIR/memory-denylist-check.js"
     run_gate "memory-denylist selftest" bash "$CI_DIR/memory-denylist-check.selftest.sh"
     run_gate "routing-profile-check"     node "$CI_DIR/routing-profile-check.js"
