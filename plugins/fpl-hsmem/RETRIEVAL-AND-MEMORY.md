@@ -8,11 +8,15 @@ looks like a failure — it looks like an answer.
 This document is the reference. `/fpl-hsmem:memory-setup` is the actionable version (what a given
 project should install); the agent `memory-curator` carries the memory half as operating rules.
 
-**Provenance of every number below.** Timings and counts come from ONE repository — a TypeScript
-monorepo, ~1,700 tracked files under git, ~95,000 files on disk including vendored dependencies,
-measured 2026-09-10 in a clean `bash --noprofile --norc`, best of three, warm cache. They are
-**observations, never thresholds.** On a small repository an unindexed searcher wins outright; on a
-400,000-file one the published vendor benchmark claims 52×. Measure your own before you decide.
+**Provenance of every number below.** Timings and counts come from ONE repository — `gerts-hub`, a
+TypeScript monorepo, commit `94dec532`, 2,154 tracked files under git
+(`git ls-tree -r --name-only 94dec532 | wc -l`), measured 2026-09-10 in a clean
+`bash --noprofile --norc`, best of three, warm cache. A file count "on disk" is deliberately not
+given here — it depends on working-copy state, not on a commit, so it does not stay put (see "Two
+corrections to a widely-copied policy" below for how the `.gitignore` effect is measured instead
+without one). They are **observations, never thresholds.** On a small repository an unindexed
+searcher wins outright; on a 400,000-file one the published vendor benchmark claims 52×. Measure
+your own before you decide.
 
 ---
 
@@ -50,7 +54,7 @@ disk, and that gap — not the index — is where most of the speedup came from.
 | Tracked files | Text search | Indexed search | Semantic search | Why |
 |---|---|---|---|---|
 | **under ~1,000** | plain `rg`, nothing else | **no** | **no** | a full scan is already instant; an index costs more to build and keep fresh than it can ever return |
-| **~1,000 – 10,000** | plain `rg` | **probably not** — measure | only if questions are genuinely abstract | measured at 2,154 files: unindexed **36 ms**, indexed **39 ms** (best of three). The index lost. Re-measured independently on the same tree and it lost again — the direction reproduces, the earlier anchor did not. It may win higher in this band; we did not measure that |
+| **~1,000 – 10,000** | plain `rg` | **probably not** — measure | only if questions are genuinely abstract | measured at 2,154 files (`gerts-hub`, 2026-09-10): unindexed **36 ms**, indexed **39 ms** (best of three). The index lost. Independently re-measured the same day (EVID-264, `gerts-hub`, literal `Moleculer`, 2026-09-10 22:35–22:50Z) and it lost again — the direction reproduces, the earlier anchor did not. It may win higher in this band; we did not measure that |
 | **~10,000 – 100,000** | `rg` for one-off scans | **measure before adopting** — this is where the crossover lives | worth considering | the honest answer is that we have no data point in this band. Anyone who tells you otherwise is quoting a vendor |
 | **over ~100,000** | `rg` for a subdirectory | **likely yes** | likely yes | the vendor benchmark claims 52× at 388,000 files. UNVERIFIED by us — treat it as a reason to measure, not as a result |
 
@@ -106,7 +110,7 @@ Every one of these produces a **plausible answer**, not an error. That is what m
 
 | Wrong pairing | How you recognise it |
 |---|---|
-| AST tool for a plain literal | **a confident small number.** Measured: `rg -F` 192 files, `ast-grep` 4 — a 48× undercount, no warning. Slowness is NOT the symptom (167 ms vs 53 ms). Cause is broader than "misses strings": an AST tool parses only the language you named, so Markdown, JSON, YAML and config are invisible to it |
+| AST tool for a plain literal | **a confident small number.** Measured (`gerts-hub`, commit `94dec532`, literal `Moleculer`, 2026-09-10): `rg -F` 192 files, `ast-grep` 2 files (containing 4 matches) — a **96×** undercount, no warning. Slowness is NOT the symptom (167 ms vs 53 ms, same repository and date). Cause is broader than "misses strings": an AST tool parses only the language you named, so Markdown, JSON, YAML and config are invisible to it |
 | Invalid AST pattern | **exit 0 and no matches** — indistinguishable from a correct search that found nothing. The pattern must be a parseable fragment of real code |
 | AST tool for "is this variable shadowed" / "what type is this" | a confident match on the wrong binding. The tool documents that it has no scope analysis, no type information, no data-flow |
 | Text search for "who uses this symbol" | hits in comments, strings, and on a same-named different thing; the rename that follows breaks sites you never saw |
@@ -114,7 +118,7 @@ Every one of these produces a **plausible answer**, not an error. That is what m
 | A verbose question given to semantic search | it honours every word and loses the intent; lifecycle files rank above the thing you meant. Query as a noun phrase |
 | **Believing an empty result from a stale index** | the most expensive one. Trigram indexes give false NEGATIVES — a symbol added after the last build is not found, and the exit code is identical to an honest "no such thing". Reproduced live |
 | Verifying with the same layer you searched with | the same snapshot, twice. A "confirmation" taken before the change |
-| `grep -r` on a tree with vendored dependencies | 43 seconds, and matches from code you do not own |
+| `grep -r` on a tree with vendored dependencies | 43 seconds (`gerts-hub`, 2026-09-10), and matches from code you do not own |
 | Memory for "where is it" | a confident path. Easy failure: it no longer exists. Expensive failure: it still exists and the claim about it is stale — the coordinate checks out and confirms nothing |
 | Code search for "why is it like this" | a rationale reverse-engineered from an implementation, which nobody actually reasoned from. Reopens a settled argument |
 | Retain then immediately recall | the old statement comes back — extraction has not run. Pass `wait: true` |
@@ -149,13 +153,27 @@ that propagates because the document looks rigorous:
 
 1. **The performance verdict is inverted at that repository's size.** It reports the indexed searcher
    at 0.05 s against 0.10 s for the unindexed one and recommends the index for repo-wide queries.
-   Re-measured on the same repository with the same query: **29 ms unindexed, 36 ms indexed** — the
-   unindexed one wins or ties across every query shape tried.
+   Re-measured on `gerts-hub` (commit `94dec532`, 2026-09-10) with the same query, literal
+   `Moleculer`: **29 ms unindexed, 36 ms indexed** — the unindexed one wins or ties across every
+   query shape tried.
 2. **The speedup is attributed to the wrong cause.** "200× faster than `grep` because of the index"
-   — in fact `grep` walks 95,000 files while both fast searchers walk ~1,700, because they respect
-   `.gitignore`. The win is *not scanning vendored code*, which the unindexed searcher gets for free,
-   with no index to keep fresh. A wrong cause produces a wrong policy: a team told to maintain an
-   index for a benefit that is not there at their size.
+   is wrong about the cause. Both fast searchers respect `.gitignore` and see only what git tracks;
+   `grep -r` walks the whole tree, including vendored dependencies. The win is *not scanning vendored
+   code*, which the unindexed searcher gets for free, with no index to keep fresh. A wrong cause
+   produces a wrong policy: a team told to maintain an index for a benefit that is not there at
+   their size.
+
+   Numbers are deliberately omitted here: the size of the skipped tree depends on working-copy
+   state, not on a commit, so it does not pin to a measurement (see "Count what the tools count,
+   not what `find` counts" above). The cause is checked with one pair of commands — one tool, one
+   query, differing only in whether `.gitignore` is honoured:
+
+   ```bash
+   rg     -l -F '<a literal in your code>' . | wc -l   # sees only what git tracks
+   rg -uu -l -F '<the same literal>' . | wc -l          # walks everything, like grep
+   ```
+
+   The pair is chosen so the difference cannot be an artifact of comparing two different tools.
 
 The lesson generalises: **a timing without its repository, its query shape and its date is not a
 measurement, it is folklore.** Every number in this document carries its provenance for that reason.

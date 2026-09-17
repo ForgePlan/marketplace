@@ -94,7 +94,7 @@ somebody else's monorepo.
 | Tracked files | What to propose | What to say |
 |---|---|---|
 | **under ~1,000** | plain text search only | "A full scan here is already instant. An index would cost more to build and keep fresh than it can return — not recommended." |
-| **~1,000 – 10,000** | plain text search; index only if a measurement says so | "Measured on a repository of this size: unindexed 29 ms, indexed 36 ms — the index lost. Yours may differ; the command to check is below." |
+| **~1,000 – 10,000** | plain text search; index only if a measurement says so | "Measured on `gerts-hub` at 2,154 tracked files (commit 94dec532, 2026-09-10, literal `Moleculer`): unindexed 29 ms, indexed 36 ms — the index lost. Yours may differ; the command to check is below." |
 | **~10,000 – 100,000** | measure before adopting an index | "This is where the crossover lives and **we have no measurement in this band**. I am not going to guess it for you." |
 | **over ~100,000** | an index is likely to win | "The 52× figure comes from a vendor benchmark at 388,000 files and is UNVERIFIED here. It is a reason to measure, not a result." |
 
@@ -137,10 +137,12 @@ search was the wrong kind.
 pairing has a distinct symptom — and in every case the symptom is a *plausible
 answer*, not an error:
 
-- **AST tool used for a literal** → a confident small number. Measured on one
-  repo: `rg -F` returned 192 files, `ast-grep` 4. Not an error, not a warning —
-  a 48× undercount that reads as a result. Slowness is NOT the symptom (167 ms
-  vs 53 ms; you will never notice). The cause is broader than "misses strings":
+- **AST tool used for a literal** → a confident small number. Measured on
+  `gerts-hub` (commit 94dec532, literal `Moleculer`, 2026-09-10): `rg -F`
+  returned 192 files, `ast-grep` 2 files (containing 4 matches). Not an
+  error, not a warning — a **96×** undercount that reads as a result.
+  Slowness is NOT the symptom (167 ms vs 53 ms, same repository and date;
+  you will never notice). The cause is broader than "misses strings":
   an AST tool parses only the language you named, so everything in Markdown,
   JSON, YAML and config is invisible to it. And an invalid pattern exits **0**
   with no matches, which is indistinguishable from a correct search that found
