@@ -18,9 +18,12 @@ All notable changes to `fpl-hsmem` are documented here. Format:
   measurement date that tree held **2,154** tracked files, and 1,674 appears at
   no point in the observable window (1,926 → 2,102 → 2,117 → 2,154).
 
-  Corrected to 2,154 / 95,201 in all five places it had spread to: the
-  provenance paragraph, the size-bracket table, `/memory-setup`'s worked
-  example, the plugin description, and the catalog.
+  Corrected to 2,154 in four of the five places it had spread to: the
+  size-bracket table, `/memory-setup`'s worked example, the plugin
+  description, and the catalog. The provenance paragraph in
+  `RETRIEVAL-AND-MEMORY.md` (line 12) and its "on disk" companion figure
+  (line 155) were missed by this pass and kept the stale `~1,700` / `~95,000`
+  figures until a follow-up fix on 2026-09-17 (ADR-028).
 
   **The conclusion survives; only the anchor was wrong.** 2,154 sits in the same
   bracket, and an independent re-measurement on the same tree has the index
