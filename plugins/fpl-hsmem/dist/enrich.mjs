@@ -1,8 +1,5 @@
 #!/usr/bin/env node
 
-// src/enrich.ts
-import { readFileSync as readFileSync3 } from "node:fs";
-
 // src/lib/version.ts
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -110,6 +107,10 @@ var HindsightClient = class {
   }
   get bank() {
     return this.bankId;
+  }
+  /** Фактическое назначение запросов; callers хешируют его, не выводя credentials из URL. */
+  get endpoint() {
+    return this.url;
   }
   headers() {
     const h = {
@@ -242,14 +243,18 @@ var HindsightClient = class {
    */
   async getDocument(id) {
     try {
-      return await this.request(
+      const document = await this.request(
         "GET",
         `${this.bankPath()}/documents/${encodeURIComponent(assertPathId(id, "document id", true))}`,
         void 0,
         1e4
       );
+      if (document === null || typeof document !== "object" || Array.isArray(document)) {
+        throw new Error("Invalid response from document lookup");
+      }
+      return document;
     } catch (err) {
-      if (err instanceof Error && /HTTP 404/.test(err.message)) return null;
+      if (err instanceof Error && /^HTTP 404 from /.test(err.message)) return null;
       throw err;
     }
   }
@@ -323,7 +328,7 @@ var HindsightClient = class {
     if (options.q) query.q = options.q;
     if (options.type) query.type = options.type;
     if (options.state && options.state !== "all") query.state = options.state;
-    if (options.documentId) query.document_id = assertPathId(options.documentId, "document_id");
+    if (options.documentId) query.document_id = assertPathId(options.documentId, "document_id", true);
     if (options.tags?.length) query.tags = options.tags;
     return this.request(
       "GET",
@@ -444,7 +449,12 @@ var HindsightClient = class {
   }
   /** Irreversible. Cascades to every memory extracted from the document. */
   async deleteDocument(id) {
-    return this.request("DELETE", this.bankUrl(["documents", id]), void 0, 3e4);
+    return this.request(
+      "DELETE",
+      `${this.bankPath()}/documents/${encodeURIComponent(assertPathId(id, "document id", true))}`,
+      void 0,
+      3e4
+    );
   }
 };
 
@@ -495,7 +505,7 @@ var BankGate = class {
     if (at === void 0 || this.now() - at >= this.ttlMs) {
       if (!await client.bankExists(bank)) {
         this.confirmedAt.delete(bank);
-        return `Refusing: bank "${bank}" does not exist on ${this.config.url}. This client will not create it; an authorized operator must provision it separately.`;
+        return `Refusing: bank "${bank}" does not exist on the configured Hindsight server. This client will not create it; an authorized operator must provision it separately.`;
       }
       this.confirmedAt.set(bank, this.now());
     }
@@ -993,10 +1003,10 @@ function parseCandidates(text, opts) {
     const c = obj;
     const reasons = [];
     const docId = typeof c.document_id === "string" ? c.document_id : void 0;
-    const unknown = Object.keys(c).filter((k) => !FIELDS.has(k));
-    if (unknown.length) reasons.push(`unknown field(s) ${unknown.join(", ")}`);
+    let reportDocId;
+    if (Object.keys(c).some((k) => !FIELDS.has(k))) reasons.push("unknown field(s) present");
     if (typeof c.kind !== "string" || !KINDS.has(c.kind)) {
-      reasons.push(`kind must be one of ${ENRICH_KINDS.join("|")} (got ${JSON.stringify(c.kind ?? null)})`);
+      reasons.push(`kind must be one of ${ENRICH_KINDS.join("|")}`);
     }
     if (typeof c.content !== "string" || !c.content.trim()) {
       reasons.push("content is required");
@@ -1013,8 +1023,9 @@ function parseCandidates(text, opts) {
     } else {
       try {
         assertPathId(docId, "document_id", true);
-      } catch (err) {
-        reasons.push(err.message);
+        reportDocId = docId;
+      } catch {
+        reasons.push("document_id must be a valid stable identifier (max 200 chars, no path traversal)");
       }
       const first = firstLineOf.get(docId);
       if (first !== void 0) reasons.push(`duplicate document_id (first at line ${first})`);
@@ -1033,23 +1044,31 @@ function parseCandidates(text, opts) {
       bank = repo ? routeBank(repo, opts.routing) : void 0;
       if (!bank) {
         reasons.push(
-          repo ? `no bank: the line names none and no \`routing\` entry matches repo "${repo}"` : "no bank: the line names none and has no metadata.repo to route by"
+          repo ? "no bank: the line names none and no `routing` entry matches metadata.repo" : "no bank: the line names none and has no metadata.repo to route by"
         );
       }
     }
     const fields = [
+      ["bank", bank],
       ["content", c.content],
       ["context", c.context],
       ["document_id", c.document_id],
       ["tags", tagsOk && c.tags ? c.tags.join(" ") : ""],
       ["metadata", metaOk && c.metadata ? Object.values(c.metadata).join(" ") : ""]
     ];
-    const hits = fields.flatMap(
-      ([name, v]) => typeof v === "string" && v ? scanSensitive(v).map((k) => `${k} in ${name}`) : []
-    );
+    if (c.metadata && typeof c.metadata === "object" && !Array.isArray(c.metadata)) {
+      for (const key of Object.keys(c.metadata)) fields.push(["metadata key", key]);
+    }
+    const hits = [];
+    for (const [name, value] of fields) {
+      if (typeof value !== "string" || !value) continue;
+      const kinds = scanSensitive(value);
+      if (name === "document_id" && kinds.length) reportDocId = void 0;
+      hits.push(...kinds.map((kind2) => `${kind2} in ${name}`));
+    }
     if (hits.length) reasons.push(`secret/PII scan: ${hits.join(", ")}`);
     if (reasons.length) {
-      out.refused.push({ line, documentId: docId, reasons });
+      out.refused.push({ line, ...reportDocId ? { documentId: reportDocId } : {}, reasons });
       continue;
     }
     const kind = c.kind;
@@ -1096,12 +1115,14 @@ async function planEnrich(bytes2, opts, resolve3) {
   }
   const refused = [...parsed.refused];
   const banks = [];
+  const destinations = [];
   for (const [bank, all] of byBank) {
     const client = await resolve3(bank);
     if (typeof client === "string") {
       for (const c of all) refused.push({ line: c.line, documentId: c.item.document_id, reasons: [client] });
       continue;
     }
+    destinations.push({ bank, fingerprint: createHash("sha256").update(client.endpoint).digest("hex") });
     const found = await mapLimit(all, LOOKUP_CONCURRENCY, (c) => client.getDocument(c.item.document_id));
     const candidates = [];
     const existing = [];
@@ -1133,9 +1154,10 @@ async function planEnrich(bytes2, opts, resolve3) {
   }
   refused.sort((a, b) => a.line - b.line);
   const resolved = {
-    v: 1,
+    v: 2,
     file: createHash("sha256").update(bytes2).digest("hex"),
     allowReplaceForeign: opts.allowReplaceForeign === true,
+    destinations,
     banks: banks.map((b) => ({
       bank: b.bank,
       items: b.candidates.map((c) => c.item.document_id),
@@ -1145,14 +1167,14 @@ async function planEnrich(bytes2, opts, resolve3) {
     refused: refused.map((r) => [r.line, r.documentId ?? null, r.reasons])
   };
   const digest = createHash("sha256").update(JSON.stringify(resolved)).digest("hex");
-  return { lines: parsed.lines, refused, banks, digest };
+  return { lines: parsed.lines, refused, banks, destinations, digest };
 }
 function confirmRefusal(plan, confirm2) {
   if (typeof confirm2 !== "string" || !confirm2) {
     return "Refusing to apply: apply requires the freshness digest printed by the dry run of this exact file. The digest does not grant authorization, ownership, or permission to write. Nothing was written.";
   }
   if (confirm2.trim().toLowerCase() !== plan.digest) {
-    return "Refusing to apply: the file or the resolved plan changed since the dry run that produced this digest (an edited line, a different routing, or documents created or removed on the server). Dry-run again. A matching digest would prove freshness only, not authorization. Nothing was written.";
+    return "Refusing to apply: the file or the resolved plan changed since the dry run that produced this digest (an edited line, a different destination or routing, or documents created or removed on the server). Dry-run again. A matching digest would prove freshness only, not authorization. Nothing was written.";
   }
   return null;
 }
@@ -1185,6 +1207,7 @@ function enrichSummary(file2, plan, applied) {
     file: file2,
     mode: applied ? "apply" : "dry-run",
     digest: plan.digest,
+    destinations: plan.destinations,
     lines: plan.lines,
     accepted: plan.banks.reduce((n, b) => n + b.candidates.length, 0),
     refused: plan.refused,
@@ -1207,6 +1230,7 @@ function formatEnrichReport(file2, plan, applied, opts = {}) {
   out.push(applied ? `APPLY \u2014 ${file2}` : `DRY RUN \u2014 nothing written \u2014 ${file2}`);
   out.push(`lines ${plan.lines} \xB7 accepted ${accepted} \xB7 refused ${plan.refused.length}`);
   out.push(`digest ${plan.digest}`);
+  for (const d of plan.destinations) out.push(`destination fingerprint ${d.fingerprint} \xB7 bank "${d.bank}"`);
   out.push("");
   if (plan.banks.length === 0) out.push("No item is writable.");
   for (const b of plan.banks) {
@@ -1263,27 +1287,62 @@ function formatEnrichReport(file2, plan, applied, opts = {}) {
 }
 
 // src/lib/paths.ts
-import { realpathSync as realpathSync2, statSync as statSync2 } from "node:fs";
-import { resolve as resolve2, sep as sep2 } from "node:path";
+import { closeSync as closeSync2, constants as constants2, fstatSync as fstatSync2, lstatSync, openSync as openSync2, readSync, realpathSync as realpathSync2 } from "node:fs";
+import { isAbsolute as isAbsolute2, relative, resolve as resolve2, sep as sep2 } from "node:path";
 var MAX_PROJECT_FILE_BYTES = 2 * 1024 * 1024;
-function assertInsideProject(input, projectRoot) {
-  const root = realpathSync2(resolve2(projectRoot));
-  let real;
+var ProjectFileError = class extends Error {
+};
+function contained(path2, root) {
+  const rel = relative(root, path2);
+  return rel !== ".." && !rel.startsWith(`..${sep2}`) && !isAbsolute2(rel);
+}
+function unchanged(before, after) {
+  return after.isFile() && before.dev === after.dev && before.ino === after.ino && before.size === after.size && before.mtimeNs === after.mtimeNs && before.ctimeNs === after.ctimeNs;
+}
+function readProjectFile(input, projectRoot) {
   try {
-    real = realpathSync2(resolve2(input));
-  } catch (err) {
-    throw new Error(`cannot resolve ${input}: ${err.message}`);
+    const rootInput = resolve2(projectRoot);
+    const root = realpathSync2(rootInput);
+    const requested = resolve2(input);
+    const path2 = realpathSync2(requested);
+    if (!contained(path2, root)) {
+      throw new ProjectFileError("refusing to read project file outside the project root");
+    }
+    const before = lstatSync(path2, { bigint: true });
+    if (!before.isFile()) {
+      throw new ProjectFileError("refusing to read project file: not a regular file");
+    }
+    if (before.size > BigInt(MAX_PROJECT_FILE_BYTES)) {
+      throw new ProjectFileError(`refusing to read project file: exceeds the ${MAX_PROJECT_FILE_BYTES}-byte cap`);
+    }
+    const fd = openSync2(path2, constants2.O_RDONLY | (constants2.O_NOFOLLOW ?? 0) | (constants2.O_NONBLOCK ?? 0));
+    try {
+      const verify = () => {
+        if (!unchanged(before, fstatSync2(fd, { bigint: true })) || realpathSync2(rootInput) !== root || realpathSync2(requested) !== path2 || realpathSync2(path2) !== path2 || !contained(path2, root) || !unchanged(before, lstatSync(path2, { bigint: true }))) {
+          throw new ProjectFileError("refusing to read project file: file changed while reading");
+        }
+      };
+      verify();
+      const size = Number(before.size);
+      const bytes2 = Buffer.allocUnsafe(size + 1);
+      let length = 0;
+      while (length <= size) {
+        const count = readSync(fd, bytes2, length, bytes2.length - length, length);
+        if (count === 0) break;
+        length += count;
+      }
+      if (length !== size) {
+        throw new ProjectFileError("refusing to read project file: file changed while reading");
+      }
+      verify();
+      return { path: path2, bytes: bytes2.subarray(0, length) };
+    } finally {
+      closeSync2(fd);
+    }
+  } catch (error) {
+    if (error instanceof ProjectFileError) throw error;
+    throw new ProjectFileError("refusing to read project file: unavailable or changed file");
   }
-  if (real !== root && !real.startsWith(root + sep2)) {
-    throw new Error(
-      `refusing to read ${input}: it resolves to ${real}, which is outside the project root ${root}. Symlinks are followed before this check, so a link pointing out of the project is refused too.`
-    );
-  }
-  const size = statSync2(real).size;
-  if (size > MAX_PROJECT_FILE_BYTES) {
-    throw new Error(`refusing to read ${real}: ${size} bytes exceeds the ${MAX_PROJECT_FILE_BYTES}-byte cap`);
-  }
-  return real;
 }
 
 // src/enrich.ts
@@ -1347,8 +1406,7 @@ var config = loaded.config;
 var path;
 var bytes;
 try {
-  path = assertInsideProject(file, config.projectRoot);
-  bytes = readFileSync3(path);
+  ({ path, bytes } = readProjectFile(file, config.projectRoot));
 } catch (err) {
   fail(1, err.message);
 }

@@ -68,7 +68,7 @@ export class BankGate {
       if (!(await client.bankExists(bank))) {
         this.confirmedAt.delete(bank);
         return (
-          `Refusing: bank "${bank}" does not exist on ${this.config.url}. This client will not ` +
+          `Refusing: bank "${bank}" does not exist on the configured Hindsight server. This client will not ` +
           `create it; an authorized operator must provision it separately.`
         );
       }

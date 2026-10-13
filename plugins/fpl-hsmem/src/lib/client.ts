@@ -127,6 +127,11 @@ export class HindsightClient {
     return this.bankId;
   }
 
+  /** Фактическое назначение запросов; callers хешируют его, не выводя credentials из URL. */
+  get endpoint(): string {
+    return this.url;
+  }
+
   private headers(): Record<string, string> {
     const h: Record<string, string> = {
       "Content-Type": "application/json",
@@ -303,16 +308,20 @@ export class HindsightClient {
    * Document ids may carry `:` (see DOCUMENT_ID_RE), so the segment is validated here rather than
    * by `bankUrl`.
    */
-  async getDocument(id: string): Promise<{ memory_unit_count?: number; [k: string]: unknown } | null> {
+  async getDocument(id: string): Promise<{ memory_unit_count?: unknown; [k: string]: unknown } | null> {
     try {
-      return await this.request(
+      const document = await this.request<unknown>(
         "GET",
         `${this.bankPath()}/documents/${encodeURIComponent(assertPathId(id, "document id", true))}`,
         undefined,
         10000,
       );
+      if (document === null || typeof document !== "object" || Array.isArray(document)) {
+        throw new Error("Invalid response from document lookup");
+      }
+      return document as { memory_unit_count?: unknown; [k: string]: unknown };
     } catch (err) {
-      if (err instanceof Error && /HTTP 404/.test(err.message)) return null;
+      if (err instanceof Error && /^HTTP 404 from /.test(err.message)) return null;
       throw err;
     }
   }
@@ -411,7 +420,7 @@ export class HindsightClient {
     if (options.q) query.q = options.q;
     if (options.type) query.type = options.type;
     if (options.state && options.state !== "all") query.state = options.state;
-    if (options.documentId) query.document_id = assertPathId(options.documentId, "document_id");
+    if (options.documentId) query.document_id = assertPathId(options.documentId, "document_id", true);
     if (options.tags?.length) query.tags = options.tags;
     return this.request(
       "GET",
@@ -563,6 +572,11 @@ export class HindsightClient {
 
   /** Irreversible. Cascades to every memory extracted from the document. */
   async deleteDocument(id: string): Promise<unknown> {
-    return this.request("DELETE", this.bankUrl(["documents", id]), undefined, 30000);
+    return this.request(
+      "DELETE",
+      `${this.bankPath()}/documents/${encodeURIComponent(assertPathId(id, "document id", true))}`,
+      undefined,
+      30000,
+    );
   }
 }

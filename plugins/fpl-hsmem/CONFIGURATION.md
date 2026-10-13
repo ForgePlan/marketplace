@@ -97,6 +97,12 @@ Refused keys — the config is treated as invalid, never silently reinterpreted:
 `HINDSIGHT_API_KEY` env (only together with `HINDSIGHT_URL`) → `tokenFile` → `tokenCommand` (only with `HINDSIGHT_ALLOW_TOKEN_COMMAND=1`) → none. `memory_status` and
 `memory_get_current_bank` report *where* the token came from, never the token.
 
+**Доступ по ключу сохранён.** Активный проект по-прежнему отправляет `Authorization: Bearer`
+с ключом из выбранного источника. Можно использовать пару `HINDSIGHT_URL` +
+`HINDSIGHT_API_KEY` в пользовательском окружении или `tokenFile`/явно разрешённый
+`tokenCommand`. Ключ без проектного opt-in не включает плагин глобально; поле `apiKey`
+в JSON намеренно отвергается, чтобы ключ не попадал в репозиторий.
+
 ### Environment variables
 
 Only these are read, and only for a project that is already configured:
@@ -191,6 +197,10 @@ known token prefixes, `password=`, credentials in a URL, database DSNs, long opa
 addresses) is listed with its line number and the reason — the matched text is never echoed. The
 rest of the file proceeds.
 
+Проверяются также имена metadata-полей. Невалидный/чувствительный document_id не возвращается
+в refusal record, а ошибки вида/полей не воспроизводят введённые значения. Проверка остаётся
+pattern-based: отсутствие совпадений не доказывает отсутствие всех возможных секретов.
+
 **Dry run is the default.** It reports counts per bank and kind, the refused lines, which
 `document_id`s already exist on the server (an operator apply would replace them), and samples.
 Only the CLI apply path posts `/v1/default/banks/{bank}/memories` in batches per bank, `async: true`,
@@ -198,7 +208,9 @@ each item with `update_mode: "replace"` and `observation_scopes: "shared"`, and 
 ids. Re-running the same file is idempotent: same `document_id`s, replaced in place.
 
 **The digest proves freshness only.** Dry run prints a sha256 over the file bytes and resolved plan
-(banks, routing, refusals, existing documents). CLI apply recomputes it and refuses any difference.
+(banks, routing, refusals, existing documents и fingerprint эффективного server endpoint).
+CLI apply recomputes it and refuses any difference. При смене URL нужен новый dry-run;
+отчёт показывает fingerprint назначения, а не сырой URL с возможными credentials.
 A matching digest is an anti-TOCTOU check; it is **not** human authorization, ownership, or
 permission to write. Operator authorization for apply is a separate gate.
 
@@ -252,6 +264,17 @@ command `node`, argument `/absolute/path/to/fpl-hsmem/dist/index.mjs`, working d
 The server discovers `.hindsight.json` itself; do **not** add legacy `HINDSIGHT_BANK_ID` selectors,
 and do not put a token in a committed MCP config. One registration per runtime avoids two clients
 quietly writing to different banks.
+
+## Проверки входа и файлов
+
+MCP исполняет опубликованные input schemas до bank/network действий. Невалидные типы
+аргументов возвращают `InvalidParams`, а не преобразуются в строки и цели удаления.
+При ingest ошибка lookup или неизвестный/некорректный memory count означает отказ;
+проверенный HTTP 404 или целый нулевой счётчик — единственные разрешающие варианты.
+
+`document_ingest_file`, MCP planner и enrich CLI читают только regular-файл внутри проекта,
+через проверенный дескриптор, с лимитом 2 MiB. Допустимы ссылки на файл внутри проекта;
+ссылки наружу, FIFO, каталоги, подмена объекта и изменение файла во время чтения отвергаются.
 
 ## Hindsight server compatibility
 

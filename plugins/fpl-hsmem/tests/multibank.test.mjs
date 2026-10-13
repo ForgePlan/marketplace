@@ -38,8 +38,9 @@ await withServer(dir, {}, async ({ list, call }) => {
 
   r = await call("mental_model_list", { bank: "beta" });
   check(!r.isError && bankScoped().at(-1)?.path === "/v1/default/banks/beta/mental-models", "mental_model_list honours bank");
+  const requestsBeforeInvalidBank = fake.requests.length;
   r = await call("memory_set_mission", { mission: "m", bank: 5 });
-  check(r.isError && /must be a string/.test(r.text), "a non-string bank is refused");
+  check(r.error?.code === -32602 && fake.requests.length === requestsBeforeInvalidBank, "a non-string bank is refused before any network request");
 
   console.log("current bank");
   r = await call("memory_get_current_bank");

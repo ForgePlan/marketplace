@@ -97,6 +97,20 @@ All notable changes to `fpl-hsmem` are documented here. Format:
   query key, so a multi-tag filter matched one tag named `a,b`.
 - Verified that supported servers use Hindsight API >=0.10.2 and <0.11.0 and no tool calls the
   endpoints removed in 0.10 (`memory_set_mission` uses `PATCH /config`).
+- Идентификаторы документов с `:` поддерживаются не только в enrich/getDocument, но и при
+  фильтрации памяти и удалении документа; измерение и human-confirmation guard сохранены.
+- Подтверждение enrich привязано к эффективному серверу через безопасный fingerprint. Смена
+  URL требует нового dry-run; ключи/credentials из URL в отчёт не выводятся.
+- Отказы enrich не раскрывают невалидные значения и чувствительные document_id; проверяются
+  и имена, и значения metadata. Отобранные обычные факты продолжают сохраняться.
+- Ingest не считает сбой lookup или неизвестный memory count пустым документом: запись
+  разрешается только при проверенном отсутствии или корректном нулевом счётчике.
+- MCP проверяет опубликованные input schemas до сетевых запросов; неверно типизированный ID
+  больше не преобразуется в цель удаления.
+- Файловые инструменты читают проверенный regular-file descriptor с лимитом 2 MiB; подмена,
+  FIFO и изменение размера/содержимого во время чтения вызывают отказ, а не частичную загрузку.
+- Recall hook использует существующее shape-based маскирование credentials в возвращаемом
+  контексте. Это уменьшает риск, но не заменяет отдельное согласие на автоматическое чтение.
 
 ## [3.6.3] — 2026-09-11
 

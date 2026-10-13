@@ -17,7 +17,7 @@ export { redact, redactionCount, redactDeep, secretKinds } from "./lib/redact.js
 export { TOOL_NAMES, isOwnTool } from "./lib/tool-names.js";
 export { loadProjectConfig, findConfigFile, ENRICH_MAX_CHARS_LIMIT } from "./lib/config.js";
 export { BankGate } from "./lib/banks.js";
-export { assertInsideProject } from "./lib/paths.js";
+export { readProjectFile, MAX_PROJECT_FILE_BYTES } from "./lib/paths.js";
 export {
   parseCandidates,
   routeBank,

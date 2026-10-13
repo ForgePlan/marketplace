@@ -140,6 +140,10 @@ var HindsightClient = class {
   get bank() {
     return this.bankId;
   }
+  /** Фактическое назначение запросов; callers хешируют его, не выводя credentials из URL. */
+  get endpoint() {
+    return this.url;
+  }
   headers() {
     const h = {
       "Content-Type": "application/json",
@@ -271,14 +275,18 @@ var HindsightClient = class {
    */
   async getDocument(id) {
     try {
-      return await this.request(
+      const document = await this.request(
         "GET",
         `${this.bankPath()}/documents/${encodeURIComponent(assertPathId(id, "document id", true))}`,
         void 0,
         1e4
       );
+      if (document === null || typeof document !== "object" || Array.isArray(document)) {
+        throw new Error("Invalid response from document lookup");
+      }
+      return document;
     } catch (err) {
-      if (err instanceof Error && /HTTP 404/.test(err.message)) return null;
+      if (err instanceof Error && /^HTTP 404 from /.test(err.message)) return null;
       throw err;
     }
   }
@@ -352,7 +360,7 @@ var HindsightClient = class {
     if (options.q) query.q = options.q;
     if (options.type) query.type = options.type;
     if (options.state && options.state !== "all") query.state = options.state;
-    if (options.documentId) query.document_id = assertPathId(options.documentId, "document_id");
+    if (options.documentId) query.document_id = assertPathId(options.documentId, "document_id", true);
     if (options.tags?.length) query.tags = options.tags;
     return this.request(
       "GET",
@@ -473,7 +481,12 @@ var HindsightClient = class {
   }
   /** Irreversible. Cascades to every memory extracted from the document. */
   async deleteDocument(id) {
-    return this.request("DELETE", this.bankUrl(["documents", id]), void 0, 3e4);
+    return this.request(
+      "DELETE",
+      `${this.bankPath()}/documents/${encodeURIComponent(assertPathId(id, "document id", true))}`,
+      void 0,
+      3e4
+    );
   }
 };
 
@@ -524,7 +537,7 @@ var BankGate = class {
     if (at === void 0 || this.now() - at >= this.ttlMs) {
       if (!await client.bankExists(bank)) {
         this.confirmedAt.delete(bank);
-        return `Refusing: bank "${bank}" does not exist on ${this.config.url}. This client will not create it; an authorized operator must provision it separately.`;
+        return `Refusing: bank "${bank}" does not exist on the configured Hindsight server. This client will not create it; an authorized operator must provision it separately.`;
       }
       this.confirmedAt.set(bank, this.now());
     }
@@ -1164,7 +1177,7 @@ async function main() {
     debugLog(config, "No memories found");
     return;
   }
-  const formatted = formatMemories(results);
+  const formatted = redact(formatMemories(results));
   const block = [
     "<hindsight_memories>",
     config.recallPromptPreamble,

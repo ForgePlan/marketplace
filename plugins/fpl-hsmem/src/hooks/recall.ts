@@ -114,7 +114,7 @@ async function main(): Promise<void> {
     return;
   }
 
-  const formatted = formatMemories(results);
+  const formatted = redact(formatMemories(results));
   const block = [
     "<hindsight_memories>",
     config.recallPromptPreamble,

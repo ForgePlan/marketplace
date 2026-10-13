@@ -32,10 +32,10 @@ import { redact, secretKinds } from "./redact.js";
  * anyone who can write memory can set any tag.
  *
  * WHY APPLY CARRIES A DIGEST. The dry run returns a digest of the file's bytes and of the resolved
- * plan (banks, routing, refusals, which documents exist). Apply recomputes it and refuses unless
- * the caller passes the same value, proving only that the file and plan are still fresh. A matching
- * digest never proves human authorization, ownership, or permission to write; apply remains a
- * separately authorized operator action.
+ * plan (destination fingerprints, banks, routing, refusals, which documents exist). Apply recomputes
+ * it and refuses unless the caller passes the same value, proving only that the file and plan
+ * are still fresh. A matching digest never proves human authorization, ownership, or permission
+ * to write; apply remains a separately authorized operator action.
  */
 
 /** Tag carried by every item this pipeline writes; apply replaces only documents that have it. */
@@ -164,12 +164,12 @@ export function parseCandidates(text: string, opts: EnrichOptions): ParsedCandid
     const c = obj as Record<string, unknown>;
     const reasons: string[] = [];
     const docId = typeof c.document_id === "string" ? c.document_id : undefined;
+    let reportDocId: string | undefined;
 
-    const unknown = Object.keys(c).filter((k) => !FIELDS.has(k));
-    if (unknown.length) reasons.push(`unknown field(s) ${unknown.join(", ")}`);
+    if (Object.keys(c).some((k) => !FIELDS.has(k))) reasons.push("unknown field(s) present");
 
     if (typeof c.kind !== "string" || !KINDS.has(c.kind)) {
-      reasons.push(`kind must be one of ${ENRICH_KINDS.join("|")} (got ${JSON.stringify(c.kind ?? null)})`);
+      reasons.push(`kind must be one of ${ENRICH_KINDS.join("|")}`);
     }
     if (typeof c.content !== "string" || !c.content.trim()) {
       reasons.push("content is required");
@@ -186,8 +186,9 @@ export function parseCandidates(text: string, opts: EnrichOptions): ParsedCandid
     } else {
       try {
         assertPathId(docId, "document_id", true);
-      } catch (err) {
-        reasons.push((err as Error).message);
+        reportDocId = docId;
+      } catch {
+        reasons.push("document_id must be a valid stable identifier (max 200 chars, no path traversal)");
       }
       const first = firstLineOf.get(docId);
       if (first !== undefined) reasons.push(`duplicate document_id (first at line ${first})`);
@@ -215,26 +216,34 @@ export function parseCandidates(text: string, opts: EnrichOptions): ParsedCandid
       if (!bank) {
         reasons.push(
           repo
-            ? `no bank: the line names none and no \`routing\` entry matches repo "${repo}"`
+            ? "no bank: the line names none and no `routing` entry matches metadata.repo"
             : "no bank: the line names none and has no metadata.repo to route by",
         );
       }
     }
 
     const fields: [string, unknown][] = [
+      ["bank", bank],
       ["content", c.content],
       ["context", c.context],
       ["document_id", c.document_id],
       ["tags", tagsOk && c.tags ? (c.tags as string[]).join(" ") : ""],
       ["metadata", metaOk && c.metadata ? Object.values(c.metadata as Record<string, string>).join(" ") : ""],
     ];
-    const hits = fields.flatMap(([name, v]) =>
-      typeof v === "string" && v ? scanSensitive(v).map((k) => `${k} in ${name}`) : [],
-    );
+    if (c.metadata && typeof c.metadata === "object" && !Array.isArray(c.metadata)) {
+      for (const key of Object.keys(c.metadata)) fields.push(["metadata key", key]);
+    }
+    const hits: string[] = [];
+    for (const [name, value] of fields) {
+      if (typeof value !== "string" || !value) continue;
+      const kinds = scanSensitive(value);
+      if (name === "document_id" && kinds.length) reportDocId = undefined;
+      hits.push(...kinds.map((kind) => `${kind} in ${name}`));
+    }
     if (hits.length) reasons.push(`secret/PII scan: ${hits.join(", ")}`);
 
     if (reasons.length) {
-      out.refused.push({ line, documentId: docId, reasons });
+      out.refused.push({ line, ...(reportDocId ? { documentId: reportDocId } : {}), reasons });
       continue;
     }
     const kind = c.kind as string;
@@ -274,6 +283,8 @@ export interface EnrichPlan {
   lines: number;
   refused: EnrichRefusal[];
   banks: BankPlan[];
+  /** SHA256 точных endpoint назначения; сырой URL не выводится. */
+  destinations: { bank: string; fingerprint: string }[];
   /** sha256 of the file bytes and resolved plan; an anti-TOCTOU check, never write authorization. */
   digest: string;
 }
@@ -310,12 +321,14 @@ export async function planEnrich(bytes: Uint8Array, opts: EnrichOptions, resolve
   }
   const refused = [...parsed.refused];
   const banks: BankPlan[] = [];
+  const destinations: EnrichPlan["destinations"] = [];
   for (const [bank, all] of byBank) {
     const client = await resolve(bank);
     if (typeof client === "string") {
       for (const c of all) refused.push({ line: c.line, documentId: c.item.document_id, reasons: [client] });
       continue;
     }
+    destinations.push({ bank, fingerprint: createHash("sha256").update(client.endpoint).digest("hex") });
     const found = await mapLimit(all, LOOKUP_CONCURRENCY, (c) => client.getDocument(c.item.document_id));
     const candidates: EnrichCandidate[] = [];
     const existing: string[] = [];
@@ -349,9 +362,10 @@ export async function planEnrich(bytes: Uint8Array, opts: EnrichOptions, resolve
   }
   refused.sort((a, b) => a.line - b.line);
   const resolved = {
-    v: 1,
+    v: 2,
     file: createHash("sha256").update(bytes).digest("hex"),
     allowReplaceForeign: opts.allowReplaceForeign === true,
+    destinations,
     banks: banks.map((b) => ({
       bank: b.bank,
       items: b.candidates.map((c) => c.item.document_id),
@@ -361,7 +375,7 @@ export async function planEnrich(bytes: Uint8Array, opts: EnrichOptions, resolve
     refused: refused.map((r) => [r.line, r.documentId ?? null, r.reasons]),
   };
   const digest = createHash("sha256").update(JSON.stringify(resolved)).digest("hex");
-  return { lines: parsed.lines, refused, banks, digest };
+  return { lines: parsed.lines, refused, banks, destinations, digest };
 }
 
 /**
@@ -380,7 +394,7 @@ export function confirmRefusal(plan: EnrichPlan, confirm: unknown): string | nul
   if (confirm.trim().toLowerCase() !== plan.digest) {
     return (
       "Refusing to apply: the file or the resolved plan changed since the dry run that produced this " +
-      "digest (an edited line, a different routing, or documents created or removed on the server). " +
+      "digest (an edited line, a different destination or routing, or documents created or removed on the server). " +
       "Dry-run again. A matching digest would prove freshness only, not authorization. Nothing was written."
     );
   }
@@ -433,6 +447,7 @@ export function enrichSummary(file: string, plan: EnrichPlan, applied?: BatchRes
     file,
     mode: applied ? "apply" : "dry-run",
     digest: plan.digest,
+    destinations: plan.destinations,
     lines: plan.lines,
     accepted: plan.banks.reduce((n, b) => n + b.candidates.length, 0),
     refused: plan.refused,
@@ -462,6 +477,7 @@ export function formatEnrichReport(
   out.push(applied ? `APPLY — ${file}` : `DRY RUN — nothing written — ${file}`);
   out.push(`lines ${plan.lines} · accepted ${accepted} · refused ${plan.refused.length}`);
   out.push(`digest ${plan.digest}`);
+  for (const d of plan.destinations) out.push(`destination fingerprint ${d.fingerprint} · bank "${d.bank}"`);
   out.push("");
   if (plan.banks.length === 0) out.push("No item is writable.");
   for (const b of plan.banks) {

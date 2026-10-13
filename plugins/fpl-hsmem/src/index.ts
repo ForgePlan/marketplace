@@ -15,7 +15,6 @@
  * call, which reads to a model as a broken server rather than a missing handler.
  */
 
-import { readFileSync } from "node:fs";
 import { sep } from "node:path";
 import { assertPathId } from "./lib/client.js";
 import { escapeMemoryMarkers } from "./lib/content.js";
@@ -24,6 +23,8 @@ import { TOOL_NAMES } from "./lib/tool-names.js";
 import { pluginVersion } from "./lib/version.js";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
+import type { JsonSchemaValidator } from "@modelcontextprotocol/sdk/validation";
 import {
   CallToolRequestSchema,
   ElicitResultSchema,
@@ -36,7 +37,7 @@ import { HindsightClient } from "./lib/client.js";
 import { BankGate } from "./lib/banks.js";
 import { loadProjectConfig, type HindsightConfig } from "./lib/config.js";
 import { formatEnrichReport, planEnrich } from "./lib/enrich.js";
-import { assertInsideProject } from "./lib/paths.js";
+import { readProjectFile } from "./lib/paths.js";
 
 interface ToolHandlerArgs {
   [key: string]: unknown;
@@ -137,12 +138,17 @@ const inactiveReason =
 const INERT_INSTRUCTIONS = `Hindsight memory is inactive for this project, so this server exposes no tools.
 ${inactiveReason}`;
 
+const schemaValidator = new AjvJsonSchemaValidator();
 const server = new Server(
   // Read, never hardcoded. Three places carried this number and all three disagreed; the handshake
   // version is the only thing that identifies WHICH BUNDLE IS LOADED, so a stale literal here lies
   // exactly when someone is trying to work out why a stale binary is answering.
   { name: "hindsight-mcp", version: pluginVersion() },
-  { capabilities: { tools: {} }, instructions: loaded.state === "active" ? INSTRUCTIONS : INERT_INSTRUCTIONS },
+  {
+    capabilities: { tools: {} },
+    instructions: loaded.state === "active" ? INSTRUCTIONS : INERT_INSTRUCTIONS,
+    jsonSchemaValidator: schemaValidator,
+  },
 );
 
 // =================================================================================================
@@ -600,6 +606,16 @@ for (const t of tools) {
   };
 }
 
+// Схемы из tools/list — исполняемый контракт, а не подсказка модели.
+const inputValidators: Record<string, JsonSchemaValidator<ToolHandlerArgs>> = {};
+if (runtime.state === "active") {
+  for (const tool of tools) {
+    if (runtime.enabledTools.has(tool.name)) {
+      inputValidators[tool.name] = schemaValidator.getValidator<ToolHandlerArgs>(tool.inputSchema);
+    }
+  }
+}
+
 // =================================================================================================
 // Helpers
 // =================================================================================================
@@ -649,9 +665,16 @@ function slugifyDocId(title: string): string {
  * sent explicitly at every call site because the API default is destructive.
  */
 async function guardDocumentOverwrite(client: HindsightClient, docId: string): Promise<string | null> {
-  const existing = await client.getDocument(docId).catch(() => null);
-  const units = typeof existing?.memory_unit_count === "number" ? existing.memory_unit_count : 0;
-  if (existing && units > 0) {
+  const existing = await client.getDocument(docId);
+  if (existing === null) return null; // Только проверенный HTTP 404 означает отсутствие.
+  const units = existing.memory_unit_count;
+  if (typeof units !== "number" || !Number.isSafeInteger(units) || units < 0) {
+    return (
+      `Refusing to ingest as "${docId}": the existing document's memory count could not be ` +
+      `verified. Nothing was replaced.`
+    );
+  }
+  if (units > 0) {
     return (
       `Refusing to ingest as "${docId}": that document already exists and carries ${units} memory ` +
       `unit(s). Ingesting would replace it and delete those memories. Choose a different title, or ` +
@@ -802,8 +825,9 @@ const handlers: Record<string, ToolHandler> = {
     let bytes: Buffer;
     try {
       // Same rule as document_ingest_file: the file must be inside the project.
-      real = assertInsideProject(file, config.projectRoot || process.cwd());
-      bytes = readFileSync(real);
+      const input = readProjectFile(file, config.projectRoot);
+      real = input.path;
+      bytes = input.bytes;
     } catch (e) {
       return `Error: ${(e as Error).message}`;
     }
@@ -1214,8 +1238,9 @@ const handlers: Record<string, ToolHandler> = {
     let content: string;
     let docId: string;
     try {
-      real = assertInsideProject(path, config.projectRoot || process.cwd());
-      content = readFileSync(real, "utf-8");
+      const input = readProjectFile(path, config.projectRoot);
+      real = input.path;
+      content = input.bytes.toString("utf-8");
       const filename = real.split(sep).pop() ?? "doc";
       docId = slugifyDocId(filename.replace(/\.[^.]+$/, ""));
     } catch (e) {
@@ -1263,7 +1288,7 @@ const handlers: Record<string, ToolHandler> = {
     const id = String(args.id ?? "");
     if (!id) return "Error: id is required";
     try {
-      assertPathId(id, "document id");
+      assertPathId(id, "document id", true);
     } catch (err) {
       return `Error: ${(err as Error).message}`;
     }
@@ -1278,9 +1303,19 @@ const handlers: Record<string, ToolHandler> = {
     if (!doc) {
       return `Refusing: no document with id "${id}" in bank "${client.bank}". Confirm with document_list.`;
     }
-    const declared = typeof doc.memory_unit_count === "number" ? doc.memory_unit_count : null;
+    const declared =
+      typeof doc.memory_unit_count === "number" &&
+      Number.isSafeInteger(doc.memory_unit_count) &&
+      doc.memory_unit_count >= 0
+        ? doc.memory_unit_count
+        : null;
     const crossCheck = await client.listMemories({ documentId: id, limit: 1 }).catch(() => null);
-    const counted = typeof crossCheck?.total === "number" ? crossCheck.total : null;
+    const counted =
+      typeof crossCheck?.total === "number" &&
+      Number.isSafeInteger(crossCheck.total) &&
+      crossCheck.total >= 0
+        ? crossCheck.total
+        : null;
     if (declared === null || counted === null) {
       return (
         `Refusing to delete "${id}": the blast radius could not be measured ` +
@@ -1369,7 +1404,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const name = request.params.name;
-  const args = (request.params.arguments ?? {}) as ToolHandlerArgs;
+  const args = request.params.arguments ?? {};
   if (runtime.state !== "active") {
     throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
   }
@@ -1385,12 +1420,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       `Tool ${name} is disabled by this project's tool policy (allowTools/denyTools in ${runtime.config.configPath})`,
     );
   }
+  const validated = inputValidators[name](args);
+  if (!validated.valid) {
+    throw new McpError(ErrorCode.InvalidParams, `Invalid arguments for ${name}; use its published input schema.`);
+  }
   let client: HindsightClient;
   try {
     // A bankless tool still needs a client value; it never uses it, so no existence check is made.
     const resolved = BANKLESS[name]
       ? runtime.gate.defaultClient()
-      : await runtime.gate.resolve(args.bank);
+      : await runtime.gate.resolve(validated.data.bank);
     if (typeof resolved === "string") {
       return { content: [{ type: "text" as const, text: resolved }], isError: true };
     }
@@ -1407,7 +1446,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     };
   }
   try {
-    const text = await handler(args, client, runtime);
+    const text = await handler(validated.data, client, runtime);
     return { content: [{ type: "text" as const, text }] };
   } catch (e) {
     return {

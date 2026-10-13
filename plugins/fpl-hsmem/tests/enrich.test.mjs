@@ -1,6 +1,7 @@
 // Batch enrichment: validation, routing, secret/PII refusal, dry run vs apply — for the CLI
 // (dist/enrich.mjs) and the memory_retain_batch tool. Offline, against the recording fake server.
 import { spawn } from "node:child_process";
+import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { appendFileSync, mkdtempSync, symlinkSync, writeFileSync } from "node:fs";
@@ -31,33 +32,33 @@ console.log("validation");
   check(!("bank" in it) && !("kind" in it), "bank and kind are not sent as item fields");
 
   const cases = [
-    [item({ bank: "alpha", kind: "idea" }), /kind must be one of/],
-    [item({ bank: "alpha", content: "" }), /content is required/],
-    [item({ bank: "alpha", content: "x".repeat(901) }), /901 chars, over the 900-char cap/],
-    [item({ bank: "alpha", context: undefined }), /context is required/],
-    [item({ bank: "alpha", timestamp: "" }), /timestamp is required/],
-    [item({ bank: "alpha", timestamp: "last tuesday" }), /timestamp is required/],
-    [item({ bank: "alpha", document_id: undefined }), /document_id is required/],
-    [item({ bank: "alpha", document_id: "a/../b" }), /may not contain "\.\."/],
-    [item({ bank: "alpha", document_id: "decision:a/b" }), /must start with a letter/],
-    [item({ bank: "alpha", documentId: "x" }), /unknown field\(s\) documentId/],
-    [item({ bank: "alpha", metadata: { repo: 5 } }), /metadata must be an object of string values/],
-    [item({ bank: "alpha", tags: "a,b" }), /tags must be an array/],
-    [item({ bank: "" }), /bank, when present, must be a non-empty string/],
-    ["{not json", /not valid JSON/],
-    ["[1,2]", /not a JSON object/],
+    [item({ bank: "alpha", kind: "idea" }), "unknown kind"],
+    [item({ bank: "alpha", content: "" }), "empty content"],
+    [item({ bank: "alpha", content: "x".repeat(901) }), "content over the configured cap"],
+    [item({ bank: "alpha", context: undefined }), "missing context"],
+    [item({ bank: "alpha", timestamp: "" }), "missing timestamp"],
+    [item({ bank: "alpha", timestamp: "last tuesday" }), "non-ISO timestamp"],
+    [item({ bank: "alpha", document_id: undefined }), "missing document ID"],
+    [item({ bank: "alpha", document_id: "a/../b" }), "traversal document ID"],
+    [item({ bank: "alpha", document_id: "decision:a/b" }), "multi-segment document ID"],
+    [item({ bank: "alpha", documentId: "x" }), "unknown field"],
+    [item({ bank: "alpha", metadata: { repo: 5 } }), "non-string metadata"],
+    [item({ bank: "alpha", tags: "a,b" }), "non-array tags"],
+    [item({ bank: "" }), "empty bank"],
+    ["{not json", "malformed JSON"],
+    ["[1,2]", "non-object JSON"],
   ];
-  for (const [row, re] of cases) {
+  for (const [row, label] of cases) {
     const r = parseCandidates(jsonl(row), opts);
-    check(r.refused.length === 1 && re.test(r.refused[0].reasons.join("; ")), `refused: ${re.source}`, JSON.stringify(r.refused));
+    check(r.candidates.length === 0 && r.refused.length === 1 && r.refused[0].line === 1, `refused: ${label}`, JSON.stringify(r.refused));
   }
   const capped = parseCandidates(jsonl(item({ bank: "alpha", content: "y".repeat(120) })), { ...opts, maxChars: 100 });
   check(capped.refused.length === 1, "the content cap is configurable");
 
   const dup = parseCandidates(jsonl(item({ bank: "alpha" }), "", item({ bank: "alpha", content: "other text" })), opts);
   check(
-    dup.lines === 2 && dup.candidates.length === 1 && dup.refused[0]?.line === 3 && /duplicate document_id \(first at line 1\)/.test(dup.refused[0].reasons[0]),
-    "a duplicate document_id is refused with both line numbers; blank lines are skipped but counted in numbering",
+    dup.lines === 2 && dup.candidates.length === 1 && dup.candidates[0].line === 1 && dup.refused[0]?.line === 3,
+    "duplicate source rows cannot replace the first candidate; blank rows preserve line numbering",
     JSON.stringify(dup.refused),
   );
 }
@@ -77,9 +78,9 @@ console.log("routing");
   const explicit = parseCandidates(jsonl(item({ bank: "alpha" })), { maxChars: 900, routing: { "service-*": "beta" } });
   check(explicit.candidates[0]?.bank === "alpha", "an explicit bank beats routing");
   const unrouted = parseCandidates(jsonl(item()), opts);
-  check(unrouted.refused.length === 1 && /no `routing` entry matches repo "service-x"/.test(unrouted.refused[0].reasons[0]), "unroutable line refused, never sent to defaultBank");
+  check(unrouted.candidates.length === 0 && unrouted.refused[0]?.line === 1, "unroutable line is refused instead of sent to defaultBank");
   const norepo = parseCandidates(jsonl(item({ metadata: undefined })), opts);
-  check(norepo.refused.length === 1 && /no metadata.repo/.test(norepo.refused[0].reasons[0]), "no bank and no repo → refused");
+  check(norepo.candidates.length === 0 && norepo.refused[0]?.line === 1, "a line without a bank or repository is refused");
 }
 
 console.log("secret / PII scan");
@@ -226,6 +227,126 @@ console.log("CLI apply needs the dry run's digest");
   check(e.code === 1 && /changed since the dry run/.test(e.stderr) && posts().length === 0, "a file edited after the dry run is refused", e.stderr);
   const ff = await cli(dir, ["cands.jsonl", "--apply", "--allow-replace-foreign", "--confirm", await digestOf(dir, ["cands.jsonl"])]);
   check(ff.code === 1 && posts().length === 0, "a digest from a dry run without --allow-replace-foreign does not confirm an apply with it");
+}
+
+console.log("destination-bound freshness");
+{
+  const documents = { alpha: [{ id: "decision:destination:1", tags: [ENRICH_SOURCE_TAG] }] };
+  const a = await fakeHindsight(["alpha"], { documents });
+  const b = await fakeHindsight(["alpha"], { documents });
+  try {
+    const file = jsonl(item({ bank: "alpha", document_id: "decision:destination:1" }));
+    const aDir = project({ ...config, url: a.url, banks: ["alpha"], routing: {} }, { t: "tok", "c.jsonl": file });
+    const bDir = project({ ...config, url: b.url, banks: ["alpha"], routing: {} }, { t: "tok", "c.jsonl": file });
+    const aRun = await cli(aDir, ["c.jsonl", "--json"]);
+    const bRun = await cli(bDir, ["c.jsonl", "--json"]);
+    const aPlan = JSON.parse(aRun.stdout);
+    const bPlan = JSON.parse(bRun.stdout);
+    check(aRun.code === 0 && bRun.code === 0 && aPlan.accepted === 1 && bPlan.accepted === 1 &&
+      aPlan.banks[0].existing.length === 1 && bPlan.banks[0].existing.length === 1,
+      "both destinations expose identical candidate and document state");
+    check(aPlan.digest !== bPlan.digest, "the same file and document state on different endpoints have different digests");
+    const fingerprintA = createHash("sha256").update(a.url).digest("hex");
+    const fingerprintB = createHash("sha256").update(b.url).digest("hex");
+    check(aPlan.destinations.some((d) => d.bank === "alpha" && d.fingerprint === fingerprintA) &&
+      bPlan.destinations.some((d) => d.bank === "alpha" && d.fingerprint === fingerprintB),
+      "JSON identifies each exact destination by its safe fingerprint");
+    const text = await cli(bDir, ["c.jsonl"]);
+    check(text.stdout.includes(fingerprintB) && !text.stdout.includes(b.url) && !bRun.stdout.includes(b.url),
+      "text and JSON report the destination fingerprint without the raw endpoint");
+    const stale = await cli(bDir, ["c.jsonl", "--apply", "--confirm", aPlan.digest, "--json"]);
+    check(stale.code === 1, "confirmation for destination A cannot apply to destination B");
+    check(!a.requests.some((r) => r.method === "POST") && !b.requests.some((r) => r.method === "POST"),
+      "cross-destination confirmation refusal sends no POST to either fake server");
+  } finally {
+    a.close();
+    b.close();
+  }
+}
+
+console.log("missing-bank report privacy");
+{
+  const missing = await fakeHindsight([]);
+  try {
+    const missingDir = project(
+      { url: missing.url, banks: ["ghost"], defaultBank: "ghost" },
+      { "c.jsonl": jsonl(item({ bank: "ghost" })) },
+    );
+    const text = await cli(missingDir, ["c.jsonl"]);
+    const json = await cli(missingDir, ["c.jsonl", "--json"]);
+    const report = JSON.parse(json.stdout);
+    check(
+      text.code === 3 && json.code === 3 && report.accepted === 0 && report.refused[0]?.line === 1 &&
+        !text.stdout.includes(missing.url) && !json.stdout.includes(missing.url) &&
+        !missing.requests.some((r) => r.method === "POST"),
+      "missing-bank text and JSON keep the refusal without exposing its endpoint or writing",
+    );
+  } finally {
+    missing.close();
+  }
+}
+
+console.log("refusal report privacy");
+{
+  const email = "audit.person@example.com";
+  const token = "ghp_abcdefghijklmnopqrstuvwxyz0123456789";
+  const unsafeId = "private-id/$unrecognized";
+  const unknownKey = "$unrecognized-private-field";
+  const invalidKind = "unrecognized-private-kind";
+  const cases = [
+    item({ bank: "alpha", document_id: email }),
+    item({ bank: "alpha", document_id: token }),
+    item({ bank: "alpha", document_id: unsafeId }),
+    item({ bank: "alpha", document_id: "decision:privacy:kind-email", kind: email }),
+    item({ bank: "alpha", document_id: "decision:privacy:kind-token", kind: token }),
+    item({ bank: "alpha", document_id: "decision:privacy:kind-object", kind: { [email]: token } }),
+    item({ bank: "alpha", document_id: "decision:privacy:kind-unknown", kind: invalidKind }),
+    item({ bank: "alpha", document_id: "decision:privacy:field-email", [email]: "ordinary" }),
+    item({ bank: "alpha", document_id: "decision:privacy:field-token", [token]: "ordinary" }),
+    item({ bank: "alpha", document_id: "decision:privacy:field-unknown", [unknownKey]: { contact: email, secret: token } }),
+    item({ bank: "alpha", document_id: "decision:privacy:meta-email", metadata: { [email]: "ordinary" } }),
+    item({ bank: "alpha", document_id: "decision:privacy:meta-token", metadata: { [token]: "ordinary" } }),
+    item({ bank: "alpha", document_id: "decision:privacy:meta-invalid", metadata: { [email]: 7 } }),
+    item({ bank: "alpha", document_id: "decision:privacy:meta-value", metadata: { link: token } }),
+    item({ document_id: "decision:privacy:repo", metadata: { repo: email } }),
+  ];
+  const clean = item({ bank: "alpha", document_id: "decision:privacy:clean" });
+  const parsed = parseCandidates(jsonl(...cases, clean), opts);
+  check(parsed.refused.length === cases.length && parsed.candidates.length === 1,
+    "unsafe identifiers, invalid fields and sensitive metadata are refused while a clean candidate survives");
+  check(parsed.refused.slice(0, 3).every((r) => !Object.hasOwn(r, "documentId")) &&
+    parsed.refused[3]?.documentId === "decision:privacy:kind-email",
+    "refusals omit unsafe IDs but preserve validated clean IDs");
+  check(parsed.refused[10]?.reasons.some((r) => r.includes("email in metadata key")) &&
+    parsed.refused[11]?.reasons.some((r) => r.includes("github-token in metadata key")),
+    "metadata key refusals expose only field category and recognized kind");
+  const privateValues = [email, token, unsafeId, unknownKey, invalidKind];
+  check(privateValues.every((v) => !JSON.stringify(parsed.refused).includes(v)),
+    "raw refused values and unknown names do not leak even when no scanner recognizes them");
+  const server = await fakeHindsight(["alpha"]);
+  try {
+    const privacyDir = project({ ...config, url: server.url, banks: ["alpha"], routing: {} },
+      { t: "tok", "c.jsonl": jsonl(...cases, clean) });
+    const text = await cli(privacyDir, ["c.jsonl"]);
+    const json = await cli(privacyDir, ["c.jsonl", "--json"]);
+    const plan = JSON.parse(json.stdout);
+    check(text.code === 3 && json.code === 3 && plan.accepted === 1 && plan.refused.length === cases.length,
+      "both report modes keep every privacy refusal and the ordinary candidate");
+    check(privateValues.every((v) => ![text.stdout, text.stderr, json.stdout, json.stderr].some((s) => s.includes(v))),
+      "neither text nor JSON reports echo sensitive or unvalidated values");
+    check(!server.requests.some((r) => r.method === "POST"), "privacy dry runs send no writes");
+    const applied = await cli(privacyDir, ["c.jsonl", "--apply", "--confirm", plan.digest, "--json"]);
+    const writes = server.requests.filter((r) => r.method === "POST");
+    const sent = writes.flatMap((r) => r.body.items);
+    check(applied.code === 3 && writes.length === 1 && sent.length === 1 &&
+      sent[0].document_id === clean.document_id && JSON.stringify(sent[0].metadata) === JSON.stringify(clean.metadata),
+      "only the clean candidate is retained and its ordinary metadata remains functional");
+    check(privateValues.every((v) => !JSON.stringify(server.requests).includes(v) &&
+      !applied.stdout.includes(v) && !applied.stderr.includes(v)),
+      "refused values never reach fake requests or apply reports");
+  } finally {
+    server.close();
+  }
 }
 
 console.log("CLI apply");

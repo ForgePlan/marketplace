@@ -18,7 +18,6 @@
  * failure; 2 — usage.
  */
 
-import { readFileSync } from "node:fs";
 import { BankGate } from "./lib/banks.js";
 import { ENRICH_MAX_CHARS_LIMIT, loadProjectConfig } from "./lib/config.js";
 import {
@@ -29,7 +28,7 @@ import {
   formatEnrichReport,
   planEnrich,
 } from "./lib/enrich.js";
-import { assertInsideProject } from "./lib/paths.js";
+import { readProjectFile } from "./lib/paths.js";
 import { redact } from "./lib/redact.js";
 
 const USAGE =
@@ -91,9 +90,8 @@ const config = loaded.config;
 let path: string;
 let bytes: Buffer;
 try {
-  // The same rule as the MCP tool: only a file inside the project, symlinks followed, size-capped.
-  path = assertInsideProject(file, config.projectRoot);
-  bytes = readFileSync(path);
+  // Read once from the identity-checked, bounded descriptor shared with MCP consumers.
+  ({ path, bytes } = readProjectFile(file, config.projectRoot));
 } catch (err) {
   fail(1, (err as Error).message);
 }
