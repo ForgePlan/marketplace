@@ -1,4 +1,5 @@
 import { pluginVersion } from "./version.js";
+import { HindsightCompatibilityGate } from "./compatibility.js";
 
 // One source for the version, shared with the handshake string. It used to read package.json,
 // which was two releases behind plugin.json — so the User-Agent identified a build that had not
@@ -42,9 +43,9 @@ export function assertPathId(value: unknown, what = "id", colon = false): string
 }
 
 /**
- * Bank ids need a DIFFERENT, permissive validator: they are derived from directory basenames, so
- * "my project" and "föö" are legitimate and must survive. Only the characters that would change
- * the shape of the URL are refused.
+ * Bank ids have a different, permissive validator because existing server banks may legitimately
+ * contain spaces or non-ASCII characters. Only characters that could change URL structure are
+ * refused; project configuration, not a directory name, selects which validated ids are allowed.
  */
 export function assertBankId(value: unknown): string {
   if (typeof value !== "string" || value.trim().length === 0) {
@@ -106,13 +107,20 @@ export interface RetainResponse {
 
 export class HindsightClient {
   private readonly url: string;
-  private readonly apiKey: string;
+  private readonly apiKey: () => string;
   private readonly bankId: string;
+  private readonly compatibility: HindsightCompatibilityGate;
 
-  constructor(url: string, bankId: string, apiKey: string = "") {
+  constructor(
+    url: string,
+    bankId: string,
+    apiKey: string | (() => string) = "",
+    compatibility: HindsightCompatibilityGate = new HindsightCompatibilityGate(),
+  ) {
     this.url = url.replace(/\/$/, "");
     this.bankId = bankId;
-    this.apiKey = apiKey;
+    this.apiKey = typeof apiKey === "function" ? apiKey : () => apiKey;
+    this.compatibility = compatibility;
   }
 
   get bank(): string {
@@ -124,7 +132,8 @@ export class HindsightClient {
       "Content-Type": "application/json",
       "User-Agent": USER_AGENT,
     };
-    if (this.apiKey) h["Authorization"] = `Bearer ${this.apiKey}`;
+    const apiKey = this.apiKey();
+    if (apiKey) h["Authorization"] = `Bearer ${apiKey}`;
     return h;
   }
 
@@ -161,6 +170,20 @@ export class HindsightClient {
     path: string,
     body?: unknown,
     timeoutMs = 15000,
+  ): Promise<T> {
+    if (path === "/v1/default/banks" || path.startsWith("/v1/default/banks?") || path.startsWith("/v1/default/banks/")) {
+      await this.compatibility.assertCompatible(() =>
+        this.rawRequest<{ api_version?: unknown }>("GET", "/version", undefined, 5000),
+      );
+    }
+    return this.rawRequest<T>(method, path, body, timeoutMs);
+  }
+
+  private async rawRequest<T>(
+    method: string,
+    path: string,
+    body: unknown,
+    timeoutMs: number,
   ): Promise<T> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -212,8 +235,8 @@ export class HindsightClient {
    *
    * Hindsight creates a bank implicitly on the first bank-scoped write (and several reads), so
    * "just try it" is how orphan banks are born. This asks the bank list instead — `GET
-   * /v1/default/banks?q=` is a substring filter, so the match is checked exactly here — and that
-   * endpoint never creates anything.
+   * /v1/default/banks?q=` is a substring filter, so the match is checked exactly here. This is an
+   * observed existence check, not a claim that server-side reads are universally non-mutating.
    */
   async bankExists(bankId: string, timeoutMs = 10000): Promise<boolean> {
     const res = await this.request<{ banks?: { bank_id?: string }[] }>(

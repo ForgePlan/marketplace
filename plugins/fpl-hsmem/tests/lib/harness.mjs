@@ -51,8 +51,11 @@ export function project(config, files = {}, { git = true } = {}) {
 }
 
 /**
- * Fake Hindsight 0.10. `banks` exist; anything else is "missing". The removed 0.10 endpoints
- * answer 410 exactly like the real server, so a regression to them is visible.
+ * Fake Hindsight 0.10. `banks` exist; anything else is "missing". The fake reports API 0.10.2
+ * from `/version` unless `opts.apiVersion`, `opts.versionBody`, or `opts.failVersion` overrides it.
+ * `opts.versionBarrier` delays that response until its promise settles; `opts.onVersionRequest`
+ * observes arrival before release so concurrent compatibility behavior can be tested deterministically.
+ * The removed 0.10 endpoints answer 410 exactly like the real server, so a regression is visible.
  *
  * `opts.documents` — `{ bank: [documentId | { id, tags }, …] }` that GET /documents/{id} reports as
  * existing (every other id is a 404, as on the real server); a bare id has no tags. Documents
@@ -76,6 +79,20 @@ export async function fakeHindsight(banks = [], opts = {}) {
         res.writeHead(code, { "content-type": "application/json" });
         res.end(JSON.stringify(obj));
       };
+      if (url.pathname === "/version" && req.method === "GET") {
+        const answerVersion = () => {
+          if (opts.failVersion) return send(503, { detail: "version unavailable" });
+          const versionBody =
+            Object.hasOwn(opts, "versionBody") ? opts.versionBody : { api_version: opts.apiVersion ?? "0.10.2" };
+          return send(200, versionBody);
+        };
+        opts.onVersionRequest?.();
+        if (opts.versionBarrier) {
+          void opts.versionBarrier.then(answerVersion);
+          return;
+        }
+        return answerVersion();
+      }
       if (/\/(profile|background)$/.test(url.pathname)) return send(410, { detail: "removed in 0.10" });
       if (url.pathname === "/v1/default/banks" && req.method === "GET") {
         const q = url.searchParams.get("q") ?? "";

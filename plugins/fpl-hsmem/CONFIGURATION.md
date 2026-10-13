@@ -22,23 +22,36 @@ server (`url`) and where the token comes from. So it is not trusted with more th
   `.hindsight.json`**. An absolute path elsewhere, a `..` escape or a symlink pointing out makes
   the config invalid. Otherwise a cloned repository could send any file you can read (an SSH key,
   a cloud credential) to a server of its choosing as the bearer token.
+  Проверка фиксирует идентичность файла; при первом запросе токен читается через проверенный
+  файловый дескриптор. Замена файла после загрузки конфигурации вызывает отказ. После атомарной
+  ротации tokenFile перезапустите MCP/CLI, чтобы загрузить новую идентичность.
 - **`tokenCommand`** runs only when **you** set `HINDSIGHT_ALLOW_TOKEN_COMMAND=1` in your
   environment. Without it, a config that names one is invalid (inert, with the reason).
 - **`HINDSIGHT_API_KEY`** is used only together with **`HINDSIGHT_URL`**. Alone it is ignored, so
   your key never travels to a url that a repository chose.
-- Hooks read the token only after deciding to run (`autoRecall` / `autoRetain`), so a
-  `tokenCommand` never runs on a prompt the hooks would ignore anyway.
+- Config discovery and validation do not read a token or execute `tokenCommand`. The token is
+  acquired lazily only when an active configuration makes its first network request.
+- Hooks acquire it only after deciding to run (`autoRecall` / `autoRetain`), so inactive and invalid
+  states, and a prompt the hooks ignore, perform no token read/command and no network request.
 
 ## The rule
 
-| Situation | MCP server | Hooks |
+| State | MCP server | Hooks |
 |---|---|---|
-| No `.hindsight.json` at or above cwd | answers the handshake, lists **no tools**; its instructions say why | no-op, no network |
-| `.hindsight.json` present but invalid | same as above; the reason (e.g. `defaultBank "x" is not in banks`) is on stderr and in the instructions | no-op |
-| `.hindsight-disabled` next to it, or `HINDSIGHT_DISABLED=true` | inert | no-op |
-| Valid `.hindsight.json` | all 28 tools | recall only if `autoRecall: true`; retain only if `autoRetain: true` |
+| `missing`: no `.hindsight.json` at or above cwd | answers the handshake, lists **no tools**, silent on stderr | silent no-op; no token or network |
+| `disabled`: `.hindsight-disabled` in cwd or next to the config, or `HINDSIGHT_DISABLED=true` | same inert, silent behavior | silent no-op; no token or network |
+| `invalid`: config exists but fails validation | zero tools; exactly one useful redacted stderr diagnostic | no action; one useful redacted stderr diagnostic; no token or network |
+| `active`: valid `.hindsight.json` | configured tool policy (28 tools without a policy) | recall only if `autoRecall: true`; retain only if `autoRetain: true` |
+
+Diagnostics never print a token, a token file's contents, or raw `tokenCommand` output.
+Ошибки конфигурации содержат только имя поля и нарушенное правило: без введённых значений,
+абсолютных путей и фрагментов JSON. Один запуск MCP или hook выводит одну физическую строку.
 
 ## `.hindsight.json`
+
+Во всех примерах ниже `tokenFile` предполагает уже подготовленный файл токена внутри проекта,
+исключённый из git. Setup не создаёт этот файл. Для неаутентифицированного одноразового
+локального сервера убери `tokenFile` (и не передавай `--token-file` в setup).
 
 ```json
 {
@@ -106,35 +119,43 @@ off-limits. An unknown name makes the config invalid, so a typo cannot silently 
 `memory_get_current_bank` reports what is enabled (`"tools": "all"` without a policy).
 
 Hindsight's own per-bank tool allowlist (`mcp_enabled_tools`) applies only to its built-in MCP
-endpoint; this plugin talks REST with the token, so this policy is where the surface is narrowed.
+endpoint. This plugin talks REST with the configured token, so `BankGate` and this policy narrow
+what this **client** will call; they are not server-side authorization and do not protect a bank
+from other clients or credentials.
 
-**Recommended read + curate profile** — search, browse and correct memory, write curated items,
-but no deletes, no directives, no mission or bank-config changes, no document ingestion:
+**Recommended Stage-0 pilot profile** — read-only and intentionally minimal. It excludes
+`memory_retain_batch` even though the tool remains implemented, and it is paired with
+`autoRecall: false` and `autoRetain: false`:
 
 ```json
-"allowTools": [
-  "memory_recall", "memory_reflect", "memory_status", "memory_get_current_bank",
-  "memory_list", "memory_get", "memory_operations",
-  "mental_model_list", "mental_model_get", "directive_list", "bank_config_get", "document_list",
-  "memory_retain", "memory_retain_batch", "memory_invalidate", "memory_reconsolidate",
-  "mental_model_refresh"
-]
+{
+  "autoRecall": false,
+  "autoRetain": false,
+  "allowTools": [
+    "memory_recall", "memory_status", "memory_get_current_bank",
+    "memory_list", "memory_get", "memory_operations",
+    "mental_model_list", "mental_model_get", "directive_list",
+    "bank_config_get", "document_list"
+  ]
+}
 ```
 
 ## Several banks
 
 Every tool except `memory_get_current_bank` and `memory_retain_batch` takes an optional `bank`.
-Omitted, it is `defaultBank`. A call is refused **before any bank-scoped request** when the bank is
-not in `banks`, or when the server does not have it — existence is read from
-`GET /v1/default/banks`, because Hindsight creates a bank implicitly on the first retain or reflect.
-This plugin never creates a bank; an operator does, deliberately. There is no cross-bank search: ask
-each bank separately.
+Omitted, it is `defaultBank`. This client refuses a call **before any bank-scoped request** when the
+bank is outside `banks` or absent from the server's `GET /v1/default/banks` response. This prevents
+the plugin from causing Hindsight's implicit create-on-write behavior through an unapproved bank
+name. It does not change server permissions, prevent another client from creating banks, or prove
+that every read endpoint is non-creating. There is no cross-bank search: ask each bank separately.
 
 ## Batch enrichment
 
-`memory_retain_batch` (MCP) and `dist/enrich.mjs` (CLI) write a JSONL file of distilled candidate
-items — one short, self-contained item per line — into memory. The procedure for producing that
-file is the `/fpl-hsmem:enrich` skill. Both entry points read this same `.hindsight.json`.
+`memory_retain_batch` remains available as an MCP **read-only planner** for a JSONL file of
+distilled candidates. It validates, routes and previews, but never applies. A separately authorized
+operator may apply the same plan with `dist/enrich.mjs`; keeping write authority out of the MCP
+surface is part of the initial adoption posture. The procedure for producing the file is the
+`/fpl-hsmem:enrich` skill. Both entry points read this same `.hindsight.json`.
 
 ```json
 {
@@ -157,7 +178,7 @@ file is the `/fpl-hsmem:enrich` skill. Both entry points read this same `.hindsi
 order. No match → the line is refused; it is **never** sent to `defaultBank` by default, because a
 wrong bank is a silent split of the team's memory. Add `"*": "<bank>"` if you want a catch-all.
 A route to a bank outside `banks` makes the whole config invalid, so the mistake is reported where
-it was made. Every resolved bank must also exist on the server; nothing is created.
+it was made. The client also refuses a resolved bank absent from the server's list.
 
 **Line schema.** `kind` (`decision`|`rejected`|`lesson`|`pitfall`|`rule`|`finding`), `content`
 (≤ `enrichMaxChars`), `context`, `timestamp` (ISO date or datetime — when it was decided),
@@ -171,20 +192,20 @@ addresses) is listed with its line number and the reason — the matched text is
 rest of the file proceeds.
 
 **Dry run is the default.** It reports counts per bank and kind, the refused lines, which
-`document_id`s already exist on the server (apply would replace them), and samples. Apply posts
-`/v1/default/banks/{bank}/memories` in batches per bank, `async: true`, each item with
-`update_mode: "replace"` and `observation_scopes: "shared"`, and prints the operation ids. Re-running
-the same file is idempotent: same `document_id`s, replaced in place.
+`document_id`s already exist on the server (an operator apply would replace them), and samples.
+Only the CLI apply path posts `/v1/default/banks/{bank}/memories` in batches per bank, `async: true`,
+each item with `update_mode: "replace"` and `observation_scopes: "shared"`, and prints operation
+ids. Re-running the same file is idempotent: same `document_id`s, replaced in place.
 
-**Apply is bound to the reviewed dry run.** The dry run prints a `digest` — sha256 over the file's
-bytes and the resolved plan (banks, routing, refusals, which documents exist). Apply needs that
-digest (`confirm` on the tool, `--confirm` on the CLI), recomputes it, and refuses on any
-difference: an edited file, a changed routing, or documents created or removed on the server since.
+**The digest proves freshness only.** Dry run prints a sha256 over the file bytes and resolved plan
+(banks, routing, refusals, existing documents). CLI apply recomputes it and refuses any difference.
+A matching digest is an anti-TOCTOU check; it is **not** human authorization, ownership, or
+permission to write. Operator authorization for apply is a separate gate.
 
 **Apply never replaces a document enrich did not write.** Every item is written with the tag
 `source-tool:enrich`. A `document_id` that already exists without that tag — a captured transcript,
 an ingested document, a manual retain — refuses its line, and the dry run names it. Pass
-`allowReplaceForeign` (`--allow-replace-foreign`) only when replacing it is intended; that changes
+`--allow-replace-foreign` только в отдельно разрешённом операторском CLI, когда замена намеренна; это меняет
 the digest, so dry-run with it too. The tag guards against accidents, not against a writer who sets
 it on purpose.
 
@@ -195,9 +216,9 @@ node "${CLAUDE_PLUGIN_ROOT}/dist/enrich.mjs" candidates.jsonl --apply --confirm 
 #   --samples N (dry-run samples per bank, default 2)  --json (machine-readable summary)
 ```
 
-Exit codes: `0` every line accepted (and queued, with `--apply`); `3` some lines refused; `1`
-config, file, server, confirmation or batch failure; `2` usage. Both entry points require the file
-to be inside the project root, symlinks followed (same rule as `document_ingest_file`).
+CLI exit codes: `0` every line accepted (and queued, with `--apply`); `3` some lines refused; `1`
+config, file, server, confirmation or batch failure; `2` usage. Both planner entry points require
+the file to be inside the project root, symlinks followed (same rule as `document_ingest_file`).
 
 ## Why `autoRetain` is off by default
 
@@ -219,15 +240,49 @@ node "${CLAUDE_PLUGIN_ROOT}/dist/setup.mjs" --url http://hindsight.example.inter
   --bank team --bank analytics --token-file .secrets/hindsight.token
 ```
 
-Writes `.hindsight.json` (first `--bank` is the default) and `.claude/rules/hindsight.md`. The
-plugin registers the MCP server and hooks itself; no `.mcp.json` is written.
+Writes `.hindsight.json` (first `--bank` is the default) with the Stage-0 read-only policy and both
+hooks off, plus `.claude/rules/hindsight.md`. The plugin registers the MCP server and hooks itself;
+no `.mcp.json` is written.
+
+## Direct client registration
+
+The plugin install registers one Claude Code runtime. Do not also hand-wire it in that runtime.
+For Codex or OMP, register the same built bundle once in that client's project configuration:
+command `node`, argument `/absolute/path/to/fpl-hsmem/dist/index.mjs`, working directory the project.
+The server discovers `.hindsight.json` itself; do **not** add legacy `HINDSIGHT_BANK_ID` selectors,
+and do not put a token in a committed MCP config. One registration per runtime avoids two clients
+quietly writing to different banks.
 
 ## Hindsight server compatibility
 
-Targets Hindsight **0.10.x** (verified against 0.10.2). Nothing calls the endpoints 0.10 removed
-(`GET/PUT /banks/{id}/profile`, `POST /banks/{id}/background` → 410). The bank persona is
-`reflect_mission`, set with `memory_set_mission` via `PATCH /banks/{id}/config`.
-`tests/test-hindsight-010.sh` pins this.
+The prerequisite is Hindsight API **>=0.10.2 and <0.11.0**. On the first bank-list or bank-scoped
+request, an active client calls `/version`; the result is cached. API 0.9.1, 0.11+, missing or
+malformed versions, and request failures all fail closed before any bank request. Missing,
+disabled, and invalid project configurations make no version request or other network call.
+No URL is implied: every active `.hindsight.json` must declare `url`.
+
+Nothing calls the endpoints 0.10 removed (`GET/PUT /banks/{id}/profile`,
+`POST /banks/{id}/background` → 410). The bank persona is `reflect_mission`, set with
+`memory_set_mission` via `PATCH /banks/{id}/config`. `tests/test-hindsight-010.sh` pins this.
+
+## Stage-0 migration and pilot runbook
+
+This is rehearsal guidance, not production-cutover authorization:
+
+1. Rehearse **0.9.1 → 0.10.2** on a restored copy. Prove restore before touching the source
+   system. Roll back the **image and database together**; never mix a downgraded image with an
+   upgraded database.
+2. Make configuration changes first, then canary **one boundary at a time**. Keep exactly one
+   registration per runtime. Begin with the read-only pilot policy above, `autoRecall: false`,
+   `autoRetain: false`, no retain hooks, and no enrichment apply.
+3. Freeze writes initially. Repository configuration alone is not consent to enable automatic
+   hooks. Enable no automatic write path merely because `.hindsight.json` was committed.
+4. Quiesce ForgePlanOps, take fresh **M/U/O** snapshots, classify all eight roles, and transact the
+   migration as one controlled operation. Record production cutover separately from the later
+   decision to enable writes.
+5. A later production backup/cutover requires documented encryption, least privilege,
+   authenticated integrity, custody, retention, destruction, and successful restore evidence.
+   Write enablement needs its own later record and authorization.
 
 ---
 

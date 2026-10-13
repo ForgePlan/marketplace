@@ -121,18 +121,18 @@ console.log("config");
 {
   const base = { url: "http://127.0.0.1:1", banks: ["alpha", "beta"], defaultBank: "alpha" };
   const good = loadProjectConfig(project({ ...base, routing: { "svc-*": "beta" }, enrichMaxChars: 500 }));
-  check(good.active && good.config.routing["svc-*"] === "beta" && good.config.enrichMaxChars === 500, "routing and enrichMaxChars load", JSON.stringify(good));
+  check(good.state === "active" && good.config.routing["svc-*"] === "beta" && good.config.enrichMaxChars === 500, "routing and enrichMaxChars load", JSON.stringify(good));
   const dflt = loadProjectConfig(project(base));
-  check(dflt.active && dflt.config.enrichMaxChars === 900 && Object.keys(dflt.config.routing).length === 0, "defaults: 900 chars, no routing");
+  check(dflt.state === "active" && dflt.config.enrichMaxChars === 900 && Object.keys(dflt.config.routing).length === 0, "defaults: 900 chars, no routing");
   const bad = loadProjectConfig(project({ ...base, routing: { "svc-*": "outside" } }));
-  check(!bad.active && /routing.*"outside" is not in `banks`/.test(bad.reason), "a route to a bank outside the allowlist invalidates the config", bad.reason);
+  check(bad.state === "invalid", "a route to a bank outside the allowlist invalidates the config");
   const badShape = loadProjectConfig(project({ ...base, routing: ["svc"] }));
-  check(!badShape.active && /`routing` must be an object/.test(badShape.reason), "routing must be an object");
+  check(badShape.state === "invalid" && /`routing` must be an object/.test(badShape.reason), "routing must be an object");
   const badCap = loadProjectConfig(project({ ...base, enrichMaxChars: 0 }));
-  check(!badCap.active && /enrichMaxChars/.test(badCap.reason), "enrichMaxChars must be positive");
+  check(badCap.state === "invalid" && /enrichMaxChars/.test(badCap.reason), "enrichMaxChars must be positive");
   const overCap = loadProjectConfig(project({ ...base, enrichMaxChars: 2001 }));
-  check(!overCap.active && /enrichMaxChars` must be an integer from 1 to 2000/.test(overCap.reason), "enrichMaxChars is capped at 2000", overCap.reason);
-  check(loadProjectConfig(project({ ...base, enrichMaxChars: 2000 })).active, "enrichMaxChars 2000 is allowed");
+  check(overCap.state === "invalid" && /enrichMaxChars` must be an integer from 1 to 2000/.test(overCap.reason), "enrichMaxChars is capped at 2000", overCap.reason);
+  check(loadProjectConfig(project({ ...base, enrichMaxChars: 2000 })).state === "active", "enrichMaxChars 2000 is allowed");
 }
 
 /** Run the built CLI in `cwd`. */
@@ -213,7 +213,7 @@ console.log("CLI dry run");
 console.log("CLI apply needs the dry run's digest");
 {
   const none = await cli(dir, ["cands.jsonl", "--apply"]);
-  check(none.code === 1 && /requires the digest printed by the dry run/.test(none.stderr) && posts().length === 0, "--apply without --confirm writes nothing", `${none.code} ${none.stderr}`);
+  check(none.code === 1 && /requires the freshness digest printed by the dry run/.test(none.stderr) && posts().length === 0, "--apply without --confirm writes nothing", `${none.code} ${none.stderr}`);
   const wrong = await cli(dir, ["cands.jsonl", "--apply", "--confirm", "0".repeat(64)]);
   check(wrong.code === 1 && /changed since the dry run/.test(wrong.stderr) && posts().length === 0, "a wrong digest writes nothing", wrong.stderr);
   const orphan = await cli(dir, ["cands.jsonl", "--confirm", "abc"]);
@@ -301,29 +301,30 @@ console.log("CLI edges");
   check(u.code === 2 && /usage/.test(u.stderr), "usage error → exit 2");
 }
 
-console.log("MCP tool");
+console.log("MCP tool stays implemented but cannot apply");
 {
   const before = posts().length;
   await withServer(dir, {}, async ({ list, call }) => {
     const t = (await list()).find((x) => x.name === "memory_retain_batch");
     const props = t?.inputSchema.properties ?? {};
-    check(Boolean(t) && !props.bank && props.confirm && props.allowReplaceForeign && t.inputSchema.required.join() === "file", "memory_retain_batch is listed: file (+apply, confirm, allowReplaceForeign), no `bank`");
+    check(
+      Boolean(t) && Object.keys(props).join() === "file" && t.inputSchema.required.join() === "file",
+      "memory_retain_batch remains implemented as a file-only planner",
+      JSON.stringify(props),
+    );
+    check(t?.annotations?.readOnlyHint === true, "the batch MCP surface advertises read-only planning");
     let r = await call("memory_retain_batch", { file: "cands.jsonl" });
-    check(!r.isError && /DRY RUN/.test(r.text) && posts().length === before, "dry run by default, nothing written", r.text);
-    const digest = /^digest ([0-9a-f]{64})$/m.exec(r.text)?.[1];
-    check(Boolean(digest) && r.text.includes(`only after they approve, call again with apply:true, confirm:"${digest}"`), "tells the agent to get approval and how to confirm", r.text);
-    r = await call("memory_retain_batch", { file: "cands.jsonl", apply: true });
-    check(/Refusing to apply: apply requires the digest/.test(r.text) && posts().length === before, "apply:true without confirm writes nothing", r.text);
+    check(
+      !r.isError && /DRY RUN/.test(r.text) && /freshness.*grants no authorization/.test(r.text) && posts().length === before,
+      "MCP dry run reports freshness-only digest semantics and writes nothing",
+      r.text,
+    );
     r = await call("memory_retain_batch", { file: "cands.jsonl", apply: true, confirm: "f".repeat(64) });
-    check(/changed since the dry run/.test(r.text) && posts().length === before, "apply:true with a wrong digest writes nothing", r.text);
-    r = await call("memory_retain_batch", { file: "cands.jsonl", apply: true, confirm: digest });
-    check(!r.isError && /APPLY/.test(r.text) && posts().length === before + 2, "apply:true with the digest writes", r.text);
-    const sent = posts().slice(before).flatMap((q) => q.body.items.map((i) => i.document_id));
-    check(!sent.includes("sess-1234"), "the foreign document is not replaced through the tool either");
-    const outside = mkdtempSync(join(tmpdir(), "hsmem-out-"));
-    writeFileSync(join(outside, "c.jsonl"), jsonl(item({ bank: "alpha" })));
-    r = await call("memory_retain_batch", { file: join(outside, "c.jsonl"), apply: true, confirm: digest });
-    check(/outside the project root/.test(r.text) && posts().length === before + 2, "a file outside the project is refused", r.text);
+    check(
+      /read-only planner/.test(r.text) && /does not authorize a write/.test(r.text) && posts().length === before,
+      "legacy apply arguments cannot turn the planner into a writer",
+      r.text,
+    );
   });
 }
 

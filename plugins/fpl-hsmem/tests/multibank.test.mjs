@@ -75,7 +75,7 @@ console.log("bank existence cache expires");
   const live = ["alpha"];
   const f = await fakeHindsight(live);
   let now = 0;
-  const gate = new BankGate({ url: f.url, banks: ["alpha"], defaultBank: "alpha", apiKey: "k", configPath: "/x/.hindsight.json" }, { ttlMs: 1000, now: () => now });
+  const gate = new BankGate({ url: f.url, banks: ["alpha"], defaultBank: "alpha", getApiKey: () => "k", configPath: "/x/.hindsight.json" }, { ttlMs: 1000, now: () => now });
   const lists = () => f.requests.filter((q) => q.path === "/v1/default/banks").length;
   check(typeof (await gate.resolve("alpha")) !== "string", "an existing bank resolves");
   now = 999;

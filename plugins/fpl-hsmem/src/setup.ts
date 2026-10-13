@@ -99,6 +99,20 @@ function main(): void {
     defaultBank: opts.banks[0],
     autoRecall: false,
     autoRetain: false,
+    // Stage-0 pilot: explicit, minimal, read-only. Writes need a later authorization and policy edit.
+    allowTools: [
+      "memory_recall",
+      "memory_status",
+      "memory_get_current_bank",
+      "memory_list",
+      "memory_get",
+      "memory_operations",
+      "mental_model_list",
+      "mental_model_get",
+      "directive_list",
+      "bank_config_get",
+      "document_list",
+    ],
   };
   if (opts.tokenFile) config.tokenFile = opts.tokenFile;
 
@@ -117,7 +131,8 @@ function main(): void {
     console.log(`  .claude/rules/hindsight.md      ${status}`);
   }
 
-  console.log("\n✅ Done. Restart Claude Code here and run memory_get_current_bank to verify.");
+  console.log("\n✅ Done. The generated pilot is read-only with both hooks off.");
+  console.log("Restart Claude Code here and run memory_get_current_bank to verify.");
   if (cfgStatus === "skipped") console.log("⚠️  .hindsight.json already exists — use --force to overwrite");
 }
 

@@ -1,4 +1,5 @@
 import { HindsightClient } from "./client.js";
+import { HindsightCompatibilityGate } from "./compatibility.js";
 import type { HindsightConfig } from "./config.js";
 
 /** How long a confirmed bank stays confirmed before the bank list is asked again. */
@@ -7,7 +8,7 @@ export const BANK_EXISTS_TTL_MS = 5 * 60 * 1000;
 /**
  * The one place a bank id becomes a client.
  *
- * Shared by the MCP server and the batch writer (`enrich.mjs`) so both refuse the same banks for
+ * Shared by the MCP planner and the operator CLI (`enrich.mjs`) so both refuse the same banks for
  * the same reasons. A bank is accepted only when it is in the project's allowlist AND already
  * exists on the server. Existence is read from the bank list, never by touching the bank:
  * Hindsight creates a bank implicitly on first use, so "try it and see" would create exactly the
@@ -21,11 +22,13 @@ export class BankGate {
    * bank an operator deleted must stop being accepted, or the next write would recreate it.
    */
   private readonly confirmedAt = new Map<string, number>();
+  /** One compatibility request shared by every bank client for this active configuration. */
+  private readonly compatibility = new HindsightCompatibilityGate();
   private readonly ttlMs: number;
   private readonly now: () => number;
 
   constructor(
-    private readonly config: Pick<HindsightConfig, "url" | "banks" | "defaultBank" | "apiKey" | "configPath">,
+    private readonly config: Pick<HindsightConfig, "url" | "banks" | "defaultBank" | "getApiKey" | "configPath">,
     opts: { ttlMs?: number; now?: () => number } = {},
   ) {
     this.ttlMs = opts.ttlMs ?? BANK_EXISTS_TTL_MS;
@@ -40,7 +43,7 @@ export class BankGate {
   private clientFor(bank: string): HindsightClient {
     let client = this.clients.get(bank);
     if (!client) {
-      client = new HindsightClient(this.config.url, bank, this.config.apiKey);
+      client = new HindsightClient(this.config.url, bank, this.config.getApiKey, this.compatibility);
       this.clients.set(bank, client);
     }
     return client;
@@ -65,8 +68,8 @@ export class BankGate {
       if (!(await client.bankExists(bank))) {
         this.confirmedAt.delete(bank);
         return (
-          `Refusing: bank "${bank}" does not exist on ${this.config.url}. This server never creates ` +
-          `banks — an operator creates one deliberately, then this call will work.`
+          `Refusing: bank "${bank}" does not exist on ${this.config.url}. This client will not ` +
+          `create it; an authorized operator must provision it separately.`
         );
       }
       this.confirmedAt.set(bank, this.now());

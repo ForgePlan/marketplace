@@ -4,8 +4,8 @@ description: |
   Turns knowledge the team already has — design records (ADRs, RFCs, notes, problem and evidence
   records), decision ledgers, review threads, chat threads — into short, self-contained memory items
   (a decision and why, a rejected option and why, a lesson, a pitfall, a rule) that link back to the
-  artifact, and writes them in one batch after a dry run a human has seen. Memory is not a document
-  store: this skill distils, it never copies.
+  artifact. This skill writes local JSONL and produces a read-only dry-run plan; it never applies
+  the plan or writes to a bank. Memory is not a document store: this skill distils, it never copies.
   EN: Enrich a memory bank from existing sources. Use when asked to fill memory with past decisions,
   pull decisions out of design records, or load lessons from reviews and threads. NOT for fixing a
   wrong fact (/fpl-hsmem:correct-memory), seeding a brand-new bank's mission and pages
@@ -41,11 +41,11 @@ current.
 
 ## Model tier
 
-**This skill asks for tier B for the distillation, C for the dry run and apply.**
+**This skill asks for tier B for distillation and C for local JSONL and dry-run planning.**
 
 Deciding what in an ADR is non-obvious, and stating the *why* in two sentences, is judgement: a
-vague or wrong item is recalled into every future session that brushes the topic. The writes are
-mechanical and the tool validates them.
+vague or wrong item is recalled into every future session that brushes the topic. Local file
+generation and the read-only planner are mechanical. Applying a plan is not part of this skill.
 
 `model:` values like `opus` / `sonnet` / `haiku` are Claude Code names, not the requirement. On
 another runtime substitute whatever serves this tier there, and when you cannot tell, miss
@@ -87,29 +87,22 @@ memory_recall  query="what did we decide about <area> in <repo>"
    them), and a couple of samples, plus a `digest` of the file and the plan. A `document_id` that
    already exists but was not written by enrich (a transcript, an ingested document) refuses its
    line: pick another id — replacing it would delete its memories.
-6. **Show the human** the summary, the refused lines and 3–5 representative items per bank —
-   verbatim, not paraphrased. Fix a refused line by rewording or removing the sensitive part, never
-   by weakening the scan. Re-run the dry run until the report is what you mean to write.
-7. **Apply only after the human approves that report** in this conversation:
+6. **Show the human** the summary, refused lines and 3–5 representative items per bank — verbatim,
+   not paraphrased. Fix a refused line by rewording or removing sensitive material, never by
+   weakening the scan. Re-run until the report is accurate. Review is useful input, but neither the
+   review nor its digest grants ownership, authorization, or permission to write.
+7. **Stop and hand off the local artifacts.** This skill ends with the JSONL path, dry-run report,
+   and digest. It MUST NOT run an apply command or write to a bank. Applying is exclusively a
+   separately authorized operator CLI workflow:
 
-   ```
-   memory_retain_batch  file=<path>.jsonl  apply=true  confirm=<digest from that dry run>
-   ```
-
-   Apply recomputes the digest and refuses if the file or the plan changed since the report — then
-   dry-run again and show the new report. `allowReplaceForeign=true` (which changes the digest)
-   only when the human explicitly asked to replace a document enrich did not write.
-
-   Items are queued asynchronously, in batches per bank; the report prints operation ids.
-8. **Verify, do not assume.**
-
-   ```
-   memory_operations  status=failed  limit=10
-   memory_recall      query="<a question one of the new items should answer>"
+   ```bash
+   node "${CLAUDE_PLUGIN_ROOT}/dist/enrich.mjs" <path>.jsonl --apply --confirm <digest>
    ```
 
-   Ask two or three real questions. Extraction takes a little while; a failed job is visible only
-   in `memory_operations`.
+   The operator CLI recomputes the digest and refuses if file or plan changed. The digest is only
+   an anti-TOCTOU freshness proof. `--allow-replace-foreign` is a further operator choice and
+   changes the digest; it is never a way to clear a collision casually. Post-apply checks belong to
+   that operator workflow; this skill does not infer success from a reviewed plan.
 
 **Rollback.** Every write replaces by `document_id`, so re-applying a corrected file fixes the
 items in place. To withdraw an item entirely, `document_delete` its `document_id` (it removes only
@@ -212,23 +205,16 @@ Only after the artifacts above are done, and only:
 A transcript is mostly noise around a few decisions; the decisions usually also exist in a commit
 message or a record, which is the better link.
 
-## When the runtime has its own retain tool
+## Operator CLI boundary
 
-Some hosts — a chat bot, for instance — expose their own memory tool instead of this plugin,
-often limited to certain banks and a smaller content cap. Then use that tool **item by item** with
-the same item shape (content, context, timestamp, document_id, tags, metadata), and respect its
-limits: write only to the banks it allows, shorten an item to its cap rather than splitting it
-into fragments that do not stand alone, and pace the writes. The dry run and the human approval
-still happen — show the item list first, write after the yes.
-
-## From a shell
-
-The same pipeline ships as a CLI, reading the same `.hindsight.json` from the working directory:
+The planner CLI reads the same `.hindsight.json` and is safe for the pilot. This skill MAY invoke
+the dry run below to produce its local plan. It MUST NOT invoke `--apply`; that command is shown
+only as the separately authorized operator workflow:
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/dist/enrich.mjs" <file>.jsonl            # dry run
-node "${CLAUDE_PLUGIN_ROOT}/dist/enrich.mjs" <file>.jsonl --apply --confirm <digest>    # write
-#   --max-chars N   --batch-size N   --samples N   --json
+node "${CLAUDE_PLUGIN_ROOT}/dist/enrich.mjs" <file>.jsonl            # skill: dry-run plan only
+node "${CLAUDE_PLUGIN_ROOT}/dist/enrich.mjs" <file>.jsonl --apply --confirm <digest>    # operator only
+#   --allow-replace-foreign   --max-chars N   --batch-size N   --samples N   --json
 ```
 
 Exit codes: `0` all accepted, `3` some lines refused (the rest planned or written), `1` config,
@@ -246,10 +232,9 @@ file, server or batch failure, `2` usage.
   presents old reasoning as the latest word.
 - **Reading records from the local working tree** when the remote base has moved — loading a
   draft that was never accepted, or missing the supersession that landed yesterday.
-- **Applying before a human has seen the dry-run report**, or applying a file edited since the
-  report was shown (the digest refuses it — re-run the dry run, do not hunt for the new digest
-  without showing the new report).
-- **Reaching for `allowReplaceForeign` to clear a collision** with a transcript or an ingested
+- **Treating report review or a matching digest as write authorization.** The digest proves only
+  that file and plan are fresh; authorization is a separate operator gate.
+- **Reaching for `--allow-replace-foreign` to clear a collision** with a transcript or ingested
   document instead of choosing another `document_id`.
 - **Silencing a refusal** by mangling the text until the scanner stops matching, instead of
   removing the secret or the personal data.

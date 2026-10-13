@@ -21,8 +21,8 @@ allowed-tools: mcp__hindsight__memory_status, mcp__plugin_fpl-hsmem_hindsight__m
 
 # Diagnose Hindsight integration
 
-Run a structured 5-step diagnostic. Each step produces a status line.
-At the end, summarize as "all green" / list of issues + remediation.
+Run a structured six-step diagnostic. Report expected inactive states separately from failures.
+Keep it read-only: do not enable hooks, change registrations, or create banks.
 
 
 ## Model tier
@@ -37,49 +37,48 @@ bank both return nothing, and reporting the wrong one sends someone to fix the w
 requirement. On another runtime substitute whatever serves this tier there, and when you cannot
 tell, miss **upward**. Saving cost means giving a skill less work, not a weaker model.
 
-## Step 1 — Server reachability
+## Step 1 — Configuration and server reachability
 
-```bash
-curl -fsS http://localhost:8888/health
-```
-- ✓ 200 with `{"status":"healthy",...}` → server is up
-- ✗ connection refused → Docker container is not running
-- ✗ 5xx → server is up but unhealthy (check `docker logs hindsight`)
+Сначала проверь проектный `.hindsight.json`, границу git-root и opt-out. Отсутствующий или
+отключённый конфиг — штатное неактивное состояние; не делай сетевой запрос. Невалидный конфиг
+исправляют по единственной безопасной диагностике stderr, не выводя токен или сырой файл.
+
+Для активного конфига используй его явный `url` или пользовательский `HINDSIGHT_URL`, а не
+жёстко заданный localhost. Read-only `/version` должен показать API >=0.10.2 и <0.11.0;
+`/health` проверяет доступность. Ошибка подключения не доказывает, что остановлен Docker:
+проверь адрес, сеть и фактический способ развёртывания. Не ослабляй проверку совместимости.
 
 ## Step 2 — Bank resolution
 
 - Call `memory_get_current_bank`
 - Compare with what the user expects (ask if unsure)
 - ✓ matches → resolution working
-- ✗ unexpected → check `config_file` in the output: it is the nearest
-  `.hindsight.json` at or above the working directory, and its `defaultBank`
-  / `banks` decide everything. No tools at all → there is no valid
-  `.hindsight.json`; the server's instructions say why.
+- ✗ unexpected → inspect `config_file`, `default_bank` and `allowed_banks`; discovery stops at
+  the git root and never uses a home-wide config. A nested repository needs its own opt-in.
+- Zero tools → missing/disabled is expected; invalid config reports one safe stderr reason.
 
 ## Step 3 — Bank content
 
 - Call `memory_status` for memory count and document count
 - Call `mental_model_list` for living pages
 - Note ratios:
-  - Memories = 0 in a 1-month-old project → auto-retain might be off,
-    or `retainEveryNTurns` is too high
+  - Memories = 0 → банк может быть новым или использовать только отобранные ручные записи.
+    Не включай autoRetain как средство диагностики.
   - Documents = 0 → no `document_ingest` runs yet (normal for new bank)
   - Mental models = 0 → either new bank, or user hasn't created any
     (suggest `mental-model` skill)
 
-## Step 4 — Hook state files
+## Step 4 — Hook policy and optional state
 
-```bash
-ls -la ~/.hindsight/state/ 2>/dev/null
-```
-Look for:
-- `turns.json` — tracks turn count per session (used by retain throttling)
-- `retention.json` — tracks message_count per session (used for compaction detection)
+Сначала прочитай `autoRecall` и `autoRetain`: оба по умолчанию false. Retain state находится в
+`${CLAUDE_PLUGIN_DATA}/state`, если переменная задана, иначе в `~/.hindsight/state`. При выключенном
+autoRetain отсутствие `turns.json` и `retention.json` нормально. State не доказывает работу recall.
 
-- ✓ both exist with recent mtime → hooks are running
-- ✗ neither exists → hooks aren't firing. Check
-  `.claude/settings.local.json` for hook registration, or check if the
-  plugin is loaded (run `claude plugin list`)
+Только если оператор уже отдельно разрешил соответствующий hook, проверь его регистрацию и
+диагностику. В Claude plugin-mode регистрация принадлежит плагину; в direct Codex/OMP —
+конфигурации конкретного host. Должен быть один MCP и один набор hooks, не оба режима сразу.
+Для разрешённого retain проверь state и результат operations; не считай один свежий mtime
+доказательством успешного сохранения. Само существование банка не разрешает включение hooks.
 
 ## Step 5 — Config resolution
 
@@ -93,11 +92,10 @@ used only together with it. Show the user `config_file`,
 ## Step 6 — Opt-out check
 
 Look for:
-- `<cwd>/.hindsight-disabled` file
-- `HINDSIGHT_DISABLED=true` env
+- `.hindsight-disabled` in cwd or beside the resolved config
+- `HINDSIGHT_DISABLED=true` in the environment
 
-If present, **none of the above matters** — Hindsight is disabled in
-this project. Tell the user and ask if they want to enable it.
+If present, report intentional opt-out. Do not remove it or enable hooks as remediation.
 
 ## Final summary
 

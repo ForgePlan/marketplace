@@ -1,10 +1,9 @@
 # Retrieval layers and memory — which question goes where
 
 > [!IMPORTANT]
-> **Project-only configuration.** Configuration is project-only (`.hindsight.json`, several banks, no
-> derived bank, `autoRetain`/`autoRecall` off by default). Where this page mentions `.mcp.json`,
-> `HINDSIGHT_BANK_ID`, `~/.hindsight/config.json` or a bank derived from the directory name, that
-> describes the pre-3.7.0 behaviour — see [`CONFIGURATION.md`](./CONFIGURATION.md).
+> **3.7.0 is project-only and default-off.** It requires explicit `.hindsight.json` banks and
+> Hindsight API >=0.10.2 and <0.11.0. The initial pilot is minimal/read-only; auto hooks and write
+> paths require separate authorization. See [`CONFIGURATION.md`](./CONFIGURATION.md).
 
 
 A developer asks two kinds of question all day. **"Where is it?"** is answered by search, and which

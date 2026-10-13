@@ -1,10 +1,10 @@
 # Usage patterns
 
 > [!IMPORTANT]
-> **Project-only configuration.** Configuration is project-only (`.hindsight.json`, several banks, no
-> derived bank, `autoRetain`/`autoRecall` off by default). Where this page mentions `.mcp.json`,
-> `HINDSIGHT_BANK_ID`, `~/.hindsight/config.json` or a bank derived from the directory name, that
-> describes the pre-3.7.0 behaviour — see [`CONFIGURATION.md`](./CONFIGURATION.md).
+> **3.7.0 is project-only and default-off.** The initial pilot uses the minimal read-only policy in
+> [`CONFIGURATION.md`](./CONFIGURATION.md), with `autoRecall: false`, `autoRetain: false`, no retain
+> hooks and no enrichment apply. Write examples below are post-pilot workflows that require a
+> separate operator authorization; repository configuration alone is not that consent.
 
 
 Real-world use cases for `fpl-hsmem` and integration recipes with the
@@ -37,17 +37,19 @@ creates drift.
 
 ---
 
-## When auto-recall vs. manual tools vs. mental models
+## When manual tools vs. optional auto-recall vs. mental models
 
-`fpl-hsmem` exposes three different recall mechanisms. Pick by intent:
+`fpl-hsmem` exposes three recall mechanisms. Auto-recall is **not already happening** unless an
+operator separately enabled `autoRecall: true`:
 
 | Need | Use | Why |
 |------|-----|-----|
-| Default context for every prompt | **Auto-recall hook** | Already happening, zero overhead, invisible |
+| Initial read-only pilot | **manual read tools** | explicit, observable, no background hook |
+| Default context after later authorization | **Auto-recall hook** | invisible on each prompt once enabled |
 | "What did we decide about X?" | **`memory_recall`** | Raw ranked memories, fast, ad-hoc |
-| "Give me a coherent summary of X" | **`memory_reflect`** | LLM synthesis across all relevant memories |
-| Recurring question with auto-updates | **`mental_model_*`** | Living page, refreshes after each consolidation |
-| Searchable archival of a finalized artifact | **`document_ingest`** | One-shot ingestion, becomes findable via recall |
+| "Give me a coherent summary of X" | **`memory_reflect`** | LLM synthesis across relevant memories |
+| Recurring question after write enablement | **`mental_model_*`** | Living page, refreshes after consolidation |
+| Searchable archival after write enablement | **`document_ingest`** | One-shot ingestion |
 
 ---
 
@@ -146,14 +148,11 @@ add more as recurring questions emerge.
 
 `fpl-hsmem` is **complementary** to `fpl-skills`, not a replacement.
 
-### `/restore` + auto-recall
+### `/restore` + optional auto-recall
 
-`fpl-skills:/restore` reconstructs session context from git + working
-copy. Auto-recall **adds** the long-tail of cross-session conversation
-context on top of that — without you calling anything.
-
-Best practice: run `/restore` at session start (or let SessionStart hook
-do it). The recall hook handles every subsequent prompt automatically.
+`fpl-skills:/restore` reconstructs session context from git + working copy. After a separate
+authorization, auto-recall can add cross-session conversation context. In the Stage-0 pilot,
+call `memory_recall` explicitly instead; the hook remains off.
 
 ### `/research` results — ingest as documents
 
@@ -282,10 +281,9 @@ state.
 
 ### Multi-session memory consistency
 
-All sessions in the same project share **one bank** (derived from cwd
-or `.mcp.json`). When one session retains, all subsequent sessions
-recall those facts. Auto-retain is idempotent — same content won't
-duplicate.
+All sessions use the explicit `defaultBank` from the same project `.hindsight.json` unless a call
+names another allowlisted bank. Nothing derives a bank from cwd or `.mcp.json`. Writes become
+visible to later sessions only after the project has separately authorized write tools.
 
 ---
 
@@ -303,12 +301,13 @@ gracefully — but you're missing the value.
 
 ## Anti-patterns
 
-### Don't `memory_retain` everything
+### Don't enable transcript capture by assumption
 
-Auto-retain already captures the full transcript every N turns.
-Manual `memory_retain` is for **non-obvious lessons** that might get
-diluted in the transcript stream. Saving "we use TypeScript" is noise.
-Saving "we tried X, it failed because Y, now we use Z" is signal.
+`autoRetain` is false by default. A committed `.hindsight.json` does not authorize automatic
+transcript writes. Enable it, if ever, only under a later write-enablement record.
+
+Manual `memory_retain` is for separately authorized, non-obvious lessons. Saving "we use
+TypeScript" is noise; saving "we tried X, it failed because Y, now we use Z" is signal.
 
 ### Don't ingest active documents
 
@@ -325,18 +324,13 @@ recurring questions, then crystallize them.
 
 ### Don't share banks across unrelated projects
 
-`fpl-hsmem` derives one bank per project (via git root). Don't override
-to share across projects — recall quality degrades fast when contexts
-mix. Use multiple banks; cross-reference manually if needed.
+Declare each project's `banks` and `defaultBank` explicitly. Do not broaden them to share unrelated
+contexts: recall quality degrades and the client gate is not server authorization.
 
 ### Don't `memory_recall` reflexively
 
-The hook already runs recall for every prompt. Manual recall is for:
-- Targeted searches with specific filters (`types`, `tags`)
-- Re-running with `recallBudget: "high"` when initial recall missed
-- Explicit "remember when..." user requests
-
-Otherwise, just talk to Claude — the hook does the rest.
+In the Stage-0 pilot, manual recall is expected. If auto-recall is later authorized, reserve manual
+recall for targeted filters, a higher recall budget, or explicit "remember when" requests.
 
 ---
 
@@ -357,14 +351,12 @@ questions trigger semantic matching across the entire memory graph.
 
 ## Performance and cost
 
-- **Auto-recall** runs on every prompt with a 12-second timeout. If
-  recall is slow, the prompt proceeds without it — never blocks.
-- **Auto-retain** runs async (`async: true`) — non-blocking. Returns
-  immediately, server processes in background.
-- **Mental model consolidation** is server-side work. Triggered
-  automatically after retains accumulate. Costs LLM tokens (on whatever
-  provider Hindsight is configured for — defaults to `claude-code`
-  reusing your subscription).
+- **Manual recall** runs only when called.
+- **Auto-recall**, if separately enabled, has a 12-second timeout; a slow recall does not block the
+  prompt.
+- **Auto-retain**, if separately enabled, posts async and returns while server processing continues.
+- **Mental model consolidation** is server-side work after writes accumulate and consumes the
+  configured provider's tokens.
 
 If you're on `claude-code` provider: cost is **zero extra dollars**
 beyond your Pro/Max subscription. If you're on a paid API provider

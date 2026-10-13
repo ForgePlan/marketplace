@@ -11,6 +11,7 @@
 
 import { runRetain } from "./retain.js";
 import { loadProjectConfig, debugLog } from "../lib/config.js";
+import { redact } from "../lib/redact.js";
 
 interface HookInput {
   session_id?: string;
@@ -40,9 +41,13 @@ async function main(): Promise<void> {
     }
   }
 
-  // Token-free: runRetain reads the token itself, and only when it is actually going to write.
-  const loaded = loadProjectConfig(hookInput.cwd ?? process.cwd(), { token: false });
-  if (!loaded.active) return; // not an opted-in project: the hook does nothing
+  // Configuration is classified before any token is acquired or network request is made.
+  const loaded = loadProjectConfig(hookInput.cwd ?? process.cwd());
+  if (loaded.state === "missing" || loaded.state === "disabled") return;
+  if (loaded.state === "invalid") {
+    process.stderr.write(`[Hindsight] SessionEnd skipped: invalid configuration: ${redact(loaded.reason)}\n`);
+    return;
+  }
   const { config } = loaded;
   debugLog(config, `SessionEnd, reason: ${hookInput.reason ?? "unknown"}`);
 
@@ -58,11 +63,11 @@ async function main(): Promise<void> {
   try {
     await runRetain(hookInput, true);
   } catch (e) {
-    process.stderr.write(`[Hindsight] SessionEnd final retain failed: ${(e as Error).message}\n`);
+    process.stderr.write(`[Hindsight] SessionEnd final retain failed: ${redact((e as Error).message)}\n`);
   }
 }
 
 main().catch((e: Error) => {
-  process.stderr.write(`[Hindsight] session-end hook error: ${e.message}\n`);
+  process.stderr.write(`[Hindsight] session-end hook error: ${redact(e.message)}\n`);
   process.exit(0);
 });

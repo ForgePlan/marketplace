@@ -71,7 +71,21 @@ function main() {
     banks: opts.banks,
     defaultBank: opts.banks[0],
     autoRecall: false,
-    autoRetain: false
+    autoRetain: false,
+    // Stage-0 pilot: explicit, minimal, read-only. Writes need a later authorization and policy edit.
+    allowTools: [
+      "memory_recall",
+      "memory_status",
+      "memory_get_current_bank",
+      "memory_list",
+      "memory_get",
+      "memory_operations",
+      "mental_model_list",
+      "mental_model_get",
+      "directive_list",
+      "bank_config_get",
+      "document_list"
+    ]
   };
   if (opts.tokenFile) config.tokenFile = opts.tokenFile;
   console.log("\u{1F9E0} fpl-hsmem setup");
@@ -86,7 +100,8 @@ function main() {
     const status = writeFile(join(cwd, ".claude", "rules", "hindsight.md"), rules, opts.force);
     console.log(`  .claude/rules/hindsight.md      ${status}`);
   }
-  console.log("\n\u2705 Done. Restart Claude Code here and run memory_get_current_bank to verify.");
+  console.log("\n\u2705 Done. The generated pilot is read-only with both hooks off.");
+  console.log("Restart Claude Code here and run memory_get_current_bank to verify.");
   if (cfgStatus === "skipped") console.log("\u26A0\uFE0F  .hindsight.json already exists \u2014 use --force to overwrite");
 }
 main();

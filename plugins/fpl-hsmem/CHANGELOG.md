@@ -6,47 +6,60 @@ All notable changes to `fpl-hsmem` are documented here. Format:
 
 ## [Unreleased]
 
+## [3.7.0] — 2026-10-07
+
+
 ### Changed
-- **Batch apply is bound to the reviewed dry run.** `memory_retain_batch` / `enrich.mjs` print a
-  `digest` (sha256 of the file bytes and the resolved plan). Apply requires it (`confirm` /
-  `--confirm`) and refuses when the file, routing or the server's documents changed since.
+- **Batch confirmation proves freshness only.** `memory_retain_batch` plans read-only;
+  `enrich.mjs` prints a digest (sha256 of file bytes and resolved plan), and CLI apply requires it
+  with `--confirm`. A match is anti-TOCTOU, never authorization, ownership, or permission to write.
 - **Batch apply never replaces a document it did not write.** Items carry the tag
   `source-tool:enrich`; an existing document without it refuses its line unless
-  `allowReplaceForeign` / `--allow-replace-foreign` is set (which changes the digest).
+  operator CLI `--allow-replace-foreign` is set (which changes the digest). MCP never applies.
 - **Config trust.** `tokenFile` must resolve (realpath) inside the directory holding
   `.hindsight.json`; `tokenCommand` runs only with `HINDSIGHT_ALLOW_TOKEN_COMMAND=1`;
   `HINDSIGHT_API_KEY` is used only together with `HINDSIGHT_URL`; discovery stops at the git
-  toplevel (else `$HOME`) and never reads `$HOME/.hindsight.json`. Hooks read the token only after
-  deciding to run.
+  toplevel (else `$HOME`) and never reads `$HOME/.hindsight.json`. Configuration is validated
+  without reading a token or running `tokenCommand`; acquisition is lazy at the first request.
 - The autoRecall hook goes through the bank existence gate (`BankGate`), like every MCP tool.
 - Bank existence is cached for 5 minutes instead of the life of the process.
 - The enrich CLI enforces the inside-the-project rule (symlinks followed) and caps `--max-chars`
   at 2000; `enrichMaxChars` is capped at 2000 too.
+- Active clients lazily call `/version` before the first bank-list/bank-scoped request and cache the
+  result. Hindsight API >=0.10.2 and <0.11.0 is required; failures and incompatible/malformed
+  responses fail closed. Missing, disabled and invalid states do no token acquisition or network.
+- Configuration state is explicit (`missing`, `disabled`, `invalid`, `active`); inactive states are
+  silent, while invalid config produces one useful redacted diagnostic and exposes zero tools.
+- MCP batch enrichment is a read-only planner. Apply is operator-only through `dist/enrich.mjs`.
+  The Stage-0 pilot policy is minimal/read-only and excludes `memory_retain_batch`.
+- Исправлена подмена `tokenFile` между загрузкой конфигурации и первым запросом: открытие
+  неблокирующее, проверяются идентичность и тип файла, чтение идёт через дескриптор; замена
+  и FIFO вызывают отказ.
+- Диагностика невалидной конфигурации больше не выводит произвольные значения, абсолютные пути
+  и фрагменты JSON; управляющие символы из входа не попадают в stderr.
+- Активные зависимости MCP и отложенный доступ к токену представлены явными типами; добавлена
+  проверка единственного `/version` при одновременных первых запросах.
 
 ### Added
 - Tool policy: optional `allowTools` / `denyTools` in `.hindsight.json`. Denied tools are not listed
   and refuse calls; unknown names invalidate the config. `memory_get_current_bank` reports the
   enabled tools.
 
-## [3.7.0] — 2026-10-07
-
-### Added
-
-- **Batch enrichment.** New MCP tool `memory_retain_batch {file, apply}` and CLI
-  `dist/enrich.mjs <file> [--apply]` write a JSONL file of distilled items (`decision`,
+- **Batch enrichment.** New read-only MCP planner `memory_retain_batch {file}` and operator CLI
+  `dist/enrich.mjs <file> [--apply --confirm <digest>]` process JSONL distilled items (`decision`,
   `rejected`, `lesson`, `pitfall`, `rule`, `finding`) into memory, one bank per item. Every line
   is validated (fields, kind, content cap, ISO timestamp, `document_id` shape, duplicates), routed
   (explicit `bank`, else `routing` by `metadata.repo`), gated (allowlist + exists on the server,
-  never created) and scanned for secrets and personal data; offending lines are refused with their
-  line numbers and never sent. Dry run by default — counts per bank and kind, refused lines, which
-  `document_id`s already exist, samples. Apply posts per bank in batches, `async`, with
-  `update_mode: "replace"` and `observation_scopes: "shared"`, and prints operation ids;
-  re-running a file is idempotent.
+  before bank-scoped calls) and scanned for secrets and personal data; offending lines are refused
+  with their line numbers and never sent. Dry run reports counts per bank and kind, refused lines,
+  which `document_id`s already exist, and samples. Only the separately authorized CLI apply posts
+  per bank in batches, `async`, with `update_mode: "replace"` and
+  `observation_scopes: "shared"`, and prints operation ids; re-running is idempotent.
 - Config keys `routing` (repository name or glob → bank; every target must be in `banks`) and
   `enrichMaxChars` (default 900).
 - Skill `/fpl-hsmem:enrich`: the procedure for distilling design records, decision ledgers,
-  review threads, chat threads and (optionally) one's own session transcripts into linked items,
-  with a dry run shown to a human before apply and a recall spot-check after.
+  review threads, chat threads and (optionally) one's own session transcripts into linked items.
+  Apply remains a separately authorized operator action after dry run.
 - `tests/test-enrich.sh`: validation, routing, refusal, dry run vs apply, CLI exit codes, MCP tool.
 
 ### Changed
@@ -71,17 +84,19 @@ All notable changes to `fpl-hsmem` are documented here. Format:
 ### Added
 
 - Optional `bank` on every bank-scoped tool (all except `memory_get_current_bank`). A bank outside
-  the allowlist or missing on the server is refused before any bank-scoped request; nothing
-  creates a bank. `memory_get_current_bank` reports `default_bank`, `allowed_banks`,
-  `config_file`, `token_source`.
-- Offline tests: project config, multi-bank, no transcript capture, Hindsight 0.10 contract.
+  the allowlist or absent from the server list is refused before a bank-scoped request.
+  `memory_get_current_bank` reports `default_bank`, `allowed_banks`, `config_file`, `token_source`.
+  These client checks are not server authorization and make no blanket guarantee about server-side
+  read behavior.
+- Offline tests: project config states/laziness, multi-bank, default-off hooks, compatibility gate,
+  Hindsight 0.10 request contracts, and enrichment authorization boundaries.
 
 ### Fixed
 
 - `memory_list` sent `tags` comma-joined; Hindsight's list endpoint takes `tags` as a repeated
   query key, so a multi-tag filter matched one tag named `a,b`.
-- Verified against Hindsight v0.10.2 that no tool calls the removed `/profile` or `/background`
-  endpoints (`memory_set_mission` is `PATCH /config {"updates":{"reflect_mission":…}}`).
+- Verified that supported servers use Hindsight API >=0.10.2 and <0.11.0 and no tool calls the
+  endpoints removed in 0.10 (`memory_set_mission` uses `PATCH /config`).
 
 ## [3.6.3] — 2026-09-11
 
@@ -472,6 +487,8 @@ RFC-003 + ADR-005, NOTE-004 outcome-feedback pattern adoption).
   `claude-code` (uses your Claude Pro/Max subscription, no extra API
   keys required).
 
-[Unreleased]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v2.1.0...HEAD
+[Unreleased]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v3.7.0...HEAD
+[3.7.0]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v3.6.3...fpl-hsmem-v3.7.0
+[3.6.3]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v2.1.0...fpl-hsmem-v3.6.3
 [2.1.0]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v2.0.0...fpl-hsmem-v2.1.0
 [2.0.0]: https://github.com/ForgePlan/marketplace/releases/tag/fpl-hsmem-v2.0.0

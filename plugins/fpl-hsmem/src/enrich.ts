@@ -8,8 +8,10 @@
  *
  * Configuration is the project's `.hindsight.json`, found walking up from the working directory —
  * the same file, allowlist and `routing` the MCP server uses, and the same rule that the file must
- * be inside the project. Dry run is the default: nothing is written without `--apply`, and apply
- * needs `--confirm` with the digest the dry run of this exact file printed.
+ * be inside the project. Dry run is the default: nothing is written without `--apply`. The digest
+ * supplied with `--confirm` proves only that the file and resolved plan are still fresh; it does
+ * not grant authorization, ownership, or permission to write. The operator must be independently
+ * authorized to invoke apply.
  *
  * Exit codes: 0 — every line accepted (and, with --apply, every batch queued); 3 — some lines
  * refused (the rest were planned / written); 1 — config, file, server, confirmation or batch
@@ -75,7 +77,15 @@ if (!file) fail(2, USAGE);
 if (confirm !== undefined && !apply) fail(2, `--confirm only makes sense with --apply\n${USAGE}`);
 
 const loaded = loadProjectConfig(process.cwd());
-if (!loaded.active) fail(1, `Hindsight is not configured here: ${loaded.reason}`);
+if (loaded.state === "missing") {
+  fail(1, `Hindsight is not configured: ${redact(loaded.reason)}`);
+}
+if (loaded.state === "disabled") {
+  fail(1, `Hindsight configuration is disabled: ${redact(loaded.reason)}`);
+}
+if (loaded.state === "invalid") {
+  fail(1, `Hindsight configuration is invalid: ${redact(loaded.reason)}`);
+}
 const config = loaded.config;
 
 let path: string;
@@ -107,7 +117,8 @@ try {
           samples,
           batchSize,
           applyHint:
-            `After a human has reviewed this summary, re-run with --apply --confirm ${plan.digest}` +
+            `Digest ${plan.digest} proves only file/plan freshness and grants no authorization. ` +
+            `If separately authorized to write, an operator may re-run with --apply --confirm ${plan.digest}` +
             (allowReplaceForeign ? " --allow-replace-foreign" : "") +
             (maxChars !== undefined ? ` --max-chars ${maxChars}` : ""),
         })) + "\n",

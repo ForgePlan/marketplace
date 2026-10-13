@@ -1,10 +1,9 @@
 # Troubleshooting
 
 > [!IMPORTANT]
-> **Project-only configuration.** Configuration is project-only (`.hindsight.json`, several banks, no
-> derived bank, `autoRetain`/`autoRecall` off by default). Where this page mentions `.mcp.json`,
-> `HINDSIGHT_BANK_ID`, `~/.hindsight/config.json` or a bank derived from the directory name, that
-> describes the pre-3.7.0 behaviour — see [`CONFIGURATION.md`](./CONFIGURATION.md).
+> **3.7.0 is project-only and default-off.** It requires an explicit `.hindsight.json` and
+> Hindsight API >=0.10.2 and <0.11.0. `autoRecall`/`autoRetain` are false unless explicitly enabled;
+> initial adoption should use the read-only policy in [`CONFIGURATION.md`](./CONFIGURATION.md).
 
 
 Diagnostic recipes for common issues. For full automated diagnostic,
@@ -40,19 +39,23 @@ Fixes:
 |-------|-----|
 | Container stopped | `docker start hindsight` |
 | Container crashed | `docker logs hindsight` to see why, recreate if needed |
-| Port 8888 conflict | Run on different port: `docker run ... -p 9000:8888 ...`, set `HINDSIGHT_URL=http://localhost:9000` |
-| Container exists but unhealthy | `docker rm -f hindsight` and recreate from scratch |
+| Port 8888 conflict | Run on a different port and set that exact `url` in `.hindsight.json`; there is no URL default |
+| Container exists but unhealthy | Diagnose before recreation; production rollback must keep image and database paired |
 | `claude-code` provider not authenticated | Run `claude auth login` on the host, recreate container |
 
-Recreate container fresh (Docker, no API keys):
+For a new disposable local server, pin a compatible image rather than `latest`:
 
 ```bash
 docker rm -f hindsight
 docker run -d --name hindsight \
   -p 8888:8888 -p 9999:9999 \
   -e HINDSIGHT_API_LLM_PROVIDER=claude-code \
-  ghcr.io/vectorize-io/hindsight:latest
+  ghcr.io/vectorize-io/hindsight:0.10.2
+curl http://localhost:8888/version
 ```
+
+Do not use this destructive recreation recipe on production. Follow the migration runbook in
+`CONFIGURATION.md`: restored-copy rehearsal, paired image+database rollback, and restore evidence.
 
 ### "First startup is very slow"
 
@@ -83,171 +86,57 @@ The fact-extraction LLM is choosing bad facts. Two levers:
 
 ---
 
-## Bank identity — the failure class that eats memory silently
+## Configuration and bank identity
 
-Everything in this chapter is one failure wearing different hats: **more than one
-thing can decide which bank you write to, and when they disagree nobody is told.**
-Recall keeps answering, statistics keep looking healthy, and the corpus quietly
-splits in two. Every recipe below was written after living through it.
-
-### The five-minute check — run this first
+### The five-minute check
 
 ```
-memory_get_current_bank      # in a plain session
-memory_status                # names the SOURCE of the bank id, and warns when it was derived
+memory_get_current_bank
+memory_status
 ```
 
-Then find everything that can set the name:
+The active identity has one source: the nearest project `.hindsight.json` within the discovery
+boundary. It declares `banks` and `defaultBank`; `HINDSIGHT_BANK_ID`, user-global config, and folder
+names are ignored. If no config is found or it is disabled, the server is silent and lists zero
+tools. If it is invalid, it lists zero tools and emits one redacted stderr diagnostic.
+
+Check the project files, not legacy selectors:
 
 ```bash
-grep -rn HINDSIGHT_BANK_ID \
-  .mcp.json .claude/settings.json .claude/settings.local.json \
-  ~/.hindsight/config.json .hindsight.json 2>/dev/null
+cat .hindsight.json
+test ! -e .hindsight-disabled
 ```
 
-**One line is healthy. Two lines is the bug**, even when both name the same
-bank — the second one is a trap waiting for the day they diverge.
+### "Unsupported Hindsight API version"
 
-Resolution order, highest wins: environment → `.mcp.json` (that server only) →
-`.hindsight.json` → `~/.hindsight/config.json` → derived from the project root's
-directory name. `.mcp.json`'s `env` block applies **only to the server declared
-in it**, which is exactly how one project ends up with a server on one bank and
-its background hooks on another.
-
-### "Memory forgot something I know it was told"
-
-The single most common report, and it is almost never amnesia.
-
-| What to check | What it means |
-|---|---|
-| `memory_get_current_bank` returns a bank you did not choose | something is naming it for you — run the grep above |
-| `memory_status` says `bank_id_source: derived-from-directory` | nobody chose it; rename the directory and the memory moves |
-| Two sets of hindsight tools in the tool list, different prefixes | two servers are registered — see the next recipe |
-| `memory_operations status=failed` returns rows | the conversation genuinely never became memory; this is loss, not misplacement |
+The first bank-list or bank-scoped request calls `/version` and caches the result. API 0.9.1,
+0.11+, missing/malformed responses, and request failure are refused before any bank request. Use a
+server in **>=0.10.2 and <0.11.0**; do not bypass the gate. Inactive/invalid configurations do not
+make even the version request.
 
 ### "There are two hindsight servers in my tool list"
 
-Symptom: both `mcp__hindsight__*` and `mcp__plugin_<something>_hindsight__*`
-appear. Ask each which bank it holds:
+Only one registration is allowed per runtime. In Claude Code, use the plugin registration and
+remove a hand-wired duplicate. In Codex or OMP, register
+`node /absolute/path/to/fpl-hsmem/dist/index.mjs` once in that client's project MCP config. Do not
+add legacy bank environment selectors. Restart and confirm only one tool prefix remains.
 
-```
-memory_get_current_bank    # via the plugin's tools
-memory_get_current_bank    # via the hand-wired server's tools
-```
+### "The selected bank is refused"
 
-Different answers mean the project has been writing to two banks in parallel.
+The client refuses a bank outside `banks` or absent from `GET /v1/default/banks` before a
+bank-scoped request. Correct the explicit configuration, or have an authorized operator create the
+bank separately. Do not widen the allowlist merely to silence the error.
 
-Worse, check **which binary** the hand-wired one runs:
+`BankGate` and `allowTools`/`denyTools` are client-side controls, not Hindsight server
+authorization. Other clients holding credentials are outside those controls, and the plugin makes
+no blanket claim that every server read can never create state.
 
-```bash
-python3 -c "import json;print(json.load(open('.mcp.json'))['mcpServers']['hindsight']['args'])"
-```
+### "I have legacy split banks"
 
-A path under `~/.claude/plugins/cache/<marketplace>/<plugin>/<version>/` pins a
-**frozen old version of the very plugin you have installed**. It does not update
-when the plugin updates, so every fix shipped since that version is absent from
-that path while looking identical from the outside.
-
-**Fix:** delete the hand-wired `hindsight` block from `.mcp.json` and let the
-plugin provide the server. Keep a copy of the file first. Verify by restarting
-the session and confirming only one set of memory tools is present.
-
-### "I have several banks for one project — how do I merge them?"
-
-Read this before running anything. The merge path has a rule that is in no
-documentation and costs an afternoon to discover.
-
-**`document-transfer` SKIPS a document whose id already exists in the target.**
-It reports `completed` either way. A run here moved 1 document out of 8 and
-reported success:
-
-```json
-{"documents_imported": 1, "documents_skipped": 7, "facts_imported": 4}
-```
-
-Why: the background hook writes each session's transcript under the **session
-UUID**. Two banks that both received hook writes therefore hold the *same ids*
-with *different contents*, and the importer refuses to touch a colliding id.
-
-**So measure the overlap before you transfer.** The useful size of a transfer is
-not how many documents the source has — it is how many of the source's document
-ids the target does *not* already have:
-
-```bash
-# list ids on both sides, compare
-curl -s -H "Authorization: Bearer $HINDSIGHT_API_KEY" \
-  "$HINDSIGHT_URL/v1/default/banks/<source>/documents?limit=50" | jq -r '.items[].id' | sort > /tmp/src.ids
-curl -s -H "Authorization: Bearer $HINDSIGHT_API_KEY" \
-  "$HINDSIGHT_URL/v1/default/banks/<target>/documents?limit=50" | jq -r '.items[].id' | sort > /tmp/tgt.ids
-comm -23 /tmp/src.ids /tmp/tgt.ids     # these are the only ones that will move
-```
-
-Two outcomes, and they call for opposite actions:
-
-- **High overlap (session-UUID ids on both sides).** The banks are not two
-  corpora, they are two partial copies of the same conversation history. There is
-  little to merge; pick the one that is ahead and stop writing to the other.
-  Do **not** delete the target's copy to force the source's in — measure first,
-  the target's copy is often the larger one.
-- **Zero overlap (named documents: `prd-024-…`, `master-reference`).** These are
-  ingested artifacts, not transcripts. The transfer will move all of them.
-
-The procedure, once you know it is worth doing:
-
-```
-POST /v1/default/banks/<source>/document-transfer/export   → operation_id
-GET  /v1/default/banks/<source>/operations/<id>            → poll to completed
-                                                             → result_metadata.download_url
-# download the archive, then
-POST /v1/default/banks/<target>/document-transfer          → multipart upload → operation_id
-GET  /v1/default/banks/<target>/operations/<id>            → poll to completed
-POST /v1/default/banks/<target>/consolidate                → rebuild derived beliefs
-# then rebuild each knowledge page: mental_model_refresh
-```
-
-Notes earned the hard way:
-
-- **Poll to a terminal state; never assume.** A poller that dies of a network
-  hiccup is not evidence about the job it was watching. Read
-  `result_metadata` — `documents_imported` is the only number that means anything.
-- **Observations do not travel and do not need to.** Every memory outside a
-  document is a derived belief (measured: exactly, to the unit, in three separate
-  banks). The target recomputes them from the facts it now has, which is what
-  `/consolidate` is for.
-- **The source bank is untouched.** Transfer copies; nothing is deleted. If the
-  import disappoints, the source is still the source.
-- The admin CLI's `import-bank` is a *different thing*: it restores a whole bank
-  and fails if the target already exists. It cannot merge.
-
-### "I have banks I never created"
-
-A bank materialises on first touch — any string that reaches the server becomes
-one. A deployment audited here held **61 banks**, among them `src`, `docs`,
-`dev`, `repo`, `shared`, `old`, `k8s`: directory names that leaked in from a
-session started one level too deep.
-
-There is no server-side guard against this. Prevention is on the client:
-
-- Declare `HINDSIGHT_BANK_ID` explicitly in every project, so nothing is derived.
-- Treat `bank_id_source: derived-from-directory` in `memory_status` as a defect
-  to fix, not a note.
-- A typo in a declared name still creates a bank. If that matters to you, keep a
-  short allowlist of known bank ids and check against it before writing.
-
-Junk banks are harmless but not free: they are indistinguishable from real ones
-in `GET /v1/default/banks`, so the next person auditing cannot tell what is live.
-
-### "The bank id changed without me changing anything"
-
-You renamed the project directory, or a session started from a subdirectory that
-resolves differently. Memory under the old name is still on the server — orphaned,
-not lost.
-
-1. **Point back at it**: declare the old `HINDSIGHT_BANK_ID` explicitly.
-2. **Or move what matters across** with the transfer procedure above — after
-   measuring the id overlap.
-
-Renaming a bank in place is not supported.
+Do not merge during the Stage-0 pilot. Freeze writes, inventory source/target document IDs and
+collisions, and make migration a separately reviewed operation. Hindsight's document transfer may
+skip IDs already present in the target while still reporting completion; measure imported/skipped
+counts and keep the source unchanged until the result is verified.
 
 ---
 
@@ -257,14 +146,12 @@ Renaming a bank in place is not supported.
 
 Causes (in likelihood order):
 
-1. **Bank is empty.** Run `memory_status` — if memory count is 0,
-   nothing has been retained yet. Wait for ~10 conversation turns or
-   run `/fpl-hsmem:bootstrap` to seed.
-2. **Query is too short.** Hindsight needs ≥5 characters. The hook
-   silently skips very short prompts.
-3. **Auto-retain is disabled.** Check `HINDSIGHT_AUTO_RETAIN`,
-   `.hindsight-disabled` marker.
-4. **Server health.** See "Hindsight is unreachable" above.
+1. **Bank is empty.** Run `memory_status`. An empty bank is expected during a read-only pilot;
+   seeding it needs a later write authorization.
+2. **Query is too short.** Hindsight needs ≥5 characters. The hook, if enabled, skips very short
+   prompts.
+3. **Auto-recall is off.** Expected by default; use `memory_recall` manually in Stage 0.
+4. **Server health or compatibility.** See "Hindsight is unreachable" and the version gate above.
 
 ### "Recall returns junk (irrelevant memories)"
 
@@ -274,7 +161,7 @@ Common causes:
 |-------|-----|
 | Query is a single keyword | Rephrase as a natural-language question |
 | `recallBudget: low` set | Try `high` for thoroughness |
-| Bank contains too much noise | Set / refine `bankMission`, narrow with `tags` filter |
+| Bank contains too much noise | Refine the server bank mission through an authorized operator; narrow recall with `tags` |
 | Memories from a forgotten side project polluting the bank | Confirm bank ID is correct; isolate per project |
 
 Use `memory_recall` with filters:
@@ -291,16 +178,14 @@ memory_recall(
 
 ### "I want recall to consider more conversation history"
 
-By default the recall hook only uses the current prompt for the query.
-To compose multi-turn queries:
+Set `recallContextTurns` in `.hindsight.json` (only relevant after `autoRecall: true` is separately
+authorized):
 
-```bash
-HINDSIGHT_RECALL_CONTEXT_TURNS=3
+```json
+{ "recallContextTurns": 3 }
 ```
 
-The hook will read the last 3 user turns from the transcript and build
-a composite query. Useful when the conversation has built up context
-that the current prompt alone doesn't capture.
+The hook reads that many prior user turns from the transcript and builds a bounded composite query.
 
 ---
 
@@ -308,21 +193,18 @@ that the current prompt alone doesn't capture.
 
 ### "Auto-recall doesn't seem to fire"
 
-Symptoms:
-- Claude doesn't seem to "remember" anything from prior sessions
-- No `[Hindsight]` lines in stderr even with `HINDSIGHT_DEBUG=true`
+Symptoms after `autoRecall: true` was explicitly authorized:
+- Claude does not seem to remember prior sessions.
+- No `[Hindsight]` lines appear on stderr with project config `"debug": true`.
 
 Diagnose:
 
 ```bash
-# Hook state files exist?
-ls -la ~/.hindsight/state/
-# turns.json should appear after first prompt
-
-# Check hooks are registered
-ls .claude/settings.local.json .claude/settings.json
-cat .claude/settings.local.json 2>/dev/null | grep recall
+cat .hindsight.json
+test ! -e .hindsight-disabled
 ```
+
+First confirm `autoRecall` is actually true. In the Stage-0 pilot, a silent hook is correct.
 
 Fixes:
 
@@ -332,7 +214,7 @@ Fixes:
 | Project has `.hindsight-disabled` | Remove the marker file if you want hooks on |
 | Project's `.claude/settings.local.json` overrides hooks | Check it doesn't have `"hooks": {}` (empty disables all) |
 | Claude Code version doesn't support `UserPromptSubmit` event | Update Claude Code |
-| Hook timeout (12s) firing on slow Hindsight | Set `HINDSIGHT_RECALL_BUDGET=low` |
+| Hook timeout (12s) firing on slow Hindsight | Lower `.hindsight.json` `recallBudget` or keep `autoRecall: false` |
 
 Manual test:
 
@@ -350,18 +232,17 @@ Causes:
 
 | Cause | Fix |
 |-------|-----|
-| Throttling — `retainEveryNTurns=10` by default | Have ≥10 turns OR set `HINDSIGHT_RETAIN_EVERY_N_TURNS=1` for testing |
+| Throttling — `retainEveryNTurns=10` by default | After write authorization, lower `retainEveryNTurns` in `.hindsight.json` for a controlled test |
 | Transcript too short / empty | Need ≥10 chars of meaningful content |
-| `HINDSIGHT_AUTO_RETAIN=false` somewhere | Check env, `.hindsight.json`, `.mcp.json` env |
-| Hook timeout (15s) cut off network | Increase timeout in plugin's `hooks.json` or set `HINDSIGHT_DISABLED=false` |
+| `autoRetain` is false | Expected by default; enable only under a later write-authorization record |
+| Hook timeout (15s) cut off network | Diagnose server latency; do not bypass project safety controls |
 | Hindsight is rejecting writes | Check `docker logs hindsight` for `POST /v1/.../memories` errors |
 
 ### "Session ended but final retain didn't happen"
 
-`session-end.mjs` only runs if Claude Code emits the SessionEnd event.
-Some shutdown paths (kill -9, terminal closed) skip it. The next session
-will pick up where this one left off via auto-retain; the worst-case
-loss is the partial conversation since the last throttled retain.
+`session-end.mjs` only runs if Claude Code emits the SessionEnd event and `autoRetain` is true.
+Some shutdown paths (kill -9, terminal closed) skip it. In the default-off pilot it is intentionally
+silent and no transcript is written.
 
 ---
 
@@ -396,22 +277,22 @@ cat ~/.hindsight/state/retention.json
 
 ### "I disabled with `.hindsight-disabled` but it still runs"
 
-Check:
+Check both the launch directory and the discovered project config directory:
 
 ```bash
-ls -la .hindsight-disabled    # file exists in cwd?
-pwd                            # are you in the project root?
+pwd
+ls -la .hindsight-disabled
+root="$(git rev-parse --show-toplevel)"
+ls -la "$root/.hindsight.json" "$root/.hindsight-disabled"
 ```
 
-The marker must be in the **directory Claude Code is launched in** —
-not the project's git root if you cd'd into a subdirectory.
+A marker in cwd or beside `.hindsight.json` disables the project. The config-side marker keeps the
+opt-out effective when Claude Code starts in a subdirectory.
 
-If you're using nested directories, you might want to opt out at git
-root level:
+To opt out at the configured project:
 
 ```bash
-cd $(git rev-parse --show-toplevel)
-touch .hindsight-disabled
+touch "$(git rev-parse --show-toplevel)/.hindsight-disabled"
 ```
 
 ### "I enabled but it still doesn't run"
@@ -600,7 +481,7 @@ rm -rf ~/.hindsight/state/
 
 Turn counters and retention tracking reset to zero. Memories in
 Hindsight are unaffected — only the local hook state file is wiped.
-Next auto-retain rebuilds the state files.
+If `autoRetain` is later enabled, its next eligible run rebuilds the state files.
 
 To **also** reset all memories in a bank (destructive):
 

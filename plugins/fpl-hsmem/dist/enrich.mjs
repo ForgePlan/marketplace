@@ -25,6 +25,38 @@ function pluginVersion() {
   return "unknown";
 }
 
+// src/lib/compatibility.ts
+var HINDSIGHT_API_RANGE = ">=0.10.2 and <0.11.0";
+var HindsightCompatibilityGate = class {
+  result;
+  assertCompatible(readVersion) {
+    if (!this.result) this.result = this.check(readVersion);
+    return this.result;
+  }
+  async check(readVersion) {
+    let response;
+    try {
+      response = await readVersion();
+    } catch {
+      throw new Error(
+        `Hindsight compatibility check failed: /version could not be read; fpl-hsmem 3.7.0 requires API ${HINDSIGHT_API_RANGE}. No bank request was sent.`
+      );
+    }
+    const supplied = response !== null && typeof response === "object" ? response.api_version : void 0;
+    if (typeof supplied !== "string" || !/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(supplied)) {
+      throw new Error(
+        `Unsupported Hindsight API version (missing or malformed); fpl-hsmem 3.7.0 requires ${HINDSIGHT_API_RANGE}. No bank request was sent.`
+      );
+    }
+    const [major, minor, patch] = supplied.split(".").map(Number);
+    if (major !== 0 || minor !== 10 || !Number.isSafeInteger(patch) || patch < 2) {
+      throw new Error(
+        `Unsupported Hindsight API version ${supplied}; fpl-hsmem 3.7.0 requires ${HINDSIGHT_API_RANGE}. No bank request was sent.`
+      );
+    }
+  }
+};
+
 // src/lib/client.ts
 var USER_AGENT = `hindsight-mcp/${pluginVersion()}`;
 var PATH_ID_RE = /^[A-Za-z0-9_][A-Za-z0-9._~-]*$/;
@@ -69,10 +101,12 @@ var HindsightClient = class {
   url;
   apiKey;
   bankId;
-  constructor(url, bankId, apiKey = "") {
+  compatibility;
+  constructor(url, bankId, apiKey = "", compatibility = new HindsightCompatibilityGate()) {
     this.url = url.replace(/\/$/, "");
     this.bankId = bankId;
-    this.apiKey = apiKey;
+    this.apiKey = typeof apiKey === "function" ? apiKey : () => apiKey;
+    this.compatibility = compatibility;
   }
   get bank() {
     return this.bankId;
@@ -82,7 +116,8 @@ var HindsightClient = class {
       "Content-Type": "application/json",
       "User-Agent": USER_AGENT
     };
-    if (this.apiKey) h["Authorization"] = `Bearer ${this.apiKey}`;
+    const apiKey = this.apiKey();
+    if (apiKey) h["Authorization"] = `Bearer ${apiKey}`;
     return h;
   }
   bankPath(bankId) {
@@ -105,6 +140,14 @@ var HindsightClient = class {
     return path2 + qs;
   }
   async request(method, path2, body, timeoutMs = 15e3) {
+    if (path2 === "/v1/default/banks" || path2.startsWith("/v1/default/banks?") || path2.startsWith("/v1/default/banks/")) {
+      await this.compatibility.assertCompatible(
+        () => this.rawRequest("GET", "/version", void 0, 5e3)
+      );
+    }
+    return this.rawRequest(method, path2, body, timeoutMs);
+  }
+  async rawRequest(method, path2, body, timeoutMs) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
@@ -148,8 +191,8 @@ var HindsightClient = class {
    *
    * Hindsight creates a bank implicitly on the first bank-scoped write (and several reads), so
    * "just try it" is how orphan banks are born. This asks the bank list instead — `GET
-   * /v1/default/banks?q=` is a substring filter, so the match is checked exactly here — and that
-   * endpoint never creates anything.
+   * /v1/default/banks?q=` is a substring filter, so the match is checked exactly here. This is an
+   * observed existence check, not a claim that server-side reads are universally non-mutating.
    */
   async bankExists(bankId, timeoutMs = 1e4) {
     const res = await this.request(
@@ -421,6 +464,8 @@ var BankGate = class {
    * bank an operator deleted must stop being accepted, or the next write would recreate it.
    */
   confirmedAt = /* @__PURE__ */ new Map();
+  /** One compatibility request shared by every bank client for this active configuration. */
+  compatibility = new HindsightCompatibilityGate();
   ttlMs;
   now;
   /** A client for the default bank without the existence check — for tools that never touch a bank. */
@@ -430,7 +475,7 @@ var BankGate = class {
   clientFor(bank) {
     let client = this.clients.get(bank);
     if (!client) {
-      client = new HindsightClient(this.config.url, bank, this.config.apiKey);
+      client = new HindsightClient(this.config.url, bank, this.config.getApiKey, this.compatibility);
       this.clients.set(bank, client);
     }
     return client;
@@ -450,7 +495,7 @@ var BankGate = class {
     if (at === void 0 || this.now() - at >= this.ttlMs) {
       if (!await client.bankExists(bank)) {
         this.confirmedAt.delete(bank);
-        return `Refusing: bank "${bank}" does not exist on ${this.config.url}. This server never creates banks \u2014 an operator creates one deliberately, then this call will work.`;
+        return `Refusing: bank "${bank}" does not exist on ${this.config.url}. This client will not create it; an authorized operator must provision it separately.`;
       }
       this.confirmedAt.set(bank, this.now());
     }
@@ -459,7 +504,16 @@ var BankGate = class {
 };
 
 // src/lib/config.ts
-import { readFileSync as readFileSync2, existsSync, realpathSync } from "node:fs";
+import {
+  closeSync,
+  constants,
+  existsSync,
+  fstatSync,
+  openSync,
+  readFileSync as readFileSync2,
+  realpathSync,
+  statSync
+} from "node:fs";
 import { execFileSync } from "node:child_process";
 import { homedir } from "node:os";
 import { dirname as dirname2, isAbsolute, join as join2, normalize, resolve, sep } from "node:path";
@@ -588,34 +642,71 @@ function isDisabled(cwd = process.cwd(), configDir) {
   const env = process.env.HINDSIGHT_DISABLED ?? "";
   return ["1", "true", "yes", "on"].includes(env.toLowerCase());
 }
-function readToken(raw, configDir) {
+function bindToken(raw, configDir) {
   const envKey = process.env.HINDSIGHT_API_KEY?.trim();
-  if (envKey && process.env.HINDSIGHT_URL) return { token: envKey, source: "env" };
+  if (envKey && process.env.HINDSIGHT_URL) return { source: "env", load: () => envKey };
   if (raw.tokenFile !== void 0) {
-    if (typeof raw.tokenFile !== "string" || !raw.tokenFile) throw new Error("`tokenFile` must be a non-empty string");
+    if (typeof raw.tokenFile !== "string" || !raw.tokenFile) {
+      throw new Error("`tokenFile` must be a non-empty string");
+    }
     const path2 = isAbsolute(raw.tokenFile) ? raw.tokenFile : resolve(configDir, raw.tokenFile);
     let real;
     let root;
     try {
       real = realpathSync(path2);
       root = realpathSync(configDir);
-    } catch (err) {
-      throw new Error(`cannot read tokenFile ${path2}: ${err.code ?? err.message}`);
+    } catch {
+      throw new Error("`tokenFile` could not be resolved");
     }
     if (real === root || !isWithin(real, root)) {
-      throw new Error(
-        `tokenFile ${path2} resolves outside ${root}, the directory holding ${CONFIG_FILE} \u2014 a token file must live next to the config that names it`
-      );
+      throw new Error("`tokenFile` must resolve to a file inside the project");
     }
-    let text;
+    let expected;
     try {
-      text = readFileSync2(real, "utf-8");
-    } catch (err) {
-      throw new Error(`cannot read tokenFile ${path2}: ${err.code ?? err.message}`);
+      const bound = statSync(real);
+      if (!bound.isFile()) throw new Error();
+      expected = { dev: bound.dev, ino: bound.ino };
+    } catch {
+      throw new Error("`tokenFile` must resolve to a regular file");
     }
-    const token = text.trim();
-    if (!token) throw new Error(`tokenFile ${path2} is empty`);
-    return { token, source: "tokenFile" };
+    return {
+      source: "tokenFile",
+      load: () => {
+        let fd;
+        try {
+          const noFollow = typeof constants.O_NOFOLLOW === "number" ? constants.O_NOFOLLOW : 0;
+          const nonBlock = typeof constants.O_NONBLOCK === "number" ? constants.O_NONBLOCK : 0;
+          fd = openSync(real, constants.O_RDONLY | noFollow | nonBlock);
+        } catch {
+          throw new Error("`tokenFile` identity changed or is no longer safely readable");
+        }
+        try {
+          let opened;
+          try {
+            opened = fstatSync(fd);
+          } catch {
+            throw new Error("`tokenFile` identity could not be verified");
+          }
+          if (!opened.isFile() || opened.dev !== expected.dev || opened.ino !== expected.ino) {
+            throw new Error("`tokenFile` identity changed after configuration load");
+          }
+          let text;
+          try {
+            text = readFileSync2(fd, "utf-8");
+          } catch {
+            throw new Error("`tokenFile` could not be read");
+          }
+          const token = text.trim();
+          if (!token) throw new Error("`tokenFile` is empty");
+          return token;
+        } finally {
+          try {
+            closeSync(fd);
+          } catch {
+          }
+        }
+      }
+    };
   }
   if (raw.tokenCommand !== void 0) {
     if (!isStringArray(raw.tokenCommand) || raw.tokenCommand.length === 0) {
@@ -627,22 +718,27 @@ function readToken(raw, configDir) {
       );
     }
     const [cmd, ...args] = raw.tokenCommand;
-    let out;
-    try {
-      out = execFileSync(cmd, args, {
-        cwd: configDir,
-        encoding: "utf-8",
-        stdio: ["ignore", "pipe", "ignore"],
-        timeout: 1e4
-      });
-    } catch (err) {
-      throw new Error(`tokenCommand ${cmd} failed: ${err.message.split("\n")[0]}`);
-    }
-    const token = out.trim();
-    if (!token) throw new Error(`tokenCommand ${cmd} printed nothing`);
-    return { token, source: "tokenCommand" };
+    return {
+      source: "tokenCommand",
+      load: () => {
+        let out;
+        try {
+          out = execFileSync(cmd, args, {
+            cwd: configDir,
+            encoding: "utf-8",
+            stdio: ["ignore", "pipe", "ignore"],
+            timeout: 1e4
+          });
+        } catch {
+          throw new Error("`tokenCommand` failed");
+        }
+        const token = out.trim();
+        if (!token) throw new Error("`tokenCommand` produced no token");
+        return token;
+      }
+    };
   }
-  return { token: "", source: "none" };
+  return { source: "none", load: () => "" };
 }
 function toolList(raw, key, problems) {
   const v = raw[key];
@@ -652,55 +748,72 @@ function toolList(raw, key, problems) {
     return void 0;
   }
   const known = new Set(TOOL_NAMES);
-  const unknown = v.filter((n) => !known.has(n));
-  if (unknown.length) problems.push(`\`${key}\` names unknown tool(s) ${unknown.join(", ")}`);
+  if (v.some((name) => !known.has(name))) {
+    problems.push(`\`${key}\` contains an unknown tool name`);
+  }
   return new Set(v);
 }
-function loadProjectConfig(cwd = process.cwd(), opts = {}) {
+function loadProjectConfig(cwd = process.cwd()) {
   const configPath = findConfigFile(cwd);
   if (!configPath) {
-    return { active: false, reason: `no ${CONFIG_FILE} at or above ${resolve(cwd || process.cwd())}` };
+    return {
+      state: "missing",
+      reason: `no ${CONFIG_FILE} at or above ${resolve(cwd || process.cwd())}`
+    };
   }
   const configDir = dirname2(configPath);
   if (isDisabled(cwd, configDir)) {
-    return { active: false, reason: "disabled by .hindsight-disabled or HINDSIGHT_DISABLED", configPath };
+    return {
+      state: "disabled",
+      reason: "disabled by .hindsight-disabled or HINDSIGHT_DISABLED",
+      configPath
+    };
   }
   let raw;
   try {
     const parsed = JSON.parse(readFileSync2(configPath, "utf-8"));
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("not a JSON object");
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error();
     raw = parsed;
-  } catch (err) {
-    return { active: false, reason: `${configPath} is not valid JSON: ${err.message}`, configPath };
+  } catch {
+    return {
+      state: "invalid",
+      reason: `${CONFIG_FILE} is not valid JSON`,
+      configPath
+    };
   }
   const problems = [];
-  for (const [k, why] of Object.entries(LEGACY_KEYS)) {
-    if (k in raw) problems.push(`\`${k}\` is not supported \u2014 ${why}`);
+  for (const [key, rule] of Object.entries(LEGACY_KEYS)) {
+    if (key in raw) problems.push(`\`${key}\` is not supported \u2014 ${rule}`);
   }
-  if (typeof raw.url !== "string" || !/^https?:\/\//.test(raw.url)) problems.push("`url` must be an http(s) URL");
-  if (!isStringArray(raw.banks) || raw.banks.length === 0) problems.push("`banks` must be a non-empty array of bank ids");
-  if (typeof raw.defaultBank !== "string" || !raw.defaultBank) problems.push("`defaultBank` is required");
-  else if (isStringArray(raw.banks) && !raw.banks.includes(raw.defaultBank)) {
-    problems.push(`\`defaultBank\` "${raw.defaultBank}" is not in \`banks\``);
+  const url = typeof raw.url === "string" && /^https?:\/\//.test(raw.url) ? raw.url : "";
+  if (!url) problems.push("`url` must be an http(s) URL");
+  const banks = isStringArray(raw.banks) && raw.banks.length > 0 ? [...new Set(raw.banks)] : [];
+  if (banks.length === 0) problems.push("`banks` must be a non-empty array of bank ids");
+  const defaultBank = typeof raw.defaultBank === "string" && raw.defaultBank ? raw.defaultBank : "";
+  if (!defaultBank) problems.push("`defaultBank` is required");
+  else if (banks.length > 0 && !banks.includes(defaultBank)) {
+    problems.push("`defaultBank` must name an entry in `banks`");
   }
   const tuning = { ...TUNING_DEFAULTS };
   for (const [key, type] of Object.entries(TUNING_TYPES)) {
     if (!(key in raw)) continue;
-    const v = raw[key];
-    const okType = type === "string[]" ? isStringArray(v) : typeof v === type;
+    const value = raw[key];
+    const okType = type === "string[]" ? isStringArray(value) : typeof value === type;
     if (!okType) {
       problems.push(`\`${key}\` must be a ${type}`);
       continue;
     }
-    tuning[key] = v;
+    tuning[key] = value;
   }
-  if (!["low", "mid", "high"].includes(tuning.recallBudget)) problems.push("`recallBudget` must be low, mid or high");
+  if (!["low", "mid", "high"].includes(tuning.recallBudget)) {
+    problems.push("`recallBudget` must be low, mid or high");
+  }
   if (!Number.isInteger(tuning.enrichMaxChars) || tuning.enrichMaxChars < 1 || tuning.enrichMaxChars > ENRICH_MAX_CHARS_LIMIT) {
     problems.push(`\`enrichMaxChars\` must be an integer from 1 to ${ENRICH_MAX_CHARS_LIMIT}`);
   }
   const allow = toolList(raw, "allowTools", problems);
   const deny = toolList(raw, "denyTools", problems);
-  const enabledTools = TOOL_NAMES.filter((n) => (!allow || allow.has(n)) && !deny?.has(n));
+  const enabledTools = TOOL_NAMES.filter((name) => (!allow || allow.has(name)) && !deny?.has(name));
   const routing = {};
   if (raw.routing !== void 0) {
     if (!raw.routing || typeof raw.routing !== "object" || Array.isArray(raw.routing)) {
@@ -708,44 +821,49 @@ function loadProjectConfig(cwd = process.cwd(), opts = {}) {
     } else {
       for (const [pattern, bank] of Object.entries(raw.routing)) {
         if (!pattern || typeof bank !== "string" || !bank) {
-          problems.push(`\`routing\` entry "${pattern}" must map to a bank id string`);
-        } else if (isStringArray(raw.banks) && !raw.banks.includes(bank)) {
-          problems.push(`\`routing\` entry "${pattern}" \u2192 "${bank}" is not in \`banks\``);
+          problems.push("`routing` contains an invalid entry");
+        } else if (banks.length > 0 && !banks.includes(bank)) {
+          problems.push("`routing` targets must be declared in `banks`");
         } else {
           routing[pattern] = bank;
         }
       }
     }
   }
-  let token = { token: "", source: "none" };
-  if (problems.length === 0 && opts.token !== false) {
-    try {
-      token = readToken(raw, configDir);
-    } catch (err) {
-      problems.push(err.message);
-    }
+  let tokenBinding;
+  try {
+    tokenBinding = bindToken(raw, configDir);
+  } catch (err) {
+    problems.push(err.message);
   }
-  if (problems.length > 0) {
-    return { active: false, reason: `${configPath}: ${problems.join("; ")}`, configPath };
+  if (problems.length > 0 || !tokenBinding) {
+    return {
+      state: "invalid",
+      reason: `${CONFIG_FILE}: ${problems.join("; ")}`,
+      configPath
+    };
   }
+  const activeTokenBinding = tokenBinding;
   const envUrl = process.env.HINDSIGHT_URL;
   const debugEnv = (process.env.HINDSIGHT_DEBUG ?? "").toLowerCase();
-  return {
-    active: true,
-    config: {
-      ...tuning,
-      debug: tuning.debug || ["1", "true", "yes", "on"].includes(debugEnv),
-      url: (envUrl || raw.url).replace(/\/$/, ""),
-      banks: [...new Set(raw.banks)],
-      defaultBank: raw.defaultBank,
-      apiKey: token.token,
-      tokenSource: token.source,
-      configPath,
-      projectRoot: configDir,
-      routing,
-      enabledTools
-    }
+  let cachedToken;
+  const config2 = {
+    ...tuning,
+    debug: tuning.debug || ["1", "true", "yes", "on"].includes(debugEnv),
+    url: (envUrl || url).replace(/\/$/, ""),
+    banks,
+    defaultBank,
+    getApiKey: () => {
+      if (cachedToken === void 0) cachedToken = activeTokenBinding.load();
+      return cachedToken;
+    },
+    tokenSource: activeTokenBinding.source,
+    configPath,
+    projectRoot: configDir,
+    routing,
+    enabledTools
   };
+  return { state: "active", config: config2 };
 }
 
 // src/lib/enrich.ts
@@ -1002,7 +1120,7 @@ async function planEnrich(bytes2, opts, resolve3) {
           line: c.line,
           documentId: id,
           reasons: [
-            `document "${id}" already exists in bank "${bank}" and was not written by enrich \u2014 replacing it would delete ${units}. Choose another document_id, or pass allowReplaceForeign if replacing it is intended`
+            `document "${id}" already exists in bank "${bank}" and was not written by enrich \u2014 replacing it would delete ${units}. Choose another document_id. A separately authorized operator may use CLI --allow-replace-foreign and dry-run again if replacement is intended`
           ]
         });
         continue;
@@ -1031,10 +1149,10 @@ async function planEnrich(bytes2, opts, resolve3) {
 }
 function confirmRefusal(plan, confirm2) {
   if (typeof confirm2 !== "string" || !confirm2) {
-    return "Refusing to apply: apply requires the digest printed by the dry run of this exact file. Run the dry run, have a human review the report, then apply with that digest. Nothing was written.";
+    return "Refusing to apply: apply requires the freshness digest printed by the dry run of this exact file. The digest does not grant authorization, ownership, or permission to write. Nothing was written.";
   }
   if (confirm2.trim().toLowerCase() !== plan.digest) {
-    return "Refusing to apply: the file or the resolved plan changed since the dry run that produced this digest (an edited line, a different routing, or documents created or removed on the server). Dry-run again and review the new report. Nothing was written.";
+    return "Refusing to apply: the file or the resolved plan changed since the dry run that produced this digest (an edited line, a different routing, or documents created or removed on the server). Dry-run again. A matching digest would prove freshness only, not authorization. Nothing was written.";
   }
   return null;
 }
@@ -1145,7 +1263,7 @@ function formatEnrichReport(file2, plan, applied, opts = {}) {
 }
 
 // src/lib/paths.ts
-import { realpathSync as realpathSync2, statSync } from "node:fs";
+import { realpathSync as realpathSync2, statSync as statSync2 } from "node:fs";
 import { resolve as resolve2, sep as sep2 } from "node:path";
 var MAX_PROJECT_FILE_BYTES = 2 * 1024 * 1024;
 function assertInsideProject(input, projectRoot) {
@@ -1161,7 +1279,7 @@ function assertInsideProject(input, projectRoot) {
       `refusing to read ${input}: it resolves to ${real}, which is outside the project root ${root}. Symlinks are followed before this check, so a link pointing out of the project is refused too.`
     );
   }
-  const size = statSync(real).size;
+  const size = statSync2(real).size;
   if (size > MAX_PROJECT_FILE_BYTES) {
     throw new Error(`refusing to read ${real}: ${size} bytes exceeds the ${MAX_PROJECT_FILE_BYTES}-byte cap`);
   }
@@ -1216,7 +1334,15 @@ if (!file) fail(2, USAGE);
 if (confirm !== void 0 && !apply) fail(2, `--confirm only makes sense with --apply
 ${USAGE}`);
 var loaded = loadProjectConfig(process.cwd());
-if (!loaded.active) fail(1, `Hindsight is not configured here: ${loaded.reason}`);
+if (loaded.state === "missing") {
+  fail(1, `Hindsight is not configured: ${redact(loaded.reason)}`);
+}
+if (loaded.state === "disabled") {
+  fail(1, `Hindsight configuration is disabled: ${redact(loaded.reason)}`);
+}
+if (loaded.state === "invalid") {
+  fail(1, `Hindsight configuration is invalid: ${redact(loaded.reason)}`);
+}
 var config = loaded.config;
 var path;
 var bytes;
@@ -1242,7 +1368,7 @@ try {
     (json ? JSON.stringify(enrichSummary(path, plan, applied), null, 2) : formatEnrichReport(path, plan, applied, {
       samples,
       batchSize,
-      applyHint: `After a human has reviewed this summary, re-run with --apply --confirm ${plan.digest}` + (allowReplaceForeign ? " --allow-replace-foreign" : "") + (maxChars !== void 0 ? ` --max-chars ${maxChars}` : "")
+      applyHint: `Digest ${plan.digest} proves only file/plan freshness and grants no authorization. If separately authorized to write, an operator may re-run with --apply --confirm ${plan.digest}` + (allowReplaceForeign ? " --allow-replace-foreign" : "") + (maxChars !== void 0 ? ` --max-chars ${maxChars}` : "")
     })) + "\n"
   );
   if (applied?.some((r) => r.error)) process.exit(1);

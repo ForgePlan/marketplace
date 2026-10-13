@@ -33,8 +33,9 @@ import { redact, secretKinds } from "./redact.js";
  *
  * WHY APPLY CARRIES A DIGEST. The dry run returns a digest of the file's bytes and of the resolved
  * plan (banks, routing, refusals, which documents exist). Apply recomputes it and refuses unless
- * the caller passes the same value — so what is written is exactly what a human reviewed, and a
- * file edited (or a server that changed) since the report cannot slip through.
+ * the caller passes the same value, proving only that the file and plan are still fresh. A matching
+ * digest never proves human authorization, ownership, or permission to write; apply remains a
+ * separately authorized operator action.
  */
 
 /** Tag carried by every item this pipeline writes; apply replaces only documents that have it. */
@@ -273,7 +274,7 @@ export interface EnrichPlan {
   lines: number;
   refused: EnrichRefusal[];
   banks: BankPlan[];
-  /** sha256 of the file bytes and the resolved plan. Apply must be confirmed with this value. */
+  /** sha256 of the file bytes and resolved plan; an anti-TOCTOU check, never write authorization. */
   digest: string;
 }
 
@@ -294,10 +295,10 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promis
 }
 
 /**
- * Everything short of writing: parse, gate each bank (allowlist + exists on the server, never
- * created), look up which document_ids already exist and who wrote them, and digest the result.
- * Reads only. Throws on a network or server failure — a plan built on a failed lookup would
- * misreport what apply is about to replace.
+ * Everything short of writing: parse, gate each bank (client allowlist + observed server
+ * existence), look up which document_ids already exist and who wrote them, and digest the result.
+ * Reads only from the client's perspective. Throws on a network or server failure — a plan built
+ * on a failed lookup would misreport what an operator apply is about to replace.
  */
 export async function planEnrich(bytes: Uint8Array, opts: EnrichOptions, resolve: BankResolver): Promise<EnrichPlan> {
   const parsed = parseCandidates(new TextDecoder().decode(bytes), opts);
@@ -334,8 +335,8 @@ export async function planEnrich(bytes: Uint8Array, opts: EnrichOptions, resolve
           documentId: id,
           reasons: [
             `document "${id}" already exists in bank "${bank}" and was not written by enrich — replacing ` +
-              `it would delete ${units}. Choose another document_id, or pass allowReplaceForeign ` +
-              `if replacing it is intended`,
+              `it would delete ${units}. Choose another document_id. A separately authorized operator ` +
+              `may use CLI --allow-replace-foreign and dry-run again if replacement is intended`,
           ],
         });
         continue;
@@ -366,20 +367,21 @@ export async function planEnrich(bytes: Uint8Array, opts: EnrichOptions, resolve
 /**
  * Null when `confirm` matches the plan's digest, else why apply must not proceed. Apply recomputes
  * the plan from the file as it is now, so any edit to the file — or a change on the server that
- * alters what would be replaced — yields a different digest and is refused.
+ * alters what would be replaced — yields a different digest and is refused. Equality is an
+ * anti-TOCTOU freshness check only; callers must gate authorization separately.
  */
 export function confirmRefusal(plan: EnrichPlan, confirm: unknown): string | null {
   if (typeof confirm !== "string" || !confirm) {
     return (
-      "Refusing to apply: apply requires the digest printed by the dry run of this exact file. " +
-      "Run the dry run, have a human review the report, then apply with that digest. Nothing was written."
+      "Refusing to apply: apply requires the freshness digest printed by the dry run of this exact " +
+      "file. The digest does not grant authorization, ownership, or permission to write. Nothing was written."
     );
   }
   if (confirm.trim().toLowerCase() !== plan.digest) {
     return (
       "Refusing to apply: the file or the resolved plan changed since the dry run that produced this " +
       "digest (an edited line, a different routing, or documents created or removed on the server). " +
-      "Dry-run again and review the new report. Nothing was written."
+      "Dry-run again. A matching digest would prove freshness only, not authorization. Nothing was written."
     );
   }
   return null;

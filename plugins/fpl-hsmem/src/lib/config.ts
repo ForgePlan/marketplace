@@ -1,4 +1,14 @@
-import { readFileSync, existsSync, realpathSync } from "node:fs";
+import {
+  closeSync,
+  constants,
+  existsSync,
+  fstatSync,
+  openSync,
+  readFileSync,
+  realpathSync,
+  statSync,
+  type Stats,
+} from "node:fs";
 import { execFileSync } from "node:child_process";
 import { homedir } from "node:os";
 import { dirname, isAbsolute, join, normalize, resolve, sep } from "node:path";
@@ -62,7 +72,8 @@ export interface HindsightConfig {
   url: string;
   banks: string[];
   defaultBank: string;
-  apiKey: string;
+  /** Acquire the credential only when a network request is about to be sent. */
+  getApiKey: () => string;
   autoRecall: boolean;
   autoRetain: boolean;
   recallBudget: "low" | "mid" | "high";
@@ -97,8 +108,10 @@ export interface HindsightConfig {
 }
 
 export type LoadResult =
-  | { active: true; config: HindsightConfig }
-  | { active: false; reason: string; configPath?: string };
+  | { state: "active"; config: HindsightConfig }
+  | { state: "missing"; reason: string }
+  | { state: "disabled"; reason: string; configPath: string }
+  | { state: "invalid"; reason: string; configPath: string };
 
 const TUNING_DEFAULTS = {
   autoRecall: false,
@@ -211,39 +224,96 @@ export function isDisabled(cwd: string = process.cwd(), configDir?: string): boo
   return ["1", "true", "yes", "on"].includes(env.toLowerCase());
 }
 
-function readToken(raw: Record<string, unknown>, configDir: string): { token: string; source: HindsightConfig["tokenSource"] } {
+interface TokenBinding {
+  source: HindsightConfig["tokenSource"];
+  load: () => string;
+}
+
+interface FileIdentity {
+  dev: number;
+  ino: number;
+}
+
+
+/**
+ * Validate the token source without acquiring the token. The returned loader is called only by the
+ * first network request, after configuration has been classified as active.
+ */
+function bindToken(raw: Record<string, unknown>, configDir: string): TokenBinding {
   // The env token goes only to a server the user chose too. A repository's config picks `url`; the
   // user's key must never follow a url the user did not set.
   const envKey = process.env.HINDSIGHT_API_KEY?.trim();
-  if (envKey && process.env.HINDSIGHT_URL) return { token: envKey, source: "env" };
+  if (envKey && process.env.HINDSIGHT_URL) return { source: "env", load: () => envKey };
   if (raw.tokenFile !== undefined) {
-    if (typeof raw.tokenFile !== "string" || !raw.tokenFile) throw new Error("`tokenFile` must be a non-empty string");
+    if (typeof raw.tokenFile !== "string" || !raw.tokenFile) {
+      throw new Error("`tokenFile` must be a non-empty string");
+    }
     const path = isAbsolute(raw.tokenFile) ? raw.tokenFile : resolve(configDir, raw.tokenFile);
     let real: string;
     let root: string;
     try {
       real = realpathSync(path);
       root = realpathSync(configDir);
-    } catch (err) {
-      throw new Error(`cannot read tokenFile ${path}: ${(err as NodeJS.ErrnoException).code ?? (err as Error).message}`);
+    } catch {
+      throw new Error("`tokenFile` could not be resolved");
     }
-    // Symlinks are followed before the check, so a link pointing out of the directory is refused.
+    // Symlinks are followed before the containment check, but the resolved target identity is
+    // pinned now. The content itself remains unread until the first network-bound request.
     if (real === root || !isWithin(real, root)) {
-      throw new Error(
-        `tokenFile ${path} resolves outside ${root}, the directory holding ${CONFIG_FILE} — a token file ` +
-          `must live next to the config that names it`,
-      );
+      throw new Error("`tokenFile` must resolve to a file inside the project");
     }
-    let text: string;
+    let expected: FileIdentity;
     try {
-      text = readFileSync(real, "utf-8");
-    } catch (err) {
-      // The path is reported, never the content.
-      throw new Error(`cannot read tokenFile ${path}: ${(err as NodeJS.ErrnoException).code ?? (err as Error).message}`);
+      const bound = statSync(real);
+      if (!bound.isFile()) throw new Error();
+      expected = { dev: bound.dev, ino: bound.ino };
+    } catch {
+      throw new Error("`tokenFile` must resolve to a regular file");
     }
-    const token = text.trim();
-    if (!token) throw new Error(`tokenFile ${path} is empty`);
-    return { token, source: "tokenFile" };
+    return {
+      source: "tokenFile",
+      load: () => {
+        let fd: number;
+        try {
+          // O_NOFOLLOW closes the final-component symlink race on platforms that provide it.
+          // Platforms without it remain safe because the descriptor identity is checked below.
+          const noFollow = typeof constants.O_NOFOLLOW === "number" ? constants.O_NOFOLLOW : 0;
+          const nonBlock = typeof constants.O_NONBLOCK === "number" ? constants.O_NONBLOCK : 0;
+          // Не ждём writer у подставленного FIFO: fstat ниже отвергнет нерегулярный файл.
+          fd = openSync(real, constants.O_RDONLY | noFollow | nonBlock);
+        } catch {
+          throw new Error("`tokenFile` identity changed or is no longer safely readable");
+        }
+        try {
+          let opened: Stats;
+          try {
+            opened = fstatSync(fd);
+          } catch {
+            throw new Error("`tokenFile` identity could not be verified");
+          }
+          if (!opened.isFile() || opened.dev !== expected.dev || opened.ino !== expected.ino) {
+            throw new Error("`tokenFile` identity changed after configuration load");
+          }
+          let text: string;
+          try {
+            // Read from the verified descriptor, never by reopening the path.
+            text = readFileSync(fd, "utf-8");
+          } catch {
+            throw new Error("`tokenFile` could not be read");
+          }
+          const token = text.trim();
+          if (!token) throw new Error("`tokenFile` is empty");
+          return token;
+        } finally {
+          try {
+            closeSync(fd);
+          } catch {
+            // The credential was already read or rejected; never replace that result with an
+            // OS-specific close error that could expose a path.
+          }
+        }
+      },
+    };
   }
   if (raw.tokenCommand !== undefined) {
     if (!isStringArray(raw.tokenCommand) || raw.tokenCommand.length === 0) {
@@ -256,22 +326,28 @@ function readToken(raw: Record<string, unknown>, configDir: string): { token: st
       );
     }
     const [cmd, ...args] = raw.tokenCommand;
-    let out: string;
-    try {
-      out = execFileSync(cmd, args, {
-        cwd: configDir,
-        encoding: "utf-8",
-        stdio: ["ignore", "pipe", "ignore"],
-        timeout: 10000,
-      });
-    } catch (err) {
-      throw new Error(`tokenCommand ${cmd} failed: ${(err as Error).message.split("\n")[0]}`);
-    }
-    const token = out.trim();
-    if (!token) throw new Error(`tokenCommand ${cmd} printed nothing`);
-    return { token, source: "tokenCommand" };
+    return {
+      source: "tokenCommand",
+      load: () => {
+        let out: string;
+        try {
+          out = execFileSync(cmd, args, {
+            cwd: configDir,
+            encoding: "utf-8",
+            stdio: ["ignore", "pipe", "ignore"],
+            timeout: 10000,
+          });
+        } catch {
+          // Never include command output or argv: either may contain a credential.
+          throw new Error("`tokenCommand` failed");
+        }
+        const token = out.trim();
+        if (!token) throw new Error("`tokenCommand` produced no token");
+        return token;
+      },
+    };
   }
-  return { token: "", source: "none" };
+  return { source: "none", load: () => "" };
 }
 
 /** Validate one tool-policy list; unknown names are a config error, never silently ignored. */
@@ -283,63 +359,85 @@ function toolList(raw: Record<string, unknown>, key: "allowTools" | "denyTools",
     return undefined;
   }
   const known = new Set<string>(TOOL_NAMES);
-  const unknown = v.filter((n) => !known.has(n));
-  if (unknown.length) problems.push(`\`${key}\` names unknown tool(s) ${unknown.join(", ")}`);
+  if (v.some((name) => !known.has(name))) {
+    problems.push(`\`${key}\` contains an unknown tool name`);
+  }
   return new Set(v);
 }
 
 /**
- * Resolve the project's configuration. Never throws: an absent or invalid config yields
- * `{ active: false, reason }`, and every caller treats that as "do nothing".
+ * Resolve the project's configuration. Never throws. The result distinguishes absence, an explicit
+ * opt-out, invalid input, and an active configuration so callers can stay silent only when silence
+ * is correct. Token content is acquired lazily by `config.getApiKey`, immediately before networking.
  */
-export function loadProjectConfig(cwd: string = process.cwd(), opts: { token?: boolean } = {}): LoadResult {
+export function loadProjectConfig(cwd: string = process.cwd()): LoadResult {
   const configPath = findConfigFile(cwd);
   if (!configPath) {
-    return { active: false, reason: `no ${CONFIG_FILE} at or above ${resolve(cwd || process.cwd())}` };
+    return {
+      state: "missing",
+      reason: `no ${CONFIG_FILE} at or above ${resolve(cwd || process.cwd())}`,
+    };
   }
   const configDir = dirname(configPath);
   if (isDisabled(cwd, configDir)) {
-    return { active: false, reason: "disabled by .hindsight-disabled or HINDSIGHT_DISABLED", configPath };
+    return {
+      state: "disabled",
+      reason: "disabled by .hindsight-disabled or HINDSIGHT_DISABLED",
+      configPath,
+    };
   }
 
   let raw: Record<string, unknown>;
   try {
     const parsed = JSON.parse(readFileSync(configPath, "utf-8")) as unknown;
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("not a JSON object");
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error();
     raw = parsed as Record<string, unknown>;
-  } catch (err) {
-    return { active: false, reason: `${configPath} is not valid JSON: ${(err as Error).message}`, configPath };
+  } catch {
+    return {
+      state: "invalid",
+      reason: `${CONFIG_FILE} is not valid JSON`,
+      configPath,
+    };
   }
 
   const problems: string[] = [];
-  for (const [k, why] of Object.entries(LEGACY_KEYS)) {
-    if (k in raw) problems.push(`\`${k}\` is not supported — ${why}`);
+  for (const [key, rule] of Object.entries(LEGACY_KEYS)) {
+    if (key in raw) problems.push(`\`${key}\` is not supported — ${rule}`);
   }
-  if (typeof raw.url !== "string" || !/^https?:\/\//.test(raw.url)) problems.push("`url` must be an http(s) URL");
-  if (!isStringArray(raw.banks) || raw.banks.length === 0) problems.push("`banks` must be a non-empty array of bank ids");
-  if (typeof raw.defaultBank !== "string" || !raw.defaultBank) problems.push("`defaultBank` is required");
-  else if (isStringArray(raw.banks) && !raw.banks.includes(raw.defaultBank)) {
-    problems.push(`\`defaultBank\` "${raw.defaultBank}" is not in \`banks\``);
+  const url = typeof raw.url === "string" && /^https?:\/\//.test(raw.url) ? raw.url : "";
+  if (!url) problems.push("`url` must be an http(s) URL");
+  const banks = isStringArray(raw.banks) && raw.banks.length > 0 ? [...new Set(raw.banks)] : [];
+  if (banks.length === 0) problems.push("`banks` must be a non-empty array of bank ids");
+  const defaultBank = typeof raw.defaultBank === "string" && raw.defaultBank ? raw.defaultBank : "";
+  if (!defaultBank) problems.push("`defaultBank` is required");
+  else if (banks.length > 0 && !banks.includes(defaultBank)) {
+    problems.push("`defaultBank` must name an entry in `banks`");
   }
   const tuning: Tuning = { ...TUNING_DEFAULTS };
   for (const [key, type] of Object.entries(TUNING_TYPES) as [keyof Tuning, string][]) {
     if (!(key in raw)) continue;
-    const v = raw[key];
-    const okType = type === "string[]" ? isStringArray(v) : typeof v === type;
+    const value = raw[key];
+    const okType = type === "string[]" ? isStringArray(value) : typeof value === type;
     if (!okType) {
       problems.push(`\`${key}\` must be a ${type}`);
       continue;
     }
-    (tuning as Record<string, unknown>)[key] = v;
+    (tuning as Record<string, unknown>)[key] = value;
   }
-  if (!["low", "mid", "high"].includes(tuning.recallBudget)) problems.push("`recallBudget` must be low, mid or high");
-  if (!Number.isInteger(tuning.enrichMaxChars) || tuning.enrichMaxChars < 1 || tuning.enrichMaxChars > ENRICH_MAX_CHARS_LIMIT) {
+  if (!["low", "mid", "high"].includes(tuning.recallBudget)) {
+    problems.push("`recallBudget` must be low, mid or high");
+  }
+  if (
+    !Number.isInteger(tuning.enrichMaxChars) ||
+    tuning.enrichMaxChars < 1 ||
+    tuning.enrichMaxChars > ENRICH_MAX_CHARS_LIMIT
+  ) {
     problems.push(`\`enrichMaxChars\` must be an integer from 1 to ${ENRICH_MAX_CHARS_LIMIT}`);
   }
 
   const allow = toolList(raw, "allowTools", problems);
   const deny = toolList(raw, "denyTools", problems);
-  const enabledTools = TOOL_NAMES.filter((n) => (!allow || allow.has(n)) && !deny?.has(n));
+  const enabledTools = TOOL_NAMES.filter((name) => (!allow || allow.has(name)) && !deny?.has(name));
 
   // A route to a bank outside the allowlist is a config error, not a per-line refusal later: the
   // mistake is in this file, so this file is where it is reported.
@@ -350,9 +448,9 @@ export function loadProjectConfig(cwd: string = process.cwd(), opts: { token?: b
     } else {
       for (const [pattern, bank] of Object.entries(raw.routing as Record<string, unknown>)) {
         if (!pattern || typeof bank !== "string" || !bank) {
-          problems.push(`\`routing\` entry "${pattern}" must map to a bank id string`);
-        } else if (isStringArray(raw.banks) && !raw.banks.includes(bank)) {
-          problems.push(`\`routing\` entry "${pattern}" → "${bank}" is not in \`banks\``);
+          problems.push("`routing` contains an invalid entry");
+        } else if (banks.length > 0 && !banks.includes(bank)) {
+          problems.push("`routing` targets must be declared in `banks`");
         } else {
           routing[pattern] = bank;
         }
@@ -360,38 +458,41 @@ export function loadProjectConfig(cwd: string = process.cwd(), opts: { token?: b
     }
   }
 
-  // `token: false` validates everything else without reading a token — for hooks, which decide
-  // whether they run at all before anything as costly (or as side-effecting) as a tokenCommand.
-  let token = { token: "", source: "none" as HindsightConfig["tokenSource"] };
-  if (problems.length === 0 && opts.token !== false) {
-    try {
-      token = readToken(raw, configDir);
-    } catch (err) {
-      problems.push((err as Error).message);
-    }
+  let tokenBinding: TokenBinding | undefined;
+  try {
+    tokenBinding = bindToken(raw, configDir);
+  } catch (err) {
+    problems.push((err as Error).message);
   }
-  if (problems.length > 0) {
-    return { active: false, reason: `${configPath}: ${problems.join("; ")}`, configPath };
+  if (problems.length > 0 || !tokenBinding) {
+    return {
+      state: "invalid",
+      reason: `${CONFIG_FILE}: ${problems.join("; ")}`,
+      configPath,
+    };
   }
+  const activeTokenBinding = tokenBinding;
 
   const envUrl = process.env.HINDSIGHT_URL;
   const debugEnv = (process.env.HINDSIGHT_DEBUG ?? "").toLowerCase();
-  return {
-    active: true,
-    config: {
-      ...tuning,
-      debug: tuning.debug || ["1", "true", "yes", "on"].includes(debugEnv),
-      url: (envUrl || (raw.url as string)).replace(/\/$/, ""),
-      banks: [...new Set(raw.banks as string[])],
-      defaultBank: raw.defaultBank as string,
-      apiKey: token.token,
-      tokenSource: token.source,
-      configPath,
-      projectRoot: configDir,
-      routing,
-      enabledTools,
+  let cachedToken: string | undefined;
+  const config: HindsightConfig = {
+    ...tuning,
+    debug: tuning.debug || ["1", "true", "yes", "on"].includes(debugEnv),
+    url: (envUrl || url).replace(/\/$/, ""),
+    banks,
+    defaultBank,
+    getApiKey: () => {
+      if (cachedToken === undefined) cachedToken = activeTokenBinding.load();
+      return cachedToken;
     },
+    tokenSource: activeTokenBinding.source,
+    configPath,
+    projectRoot: configDir,
+    routing,
+    enabledTools,
   };
+  return { state: "active", config };
 }
 
 export function debugLog(config: Pick<HindsightConfig, "debug"> | null | undefined, ...args: unknown[]): void {

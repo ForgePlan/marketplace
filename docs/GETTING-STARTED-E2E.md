@@ -85,7 +85,7 @@ This will (one shot):
 |------|-------------|
 | Probe | Checks for forgeplan CLI on `$PATH` and your existing project state |
 | `forgeplan init` | Creates `.forgeplan/` with LanceDB index + 13 artifact-kind subdirs (prds/, rfcs/, adrs/, evidence/, notes/, problems/, solutions/, specs/, refresh/, discovery/, epics/, memory/, lance/) |
-| `.mcp.json` | Wires `forgeplan` MCP server (and `hindsight` if you have it) |
+| `.mcp.json` | Wires the `forgeplan` MCP server; fpl-hsmem uses its own runtime registration plus project `.hindsight.json` |
 | `.claude/settings.json` | Local Claude Code settings |
 | CLAUDE.md | Universal template (via `/bootstrap` skill) |
 | **Operating contract v3** | Injects the v3 marker block into CLAUDE.md — tells future agents to use forgeplan MCP-first, dispatch canonical B2 agents, and which 16/22 fpl-skills are MCP-first vs Tier B no-forgeplan |
@@ -297,26 +297,23 @@ Expected: 4+ parallel reviewer agents (logic, architecture, security, tests). Re
 
 ---
 
-## Step 7 — Hindsight memory wiring
+## Step 7 — Hindsight read-only pilot
 
-If `fpl-hsmem` plugin is installed, memory tools are available:
+After adding the explicit project `.hindsight.json` from
+`plugins/fpl-hsmem/CONFIGURATION.md`, keep `autoRecall`/`autoRetain` false and use the minimal
+read-only policy. Exercise existing memory without writing:
 
 ```
-# Save a fact
-mcp__plugin_fpl-hsmem_hindsight__memory_retain(
-  content="Decided to use Postgres for activity feed because of LISTEN/NOTIFY semantics",
-  context="2026-05-19 walkthrough",
-  tags=["decision", "postgres", "activity-feed"]
-)
-
-# Later, in a different session
+mcp__plugin_fpl-hsmem_hindsight__memory_get_current_bank()
+mcp__plugin_fpl-hsmem_hindsight__memory_status()
 mcp__plugin_fpl-hsmem_hindsight__memory_recall(
   query="activity feed database choice"
 )
-# → returns the retained content with semantic match
 ```
 
-Banks are **per-project** — derived from current working directory by default. See `plugins/fpl-hsmem/CONFIGURATION.md` for the 3 activation modes.
+Banks are project-declared (`banks` + `defaultBank`); nothing is derived from cwd. The bank must
+already exist. The initial policy excludes `memory_retain_batch`, and repository config alone is
+not consent to enable automatic hooks or any write path.
 
 ---
 
@@ -396,11 +393,12 @@ Static B2 audit of all 17 forgeplan-aware agents (allowlist absent ✅, denylist
 ### Memory plugin
 
 ```
-mcp__plugin_fpl-hsmem_hindsight__memory_retain(...)
-→ Saved to bank "forge-marketplace". Tokens: n/a
+mcp__plugin_fpl-hsmem_hindsight__memory_get_current_bank()
+mcp__plugin_fpl-hsmem_hindsight__memory_recall(query="existing project context")
 ```
 
-✅ Retain works. Recall + reflect tools available, bank derived per-project.
+✅ Read-only tools work against the explicitly configured project bank; no write path or automatic
+hook was enabled.
 
 ### Final state
 

@@ -1,7 +1,7 @@
 {
   "name": "fpl-hsmem",
   "version": "3.7.0",
-  "description": "ForgePlan fpl-hsmem — Hindsight memory plugin for Claude Code (project opt-in, multi-bank, Hindsight 0.10)",
+  "description": "ForgePlan memory client (project opt-in, multi-bank, Hindsight API >=0.10.2 and <0.11.0)",
   "type": "module",
   "main": "dist/index.mjs",
   "bin": {

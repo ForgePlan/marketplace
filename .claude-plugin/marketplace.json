@@ -18,10 +18,10 @@
       "targets": [
         "claude-code"
       ],
-      "description": "Long-term memory across sessions for Claude Code, wrapping a Hindsight 0.10 server. Project-only and opt-in — inert unless a .hindsight.json (url, banks allowlist, defaultBank, tokenFile/tokenCommand) is found above the working directory; never derives or creates a bank. 28 MCP tools (the 27 existing tools with the same names, each bank-scoped tool takes an optional `bank`, plus memory_retain_batch) let an agent search memory, browse it by structured filter, correct a wrong fact without destroying the record, see which background jobs failed, and write a reviewed file of distilled items (decisions, rejected options, lessons) across banks with secret scanning and a dry run. Auto-recall and transcript capture are off unless the project turns them on. Ships 3 hooks, 10 skills (status, bootstrap, mental-model, diagnose, export-bank, correct-memory, audit-bank, directives, memory-setup, enrich) and the memory-curator agent.",
+      "description": "Project-scoped cross-session memory for Hindsight API >=0.10.2 and <0.11.0. Use when a repository explicitly opts in via .hindsight.json; hooks default off, enrichment is operator-gated, and BankGate is client safety, not server authorization.",
       "version": "3.7.0",
       "requires": {
-        "hindsight_server": "Hindsight server reachable at HINDSIGHT_URL (default https://hindsight.tools.orch.so or self-hosted via Docker). Opt-in per project via .hindsight.json (url, banks allowlist, defaultBank, tokenFile or tokenCommand); the banks must already exist on the server."
+        "hindsight_server": "Hindsight API >=0.10.2 and <0.11.0 at the explicit url in the project's .hindsight.json. No URL is implied. The config must declare banks and defaultBank; selected banks must already exist on the server. Credentials are optional for unauthenticated local servers; when required, use a contained tokenFile or an explicitly consented tokenCommand."
       },
       "author": {
         "name": "ForgePlan"

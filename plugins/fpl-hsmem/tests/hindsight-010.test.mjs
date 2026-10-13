@@ -33,6 +33,7 @@ const ARGS = {
 await withServer(dir, {}, async ({ list, call }) => {
   const names = (await list()).map((t) => t.name);
   for (const n of names) await call(n, ARGS[n] ?? {});
+  check(fake.requests[0]?.path === "/version", "compatibility is checked before the first bank request", JSON.stringify(fake.requests.slice(0, 2)));
   check(names.length === 28, "exercised every tool", String(names.length));
 
   const removed = fake.requests.filter((r) => /\/(profile|background)$/.test(r.path));
@@ -56,7 +57,89 @@ await withServer(dir, {}, async ({ list, call }) => {
 
   const existence = fake.requests.filter((r) => r.path === "/v1/default/banks");
   check(existence.length === 1 && existence[0].method === "GET" && /q=alpha/.test(existence[0].query), "bank existence read once from GET /v1/default/banks?q=", JSON.stringify(existence));
+  check(fake.requests.filter((r) => r.path === "/version").length === 1, "the version check is cached across every tool call");
 });
 
 fake.close();
+
+console.log("concurrent first bank calls share the compatibility request");
+{
+  let releaseVersion;
+  const versionBarrier = new Promise((resolve) => {
+    releaseVersion = resolve;
+  });
+  let observeVersion;
+  const versionEntered = new Promise((resolve) => {
+    observeVersion = resolve;
+  });
+  const concurrent = await fakeHindsight(["alpha"], {
+    versionBarrier,
+    onVersionRequest: observeVersion,
+  });
+  const concurrentDir = project({
+    url: concurrent.url,
+    banks: ["alpha"],
+    defaultBank: "alpha",
+  });
+  await withServer(concurrentDir, {}, async ({ call }) => {
+    const first = call("memory_recall", { query: "first concurrent compatibility call" });
+    const second = call("memory_recall", { query: "second concurrent compatibility call" });
+    await versionEntered;
+    check(
+      concurrent.requests.filter((request) => request.path === "/version").length === 1,
+      "concurrent first calls issue exactly one delayed /version request",
+      JSON.stringify(concurrent.requests),
+    );
+    check(
+      !concurrent.requests.some(
+        (request) =>
+          request.path === "/v1/default/banks" ||
+          request.path.startsWith("/v1/default/banks/"),
+      ),
+      "no bank traffic is sent before compatibility release",
+      JSON.stringify(concurrent.requests),
+    );
+    releaseVersion();
+    const [firstResult, secondResult] = await Promise.all([first, second]);
+    check(
+      !firstResult.isError &&
+        !secondResult.isError &&
+        concurrent.requests.filter((request) => request.path === "/version").length === 1 &&
+        concurrent.requests.some((request) => request.path.startsWith("/v1/default/banks")),
+      "both concurrent operations continue successfully after release",
+      `${firstResult.text}\n${secondResult.text}\n${JSON.stringify(concurrent.requests)}`,
+    );
+  });
+  concurrent.close();
+}
+
+console.log("server compatibility gate");
+async function versionCase(label, opts, accepted) {
+  const f = await fakeHindsight(["alpha"], opts);
+  const cwd = project({ url: f.url, banks: ["alpha"], defaultBank: "alpha" });
+  await withServer(cwd, {}, async ({ call }) => {
+    const first = await call("memory_recall", { query: "what did we decide" });
+    const second = await call("memory_recall", { query: "what else did we decide" });
+    const versions = f.requests.filter((r) => r.path === "/version");
+    const bankRequests = f.requests.filter((r) => r.path === "/v1/default/banks" || r.path.startsWith("/v1/default/banks/"));
+    check(versions.length === 1, `${label}: version check is cached`, JSON.stringify(f.requests));
+    if (accepted) {
+      check(!first.isError && !second.isError, `${label}: accepted`, `${first.text}\n${second.text}`);
+      check(bankRequests.length > 0 && f.requests[0]?.path === "/version", `${label}: version precedes bank requests`, JSON.stringify(f.requests));
+    } else {
+      check(first.isError && second.isError && />=0\.10\.2 and <0\.11\.0/.test(first.text), `${label}: rejected with supported range`, first.text);
+      check(bankRequests.length === 0, `${label}: rejected before any bank request`, JSON.stringify(f.requests));
+    }
+  });
+  f.close();
+}
+
+await versionCase("0.10.2", { apiVersion: "0.10.2" }, true);
+await versionCase("supported 0.10.x", { apiVersion: "0.10.37" }, true);
+await versionCase("0.9.1", { apiVersion: "0.9.1" }, false);
+await versionCase("0.10.1", { apiVersion: "0.10.1" }, false);
+await versionCase("0.11.0", { apiVersion: "0.11.0" }, false);
+await versionCase("malformed", { apiVersion: "ten" }, false);
+await versionCase("missing", { versionBody: { build: "unknown" } }, false);
+await versionCase("request failure", { failVersion: true }, false);
 finish("hindsight-0.10");

@@ -16,6 +16,7 @@ import { readTranscript } from "../lib/transcript.js";
 import { type RecallResult } from "../lib/client.js";
 import { BankGate } from "../lib/banks.js";
 import { loadProjectConfig, debugLog } from "../lib/config.js";
+import { redact } from "../lib/redact.js";
 import {
   composeRecallQuery,
   formatCurrentTime,
@@ -53,16 +54,15 @@ async function main(): Promise<void> {
   }
 
   const cwd = hookInput.cwd ?? process.cwd();
-  // First without the token: whether this hook runs at all is decided before a token is read.
-  const peek = loadProjectConfig(cwd, { token: false });
-  if (!peek.active) return; // not an opted-in project: the hook does nothing
-  if (!peek.config.autoRecall) {
-    debugLog(peek.config, "autoRecall disabled, skipping");
+  // Configuration is classified before any token is acquired or network request is made.
+  const loaded = loadProjectConfig(cwd);
+  if (loaded.state === "missing" || loaded.state === "disabled") return;
+  if (loaded.state === "invalid") {
+    process.stderr.write(`[Hindsight] Recall skipped: invalid configuration: ${redact(loaded.reason)}\n`);
     return;
   }
-  const loaded = loadProjectConfig(cwd);
-  if (!loaded.active) {
-    process.stderr.write(`[Hindsight] Recall skipped: ${loaded.reason}\n`);
+  if (!loaded.config.autoRecall) {
+    debugLog(loaded.config, "autoRecall disabled, skipping");
     return;
   }
   const { config } = loaded;
@@ -105,7 +105,7 @@ async function main(): Promise<void> {
     });
     results = response.results ?? [];
   } catch (e) {
-    process.stderr.write(`[Hindsight] Recall failed: ${(e as Error).message}\n`);
+    process.stderr.write(`[Hindsight] Recall failed: ${redact((e as Error).message)}\n`);
     return;
   }
 

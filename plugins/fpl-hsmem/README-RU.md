@@ -3,35 +3,52 @@
 # fpl-hsmem
 
 > [!IMPORTANT]
-> **3.7.0.** Конфигурация только проектная (`.hindsight.json`: `url`, `banks`, `defaultBank`, `tokenFile`), несколько банков по белому списку, банк никогда не выводится из имени папки и не создаётся, `autoRetain`/`autoRecall` по умолчанию выключены, совместимость с Hindsight 0.10, пакетная запись выжимки знаний (`memory_retain_batch`, `dist/enrich.mjs`, скилл `/fpl-hsmem:enrich`). Актуальное описание — [`README.md`](./README.md), [`CONFIGURATION.md`](./CONFIGURATION.md); ниже — текст до 3.7.0.
+> **3.7.0.** Конфигурация только проектная (`.hindsight.json`: обязательный `url`, `banks`, `defaultBank`, источник токена). Клиентский `BankGate` отказывает банкам вне allowlist или списка сервера, но это не серверная авторизация. `autoRetain`/`autoRecall` по умолчанию выключены. Требуется Hindsight API **>=0.10.2 и <0.11.0**: ленивый кэшируемый `/version` gate закрывает доступ до bank-запроса. `memory_retain_batch` остаётся read-only планировщиком; запись выполняет отдельно авторизованный оператор через `dist/enrich.mjs`, а digest доказывает только свежесть плана.
 
 > Долговременная межсессионная память для Claude Code. Обёртка над [Hindsight](https://github.com/vectorize-io/hindsight): 28 MCP инструментов, 3 авто-хука, 10 вспомогательных skills и агент-куратор — Claude помнит контекст между сессиями, проектами и неделями работы.
 
-Поставил один раз — каждый проект получает свой приватный bank памяти. Auto-recall вставляет релевантную историю перед каждым твоим сообщением; auto-retain сохраняет разговор после каждого ответа. Ручные MCP-инструменты покрывают синтез (`memory_reflect`), живые страницы знаний (`mental_model_*`) и заливку документов.
+Плагин инертен без проектного `.hindsight.json`. После opt-in ручные MCP-инструменты доступны по проектной политике; auto-recall и auto-retain начинают работать только после отдельного явного включения оператором.
 
 > [!WARNING]
 > Требует запущенный сервер [Hindsight](https://github.com/vectorize-io/hindsight). Простейший путь — Docker с провайдером `claude-code` (внешние LLM-ключи не нужны, для извлечения фактов используется твоя подписка Claude). См. [Быстрый старт](#быстрый-старт).
 
 ## Быстрый старт
 
-```bash
-# 1. Запустить Hindsight в Docker (без API-ключей)
-docker run -d --name hindsight -p 8888:8888 -p 9999:9999 \
-  -e HINDSIGHT_API_LLM_PROVIDER=claude-code \
-  ghcr.io/vectorize-io/hindsight:latest
+Если используешь пример с `tokenFile`, заранее подготовь существующий файл внутри проекта
+через хранилище учётных данных и исключи его из git. Для неаутентифицированного одноразового
+локального сервера убери поле `tokenFile`; отсутствующий файл делает конфиг невалидным.
 
-# 2. Установить плагин
+```bash
+# 1. Установить плагин
 /plugin install fpl-hsmem@ForgePlan-marketplace
 
-# 3. Проверить в любом проекте
-/fpl-hsmem:status
+# 2. Создать безопасную pilot-конфигурацию в проекте
+cat > .hindsight.json <<'JSON'
+{
+  "url": "http://hindsight.example.internal:8888",
+  "banks": ["team"],
+  "defaultBank": "team",
+  "tokenFile": ".secrets/hindsight.token",
+  "autoRecall": false,
+  "autoRetain": false,
+  "allowTools": [
+    "memory_recall", "memory_status", "memory_get_current_bank",
+    "memory_list", "memory_get", "memory_operations",
+    "mental_model_list", "mental_model_get", "directive_list",
+    "bank_config_get", "document_list"
+  ]
+}
+JSON
+
+# 3. Перезапустить клиент и проверить
+memory_get_current_bank
 ```
 
 Полная настройка с нуля — Docker, установка плагина, первый bootstrap, первая mental model — см. [`GETTING-STARTED.md`](./GETTING-STARTED.md).
 
 ## Примеры использования
 
-### Auto-recall в разговоре
+### Auto-recall в разговоре (только после явного `autoRecall: true`)
 
 ```
 > Что мы решили про авторизацию на прошлой неделе?
@@ -126,9 +143,9 @@ Proceed? [y/n]
 
 | Хук | Триггер | Поведение |
 |-----|---------|-----------|
-| `recall.mjs` | UserPromptSubmit | Семантический recall перед каждым prompt; результаты вставляются как `additionalContext`. Опционально multi-turn компоновка запроса. |
-| `retain.mjs` | Stop | Сохраняет transcript после каждого ответа. Throttling через `retainEveryNTurns` (по умолчанию 10). **Compaction detection** — сохраняет старый длинный документ когда Claude Code сжимает сессию. |
-| `session-end.mjs` | SessionEnd | Принудительный retain при закрытии. Страховка для коротких сессий (< `retainEveryNTurns`). |
+| `recall.mjs` | UserPromptSubmit | При `autoRecall: true` выполняет recall и добавляет `additionalContext`; иначе молчит. |
+| `retain.mjs` | Stop | При `autoRetain: true` сохраняет transcript после порога; иначе молчит. |
+| `session-end.mjs` | SessionEnd | При `autoRetain: true` выполняет финальный retain; иначе молчит. |
 
 ### 10 skills
 
@@ -147,7 +164,7 @@ Proceed? [y/n]
 | `/fpl-hsmem:correct-memory` | Исправить неверный факт, не уничтожая след: найти, пометить с причиной, записать верное целиком, пересобрать выводы, проверить, что задача завершилась. Вызывается осознанно — у него есть последствия. | B |
 | `/fpl-hsmem:audit-bank` | Аудит только на чтение: включено ли маскирование секретов, сколько стоит один документ, что упало молча. Прогонять в первый же день нового банка. | C/B |
 | `/fpl-hsmem:directives` | Правила, которым следует синтез. Стабильно кривой по форме ответ — это проблема правил, а не фактов. | B |
-| `/fpl-hsmem:enrich` | Выжать из существующих источников (ADR/RFC, журналы решений, треды ревью и чатов) короткие самодостаточные пункты со ссылкой на артефакт, прогнать dry-run, записать после одобрения человеком, проверить recall. Память, а не хранилище документов. | B/C |
+| `/fpl-hsmem:enrich` | Выжать из источников короткие пункты, проверить dry-run, затем передать отдельно авторизованному оператору CLI apply. Digest доказывает только свежесть, не право записи. | B/C |
 
 ### 1 агент
 
@@ -155,15 +172,16 @@ Proceed? [y/n]
 |-------|-----------|
 | `memory-curator` | Знает, как этим релеем полагается пользоваться: какой инструмент чтения отвечает на какой вопрос, как исправлять память, не уничтожая след, и чего трогать нельзя. По построению не имеет удаления документов, правки правил извлечения и настроек банка — это решения владельца, и у них нет отмены. |
 
-### 3 режима активации
+### Регистрация runtime
 
-| Режим | Как | Хуки? | Skills? | Лучше всего для |
-|-------|-----|-------|---------|-----------------|
-| **Установка плагина** | `/plugin install fpl-hsmem` | ✅ авто | ✅ авто | Default-on на всех проектах |
-| **Setup CLI** | `node dist/setup.mjs` per project | ✅ создаёт CLI | ❌ | Явный per-project контроль, committed `.mcp.json` |
-| **Direct MCP** | Вручную `dist/index.mjs` в `.mcp.json` | ❌ | ❌ | Разовое использование, MCP-инструменты без фоновой автоматики |
+| Runtime | Как | Хуки | Skills |
+|---|---|---|---|
+| **Claude Code plugin** | `/plugin install fpl-hsmem@ForgePlan-marketplace` | зарегистрированы, но default-off | включены |
+| **Codex / OMP direct MCP** | один раз зарегистрировать `node /absolute/path/to/dist/index.mjs` в проектной конфигурации клиента | нет | нет |
 
-Все три режима сосуществуют — project-level `.mcp.json` перекрывает plugin-level конфиг. **Opt-out** в любом проекте: `touch .hindsight-disabled` или `HINDSIGHT_DISABLED=true`. Детали — в [`CONFIGURATION.md`](./CONFIGURATION.md).
+Любой режим инертен без `.hindsight.json`. В одном runtime должна быть ровно одна регистрация:
+нельзя одновременно ставить plugin и hand-wire тот же server. Direct-клиенту не нужен legacy
+`HINDSIGHT_BANK_ID`: банк выбирают только `banks` + `defaultBank` из проектного файла.
 
 ## Сопутствующие плагины
 

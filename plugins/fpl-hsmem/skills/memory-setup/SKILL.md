@@ -165,7 +165,7 @@ answer*, not an error:
 | Layer | Holds | Propose when |
 |---|---|---|
 | **A Hindsight bank** | conversational knowledge: decisions made in chat, things tried and rejected, lessons | the project will run across more than a few sessions. Below that, the bank never fills enough to be worth reading |
-| **Auto-hooks** (recall before each prompt, retain after each response) | the corpus itself, without anyone remembering to save | almost always, once a bank exists — this is what makes memory happen instead of being intended |
+| **Auto-hooks** (recall before each prompt, retain after each response) | automatic prompt/context transfer or transcript capture | только после отдельного локального согласия оператора и проверки соответствующего read/write gate; существование банка не разрешает их включение. Pilot оставляет оба false |
 | **Knowledge pages** (mental models) | a standing answer to a recurring question, rebuilt from memories | you can name a question that gets asked and re-researched repeatedly. Two or three, not ten |
 | **Formal decision records** (`.forgeplan/`, ADR/RFC/PRD files) | ratified decisions, with authority | a decision needs to outrank memory. These are the source of truth; memory is what surrounds them |
 
@@ -223,10 +223,10 @@ For this repo (2,154 files, TypeScript, 3,200 commits, no index, no bank):
                               → brew install ast-grep
 
 3. A memory bank            — decisions stop being re-litigated every session
-                              cost: a server, and everything said gets stored
-                              → /fpl-hsmem:bootstrap
-                              ⚠ masking is off on this deployment: raw transcripts are
-                                stored verbatim. Decide that before turning it on.
+                              cost: сервер и явный отбор фактов; автохуки по умолчанию выключены
+                              → read-only pilot, затем отдельно разрешённый bootstrap
+                              ⚠ autoRetain сохраняет сырые транскрипты только при явном включении;
+                                сначала проверь masking, локальное согласие и write gate.
 
 4. Semantic code search     — NOT recommended here: your questions in this repo have
                               been exact names, which LSP answers in two keystrokes.
