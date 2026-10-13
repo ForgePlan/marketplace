@@ -1,0 +1,167 @@
+{
+  "probe": "evidencepack-phase0-core-trust-boundary",
+  "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl",
+  "checked_at": "2026-10-13T14:03:35.495Z",
+  "checks_executed": 22,
+  "checks": [
+    {
+      "name": "CLI create/update/readback leaves unlinked draft",
+      "outcome": "pass"
+    },
+    {
+      "name": "CLI own-source link activation postcondition",
+      "outcome": "pass"
+    },
+    {
+      "name": "MCP validation executes one requested artifact",
+      "outcome": "pass"
+    },
+    {
+      "name": "MCP validate/readback before link",
+      "outcome": "pass"
+    },
+    {
+      "name": "MCP activation edge and status readback",
+      "outcome": "pass"
+    },
+    {
+      "name": "CLI/MCP body/status semantic equivalence",
+      "outcome": "pass"
+    },
+    {
+      "name": "Supports CL3 exact parent score",
+      "outcome": "pass"
+    },
+    {
+      "name": "Ordinary client can choose Guardian attribution without host proof",
+      "outcome": "pass"
+    },
+    {
+      "name": "Ordinary arguments can choose claim principal",
+      "outcome": "pass"
+    },
+    {
+      "name": "Unknown evidence type persists exact malformed body",
+      "outcome": "pass"
+    },
+    {
+      "name": "Observed core unknown evidence_type acceptance",
+      "outcome": "pass"
+    },
+    {
+      "name": "Duplicate verdict persists exact malformed body",
+      "outcome": "pass"
+    },
+    {
+      "name": "Observed core duplicate structured verdict acceptance",
+      "outcome": "pass"
+    },
+    {
+      "name": "weakens draft participates in exact parent R_eff",
+      "outcome": "pass"
+    },
+    {
+      "name": "weakens direct activation readback",
+      "outcome": "pass"
+    },
+    {
+      "name": "weakens terminal state readback",
+      "outcome": "pass"
+    },
+    {
+      "name": "weakens terminal excluded from parent R_eff",
+      "outcome": "pass"
+    },
+    {
+      "name": "refutes draft participates in exact parent R_eff",
+      "outcome": "pass"
+    },
+    {
+      "name": "refutes direct activation readback",
+      "outcome": "pass"
+    },
+    {
+      "name": "refutes terminal state readback",
+      "outcome": "pass"
+    },
+    {
+      "name": "refutes terminal excluded from parent R_eff",
+      "outcome": "pass"
+    },
+    {
+      "name": "Observed validation hint proposes activation for active Evidence",
+      "outcome": "pass"
+    }
+  ],
+  "checks_passed": 22,
+  "checks_failed": 0,
+  "probe_source_sha256": "ce9b4ef1db20b1ff201c9404779e686351640ee7aae54371f4adca0f15b19c95",
+  "resolved_binary": "/opt/homebrew/Cellar/forgeplan/0.38.0/bin/forgeplan",
+  "result": "core_checks_pass_trusted_host_gate_not_passed",
+  "phase0_verdict": "BLOCKER",
+  "observations": {
+    "binary_version": "forgeplan 0.38.0",
+    "supports_parent_score": 1,
+    "forged_stamp": "guardian-forged-by-ordinary-client/probe-1",
+    "claim_response": {
+      "_next_action": "Claimed `PRD-001` for `runtime-allowlisted-principal-forged-in-args`. Release with `forgeplan_release PRD-001` when done, or re-call `forgeplan_claim` to renew.",
+      "agent_id": "runtime-allowlisted-principal-forged-in-args",
+      "claimed_at": "2026-10-13T14:03:35.067651+00:00",
+      "expires_at": "2026-10-13T14:33:35.067651+00:00",
+      "id": "PRD-001"
+    },
+    "unknown_type_validation": {
+      "results": [
+        {
+          "artifact_id": "EVID-003",
+          "kind": "EvidencePack",
+          "depth": "Standard",
+          "passed": true,
+          "error_count": 0,
+          "warning_count": 0,
+          "findings": []
+        }
+      ],
+      "total_artifacts": 1,
+      "total_passed": 1,
+      "total_errors": 0,
+      "total_warnings": 0,
+      "_next_action": "All passed! Implement → create EvidencePack with structured fields (verdict/congruence_level/evidence_type) → `forgeplan_link EVID-XXX <id>` → `forgeplan_activate <id>`."
+    },
+    "duplicate_key_validation": {
+      "results": [
+        {
+          "artifact_id": "EVID-003",
+          "kind": "EvidencePack",
+          "depth": "Standard",
+          "passed": true,
+          "error_count": 0,
+          "warning_count": 0,
+          "findings": []
+        }
+      ],
+      "total_artifacts": 1,
+      "total_passed": 1,
+      "total_errors": 0,
+      "total_warnings": 0,
+      "_next_action": "All passed! Implement → create EvidencePack with structured fields (verdict/congruence_level/evidence_type) → `forgeplan_link EVID-XXX <id>` → `forgeplan_activate <id>`."
+    },
+    "weakens_parent_score": 0.5,
+    "refutes_parent_score": 0,
+    "active_get_hint": "Active. Verify trust: `forgeplan_score EVID-002`. Phase: `validate` → next `adi`.",
+    "active_validation_hint": "All passed! Implement → create EvidencePack with structured fields (verdict/congruence_level/evidence_type) → `forgeplan_link EVID-XXX <id>` → `forgeplan_activate <id>`.",
+    "cli_new_supports_json": false
+  },
+  "limitations": [
+    "Core probe only: no host-authenticated delegated principal, no adapter receipt.",
+    "No production workspace mutations; generated artifacts exist only in isolated temporary workspace.",
+    "Not the normative EvidencePack conformance suite; Phase 0 remains blocked without a protected host smoke."
+  ],
+  "error": null,
+  "raw": {
+    "path": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl/transcript.json",
+    "bytes": 59104,
+    "sha256": "412044dc3c7898c53caf3cf7f80640df70536967413a98627092910d53ecba53",
+    "media_type": "application/json"
+  }
+}

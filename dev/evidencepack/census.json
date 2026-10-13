@@ -1,7 +1,7 @@
 {
   "census": "evidencepack-independent-content-v1",
   "root": "/private/tmp/marketplace-evidencepack-implementation",
-  "checked_at": "2026-10-13T14:08:28.164Z",
+  "checked_at": "2026-10-13T14:10:06.897Z",
   "candidate_count": 283,
   "alias_count": 98,
   "literal_census": {
@@ -16593,8 +16593,8 @@
       "alias_paths": [],
       "plugin": null,
       "plugin_version": null,
-      "bytes": 16814,
-      "sha256": "26ecd1af8a043a9af223c97e9353ce121e78a144e5938f88e6a51420b8cb9ca2",
+      "bytes": 16654,
+      "sha256": "4dd29582170880fc515e7e8016003ef5565976f4f35306fe4ab4e53730cc9cff",
       "declared_profiles": [
         "A",
         "B"
