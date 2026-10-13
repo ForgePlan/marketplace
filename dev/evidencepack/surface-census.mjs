@@ -24,7 +24,7 @@ function visit(visible) {
     visitTarget(visible, canonical);
     return;
   }
-  visitTarget(visible, visible);
+  visitTarget(visible, fs.realpathSync(visible));
 }
 function visitTarget(visible, canonical) {
   const stat = fs.statSync(canonical);
@@ -42,6 +42,11 @@ function visitTarget(visible, canonical) {
   if (/^(?:AGENTS|CLAUDE|GEMINI)\.md$|^\.cursorrules$/.test(path.basename(visible))) return;
   const bytes = fs.readFileSync(canonical);
   const content = bytes.toString('utf8');
+  const unsupportedTypes = [...content.matchAll(/evidence_type\s*:\s*([A-Za-z][A-Za-z_-]*)/g)]
+    .filter((match) => !['measurement', 'test', 'benchmark', 'audit'].includes(match[1]))
+    .map((match) => ({ value: match[1], line: content.slice(0, match.index).split('\n').length }));
+  const textualLevels = [...content.matchAll(/congruence_level\s*:\s*`?\s*(CL[0-3])/g)]
+    .map((match) => ({ value: match[1], line: content.slice(0, match.index).split('\n').length }));
   const lines = content.split('\n');
   const hits = [];
   for (let index = 0; index < lines.length; index++) {
@@ -65,6 +70,8 @@ function visitTarget(visible, canonical) {
     capability: 'uncertified', protocol: 'not_declared_as_evidencepack_v1',
     observed_operations: [...new Set([...content.matchAll(/forgeplan_(new|update|link|activate|supersede|deprecate|claim|release|validate|score|unlink)\b/g)].map((match) => match[1]))].sort(),
     hits,
+    unsupported_type_literals: unsupportedTypes,
+    textual_cl_literals: textualLevels,
   });
 }
 for (const directory of ['plugins', 'scripts', 'docs', '.claude-plugin', '.omp-plugin']) {
@@ -75,13 +82,21 @@ const sorted = [...records.values()].sort((a, b) => a.canonical_path.localeCompa
 const report = {
   census: 'evidencepack-independent-content-v1', root, checked_at: new Date().toISOString(),
   candidate_count: sorted.length, alias_count: aliases.length,
+  literal_census: {
+    unsupported_types: sorted.reduce((sum, record) => sum + record.unsupported_type_literals.length, 0),
+    unsupported_type_files: sorted.filter((record) => record.unsupported_type_literals.length).length,
+    textual_levels: sorted.reduce((sum, record) => sum + record.textual_cl_literals.length, 0),
+    textual_level_files: sorted.filter((record) => record.textual_cl_literals.length).length,
+    needs_activation_mention_files: sorted.filter((record) => record.hits.some((hit) => hit.text.includes('NEEDS_ACTIVATION'))).length,
+    classification: 'raw_literals_and_mentions_not_producers_or_verified_debt',
+  },
   normative_inventory_complete: false,
   limitations: ['Content-pattern census is independent of inventory; profile/responsibility/indirect operations require manual reconciliation.', 'Aliases outside repository are recorded, not traversed; installed cached plugins are separate runtime inputs.', 'Hit lines over 1000 characters are marked truncated; file bytes and SHA256 bind the full content.', 'No production mutations, no capability certification, no frozen protocol claim.'],
   patterns: { candidate: pattern.source }, aliases, errors, records: sorted,
 };
 if (process.argv[2]) {
   fs.writeFileSync(process.argv[2], JSON.stringify(report, null, 2) + '\n');
-  console.log(JSON.stringify({ output: process.argv[2], candidate_count: sorted.length, alias_count: aliases.length, errors, normative_inventory_complete: false }));
+  console.log(JSON.stringify({ output: process.argv[2], candidate_count: sorted.length, alias_count: aliases.length, literal_census: report.literal_census, errors, normative_inventory_complete: false }));
 } else {
   console.log(JSON.stringify(report, null, 2));
 }
