@@ -5,22 +5,22 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/session-start.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/session-start.sh\"",
             "timeout": 3
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/forge-report-session-start.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/forge-report-session-start.sh\"",
             "timeout": 3
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/decay-reminder.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/decay-reminder.sh\"",
             "timeout": 5
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/insight-watchdog.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/insight-watchdog.sh\"",
             "timeout": 5
           }
         ]
@@ -32,7 +32,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/safety-hook.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/safety-hook.sh\"",
             "timeout": 3
           }
         ]
@@ -44,7 +44,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/test-hint.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/test-hint.sh\"",
             "timeout": 3
           }
         ]
@@ -54,7 +54,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/forge-report-counter.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/forge-report-counter.sh\"",
             "timeout": 3
           }
         ]
@@ -65,7 +65,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/prompt-router.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/prompt-router.sh\"",
             "timeout": 1
           }
         ]

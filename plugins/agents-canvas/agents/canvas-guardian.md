@@ -30,7 +30,9 @@ disallowedTools:
   - mcp__forgeplan__forgeplan_reason
   - mcp__forgeplan__forgeplan_claims
   - mcp__hindsight__memory_retain
+  - mcp__hindsight__memory_retain_batch
   - mcp__plugin_fpl-hsmem_hindsight__memory_retain
+  - mcp__plugin_fpl-hsmem_hindsight__memory_retain_batch
   - mcp__pencil__batch_design
   - mcp__pencil__set_variables
   - mcp__pencil__export_nodes
