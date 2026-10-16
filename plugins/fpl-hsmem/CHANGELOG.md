@@ -6,6 +6,22 @@ All notable changes to `fpl-hsmem` are documented here. Format:
 
 ## [Unreleased]
 
+## [3.7.2] — 2026-10-17
+
+### Fixed
+
+- Уточнён provenance исторической выборки `gerts-hub` в retrieval reference и `/memory-setup`:
+  HEAD `94dec532` с 117 незакоммиченными изменениями, а не чистый коммит.
+  EVID-264 фиксирует 192 файла с literal-совпадениями против двух AST-файлов
+  (четыре совпадения), то есть 96× в одинаковых единицах.
+- Сохранена отдельная привязка 2,154 tracked paths к коммиту; удалено текущее утверждение
+  о размере дерева на диске и тайминги без достаточного контекста. Времена из EVID-264
+  помечены историческими: полный dirty-снимок и версии инструментов не сохранены.
+- Разделены matching files, tracked paths и охват поиска. Сравнение ignore-фильтрации
+  теперь сохраняет hidden-режим; `--no-ignore` не выдаётся за переключатель только `.gitignore`,
+  а разность результатов — за измерение причины ускорения. Настройки project-only/default-off
+  и правила enrichment из 3.7.0 не меняются.
+
 ## [3.7.0] — 2026-10-07
 
 
@@ -504,7 +520,8 @@ RFC-003 + ADR-005, NOTE-004 outcome-feedback pattern adoption).
   `claude-code` (uses your Claude Pro/Max subscription, no extra API
   keys required).
 
-[Unreleased]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v3.7.0...HEAD
+[Unreleased]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v3.7.2...HEAD
+[3.7.2]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v3.7.0...fpl-hsmem-v3.7.2
 [3.7.0]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v3.6.3...fpl-hsmem-v3.7.0
 [3.6.3]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v2.1.0...fpl-hsmem-v3.6.3
 [2.1.0]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v2.0.0...fpl-hsmem-v2.1.0

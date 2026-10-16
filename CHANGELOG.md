@@ -11,6 +11,13 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Backfill (marketplace#250)**: entries v1.133.0 through v1.139.0 were written after the fact, each from the commit that carried its catalog bump. Where a change merged between two bumps and shipped without a version of its own, it is recorded under the release that first delivered it — the plugin cache is keyed on version, so an unbumped change reaches no user until the next bump.
 
+## [1.188.1] - 2026-10-17
+
+### Fixed
+- `fpl-hsmem 3.7.2`: исторические измерения привязаны к dirty working copy, а не только к HEAD. Удалены неподтверждённые числа «на диске»; matching files отделены от tracked paths и просмотренных файлов.
+- Сравнение поиска больше не приписывает разницу `rg` / `rg -uu` только ignore-правилам: hidden-режим и остальные ограничения названы отдельно.
+- Сохранён контракт Hindsight 3.7 с project opt-in и default-off hooks; версии package/plugin/catalog согласованы, каталог OMP пересобран.
+
 ## [1.187.1] - 2026-10-16
 
 ### Fixed
