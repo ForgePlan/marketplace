@@ -53,7 +53,7 @@ PRD citing this audit's EVIDs.
 |---|---|---|---|---|---|
 | orchestrator (main session) | main | full surface; the only one who ACTIVATES and persists C-synthesis | decides launch on CONCERNS; owns any `--force` (never delegated) | `forgeplan_reason` for mitigation ADI — orchestrator/Profile A territory | `/gate-check`, `/methodology-check`, `/decision` |
 | research-analyst | fresh isolated dispatch | READ-only (denylist) | no | no — synthesis, not decisions | — |
-| security-expert / injection-analyst / pii-detector | fresh isolated dispatch EACH, **serial** — all three claim the SAME artifact under review, and the claim is a soft mutex that must not overlap | B surface: get/list/new/update/link/validate/score/claim/release; NO activate/reason/claims/memory_retain | no — but an unresolved BLOCKER halts the row until a human or a re-audit clears it | `fpf-evaluate` (Trust Calculus) on contested coverage — yes; `fpf-reason`/ADI — no (belongs to Profile A) | `c4-diagram` via orchestrator if the data-flow diagram is missing |
+| security-expert / injection-analyst / pii-detector | fresh isolated dispatch EACH, **serial** — all three claim the SAME artifact under review, and the claim is a soft mutex that must not overlap | B surface: get/list/new/update/link/validate/score/claim/release; NO activate/reason/claims/memory_retain | no — but an unresolved BLOCKER halts the row until a human or a re-audit clears it | `fpf-evaluate` (Trust Calculus) on contested coverage — yes; `fpf-reason`/ADI — no (belongs to Profile A) | portable `structurizr-c4` via orchestrator and `structurizr-c4:structurizr-architect` when a native C4 model is missing |
 | adr-architect | fresh isolated dispatch | Profile A surface | one-way-door mitigations (crypto migration, auth change) → human confirms before activation | yes — ADI is its contract | `/decision`, `/supersede` if replacing a prior security ADR |
 | guardian | fresh isolated dispatch | B-gate surface | a human may overrule CONCERNS; nobody but the orchestrator executes the verdict | no | — |
 
@@ -109,7 +109,7 @@ Smith: Context=security-audit (row 8). Methodology=OWASP 2025 + STRIDE +
           review_verdict CONCERNS.)
        → orchestrator reads <<NEEDS_ACTIVATION>> ×3, activates the EVIDs
        5. adr-architect → ADR-NNN (PII-redaction layer + structured
-          context envelope) + c4-diagram (L1+L2, 4 modules)
+          context envelope) + native Structurizr C4 delivery/report (L1+L2, 4 modules; reuse suitable current delivery or dispatch structurizr-c4:structurizr-architect)
        6. guardian → gate EVID (CONCERNS with explicit remediation plan:
           3 PRDs to follow; do not launch until those land)
        → HUMAN decides: launch with the plan, or hold

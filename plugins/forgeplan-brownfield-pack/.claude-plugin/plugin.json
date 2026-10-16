@@ -1,6 +1,6 @@
 {
   "name": "forgeplan-brownfield-pack",
-  "version": "1.7.1",
+  "version": "1.8.0",
   "description": "Brownfield extraction pack — turns legacy code and documents into a structured forgeplan graph through a discover agent and twelve extraction skills (ubiquitous language, use cases, invariants, causal links, scenarios, knowledge-graph curation, reproducibility). Use when taking over an undocumented codebase and the first problem is not what to build but what is already there and why it is that way. Full history in CHANGELOG.md.",
   "author": {
     "name": "ForgePlan"

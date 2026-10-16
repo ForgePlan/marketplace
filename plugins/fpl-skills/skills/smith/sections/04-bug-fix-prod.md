@@ -68,7 +68,7 @@ Smith: Context=bug-fix-prod (row 4). Methodology=RIPER-5 + 5 Whys.
           5. Why commit before schema review? No ADR for batch-processing schema
           → Root cause is systemic: batch jobs lack schema review gate)
        4. adr-architect → ADR-NNN (Batch job schema review gate)
-                          + c4-diagram (L1+L2 for batch subsystem, 4 modules)
+                          + native Structurizr C4 delivery/report (L1+L2, batch subsystem, 4 modules; reuse current delivery or dispatch structurizr-c4:structurizr-architect)
        5. coder → DB migration + idempotency key + dedup query + tests
        6. code-reviewer → EVID (1 finding: dedup query needs index — CONCERNS)
                           → fixer → re-review (PASS)
