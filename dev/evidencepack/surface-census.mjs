@@ -7,6 +7,7 @@ import { createHash } from 'node:crypto';
 const root = fs.realpathSync(process.cwd());
 const allowed = new Set(['.md', '.sh', '.js', '.mjs', '.ts', '.json', '.yaml', '.yml', '.toml']);
 const exclude = new Set(['.git', 'node_modules', '.forgeplan', 'lance', '.tgrep', '.chunkhound', 'dev']);
+const contextFile = /^(?:AGENTS|CLAUDE|GEMINI)\.md$|^\.cursorrules$/;
 const pattern = /\b(?:EvidencePack|Evidence[ -]Pack|evidence_type|congruence_level|review_verdict|NEEDS_ACTIVATION|EVID-\w+|forgeplan_(?:new|update|link|activate|supersede|deprecate|claim|release|validate|score|unlink))\b|forgeplan\s+(?:new\s+evidence|activate|supersede|deprecate|link)\b/i;
 const records = new Map();
 const aliases = [];
@@ -14,6 +15,7 @@ const errors = [];
 const visitedDirectories = new Set();
 const inside = (target) => target === root || target.startsWith(root + path.sep);
 const relative = (target) => path.relative(root, target).split(path.sep).join('/');
+const included = (target) => inside(target) && !path.relative(root, target).split(path.sep).some((part) => exclude.has(part));
 function visit(visible) {
   const stat = fs.lstatSync(visible);
   if (stat.isSymbolicLink()) {
@@ -27,6 +29,7 @@ function visit(visible) {
   visitTarget(visible, fs.realpathSync(visible));
 }
 function visitTarget(visible, canonical) {
+  if (!included(canonical)) return;
   const stat = fs.statSync(canonical);
   if (stat.isDirectory()) {
     if (visitedDirectories.has(canonical)) return;
@@ -39,7 +42,7 @@ function visitTarget(visible, canonical) {
   }
   if (!stat.isFile() || !allowed.has(path.extname(visible))) return;
   // Context files уже загружены host; census не читает их как agent implementation.
-  if (/^(?:AGENTS|CLAUDE|GEMINI)\.md$|^\.cursorrules$/.test(path.basename(visible))) return;
+  if (contextFile.test(path.basename(visible)) || contextFile.test(path.basename(canonical))) return;
   const bytes = fs.readFileSync(canonical);
   const content = bytes.toString('utf8');
   const unsupportedTypes = [...content.matchAll(/evidence_type\s*:\s*([A-Za-z][A-Za-z_-]*)/g)]
@@ -59,7 +62,12 @@ function visitTarget(visible, canonical) {
   let version = null;
   if (plugin) {
     const manifest = path.join(root, 'plugins', plugin, '.claude-plugin', 'plugin.json');
-    if (fs.existsSync(manifest)) version = JSON.parse(fs.readFileSync(manifest, 'utf8')).version ?? null;
+    if (fs.existsSync(manifest)) {
+      const canonicalManifest = fs.realpathSync(manifest);
+      if (included(canonicalManifest) && !contextFile.test(path.basename(canonicalManifest))) {
+        version = JSON.parse(fs.readFileSync(canonicalManifest, 'utf8')).version ?? null;
+      }
+    }
   }
   records.set(key, {
     canonical_path: key, alias_paths: relative(visible) === key ? [] : [relative(visible)], plugin, plugin_version: version,
@@ -91,7 +99,7 @@ const report = {
     classification: 'raw_literals_and_mentions_not_producers_or_verified_debt',
   },
   normative_inventory_complete: false,
-  limitations: ['Content-pattern census is independent of inventory; profile/responsibility/indirect operations require manual reconciliation.', 'Aliases outside repository are recorded, not traversed; installed cached plugins are separate runtime inputs.', 'Hit lines over 1000 characters are marked truncated; file bytes and SHA256 bind the full content.', 'No production mutations, no capability certification, no frozen protocol claim.'],
+  limitations: ['Content-pattern census is independent of inventory; profile/responsibility/indirect operations require manual reconciliation.', 'Aliases outside repository or into excluded path components are recorded, not read; installed cached plugins are separate runtime inputs.', 'Hit lines over 1000 characters are marked truncated; file bytes and SHA256 bind the full content.', 'No production mutations, no capability certification, no frozen protocol claim.'],
   patterns: { candidate: pattern.source }, aliases, errors, records: sorted,
 };
 if (process.argv[2]) {

@@ -16,6 +16,8 @@ node dev/evidencepack/surface-census.mjs dev/evidencepack/census.json
 
 CLI/MCP probe создаёт изолированный временный `.forgeplan`, а не использует production workspace. OMP probe запускает настоящий RPC host с загруженной extension, без model run и ForgePlan mutations. Оба сохраняют отчёты с source SHA-256; результаты не заменяют проверку полного протокола.
 
+`identity-core-probe.mjs` использует локальный исследовательский транспорт `mcp-client.mjs`; это не новый публичный adapter или переносимый протокол. Поле `probe_source_sha256` относится к entrypoint-файлу, не является хешем всего dependency graph.
+
 ## Наблюдавшиеся результаты
 
 - `reports/core-0.38.0.json`: **22 выполненных assertions,22 passed,0 failed**. Safe unlinked create/update/read-back, CLI/MCP body/status parity, link/activation and edge read-back; supports/weakens/refutes CL3 parent scores1/0.5/0; terminal exclusion. Ordinary `clientInfo` and claim alias can be selected by caller. Core validate accepted persisted unknown type and duplicate Markdown scoring fields. Active Evidence validation still proposed activation.
@@ -23,11 +25,36 @@ CLI/MCP probe создаёт изолированный временный `.for
 - `reports/omp-18.10.3.json`: actual `ctx.agent={kind:main,id:Main,name:main,depth:0}` and session identity; capture completed, no timeout/escalation. **Main-context only**; no subagent authorization, full mutations or receipts proven.
 - Corrected `census.json`: **283 content-pattern candidates,98 internal symlink aliases**, no scan errors or outside-root alias. Raw counts:12 unsupported-type literals in10files;3textual CL literals in3files;55files mentioning NEEDS_ACTIVATION. Documentation/examples are included; these are **not** classified producer counts or a claim that historical debt decreased.
 
+Сохранённые `reports/` и `census.json` относятся к исходному исследовательскому запуску до исправлений ниже. Их source hashes и counts не выданы за результаты текущих исходников; исторические snapshots не перегенерировались.
+
 Census resolves realpath for descendants of directory symlinks, preserves aliases, records source hashes/line matches, and explicitly leaves normative profile/responsibility reconciliation incomplete. `normative_inventory_complete=false` is intentional, not a PASS.
+
+## Безопасные регрессии исследовательских программ
+
+Canonical path проверяется по тем же исключённым компонентам, что и lexical walk: `.git`, `node_modules`, `.forgeplan`, `lance`, `.tgrep`, `.chunkhound`, `dev`. Исключения имён context files также действуют на видимый и канонический путь. Alias в исключённый каталог или файл остаётся в alias metadata, но его содержимое и snippets не читаются. Те же ограничения действуют на вторичное чтение plugin version из manifest. Разрешённые внутренние aliases сохраняются; внешние aliases не обходятся.
+
+Ошибка `child.stdin`, включая `EPIPE`, отклоняет все pending requests, очищает их deadlines и сохраняет первую transport failure. Последующие запросы не продолжают запись в сломанное соединение. Initialization notification ожидает write callback; shutdown сохраняет ошибку и выполняет ограниченный cleanup. Ошибка транспорта возвращается в обычный `probe_error`/exit `1`, а не превращается в успешную проверку.
+
+Первый targeted batch после исправлений:
+
+```bash
+node --check dev/evidencepack/surface-census.mjs && \
+node --check dev/evidencepack/identity-core-probe.mjs && \
+node --check dev/evidencepack/mcp-client.mjs && \
+node --check dev/evidencepack/tests/surface-census.test.mjs && \
+node --check dev/evidencepack/tests/mcp-client.test.mjs && \
+node --test dev/evidencepack/tests/surface-census.test.mjs dev/evidencepack/tests/mcp-client.test.mjs
+```
+
+Результат: exit `0`, **12 tests passed, 0 failed, 0 skipped**. Census CLI проверен на временном fixture с синтетическим private sentinel: baseline и aliases не раскрывают sentinel, metadata сохраняется, разрешённый внутренний alias и outside-root boundary работают. В transport tests используются настоящие in-memory Node streams; ошибки callback/event, initialization notification и shutdown завершают pending requests и cleanup. Два отдельных Node-процесса запускают настоящий entrypoint с подменёнными `child_process` и недоступным для исполнения placeholder `forgeplan`: request/notification `EPIPE` дают сохранённые JSON report/transcript, exit `1`, без uncaught error и незавершённых requests.
+
+Независимое review выявило дополнительный обход исключений context filenames через alias с разрешённым именем. Исправлены основной и вторичный manifest read; отдельный запуск `node --test dev/evidencepack/tests/surface-census.test.mjs` после этой правки — **3 passed, 0 failed, 0 skipped**, exit `0`. Четыре context basename проверяются только на синтетических временных файлах.
+
+Настоящие ForgePlan/OMP servers, пользовательский workspace и модели в этом batch не запускались. Это regression proof двух исследовательских дефектов, не повторение retained core/OMP observations, не полный Marketplace suite и не independent PASS Phase 0.
 
 ## Проверки Marketplace
 
-`./scripts/validate-all-plugins.sh` **exit1** on the main-based feature worktree. Custom/static gates passed and eight existing plugin shell-suite commands returned0. Official Claude Code2.1.282 `--strict` rejected10/23 manifests because hook commands contain unquoted `${CLAUDE_PLUGIN_ROOT}`. Existing [Marketplace#316](https://github.com/ForgePlan/marketplace/issues/316) tracks that class. Hooks were not changed during this investigation.
+В исходном исследовательском запуске до обновления этой ветки до текущего `main`: `./scripts/validate-all-plugins.sh` **exit1**. Custom/static gates passed and eight existing plugin shell-suite commands returned0. Official Claude Code2.1.282 `--strict` rejected10/23 manifests because hook commands contain unquoted `${CLAUDE_PLUGIN_ROOT}`; [Marketplace#316](https://github.com/ForgePlan/marketplace/issues/316) tracks that class. Это исторический результат, не утверждение о текущем `main` или обновлённой ветке.
 
 ## Артефакты вне git-каталога Marketplace
 
