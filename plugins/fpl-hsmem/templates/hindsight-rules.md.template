@@ -1,52 +1,40 @@
 # Hindsight memory — {{BANK_ID}}
 
-This project uses Hindsight bank `{{BANK_ID}}` (see `.mcp.json`).
-Auto-recall and auto-retain are enabled via `.claude/settings.local.json`.
+This project's default Hindsight bank is `{{BANK_ID}}` (see `.hindsight.json`;
+`memory_get_current_bank` lists every bank this project may use). Auto-recall and
+auto-retain are off unless `.hindsight.json` turns them on.
 
-## What happens automatically
+## Initial pilot behavior
 
-- **Before each user prompt** the `recall.js` hook searches this bank for
-  relevant memories and silently appends them to the message. Claude sees
-  them, the user does not.
-- **After each response** the `retain.js` hook saves the transcript once
-  every N turns.
-- **On session end** `session-end.js` forces a final retain.
+- `autoRecall` and `autoRetain` are false. Hooks are silent and make no network or token request.
+- The generated `allowTools` policy is minimal and read-only. It deliberately excludes
+  `memory_retain_batch` even though 3.7.0 still implements that planner.
+- Repository config is not consent to enable automatic hooks or writes. A later operator decision
+  must authorize write enablement and update policy separately.
+- The client checks Hindsight API compatibility before its first bank request. It requires
+  >=0.10.2 and <0.11.0.
 
-So **don't call `memory_recall` and `memory_retain` reflexively** — it's
-already happening. Manual calls are only for the special cases below.
+Use `memory_recall`, `memory_list`, `memory_get`, and the other allowed reads deliberately. If the
+bank is empty, do not create or seed it as part of this pilot.
 
 ## Mental models in this bank
 
-<!-- Add entries as you create them. The starter list is empty —
-     don't create pages just to fill it. Create one only when you see a
-     recurring question that deserves a ready-made synthesis. -->
+The pilot may read existing pages with `mental_model_list` / `mental_model_get`. Creating or
+refreshing a page is a write and needs later authorization.
 
-_None yet. Add when `mental_model_create` is genuinely needed._
+## When to invoke an allowed tool
 
-## Domain tags for manual retain
+- `memory_recall(query)` — semantic lookup across existing memory.
+- `memory_list(...)` / `memory_get(id)` — enumerate and inspect exact stored rows.
+- `memory_operations(...)` — inspect background operation status.
+- `mental_model_list()` / `mental_model_get(id)` — read existing synthesized pages.
+- `directive_list()`, `bank_config_get()`, `document_list()` — inspect server state without
+  changing it.
 
-<!-- List project-specific tags here. Claude will use them when explicitly
-     saving things via memory_retain. -->
-
-_None yet. Accumulate them as patterns emerge, e.g. `[postmortem]`,
-`[client:<name>]`, `[deprecation]`._
-
-## When to invoke a tool by hand
-
-- `memory_recall(query)` — only if the auto-hook didn't fire (very short
-  prompt, or session just started). Usually not needed.
-- `memory_retain(content)` — when the user explicitly says "remember X",
-  or when you arrive at a **non-obvious decision / lesson** that auto-retain
-  could dilute in the transcript stream.
-- `memory_reflect(query)` — when the user wants a **synthesis** over a
-  topic, not raw facts. E.g. "give me the big picture on auth", "what
-  open tech debt do we have?".
-- `mental_model_get(id)` — when the question matches one of the mental
-  models above. Reading the page gives coherent synthesis instead of a
-  spray of raw facts.
-- `document_ingest_file(path)` — when we've produced a significant
-  artifact (PRD, RFC, ADR, postmortem) and want it semantically
-  searchable, not just findable by name with `Read`.
+`BankGate` and tool policy are client-side controls, not server authorization. Other clients with
+credentials remain outside them. For Codex or OMP direct MCP mode, register
+`node /absolute/path/to/fpl-hsmem/dist/index.mjs` once in that runtime; do not add a legacy bank
+environment selector.
 
 ## What NOT to store in this bank
 

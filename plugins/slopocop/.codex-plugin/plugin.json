@@ -1,0 +1,13 @@
+{
+  "name": "slopocop",
+  "version": "2.0.0",
+  "description": "Slopocop communication layer for concise, technically precise RU/EN development replies, questions and progress, enabled by default through trusted Codex hooks. Adds to existing instructions; humanizer-ru and slop-humanizer edit targeted prose separately. Use when improving agent communication, humanizing text or auditing prose. Requires POSIX and Python >=3.9 for hooks; host-neutral startup-instruction installation is also available. No per-reply editor, evaluator or runtime network downloads.",
+  "author": {
+    "name": "ForgePlan"
+  },
+  "homepage": "https://github.com/ForgePlan/marketplace",
+  "repository": "https://github.com/ForgePlan/marketplace",
+  "license": "MIT",
+  "skills": "./skills/",
+  "hooks": "./hooks/codex-hooks.json"
+}

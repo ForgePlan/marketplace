@@ -43,7 +43,7 @@ fi
 if [ ! -f dist/index.mjs ]; then
   fail "dist/index.mjs missing — run npm run build"
 else
-  REPORTED="$(HINDSIGHT_URL=http://127.0.0.1:1 HINDSIGHT_BANK_ID=probe node -e '
+  REPORTED="$(node -e '
     const {spawn}=require("child_process");
     const c=spawn("node",["dist/index.mjs"],{stdio:["pipe","pipe","ignore"],env:process.env});
     let buf="";
