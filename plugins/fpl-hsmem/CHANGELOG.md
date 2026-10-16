@@ -6,6 +6,23 @@ All notable changes to `fpl-hsmem` are documented here. Format:
 
 ## [Unreleased]
 
+## [3.7.1] — 2026-10-17
+
+### Fixed
+
+- Пробы выбора банка П1/П3 переведены на текущий project-only контракт
+  `url`/`banks`/`defaultBank` и default-off auto-hooks; legacy `.mcp.json`/`bankId`
+  больше не являются ожидаемым значением или обязательным входом.
+- Вместо environment-only «изоляции» добавлены macOS sandbox-exec и Linux bubblewrap:
+  сеть/дочерние процессы изолированы ОС, HOME/state/transcript синтетические,
+  недоступный backend даёт `2` без fallback. URL/credential overrides не дают PASS.
+- П1 обходит все группы и hooks выбранных событий и весь вывод selector; позднее
+  расхождение не скрывается за первым совпадением. Неизвестные hooks не исполняются.
+- Структурированный argv и Bash command strings разделены: quoted paths, пробелы,
+  literal special characters и пустые аргументы сохраняются.
+- Добавлены поведенческие regression tests и smoke с настоящими bundled hooks,
+  синтетическим listener, проверками default-off/opt-out и ошибочных selectors.
+
 ## [3.7.0] — 2026-10-07
 
 
