@@ -13,6 +13,7 @@ const CONVERTER = fileURLToPath(new URL('../scripts/map-to-likec4.mjs', import.m
 const VERIFIER = fileURLToPath(new URL('../scripts/verify-likec4.mjs', import.meta.url));
 const GUARDIAN = fileURLToPath(new URL('../scripts/map-guardian.mjs', import.meta.url));
 const CHECKPOINT = fileURLToPath(new URL('../fixtures/checkpoint-map.json', import.meta.url));
+const BINDING_FIXTURES = JSON.parse(readFileSync(new URL('../fixtures/likec4-flow-bindings.json', import.meta.url), 'utf8'));
 const cli = (process.env.PATH ?? '').split(delimiter).map((dir) => resolve(dir, 'likec4')).find(existsSync);
 assert.ok(cli, 'Установленный likec4 должен быть в PATH; тест не устанавливает зависимости');
 const LIKEC4 = realpathSync(cli);
@@ -68,6 +69,35 @@ function baseMap() {
     flows: [],
   };
 }
+function reviewMap(name) {
+  const doc = baseMap();
+  doc.zones[0].id = 'core';
+  doc.composition.entry_zone = 'core';
+  doc.composition.placements[0].zone = 'core';
+  return Object.assign(doc, structuredClone(BINDING_FIXTURES[name]));
+}
+function assertBindings(model, step, expected) {
+  const expectedIds = expected.map((tuple) => {
+    const found = Object.entries(model.relations).find(([, r]) =>
+      JSON.stringify([r.source.model, r.target.model, r.kind, r.title]) === JSON.stringify(tuple));
+    assert.ok(found, `В нативной модели отсутствует связь ${JSON.stringify(tuple)}`);
+    return found[0];
+  });
+  assert.deepEqual([...step.relations].sort(), expectedIds.sort());
+}
+function refuses(name, doc, diagnostic) {
+  const fixture = verify(name, doc, 1);
+  const out = join(fixture.dir, 'protected.c4');
+  writeFileSync(out, 'protected output\n');
+  const result = run(process.execPath, [CONVERTER, fixture.map, '--out', out]);
+  expectExit(result, 1);
+  assert.match(result.output, diagnostic);
+  assert.match(fixture.result.output.replaceAll('\n', ' '), diagnostic);
+  assert.doesNotMatch(fixture.result.output, /verify-likec4: MATCH/);
+  assert.equal(readFileSync(out, 'utf8'), 'protected output\n');
+  assert.equal(existsSync(`${out}.tmp`), false);
+  return fixture;
+}
 function guardianAccepts(fixture) {
   const result = run(process.execPath, [GUARDIAN, fixture.map, '--smoke']);
   expectExit(result, 0);
@@ -93,6 +123,10 @@ if (args[0] === 'validate') {
     case 'wrong-semantic-kind': changed = original.replaceAll('-[codeDep]->', '-[typedLink]->'); break;
     case 'reverse-edge': changed = original.replace('  z_core.a -[typedLink]-> z_core.b', '  z_core.b -[typedLink]-> z_core.a'); break;
     case 'truncate-flow': changed = original.replace("    z_core.b -[codeDep]-> z_core.c 'finish'", ''); break;
+    case 'wrong-flow-binding': changed = original.replace("    core.a -[codeDep]-> core.b 'request' { head none; tail normal }", "    core.b -[codeDep]-> core.a 'request'"); break;
+    case 'lost-collapsed-binding': changed = original.replace("    core.group -[codeDep]-> core.b 'request'", "    core.b -[codeDep]-> core.group 'request' { head none; tail normal }"); break;
+    case 'wrong-flow-label': changed = original.replace("    core.a -[codeDep]-> core.b 'request' {", "    core.a -[codeDep]-> core.b 'wrong-label' {"); break;
+    case 'wrong-flow-kind': changed = original.replace("    core.a -[codeDep]-> core.b 'request' {", "    core.a -[typedLink]-> core.b 'request' {"); break;
   }
   if (changed === original) { console.error('Не выполнено независимое изменение DSL'); process.exit(2); }
   writeFileSync(file, changed);
@@ -141,37 +175,145 @@ try {
     assert.equal(actual.find((r) => r.source.model === 'z_core.b').kind, 'codeDep');
   });
 
-  scenario('reverse edges and explicit edge_ids choose the intended labels and directions', () => {
+  scenario('representable reverse edges preserve exact native IDs, labels and traversal style', () => {
     const doc = baseMap();
     doc.edges = [
       { id: 'e.ab', from: 'a', to: 'b', relation: 'request', verified_by: 'grep:request' },
       { id: 'e.ba', from: 'b', to: 'a', relation: 'response', verified_by: 'grep:response' },
-      { id: 'e.alt', from: 'b', to: 'a', relation: 'alternate', verified_by: 'grep:alternate' },
     ];
     doc.flows = [
       { id: 'reverse', name: 'Reverse', node_ids: ['b', 'a'], edge_ids: ['e.ba'], steps: ['Ответ'] },
-      { id: 'automatic', name: 'Automatic', node_ids: ['b', 'a'], steps: ['Ответ без edge_ids'] },
-      { id: 'explicit', name: 'Explicit', node_ids: ['b', 'a'], edge_ids: ['e.alt'], steps: ['Выбранное ребро'] },
+      { id: 'automatic', name: 'Automatic', node_ids: ['b', 'a'], edge_ids: ['e.ba'], steps: ['Ответ'] },
       { id: 'reverse-only', name: 'Reverse only', node_ids: ['b', 'a'], edge_ids: ['e.ab'], steps: ['Обратный обход выбранного ребра'] },
       { id: 'roundtrip', name: 'Roundtrip', node_ids: ['a', 'b', 'a'], edge_ids: ['e.ba', 'e.ab'], steps: ['Запрос', 'Ответ'] },
     ];
     const fixture = verify('direction', doc);
-    const views = exported(fixture).views;
-    assert.equal(views.flow_reverse.edges[0].label, 'response');
-    assert.equal(views.flow_automatic.edges[0].label, 'response');
-    assert.equal(views.flow_explicit.edges[0].label, 'alternate');
-    assert.equal(views['flow_reverse-only'].edges[0].label, 'request');
-    for (const id of ['flow_reverse', 'flow_explicit', 'flow_reverse-only']) {
-      assert.equal(views[id].edges[0].source, 'z_core.b');
-      assert.equal(views[id].edges[0].target, 'z_core.a');
+    guardianAccepts(fixture);
+    const model = exported(fixture), views = model.views;
+    for (const id of ['flow_reverse', 'flow_automatic']) {
+      const step = views[id].edges[0];
+      assert.equal(step.source, 'z_core.b');
+      assert.equal(step.target, 'z_core.a');
+      assert.equal(step.label, 'response');
+      assert.equal(step.kind, 'codeDep');
+      assertBindings(model, step, [['z_core.b', 'z_core.a', 'codeDep', 'response']]);
     }
+    const reverse = views['flow_reverse-only'].edges[0];
+    assert.equal(reverse.source, 'z_core.a');
+    assert.equal(reverse.target, 'z_core.b');
+    assert.equal(reverse.head, 'none');
+    assert.equal(reverse.tail, 'normal');
+    assert.equal(reverse.label, 'request');
+    assertBindings(model, reverse, [['z_core.a', 'z_core.b', 'codeDep', 'request']]);
     assert.deepEqual(views.flow_roundtrip.edges.map((e) => e.label), ['request', 'response']);
-    // Для GC-8 проверяем документ с явными edge_ids: отсутствие списка допустимо
-    // в схеме, но канонический guardian честно предупреждает о полноте подсветки.
-    doc.flows.splice(1, 1);
-    const checked = input('direction-guardian', doc);
-    guardianAccepts(checked);
+    assertBindings(model, views.flow_roundtrip.edges[0], [['z_core.a', 'z_core.b', 'codeDep', 'request']]);
+    assertBindings(model, views.flow_roundtrip.edges[1], [['z_core.b', 'z_core.a', 'codeDep', 'response']]);
   });
+
+  scenario('independent review fixture: reverse-selected binds request, retaining all static relations', () => {
+    const doc = reviewMap('competing-relations');
+    doc.flows = [doc.flows[1]];
+    const fixture = verify('review-reverse-selected', doc);
+    guardianAccepts(fixture);
+    const model = exported(fixture);
+    assert.equal(Object.keys(model.relations).length, 3);
+    const step = model.views['flow_reverse-selected'].edges[0];
+    assert.equal(step.source, 'core.a');
+    assert.equal(step.target, 'core.b');
+    assert.equal(step.head, 'none');
+    assert.equal(step.tail, 'normal');
+    assert.equal(step.label, 'request');
+    assert.equal(step.kind, 'codeDep');
+    assertBindings(model, step, [['core.a', 'core.b', 'codeDep', 'request']]);
+  });
+
+  scenario('parallel native bindings are allowed when all matching relations are selected', () => {
+    const doc = reviewMap('competing-relations');
+    doc.flows = [{ ...doc.flows[2], edge_ids: ['response-id', 'alternate-id'] }];
+    const fixture = verify('review-all-parallel', doc);
+    const model = exported(fixture), step = model.views['flow_normal-response'].edges[0];
+    assert.equal(Object.keys(model.relations).length, 3);
+    assert.equal(step.label, 'response');
+    assertBindings(model, step, [['core.b', 'core.a', 'codeDep', 'response'], ['core.b', 'core.a', 'codeDep', 'alternate']]);
+  });
+
+  for (const index of [0, 2]) {
+    scenario(`independent review fixture: exact parallel subset ${index} fails closed on LikeC4 1.59.3`, () => {
+      const doc = reviewMap('competing-relations');
+      doc.flows = [doc.flows[index]];
+      const fixture = refuses(`review-ambiguous-${index}`, doc, /LikeC4 1\.59\.3/);
+      guardianAccepts(fixture);
+    });
+  }
+  scenario('complete competing-relations review fixture never produces MATCH', () => {
+    refuses('review-competing-all', reviewMap('competing-relations'), /LikeC4 1\.59\.3/);
+  });
+  scenario('independent review fixture: unrelated explicit edge is refused rather than rebound', () => {
+    const fixture = refuses('review-unrelated', reviewMap('unrelated-explicit-edge'), /other-id.*не принадлежит пути/);
+    guardianAccepts(fixture);
+  });
+
+  scenario('canonical collapsed review flow binds the original child relationship in both traversals', () => {
+    const doc = reviewMap('canonical-collapsed-flow');
+    doc.flows.push({ ...doc.flows[0], id: 'visible-reverse', node_ids: ['b', 'group'] });
+    const fixture = verify('review-collapsed', doc);
+    guardianAccepts(fixture);
+    const model = exported(fixture);
+    assert.deepEqual(Object.keys(model.elements).sort(), ['core', 'core.group', 'core.group.a', 'core.b'].sort());
+    assert.equal(Object.keys(model.relations).length, 1);
+    const forward = model.views['flow_visible-flow'].edges[0];
+    assert.equal(forward.source, 'core.group');
+    assert.equal(forward.target, 'core.b');
+    assert.equal(forward.label, 'request');
+    assert.equal(forward.kind, 'codeDep');
+    assertBindings(model, forward, [['core.group.a', 'core.b', 'codeDep', 'request']]);
+    const reverse = model.views['flow_visible-reverse'].edges[0];
+    assert.equal(reverse.source, 'core.group');
+    assert.equal(reverse.target, 'core.b');
+    assert.equal(reverse.head, 'none');
+    assert.equal(reverse.tail, 'normal');
+    assert.equal(reverse.label, 'request');
+    assert.equal(reverse.kind, 'codeDep');
+    assertBindings(model, reverse, [['core.group.a', 'core.b', 'codeDep', 'request']]);
+  });
+
+  scenario('a collapsed group cannot silently bind an unselected sibling relationship', () => {
+    const doc = reviewMap('canonical-collapsed-flow');
+    doc.nodes.push({ ...doc.nodes[0], id: 'sibling', label: 'Sibling' });
+    doc.nodes.find((n) => n.id === 'group').children.push('sibling');
+    doc.edges.push({ id: 'sibling-id', from: 'sibling', to: 'b', relation: 'other', verified_by: 'grep:other' });
+    refuses('review-collapsed-ambiguous', doc, /LikeC4 1\.59\.3/);
+  });
+
+  for (const mutation of ['wrong-flow-binding', 'wrong-flow-label', 'wrong-flow-kind', 'lost-collapsed-binding']) {
+    scenario(`independent native dynamic alteration: ${mutation} is MISMATCH`, () => {
+      const collapsed = mutation === 'lost-collapsed-binding';
+      const doc = reviewMap(collapsed ? 'canonical-collapsed-flow' : 'competing-relations');
+      if (!collapsed) doc.flows = [doc.flows[1]];
+      const fixture = verify(mutation, doc, 1, mutationEnv(mutation));
+      const model = exported(fixture);
+      const step = Object.values(model.views).find((v) => v._type === 'dynamic').edges[0];
+      assert.match(fixture.result.output, /flows only in map.json/);
+      if (mutation === 'wrong-flow-binding') {
+        assert.equal(step.source, 'core.b');
+        assert.equal(step.target, 'core.a');
+        assert.equal(step.label, 'request');
+        assert.equal(step.kind, 'codeDep');
+        assertBindings(model, step, [['core.b', 'core.a', 'codeDep', 'response'], ['core.b', 'core.a', 'codeDep', 'alternate']]);
+      }
+      if (collapsed) {
+        assert.equal(step.source, 'core.b');
+        assert.equal(step.target, 'core.group');
+        assert.equal(step.head, 'none');
+        assert.equal(step.tail, 'normal');
+        assert.equal(step.label, 'request');
+        assert.equal(step.kind, 'codeDep');
+        assert.deepEqual(step.relations, []);
+      }
+      if (mutation === 'wrong-flow-label') assert.equal(step.label, 'wrong-label');
+      if (mutation === 'wrong-flow-kind') assert.equal(step.kind, 'typedLink');
+    });
+  }
 
   scenario('hyphen prefixes, collisions, reserved words, underscore and string escaping', () => {
     const doc = baseMap();
@@ -252,15 +394,7 @@ try {
     scenario(`${name}: converter refuses without overwriting; verifier returns MISMATCH`, () => {
       const doc = baseMap();
       alter(doc);
-      const fixture = verify(name, doc, 1);
-      const out = join(fixture.dir, 'protected.c4');
-      writeFileSync(out, 'protected output\n');
-      const result = run(process.execPath, [CONVERTER, fixture.map, '--out', out]);
-      expectExit(result, 1);
-      assert.match(result.output, diagnostic);
-      assert.doesNotMatch(fixture.result.output, /verify-likec4: MATCH/);
-      assert.equal(readFileSync(out, 'utf8'), 'protected output\n');
-      assert.equal(existsSync(`${out}.tmp`), false);
+      refuses(name, doc, diagnostic);
     });
   }
 

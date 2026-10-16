@@ -32,14 +32,14 @@
 //  5. zone drill-down -> `view <id> of <zone>` (NOT `navigateTo`: verified on
 //     the probe that `navigateTo` from a dynamic view only reaches another
 //     dynamic view, never a structural view).
-//  6. a mega-node (`is_mega: true`) -> a single nested element with
-//     `style { multiple true }`. Its `children` ids are NOT re-materialised
-//     as fake elements (they are already collapsed away and mostly do not
-//     exist as separate node objects) -- they are preserved as `metadata`
-//     for traceability only, matching the probe's own observation that a
-//     `multiple true` card shows one stacked card with children hidden.
-//     The fixture has 0 mega-nodes; this path is covered by a synthetic
-//     input in the paired verify-likec4.mjs mutation test instead.
+//  6. Реальные сохранённые children у collapsed mega вкладываются в него,
+//     чтобы нативный view мог проецировать их связи на общую карточку.
+//     Отсутствующие children остаются только metadata — узлы не выдумываются.
+//     Сырые ID и исходные рёбра сохраняются; меняется только их нативный FQN.
+//     Выбор подмножества параллельных связей между теми же участниками
+//     LikeC4 1.59.3 не поддерживает: такой поток отклоняется до записи.
+//
+// Нативные bindings проверяются отдельно от подписи и оформления шага.
 //
 // THE TRAP THIS SCRIPT MUST NOT FALL INTO: `include *` in a LikeC4 view only
 // pulls in elements that participate in at least one relationship. Verified
@@ -191,7 +191,30 @@ function build(mapDoc) {
   const kindId = new Map(); // original kind string -> sanitized kind identifier
   for (const k of new Set(nodeKindOriginal.values())) kindId.set(k, kindSan(k));
 
-  const fqn = (origNodeId) => `${zoneId.get(nodeZone.get(origNodeId))}.${nodeId.get(origNodeId)}`;
+  const childToMega = new Map();
+  for (const n of nodes) {
+    if (!nodeId.has(n.id) || n.is_mega !== true || n.collapsed !== true || !isArray(n.children)) continue;
+    for (const child of n.children) {
+      if (!nodeId.has(child)) continue;
+      if (nodeZone.get(child) !== nodeZone.get(n.id)) die(`mega ${JSON.stringify(n.id)}: ребёнок ${JSON.stringify(child)} принадлежит другой зоне`);
+      childToMega.set(child, n.id);
+    }
+  }
+  const visible = (id) => childToMega.get(id) ?? id;
+  const nodeFqn = new Map();
+  function resolveFqn(id, ancestors = new Set()) {
+    if (nodeFqn.has(id)) return nodeFqn.get(id);
+    if (ancestors.has(id)) die(`цикл children у mega ${JSON.stringify(id)}`);
+    ancestors.add(id);
+    const parent = childToMega.get(id);
+    const prefix = parent === undefined ? zoneId.get(nodeZone.get(id)) : resolveFqn(parent, ancestors);
+    const result = `${prefix}.${nodeId.get(id)}`;
+    ancestors.delete(id);
+    nodeFqn.set(id, result);
+    return result;
+  }
+  for (const id of nodeId.keys()) resolveFqn(id);
+  const fqn = (id) => nodeFqn.get(id);
 
   // -------------------------------------------------------------------------
   // specification
@@ -229,14 +252,48 @@ function build(mapDoc) {
   modelLines.push('');
 
   const nodesByZone = new Map();
+  const childrenByMega = new Map();
   for (const n of nodes) {
     if (!nodeId.has(n.id)) continue;
+    if (childToMega.has(n.id)) {
+      const parent = childToMega.get(n.id);
+      if (!childrenByMega.has(parent)) childrenByMega.set(parent, []);
+      childrenByMega.get(parent).push(n);
+      continue;
+    }
     const z = nodeZone.get(n.id);
     if (!nodesByZone.has(z)) nodesByZone.set(z, []);
     nodesByZone.get(z).push(n);
   }
 
   let megaCount = 0;
+  function emitNode(n, indent) {
+    const nid = nodeId.get(n.id);
+    const kid = kindId.get(nodeKindOriginal.get(n.id));
+    const isMega = n.is_mega === true;
+    if (isMega) megaCount++;
+    modelLines.push(`${indent}${kid} ${nid} ${qs(n.label ?? n.id)} {`);
+    if (typeof n.description_ru === 'string' && n.description_ru) {
+      modelLines.push(`${indent}  description ${qs(n.description_ru)}`);
+    }
+    if (isMega) modelLines.push(`${indent}  style { multiple true }`);
+    const nmeta = [];
+    if (typeof n.meta === 'string' && n.meta) nmeta.push(['meta', n.meta]);
+    if (typeof n.found_at === 'string' && n.found_at) nmeta.push(['found_at', n.found_at]);
+    if (typeof n.artifact_id === 'string' && n.artifact_id) nmeta.push(['artifact_id', n.artifact_id]);
+    if (isMega && isArray(n.children) && n.children.length > 0) {
+      nmeta.push(['children', n.children.map((c) => String(c))]);
+    }
+    if (nmeta.length > 0) {
+      modelLines.push(`${indent}  metadata {`);
+      for (const [key, value] of nmeta) {
+        modelLines.push(`${indent}    ${key} ${isArray(value) ? `[${value.map(qs).join(', ')}]` : qs(value)}`);
+      }
+      modelLines.push(`${indent}  }`);
+    }
+    for (const child of childrenByMega.get(n.id) ?? []) emitNode(child, `${indent}  `);
+    modelLines.push(`${indent}}`);
+  }
   for (const z of zones) {
     const zid = zoneId.get(z.id);
     if (!zid) continue;
@@ -257,39 +314,7 @@ function build(mapDoc) {
     }
     modelLines.push('');
 
-    for (const n of nodesByZone.get(z.id) ?? []) {
-      const nid = nodeId.get(n.id);
-      const kid = kindId.get(nodeKindOriginal.get(n.id));
-      const isMega = n.is_mega === true;
-      if (isMega) megaCount++;
-      modelLines.push(`    ${kid} ${nid} ${qs(n.label ?? n.id)} {`);
-      if (typeof n.description_ru === 'string' && n.description_ru) {
-        modelLines.push(`      description ${qs(n.description_ru)}`);
-      }
-      if (isMega) {
-        // rule 6: collapsed group -> style multiple true, no fake children
-        modelLines.push('      style { multiple true }');
-      }
-      const nmeta = [];
-      if (typeof n.meta === 'string' && n.meta) nmeta.push(['meta', n.meta]);
-      if (typeof n.found_at === 'string' && n.found_at) nmeta.push(['found_at', n.found_at]);
-      if (typeof n.artifact_id === 'string' && n.artifact_id) nmeta.push(['artifact_id', n.artifact_id]);
-      if (isMega && isArray(n.children) && n.children.length > 0) {
-        nmeta.push(['children', n.children.map((c) => String(c))]);
-      }
-      if (nmeta.length > 0) {
-        modelLines.push('      metadata {');
-        for (const [k, v] of nmeta) {
-          if (isArray(v)) {
-            modelLines.push(`        ${k} [${v.map(qs).join(', ')}]`);
-          } else {
-            modelLines.push(`        ${k} ${qs(v)}`);
-          }
-        }
-        modelLines.push('      }');
-      }
-      modelLines.push('    }');
-    }
+    for (const n of nodesByZone.get(z.id) ?? []) emitNode(n, '    ');
     modelLines.push('  }');
     modelLines.push('');
   }
@@ -305,6 +330,9 @@ function build(mapDoc) {
   for (const e of edges) {
     if (typeof e.from !== 'string' || typeof e.to !== 'string') { edgesSkipped++; continue; }
     if (!nodeId.has(e.from) || !nodeId.has(e.to)) { edgesSkipped++; continue; }
+    if (fqn(e.from).startsWith(`${fqn(e.to)}.`) || fqn(e.to).startsWith(`${fqn(e.from)}.`)) {
+      die(`LikeC4 1.59.3: связь ${JSON.stringify(e.id ?? e.relation)} между mega и его ребёнком не представима без изменения модели`);
+    }
     const namespace = e.namespace ?? (VALID_RELATIONS.has(e.relation) ? 'typed-link' : 'code-dep');
     const kind = namespace === 'code-dep' ? 'codeDep' : 'typedLink';
     const label = typeof e.relation === 'string' && e.relation ? e.relation : '';
@@ -374,6 +402,12 @@ function build(mapDoc) {
     // edge_ids — набор рёбер всего пути, не позиционный список по одному на шаг.
     // Пустой/отсутствующий набор допустим по схеме; тогда ищем среди всех рёбер.
     const candidates = selectedEdges.length > 0 ? selectedEdges : emittedEdges;
+    const pairs = ids.slice(0, -1).map((id, i) => [id, ids[i + 1]]);
+    for (const e of selectedEdges) {
+      if (!pairs.some(([a, b]) => (visible(e.from) === a && visible(e.to) === b) || (visible(e.from) === b && visible(e.to) === a))) {
+        die(`поток ${JSON.stringify(f.id)}: edge_id ${JSON.stringify(e.id)} не принадлежит пути`);
+      }
+    }
     const vid = viewSan(`flow_${f.id}`);
     viewLines.push(`  dynamic view ${vid} {`);
     viewLines.push(`    title ${qs(f.name ?? f.id)}`);
@@ -383,11 +417,23 @@ function build(mapDoc) {
     }
     for (let i = 0; i + 1 < ids.length; i++) {
       const a = ids[i], b = ids[i + 1];
-      const hit = candidates.find((e) => e.from === a && e.to === b) ??
-        candidates.find((e) => e.from === b && e.to === a);
+      let bindings = candidates.filter((e) => visible(e.from) === a && visible(e.to) === b);
+      const reverse = bindings.length === 0 && candidates.some((e) => visible(e.from) === b && visible(e.to) === a);
+      if (reverse) bindings = candidates.filter((e) => visible(e.from) === b && visible(e.to) === a);
+      const hit = bindings[0];
+      const source = reverse ? b : a, target = reverse ? a : b;
+      const within = (node, actor) => fqn(node) === fqn(actor) || fqn(node).startsWith(`${fqn(actor)}.`);
+      const nativeBindings = emittedEdges.filter((e) => within(e.from, source) && within(e.to, target));
+      const keys = (relations) => [...new Set(relations.map((e) => JSON.stringify([e.from, e.to, e.kind, e.relation])))].sort();
+      if (JSON.stringify(keys(bindings)) !== JSON.stringify(keys(nativeBindings))) {
+        die(`поток ${JSON.stringify(f.id)}: LikeC4 1.59.3 не может точно выбрать связи шага ${JSON.stringify(a)} -> ${JSON.stringify(b)}; неоднозначные/неподдерживаемые edge_ids, модель сохранена без записи`);
+      }
       const arrow = hit ? `-[${hit.kind}]->` : '->';
       const label = hit?.relation ? ` ${qs(hit.relation)}` : '';
-      viewLines.push(`    ${fqn(a)} ${arrow} ${fqn(b)}${label}`);
+      // Логическая связь остаётся в исходном направлении; обратный обход
+      // задаётся настоящими head/tail, а не подменой model relationship.
+      const style = reverse ? ' { head none; tail normal }' : '';
+      viewLines.push(`    ${fqn(source)} ${arrow} ${fqn(target)}${label}${style}`);
     }
     viewLines.push('  }');
     viewLines.push('');
