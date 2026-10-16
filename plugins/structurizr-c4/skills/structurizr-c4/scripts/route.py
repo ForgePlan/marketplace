@@ -459,7 +459,8 @@ def solve(snapshot: dict) -> dict:
     # Input order is intentional: extract in stable model relationship order.
     for item in relations:
         relation_id = str(item["id"])
-        sid, tid = str(item["sourceId"]), str(item["targetId"])
+        sid = str(item.get("renderedSourceId", item["sourceId"]))
+        tid = str(item.get("renderedTargetId", item["targetId"]))
         if sid not in nodes or tid not in nodes:
             raise ValueError("Missing endpoint node for relationship " + relation_id)
         source, target = nodes[sid], nodes[tid]

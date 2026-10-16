@@ -31,15 +31,17 @@ def fixtures():
                   "sourceId": "a", "targetId": "b", "start": {"x": 100, "y": 50},
                   "end": {"x": 300, "y": 50}, "labelWidth": 100, "labelHeight": 20},
                  {"id": "r:2", "originalId": "r", "order": "2", "viewIndex": 0,
-                  "sourceId": "a", "targetId": "b", "start": {"x": 100, "y": 50},
-                  "end": {"x": 300, "y": 50}, "labelWidth": 100, "labelHeight": 20}]
+                  "sourceId": "a", "targetId": "b",
+                  "renderedSourceId": "b", "renderedTargetId": "a",
+                  "start": {"x": 300, "y": 80}, "end": {"x": 100, "y": 80},
+                  "labelWidth": 100, "labelHeight": 20}]
     snapshot = {"viewKey": "Flow", "nodes": nodes, "relationships": relations,
                 "dimensions": {"width": 450, "height": 200}}
     patch = {"viewKey": "Flow", "elements": [{"id": "a", "x": 0.1, "y": 0.1},
                                                 {"id": "b", "x": 300.1, "y": 0.1}],
              "relationships": [
                  {"id": "r:2", "routing": "Direct", "position": 75, "vertices": [
-                     {"x": 100.1, "y": 50.1}, {"x": 300.1, "y": 50.1}]},
+                     {"x": 300.1, "y": 80.1}, {"x": 100.1, "y": 80.1}]},
                  {"id": "r:1", "routing": "Direct", "position": 25, "vertices": [
                      {"x": 100.1, "y": 50.1}, {"x": 100.1, "y": -120.1},
                      {"x": 300.1, "y": -120.1}, {"x": 300.1, "y": 50.1}]}],
@@ -129,13 +131,47 @@ class ApplyLayoutTests(unittest.TestCase):
 
     def test_response_flag_does_not_invert_model_endpoints(self):
         workspace, snapshot, patch = fixtures()
-        snapshot["relationships"][1]["response"] = True
+        response = snapshot["relationships"][1]
         result, _ = apply_layout(workspace, snapshot, patch)
         self.assertTrue(result["views"]["dynamicViews"][0]["relationships"][0]["response"])
+        self.assertEqual((response["renderedSourceId"], response["renderedTargetId"]), ("b", "a"))
+        self.assertEqual(result["views"]["dynamicViews"][0]["relationships"][0]["vertices"][-1],
+                         {"x": 101, "y": 250})
         snapshot["relationships"][1]["sourceId"] = "b"
         snapshot["relationships"][1]["targetId"] = "a"
         with self.assertRaisesRegex(LayoutError, "Snapshot endpoints differ"):
             apply_layout(workspace, snapshot, patch)
+
+    def test_response_direction_change_invalidates_snapshot_without_changing_model(self):
+        workspace, snapshot, patch = fixtures()
+        workspace["views"]["dynamicViews"][0]["relationships"][0]["response"] = False
+        with self.assertRaisesRegex(LayoutError, "rendered endpoints differ"):
+            apply_layout(workspace, snapshot, patch)
+
+    def test_response_bounds_use_rendered_endpoint_node_offsets(self):
+        workspace, snapshot, patch = fixtures()
+        view = workspace["views"]["dynamicViews"][0]
+        view["relationships"] = [view["relationships"][0]]
+        snapshot["relationships"] = [snapshot["relationships"][1]]
+        patch["relationships"] = [patch["relationships"][0]]
+        patch["relationships"][0]["vertices"] = []
+        patch["elements"][0]["x"] = 800
+        patch["elements"][1]["x"] = -200
+        _, report = apply_layout(workspace, snapshot, patch)
+        self.assertEqual(report["boundsBeforeShift"]["minX"], -200)
+        self.assertEqual(report["boundsBeforeShift"]["maxX"], 900)
+
+    def test_boundary_vertices_leave_a_nonzero_target_approach_for_native_arrowheads(self):
+        workspace, snapshot, patch = fixtures()
+        result, report = apply_layout(workspace, snapshot, patch)
+        response, request = result["views"]["dynamicViews"][0]["relationships"]
+        shift = report["offset"]
+        self.assertEqual(response["vertices"][-1], {"x": 101 + shift["x"], "y": 80 + shift["y"]})
+        self.assertEqual(request["vertices"][-1], {"x": 300 + shift["x"], "y": 49 + shift["y"]})
+        patch["relationships"][0]["vertices"][-1]["x"] = 110
+        result, report = apply_layout(workspace, snapshot, patch)
+        self.assertEqual(result["views"]["dynamicViews"][0]["relationships"][0]["vertices"][-1]["x"],
+                         110 + report["offset"]["x"])
 
     def test_bbox_offset_and_native_origin_survive_solver_apply_and_canvas_shift(self):
         workspace, snapshot, _ = fixtures()

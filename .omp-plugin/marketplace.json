@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code — UX, frontend, workflow, and developer tools",
-    "version": "1.187.1"
+    "version": "1.189.0"
   },
   "plugins": [
     {
@@ -808,7 +808,7 @@
     {
       "name": "structurizr-c4",
       "source": "./plugins/structurizr-c4",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "author": {
         "name": "ForgePlan"
       },

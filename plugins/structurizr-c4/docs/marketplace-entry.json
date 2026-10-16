@@ -1,7 +1,7 @@
 {
   "name": "structurizr-c4",
   "source": "./plugins/structurizr-c4",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": { "name": "ForgePlan" },
   "homepage": "https://github.com/ForgePlan/marketplace",
   "license": "MIT",
