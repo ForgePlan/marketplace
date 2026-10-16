@@ -187,7 +187,7 @@ tells you which of the two an agent actually read.
 
 ## (c) What is Claude-Code-native by design
 
-**Agents, commands, and hooks are Claude-Code-native — terminally, not pending emit (ADR-025).**
+**Agents, commands and automation are host-native; portable skills do not imply automatic translation.**
 
 - **Agents** (`plugins/<name>/agents/*.md`) - Claude Code subagent format
   (frontmatter `tools` / `disallowedTools` denylist per the PRD-026 B2 paradigm).
@@ -215,17 +215,26 @@ tells you which of the two an agent actually read.
   "read the command file and follow it". One source of truth, discoverable from
   the portable path. Four synchronised copies of a 200-line router is a promise
   nobody keeps past the second edit.
-- **Hooks** (`plugins/<name>/hooks/hooks.json`) - Claude Code hook events
-  (`PreToolUse`, `PostToolUse`, `SessionStart`, etc.). Other CLIs have their own
-  automation primitives; no cross-CLI hook emit is shipped, and none will be
-  built without a new decision — a concrete request opens one (ADR-025 Trigger 2).
+- **Hooks and extensions** use each client's native automation API. Most marketplace
+  hooks remain Claude-Code-native. Slopocop's Palych communication profile is an
+  explicit exception: Claude hooks, trusted Codex hooks and an OMP extension load
+  the same core; no generic cross-CLI hook emitter is involved. Editorial slash
+  commands and the `slop-cop` agent remain Claude-native.
 
-**Posture (ADR-025).** The portable surface is **MCP tools + skills + AGENTS.md**
-— by design and terminally, as compliance with open standards (MCP,
-agentskills.io, AGENTS.md), not as Tier 0 of a deferred adapter programme.
-Agents, commands and hooks are Claude-Code-native, with **no cross-CLI emit on
-any horizon by decision**; a concrete request opens a **new** decision rather
-than unblocking an old programme (ADR-025 supersedes ADR-014).
+  Slopocop also ships a host-neutral installer that adds a managed block to an
+  explicitly selected startup instruction file (`AGENTS.md` or the consuming
+  client's equivalent). It preserves other instructions and has no implicit
+  personal target. This makes future-session activation independent of model and
+  skill matching when the client actually reads that file. A client without a
+  supported startup-file, skill or extension mechanism cannot be auto-activated
+  by merely copying plugin files. See [Slopocop activation](../plugins/slopocop/README.md#development-communication).
+
+**Posture (ADR-025).** The general portable surface remains **MCP tools + skills +
+startup instructions**. There is no marketplace-wide translator for commands,
+agents, hooks or permission policies. The Slopocop-specific communication adapters
+are explicit integrations, not evidence that other Claude-native plugin features
+work in Codex/OMP. Codex requires hook trust; OMP 18.11.1 loads the extension after
+native installation, while `--plugin-dir` alone does not load `omp.extensions`.
 
 One thing already bridges all CLIs at the orchestration layer: **smith**, the
 master-orchestrator. Its routing logic is declared in `AGENTS.md` so the same

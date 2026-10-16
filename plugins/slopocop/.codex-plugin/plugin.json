@@ -1,0 +1,13 @@
+{
+  "name": "slopocop",
+  "version": "1.4.0",
+  "description": "Clear RU/EN development replies with Palych enabled by default through trusted Codex hooks, plus humanizer-ru and slop-humanizer for targeted prose. Use when improving agent communication, humanizing text or auditing prose. Requires POSIX and Python >=3.9 for hooks; host-neutral startup instruction installation is also available.",
+  "author": {
+    "name": "ForgePlan"
+  },
+  "homepage": "https://github.com/ForgePlan/marketplace",
+  "repository": "https://github.com/ForgePlan/marketplace",
+  "license": "MIT",
+  "skills": "./skills/",
+  "hooks": "./hooks/codex-hooks.json"
+}

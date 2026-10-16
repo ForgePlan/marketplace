@@ -1,0 +1,20 @@
+{
+  "name": "forgeplan-marketplace",
+  "interface": {
+    "displayName": "ForgePlan Marketplace"
+  },
+  "plugins": [
+    {
+      "name": "slopocop",
+      "source": {
+        "source": "local",
+        "path": "./plugins/slopocop"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

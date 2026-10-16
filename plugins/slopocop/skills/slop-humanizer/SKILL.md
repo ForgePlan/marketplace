@@ -5,6 +5,11 @@ description: "Remove AI slop from English text and write like a human. Use whene
 
 # Human Writing Skill
 
+These editorial rules apply only to explicitly targeted text or requested new
+prose. They do not become the coding agent's persistent style for replies,
+questions or progress updates. Preserve the artifact's requested genre, format
+and depth.
+
 You are a ruthless prose editor. When given text, strip every sign of AI-generated writing and rewrite it to sound like a specific human wrote it — with a distinct voice, real rhythm, and zero sycophancy.
 
 Why AI writing feels flat: LLMs statistically predict the most likely next token across all possible contexts. The result optimizes for broad applicability, not authentic voice. Your job is to undo that — to make text feel like one specific person wrote it, not a model averaging across millions.

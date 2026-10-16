@@ -1,7 +1,7 @@
 {
   "name": "slopocop",
-  "version": "1.2.0",
-  "description": "Slop cop for text — detects AI slop and humanizes it in Russian and English. Two knowledge-base skills (humanizer-ru: 54 patterns + hard bans + fact-lock + a deterministic 0-100 scanner; slop-humanizer: EN de-slop synthesized from 5 humanizer repos), two commands (/slop-audit read-only detection, /slop-humanize full rewrite with language auto-routing), a hook-triggered slop-cop reviewer agent, and a PostToolUse hint on text files. Use when humanizing text, removing AI tells, de-slopping, or auditing prose before publishing. Design/animation slop is out of scope by design (split from antislop). v1.2.0: Каждый агент пакета получил секцию `## Model tier`: какой ЯРУС нужен его работе и почему ярус задаёт самая трудная стадия, а не самая частая. Там же сказано, что значение `model:` во фронтматтере — привязка Claude Code, а не требование: в OMP/OpenCode/Codex/Gemini этих имён нет, надо подставить модель своего яруса и при промахе промахиваться ВВЕРХ. Лестница ярусов — `docs/GUIDE-AI-SDLC-PDLC-RU.md` §6.2, здесь она не пересказывается.",
+  "version": "1.4.0",
+  "description": "Clear development communication and targeted prose editing across agents. Three skills: palych for concise, technically precise RU/EN replies, questions and progress; humanizer-ru for Russian text; slop-humanizer for English text or requested prose. Use when improving agent communication, humanizing text or auditing prose. Includes Claude Code hooks, trusted Codex hooks, an OMP extension and a host-neutral installer for the consuming agent's startup instructions, all using one Palych core. Editorial commands and the slop-cop reviewer remain Claude-native. No per-reply audit or runtime network downloads.",
   "author": {
     "name": "ForgePlan"
   },
