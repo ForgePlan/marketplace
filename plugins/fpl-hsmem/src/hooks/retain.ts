@@ -12,11 +12,13 @@
  * Exported as runRetain so SessionEnd can call it with force=true.
  */
 
+import { basename } from "node:path";
 import { readTranscript } from "../lib/transcript.js";
 import { HindsightClient } from "../lib/client.js";
-import { loadConfig, debugLog, type HindsightConfig } from "../lib/config.js";
+import { loadProjectConfig, debugLog } from "../lib/config.js";
 import { prepareRetentionTranscript } from "../lib/content.js";
 import { incrementTurnCount, trackRetention } from "../lib/state.js";
+import { redact } from "../lib/redact.js";
 
 interface HookInput {
   session_id?: string;
@@ -43,12 +45,22 @@ function resolveTemplate(value: string, vars: Record<string, string>): string {
 
 export async function runRetain(hookInput: HookInput, force = false): Promise<void> {
   const cwd = hookInput.cwd ?? process.cwd();
-  const config: HindsightConfig = loadConfig(cwd);
-
-  if (!config.autoRetain) {
-    debugLog(config, "autoRetain disabled, skipping");
+  // Configuration is classified before any token is acquired or network request is made.
+  const loaded = loadProjectConfig(cwd);
+  if (loaded.state === "missing" || loaded.state === "disabled") return;
+  if (loaded.state === "invalid") {
+    process.stderr.write(`[Hindsight] Retain skipped: invalid configuration: ${redact(loaded.reason)}\n`);
     return;
   }
+
+  // Transcript capture is OFF unless the project sets `autoRetain: true`. Memory is for curated
+  // facts and decisions, not a store of raw conversation: transcripts carry pasted secrets and
+  // noise, and every captured session becomes an extraction job and a document someone must audit.
+  if (!loaded.config.autoRetain) {
+    debugLog(loaded.config, "autoRetain disabled, skipping");
+    return;
+  }
+  const { config } = loaded;
 
   const sessionId = hookInput.session_id ?? "unknown";
   const messages = readTranscript(hookInput.transcript_path);
@@ -87,10 +99,8 @@ export async function runRetain(hookInput: HookInput, force = false): Promise<vo
   }
   const documentId = chunkIndex === 0 ? sessionId : `${sessionId}-c${chunkIndex}`;
 
-  // One resolver only. loadConfig() is a strict superset of deriveBankId(); using both is
-  // what split this project's memory across two banks.
-  const bankId = config.bankId;
-  const client = new HindsightClient(config.url, bankId, config.apiKey);
+  const bankId = config.defaultBank;
+  const client = new HindsightClient(config.url, bankId, config.getApiKey);
 
   const timestamp = new Date().toISOString().replace(/\.\d+Z$/, "Z");
   const templateVars: Record<string, string> = {
@@ -119,6 +129,11 @@ export async function runRetain(hookInput: HookInput, force = false): Promise<vo
   );
 
   try {
+    // Never let a retain create a bank: Hindsight creates one implicitly on first write.
+    if (!(await client.bankExists(bankId))) {
+      process.stderr.write(`[Hindsight] Retain skipped: bank '${bankId}' does not exist on the server\n`);
+      return;
+    }
     await client.retain(
       {
         content: prepared.transcript,
@@ -135,7 +150,7 @@ export async function runRetain(hookInput: HookInput, force = false): Promise<vo
       { async: true, timeoutMs: 15000 },
     );
   } catch (e) {
-    process.stderr.write(`[Hindsight] Retain failed: ${(e as Error).message}\n`);
+    process.stderr.write(`[Hindsight] Retain failed: ${redact((e as Error).message)}\n`);
   }
 }
 
@@ -153,7 +168,7 @@ async function main(): Promise<void> {
   await runRetain(hookInput, false);
 }
 
-const isDirect = import.meta.url === `file://${process.argv[1]}`;
+const isDirect = basename(process.argv[1] ?? "") === "retain.mjs";
 if (isDirect) {
   main().catch((e: Error) => {
     process.stderr.write(`[Hindsight] retain hook error: ${e.message}\n`);

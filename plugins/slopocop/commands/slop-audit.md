@@ -8,6 +8,10 @@ description: Read-only AI-slop detection for text. Auto-detects Russian vs Engli
 You are a slop detector. You find AI tells in prose and report them — you do **not** rewrite. The
 user gets a diagnosis, not an edit. Rewriting is `/slop-humanize`.
 
+Scope: keep the target text and requested report in this command's format.
+Apply the Slopocop communication layer (`slopocop`) to surrounding replies, questions and progress updates, not to
+the artifact's requested style or level of detail.
+
 ## Step 1 — Get the text
 
 The target is whatever the user passed: a pasted block, a file path, or "the file I just edited". If

@@ -18,6 +18,7 @@
 export const TOOL_NAMES = [
   // memory — write and read
   "memory_retain",
+  "memory_retain_batch",
   "memory_recall",
   "memory_reflect",
   "memory_status",
@@ -70,14 +71,17 @@ export type ToolName = (typeof TOOL_NAMES)[number];
  * DELIBERATELY NOT ON THIS LIST, and why:
  *  - `document_ingest` / `document_ingest_file` — Profile A creators legitimately file artifacts
  *    into the bank; that is authorship, not curation.
- *  - `mental_model_refresh` — rebuilds a page from facts that are already there. It writes nothing
- *    a reader did not already have.
+ *  - `mental_model_refresh` — rebuilds a page from facts that are already there.
  *  - every `*_list` / `*_get`, `memory_recall`, `memory_reflect`, `memory_status`,
- *    `memory_get_current_bank`, `bank_config_get` — reads. Restricting reads would stop an agent
- *    from checking which bank it is in before acting, which is the opposite of safe.
+ *    `memory_get_current_bank`, `bank_config_get` — reads.
+ *
+ * `memory_retain_batch` remains denied to no-memory-write agents even though Stage 0 makes it a
+ * read-only planner: it reads bounded project files, and the initial pilot intentionally excludes
+ * that surface. Keeping both direct and plugin-prefixed denylists unchanged is defense in depth.
  */
 export const MEMORY_WRITE_TOOLS = [
   "memory_retain",
+  "memory_retain_batch",
   "memory_set_mission",
   "memory_invalidate",
   "memory_reconsolidate",

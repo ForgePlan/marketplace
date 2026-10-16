@@ -3,11 +3,11 @@
  *
  * WHY THIS EXISTS, and what it does not claim to do.
  *
- * This bank stores raw text. `store_document_text` is on, `memory_defense` is null, and the Stop
- * hook uploads whole session transcripts every ten turns. Whatever was pasted into a session is in
- * the corpus verbatim. Enabling masking on the server changes FUTURE writes only — it cleans
- * nothing that is already stored. So the last place a secret can be caught before it re-enters a
- * model's context is here, at the formatter, on the way back out.
+ * This bank may store raw text. `store_document_text` can be on and `memory_defense` can be null;
+ * when an operator separately enables `autoRetain`, the Stop hook can upload session transcripts.
+ * Whatever was pasted into such a session may then enter the corpus verbatim. Enabling masking on
+ * the server changes FUTURE writes only — it cleans nothing already stored. So the last place a
+ * secret can be caught before it re-enters a model's context is here, on the way back out.
  *
  * That makes this a blast-radius reducer, not a control. It matches SHAPES — a JWT looks like a
  * JWT, an AWS key looks like an AWS key. A password that looks like an English word is invisible
@@ -96,6 +96,20 @@ export function redactionCount(text: string): number {
     n += (text.match(re) ?? []).length;
   }
   return n;
+}
+
+/**
+ * The kinds of credential shape present in `text`, without masking. The batch planner/CLI refuses
+ * a candidate on any hit; it reports the kind, never the matched value.
+ */
+export function secretKinds(text: string): string[] {
+  if (typeof text !== "string" || text.length === 0) return [];
+  if (text.length > MAX_SCAN) return ["unscannable-length"];
+  const kinds = new Set<string>();
+  for (const rule of RULES) {
+    if (new RegExp(rule.re.source, rule.re.flags.replace("g", "")).test(text)) kinds.add(rule.kind);
+  }
+  return [...kinds];
 }
 
 /**
