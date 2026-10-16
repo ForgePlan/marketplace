@@ -1,9 +1,9 @@
 # ForgePlan Marketplace — Claude Code Configuration
 
 **Repo**: [ForgePlan/marketplace](https://github.com/ForgePlan/marketplace)
-**Catalog version**: 1.184.0
-**Plugins**: 23 (14 workflow + 8 agent packs + 1 memory plugin fpl-hsmem) — adds the AD/AID-PDLC sub-cycle instance packs agents-tdd (#1) + agents-bmad (#2) + agents-canvas (#5 — CANVAS design-system→code, RFC-021, hook-gate=Yes) alongside agents-sparc (#3, finished to B-orchestrator) + smith master-orchestrator (EPIC-002, Profile B-orchestrator)
-**Agents**: 44 of 97 forgeplan-aware (the gate-enforced definition: carries a disallowedTools denylist, PRD-026 B2) + 3 allowlist-backed Profile B reviewers outside that definition (injection-analyst, pii-detector, performance-engineer — rows 8-9 fix, 2026-09-05: full forgeplan EVID surface, constraints enforced by omission) (PRD-026 B2 paradigm — `disallowedTools` denylist; + the AD/AID-PDLC sub-cycle masters tdd-orchestrator / bmad-orchestrator, sparc-orchestrator finished to B-orchestrator, and the C4 verifier tdd-test-validator. **`memory: project` REJECTED Sprint R** — Hindsight covers use case.)
+**Catalog version**: 1.186.0
+**Plugins**: 24 (workflow plugins, agent packs and memory) — includes primary native Structurizr C4 and the AD/AID-PDLC sub-cycle packs
+**Agents**: 45 of 98 forgeplan-aware (gate definition: carries a disallowedTools denylist, PRD-026 B2) + 3 allowlist-backed Profile B reviewers outside that definition (injection-analyst, pii-detector, performance-engineer). The architecture-scoped Structurizr producer cannot write product source or ForgePlan artifacts; independent acceptance remains Profile B. **`memory: project` REJECTED Sprint R** — Hindsight covers use case.
 **Last Updated**: 2026-07-01 (fpl-skills **v1.52.0** + forgeplan-workflow **v1.13.0** — the autonomous build-workflow discipline batch (marketplace#169): AGENT-AUTHORING-GUIDE gains a companion "Autonomous build-workflow discipline" section; `build`/`sprint`/`do` skills + `/forge-cycle` codify its 3 patterns — bake project red lines verbatim into the design/build prompt (catch spec-vs-constraint violations before code, not after a failed build), spec-as-built reconciliation before activation (an omitted-by-redline PRD/RFC mandate must be reconciled in the artifact body, never silently left stale), and self-verify + claim-sweep on agent crash (never ship on an unverified crashed-agent claim, never leave an orphaned claim past TTL). Earlier same-day: agents-pro **v1.14.0** + fpl-skills **v1.51.0** + forgeplan-brownfield-pack **v1.5.1** — marketplace agent-hardening batch from the @forgeplan/web autonomous-build session: architect-reviewer + guardian get StructuredOutput-precedence (the terminal StructuredOutput call wins over the EVIDENCE-writing default under a Workflow schema, marketplace#165) + a mandatory finally-release so a crashed reviewer never leaks its claim (marketplace#166); AGENT-AUTHORING-GUIDE gains 3 canonical disciplines — claim-hygiene / StructuredOutput-precedence / CLI-vs-MCP contract (marketplace#168) + Profile B universal HARD RULES 9/10; smith pre-flight now reads forgeplan_claims + a health/stats digest (activity_stats + journal) and never routes onto a live-claimed artifact, plus the read-vs-write forgeplan_claims denylist fix (marketplace#167); discover_finding workaround docs updated now that forgeplan#292 is resolved (marketplace#86). Earlier same-day: agents-canvas **v1.0.0** — CANVAS made stack-AGNOSTIC (RFC-022 refines RFC-021; decision ADR-015): generates natively in the project's ONE declared framework (engine = input via a Step-0 stack detect → announce / force-ask), Lit/Web-Components demoted to one optional target, Spread + per-framework wrappers → an optional out-of-default multi-framework path (ADR-016), Style-Dictionary → one token-tool option, context7 mandatory for the resolved framework; the острый tokens-gate hardened for native layouts — per-framework guarded globs + state-schema migration + fail-safe stale-state substitution (canvas-gate.sh mechanism unchanged; independently security-verified EVID-195, ship-gate EVID-196). BREAKING major bump: existing installs run `/canvas-init` once on upgrade. Same-day docs-completeness sync (fpl-skills **v1.50.2**): CANVAS added/updated across ~20 marketplace docs + onboarding + methodology/plugin lists (ARCHITECTURE, DEVELOPER-JOURNEY, PLAYBOOK, ONBOARDING, process-from-idea, AGENTS.md, README, CHANGELOG) — AGENT-AUTHORING-GUIDE 12→14 context + canvas-coordinator now listed as a Profile B-orchestrator alongside tdd/bmad/sparc-orchestrator. Earlier 2026-06-30: CANVAS hardened to agents-canvas v0.3.0 — 7 gate/discipline hardenings: vision-first visual verdict vs the Pencil oracle, console-error gate, web-font-load assertion, data-state + interaction acceptance oracles in spec.yaml, missing-master PROBLEM loop (porter/coder never fabricate → typed PROBLEM → scoped re-Capture), master-anatomy completeness designed-left, coordinator-verified Spread file-ownership. Earlier 2026-06-26: shipped + made brand/style-AGNOSTIC — v0.2.0 (the visual brand is a scope-artifact INPUT, not baked in; canvas-designer Step 0 helps the user choose + record a brand before designing; warm-paper/Expo are worked examples only). instance #5 of the AD/AID-PDLC contract (RFC-021, hook-gate=Yes per the ADR-012 test; NOT a program reopen — admitted by the NOTE-027 2026-06-26 amendment; canvas-coordinator is the 4th narrow B-orchestrator). Earlier 2026-06-16: self-aware integrity scanner patch — /decay-watch + decay-reminder.sh now treat NOTE-013 `Kind: finding` as a SEPARATE machine track (excluded from human-deferral counts/triggers, owned by /forge-heal; RFC-019 R-8 / RFC-020 follow-up); + a live /forge-heal AUTO-path demo on EVID-135 (phase heal validate→evidence then rollback — reversibility verified, prod restored). brick 2 (Layer 4 heal-or-task): NEW /forge-heal skill — propose-not-silent 3-tier dispatch (AUTO/ADI/USER) of findings onto PRD-032; AUTO auto-fixes only 2 reversible kinds (phase_mismatch, complete stuck_draft) after batch-confirm + journal + one-call rollback (phase rollback via `phase_advance --to`, not undo_last); USER → tracked NOTE-013 task; never silent-mutates (PRD-074/RFC-020, EVID-177 review CONCERNS→resolved). brick 1 (2026-06-09): /forge-insight + insight-watchdog + accurate session counts + decay-reminder fix (PRD-074/RFC-019). ADR-014 cross-CLI decision activated. Earlier 2026-06-02: shipped PR #140-143 (DEFER-018/016/012/005..009). The AD/AID-PDLC sub-cycle proving-program closed at 4 instances FOR NEW DIMENSIONS (NOTE-027); CANVAS (#5) adds no new dimension and is admitted as a post-closure hook-gate=Yes methodology per the ADR-012 test (NOTE-027 amendment 2026-06-26), not a reopen; the ADR-012 gate is rendered `hook-gate` in shipped artifacts, Cyrillic codename retained only in immutable graph records. catalog v1.100.0, fpl-skills v1.52.0, forgeplan-workflow v1.13.0, agents-pro v1.14.0, forgeplan-brownfield-pack v1.5.1, cc-best v1.1.0, agents-sparc v1.3.2, agents-tdd v0.2.1, agents-bmad v0.2.0, agents-canvas v1.0.0.)
 
 ---
@@ -12,7 +12,7 @@
 
 New here, or need to find where something lives? **[`docs/INDEX.md`](docs/INDEX.md)** is the single repository map / file-RAG — it locates every plugin, agent (by pack), skill, hook, script, doc, and the forgeplan artifacts, plus a "how to find X" lookup.
 
-- **Plugins + versions** → `.claude-plugin/marketplace.json` (23: 14 workflow + 8 agent packs + 1 memory)
+- **Plugins + versions** → `.claude-plugin/marketplace.json` (24 plugins)
 - **Agents** → `plugins/<pack>/agents/`; **skills** → `plugins/<plugin>/skills/<skill>/SKILL.md`; **agent authoring** → `plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md`
 - **Methodology routing (smith)** → `plugins/fpl-skills/skills/smith/routing-map.md` (14 rows)
 - **Guides** → `docs/` (indexed in `docs/INDEX.md`); **validation** → `scripts/validate-all-plugins.sh` + `scripts/ci/`
@@ -409,34 +409,34 @@ Foundation: Simon Brown's C4 model (c4model.com) — orthogonal architecture doc
 
 ### Rules
 
-1. **Any full ADR (per Sprint Z1 criteria: ≥3 modules, OR supersede, OR irreversible) MUST be accompanied by C4 L1+L2 diagrams** (Mermaid format) before the ADR body is finalized.
+1. **Architectural decisions affecting ≥3 modules require native C4 L1+L2 delivery before the ADR/RFC body is finalized.** An explicit C4 request uses the same contract. A full ADR chosen only because it supersedes another decision or is irreversible does not by itself trigger the ≥3-module requirement.
 
-2. **`adr-architect` Step 5b.1 auto-recommends dispatching `/c4-diagram` skill in Dispatch mode** when criterion #1 (≥3 modules) triggers. The dispatch happens BEFORE filling the ADR body — diagrams shape the prose, not the other way around.
+2. **Use the primary `structurizr-c4` skill and [canonical delivery contract](plugins/structurizr-c4/skills/structurizr-c4/references/forgeplan.md).** `adr-architect` Step 5b.1 dispatches the real `structurizr-c4:structurizr-architect` agent before filling the ADR body, unless a suitable current native delivery is already supplied. Greenfield decisions use a proposed `to-be` model, not an invented production topology.
 
-3. **Output location**: Mermaid diagrams in a Markdown file co-located with the ADR body or in `docs/c4/<ADR-NNN>.md`.
+3. **Reuse the assigned workspace and the actual returned report path.** The native model, saved layout, provenance, verification record, export and report follow the canonical contract; a Markdown file or inline Mermaid alone is not a delivery. Profile A links the report from `## Context`; the architecture-scoped producer does not write the ADR/RFC itself.
 
-4. **ADR body MAY reference the C4 file via relative link** in the `## Context` section. If the ADR body discusses inter-module flow without a C4 file present — `guardian` agent flags as CONCERNS at the gate.
+4. **Independent review checks the current native snapshot.** Producer-side `/structurizr-c4:c4-review` is review/repair, not an independent verdict. Missing or stale delivery causes C4 CONCERNS in `guardian`; missing runtime/browser checks cannot be replaced with Mermaid.
 
-5. **L3 (Component) only when needed**: default depth is L1+L2. Add L3 only if the PRD body explicitly discusses component internals of a single container.
+5. **Default depth is L1+L2; selected L3 only when needed.** Level semantics and delivery details live in the canonical contract rather than a second specification here.
 
 ### What C4 levels mean for architectural decisions
 
 | Level | When required | When to skip |
 |---|---|---|
-| L1 — Context | Always for full ADRs | Never — it's 10 lines |
-| L2 — Container | Always for full ADRs | Single-service system (embed in L1) |
-| L3 — Component | PRD body discusses container internals | Anything higher-level |
-| L4 — Code | Never for ADRs | Class-level detail belongs in RFC/code comments |
+| L1 — Context | ≥3-module decisions or explicit C4 request | Below threshold without C4 request |
+| L2 — Container | With required L1 delivery | Below threshold without C4 request |
+| L3 — Component | A selected container needs internal detail | Higher-level decisions |
+| L4 — Code | Explicit code-level question; see canonical contract | Do not use another service map |
 
 ### Quick path
 
-```bash
-# adr-architect Step 5b.1 auto-dispatches:
-Task(subagent_type="fpl-skills:c4-diagram",
-     prompt="Dispatch mode. System: <name>. Modules: <list>. Depth: L1+L2. Output: docs/c4/<ADR-NNN>.md.")
+```text
+# adr-architect Step 5b.1, unless a suitable native delivery already exists:
+Task(subagent_type="structurizr-c4:structurizr-architect",
+     prompt="Read the structurizr-c4 skill and its references/forgeplan.md. system_boundary: <name/scope>; sources: <paths/revision>; state: to-be; required_levels: L1+L2; workspace_path: docs/architecture/to-be/; parent_id: <ADR-ID>; report_path: docs/c4/<ADR-ID>.md; auto_versioning: true. Return the actual report path.")
 
-# Manual invocation if writing ADR without adr-architect:
-/c4-diagram   # interactive interview → produces same output
+# Manual Claude Code entrypoint:
+/structurizr-c4:c4-build
 ```
 
 Reference: PRD-060, EPIC-001. Simon Brown's C4 model: [c4model.com](https://c4model.com).

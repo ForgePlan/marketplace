@@ -21,7 +21,7 @@ Step-by-step, with each agent's role:
 
 1. **brief-intake** (Profile A) — produces structured Brief NOTE. Why first: every downstream agent needs the user's intent in writing, not in chat history. Brief frames goals, non-goals, target users, and constraints.
 2. **specification** (Profile A) — produces PRD-NNN from the Brief. Why second: BMAD's Analyst → PM handoff happens here; the PRD becomes the canonical source for goals, FRs, and acceptance criteria.
-3. **adr-architect** (Profile A) — produces ADR(s) for boundary decisions (storage, language, deployment target). Why third: foundational choices must be recorded before the RFC, otherwise the RFC has implicit unjustified premises. Auto-dispatches `c4-diagram` skill for ≥3-module decisions.
+3. **adr-architect** (Profile A) — produces ADR(s) for boundary decisions (storage, language, deployment target). Why third: foundational choices must be recorded before the RFC, otherwise the RFC has implicit unjustified premises. For ≥3-module decisions, reuses suitable native C4 delivery or dispatches `structurizr-c4:structurizr-architect` before finalising the ADR; greenfield targets are `to-be` with `proposed` claims.
 4. **architecture** (Profile A) — produces RFC-NNN from the PRD + ADRs. Why fourth: SPARC's Architecture phase here gives the team a fleshed-out design that respects the ADR boundaries.
 5. **goal-planner** (Profile A) — produces task DAG from PRD + RFC. Why fifth: turns design into actionable units, partitioned so `coder` agents can run in parallel via `isolation: worktree`.
 6. **coder** (Profile C-coder) — produces source files implementing the DAG. Why sixth: only writes after the spec + design + plan are gated; can be dispatched in parallel waves.
@@ -44,7 +44,7 @@ What must exist before activation:
 1. **The team skips brief-intake and dives into specification.** The PRD ends up missing target users or non-goals, and the downstream RFC has to be re-derived from chat history. **Recovery**: stop, dispatch `brief-intake` retroactively to produce a Brief NOTE, then re-run `artifact-reviewer` on the PRD to confirm alignment.
 2. **ADRs get written after the RFC instead of before.** The RFC reads like a fait accompli; foundational decisions are described as "we chose X" without alternatives. **Recovery**: extract every "we chose" sentence in the RFC into a draft ADR, run `forgeplan_reason` to surface the ≥3 alternatives that *should* have been considered, then ratify or reverse each.
 3. **`coder` is dispatched before the DAG is gated.** Code lands but doesn't map to a clear task; PR reviewers can't tell what acceptance criterion each commit satisfies. **Recovery**: pause coder dispatch, complete `goal-planner`, link each new commit to a DAG node post-hoc, and rerun `code-reviewer`.
-4. **C4 diagrams are skipped for an ≥3-module ADR.** `adr-architect` Step 5b.1 should have auto-dispatched `c4-diagram`; if it didn't, `guardian` flags CONCERNS. **Recovery**: dispatch `c4-diagram` in Dispatch mode with the modules list; produce `docs/c4/ADR-NNN.md`; re-run guardian.
+4. **Native C4 delivery is missing for an ≥3-module ADR.** `adr-architect` Step 5b.1 should have obtained a model, not merely a diagram file; `guardian` flags CONCERNS. **Recovery**: reuse a suitable delivery or dispatch `structurizr-c4:structurizr-architect` with boundary/sources, `to-be`, L1+L2, assigned workspace and ADR/report inputs under the [canonical contract](../../../../../structurizr-c4/skills/structurizr-c4/references/forgeplan.md); link its actual returned report, obtain fresh independent `architect-reviewer` review, then re-run guardian.
 5. **AGENTS.md is missing.** Cross-CLI portability degrades; users on Cursor/Codex can't read project context. **Recovery**: copy the canonical scaffold from `plugins/fpl-skills/templates/AGENTS.md` (Wave 1C deliverable) into the repo root; reference CLAUDE.md from it.
 
 ## Example invocation
@@ -60,7 +60,7 @@ Smith: Context=greenfield (row 1). Methodology=BMAD-trim + Spec Kit.
        2. specification → PRD-NNN (FRs: tokenise, charge, refund, webhook)
        3. adr-architect → ADR-NNN (Tokenisation provider) +
                           ADR-NNN+1 (Multi-tenancy isolation strategy) +
-                          c4-diagram skill (L1+L2 for both ADRs, 3+ modules)
+                          native Structurizr C4 delivery + actual reports (L1+L2 for both ADRs, 3+ modules; reuse shared workspace, sequential writers)
        4. architecture → RFC-NNN (Hexagonal layering, port-per-adapter)
        5. goal-planner → task DAG (12 nodes, 4 parallel groups)
        6. coder × 4 (Profile C-coder, isolation: worktree) → source files

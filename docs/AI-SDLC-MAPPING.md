@@ -14,13 +14,15 @@ A reference table for users coming from AI-SDLC (AI Software Development Lifecyc
 |---|---|---|---|
 | **Concept / Idea** | Identify the need, gather rough requirements | [`/shape <idea>`](../plugins/fpl-skills/skills/shape/SKILL.md) | Draft PRD |
 | **Research / Discovery** | Prior art, alternatives, gap analysis | [`/research <topic>`](../plugins/fpl-skills/skills/research/SKILL.md) | `research/reports/<topic>/REPORT.md`, optional Note |
-| **Design / Architecture** | Domain modelling, system architecture, decisions | [`/refine <plan>`](../plugins/fpl-skills/skills/refine/SKILL.md), [`/ddd-decompose`](../plugins/fpl-skills/skills/ddd-decompose/SKILL.md), [`/c4-diagram`](../plugins/fpl-skills/skills/c4-diagram/SKILL.md), [`/fpf-decompose`](../plugins/fpf/) | PRD, RFC, ADR, Spec, Mermaid diagrams |
+| **Design / Architecture** | Domain modelling, system architecture, decisions | [`/refine <plan>`](../plugins/fpl-skills/skills/refine/SKILL.md), [`/ddd-decompose`](../plugins/fpl-skills/skills/ddd-decompose/SKILL.md), [`structurizr-c4`](../plugins/structurizr-c4/skills/structurizr-c4/SKILL.md), [`/fpf-decompose`](../plugins/fpf/) | PRD, RFC, ADR, Spec; native C4 model/layout, evidence and static export; DDD context map |
 | **Specification** | Formal API contracts, schemas, behaviour specs | [`/rfc create`](../plugins/fpl-skills/skills/rfc/SKILL.md), `forgeplan new spec` | RFC, Spec |
 | **Build / Implementation** | Code, tests, working software | [`/sprint`](../plugins/fpl-skills/skills/sprint/SKILL.md), [`/forge-cycle`](../plugins/forgeplan-workflow/), [`/autorun`](../plugins/fpl-skills/skills/autorun/SKILL.md), [`/do`](../plugins/fpl-skills/skills/do/SKILL.md), [`/build`](../plugins/fpl-skills/skills/build/SKILL.md) | Code + tests; Evidence on completion |
 | **Test / Verification** | Multi-expert review, debug, quality gates | [`/audit`](../plugins/fpl-skills/skills/audit/SKILL.md), [`/diagnose <bug>`](../plugins/fpl-skills/skills/diagnose/SKILL.md), [autoresearch](AUTORESEARCH-INTEGRATION.md) | Evidence (verdict + congruence_level + evidence_type) |
 | **Release / Deploy** | Activate the artifact, prepare commit, ship | `forgeplan activate <id>`, `gh pr create` | Activated PRD, conventional commit with `Refs:` |
 | **Operate / Monitor** | Production health, blind spots, stale decisions | [`/restore`](../plugins/fpl-skills/skills/restore/SKILL.md), [`/briefing`](../plugins/fpl-skills/skills/briefing/SKILL.md), `forgeplan health`, `forgeplan stale` | Daily signals, blind-spot alerts, `valid_until` triggers |
 | **Maintain / Evolve** | Update existing decisions, supersede artifacts | `forgeplan supersede <id> --by <new>`, `forgeplan deprecate <id>`, [`/refine`](../plugins/fpl-skills/skills/refine/SKILL.md) on existing PRD/RFC | Lifecycle transitions, refresh notes |
+
+C4 uses the [canonical native delivery contract](../plugins/structurizr-c4/skills/structurizr-c4/references/forgeplan.md): the architecture-scoped producer writes model/report, Profile A links the actual report into ADR/RFC, and independent Profile B reviewers check the current snapshot. Claude Code uses `/structurizr-c4:c4-build`; other runtimes invoke the installed portable skill through their native worker ([setup](CROSS-CLI.md#primary-c4-in-each-runtime)). Mermaid is not a fallback for C4; non-C4 context maps remain unchanged.
 
 ---
 
@@ -30,7 +32,7 @@ A reference table for users coming from AI-SDLC (AI Software Development Lifecyc
 |---|---|
 | Concept / Idea | ✅ `/shape` (interview from scratch) |
 | Research / Discovery | ✅ `/research` (5-agent parallel) |
-| Design / Architecture | ✅ `/refine` + `/ddd-decompose` + `/c4-diagram` + `/fpf-decompose` (four interactive design skills) |
+| Design / Architecture | ✅ `/refine` + `/ddd-decompose` + `structurizr-c4` + `/fpf-decompose` (interactive design and native C4 modelling) |
 | Specification | ✅ `/rfc create` + `forgeplan new spec` |
 | Build / Implementation | ✅ `/sprint` (interactive), `/forge-cycle` (orchestrated), `/autorun` (unattended), `/do` (with checkpoints), `/build` (from existing plan) |
 | Test / Verification | ✅ `/audit` (4-6 reviewers), `/diagnose` (6-phase debug), [autoresearch](AUTORESEARCH-INTEGRATION.md) (metric-driven loop) |
@@ -58,8 +60,8 @@ Phase 3 — Design
   → polished PRD; ADR for "why magic-link over OAuth"
   /ddd-decompose
   → bounded contexts: Identity, Session, Notification
-  /c4-diagram
-  → L1 Context + L2 Container diagrams (Mermaid)
+  /structurizr-c4:c4-build
+  → native L1 Context + L2 Containers model, saved layout, evidence, checked static export
 
 Phase 4 — Specification
   /rfc create
