@@ -742,7 +742,7 @@ gh api repos/ForgePlan/marketplace/rulesets --jq '.[] | .name'  # rulesets
 | **agentic-rag** | 1.1.1 |
 | **fp-cookbook** | 1.2.3 (доставка правки счёта стадий из #254 — контент ушёл без бампа версии) |
 | **laws-of-ux** | 1.6.0 (манифест не отбраковывается на 2.1.257 + `/ux-law` снова грузится с метаданными — marketplace#242, #244) |
-| **forgeplan-map-pack** | **0.22.0** (denylists are Claude Code-only — `disallowedTools` appears zero times in the OMP binary, so the activate invariant now lives in the agent bodies where it travels (marketplace#218) — 6 of its 8 agents were relying on the denylist alone) |
+| **forgeplan-map-pack** | **0.25.0** (перевод `map.json` в LikeC4 с проверкой направлений, типов связей, идентификаторов и динамических потоков по нативному экспорту) |
 | **structurizr-c4** | **0.2.1** (основной C4-контракт в portable skill: нативные DSL/JSON, сохранённая геометрия, независимое review и проверка экспорта; адаптеры Claude Code и OMP не заменяют переносимый процесс) |
 | **slopocop** | 1.2.0 (манифест не отбраковывается на 2.1.257 + `/slop-humanize` снова грузится с метаданными — marketplace#242, #244. text anti-slop — humanizer-ru + slop-humanizer + /slop-audit + /slop-humanize + slop-cop agent) |
 | **slopocop-design** | 1.1.0 (design anti-slop — hallmark + frontend-design + design-taste + /design-audit + /design-redesign + design-cop agent) |

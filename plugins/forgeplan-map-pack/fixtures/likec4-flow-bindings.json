@@ -1,0 +1,45 @@
+{
+  "competing-relations": {
+    "nodes": [
+      { "id": "a", "label": "a", "kind": "module", "zone": "core", "found_at": "2026-10-17T00:00:00Z" },
+      { "id": "b", "label": "b", "kind": "module", "zone": "core", "found_at": "2026-10-17T00:00:00Z" }
+    ],
+    "edges": [
+      { "id": "request-id", "from": "a", "to": "b", "relation": "request", "verified_by": "grep:synthetic-request" },
+      { "id": "response-id", "from": "b", "to": "a", "relation": "response", "verified_by": "grep:synthetic-response" },
+      { "id": "alternate-id", "from": "b", "to": "a", "relation": "alternate", "verified_by": "grep:synthetic-alternate" }
+    ],
+    "flows": [
+      { "id": "explicit-alternate", "name": "Explicit alternate", "node_ids": ["b", "a"], "edge_ids": ["alternate-id"], "steps": ["Выбранная альтернативная связь"] },
+      { "id": "reverse-selected", "name": "Reverse selected", "node_ids": ["b", "a"], "edge_ids": ["request-id"], "steps": ["Обратный обход выбранной связи"] },
+      { "id": "normal-response", "name": "Normal response", "node_ids": ["b", "a"], "edge_ids": ["response-id"], "steps": ["Прямая связь ответа"] }
+    ]
+  },
+  "canonical-collapsed-flow": {
+    "nodes": [
+      { "id": "a", "label": "a", "kind": "module", "zone": "core", "found_at": "2026-10-17T00:00:00Z" },
+      { "id": "b", "label": "b", "kind": "module", "zone": "core", "found_at": "2026-10-17T00:00:00Z" },
+      { "id": "group", "label": "Group", "kind": "mega", "zone": "core", "is_mega": true, "collapsed": true, "children": ["a"], "found_at": "2026-10-17T00:00:00Z" }
+    ],
+    "edges": [
+      { "id": "request-id", "from": "a", "to": "b", "relation": "request", "verified_by": "grep:synthetic-request" }
+    ],
+    "flows": [
+      { "id": "visible-flow", "name": "Visible flow", "node_ids": ["group", "b"], "edge_ids": ["request-id"], "steps": ["Поток из свёрнутой группы к b"] }
+    ]
+  },
+  "unrelated-explicit-edge": {
+    "nodes": [
+      { "id": "a", "label": "a", "kind": "module", "zone": "core", "found_at": "2026-10-17T00:00:00Z" },
+      { "id": "b", "label": "b", "kind": "module", "zone": "core", "found_at": "2026-10-17T00:00:00Z" },
+      { "id": "c", "label": "c", "kind": "module", "zone": "core", "found_at": "2026-10-17T00:00:00Z" }
+    ],
+    "edges": [
+      { "id": "request-id", "from": "a", "to": "b", "relation": "request", "verified_by": "grep:synthetic-request" },
+      { "id": "other-id", "from": "b", "to": "c", "relation": "other", "verified_by": "grep:synthetic-other" }
+    ],
+    "flows": [
+      { "id": "wrong-pair", "name": "Wrong pair", "node_ids": ["a", "b"], "edge_ids": ["other-id"], "steps": ["Указана связь другой пары узлов"] }
+    ]
+  }
+}
