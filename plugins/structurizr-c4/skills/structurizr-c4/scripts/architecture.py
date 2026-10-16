@@ -12,6 +12,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from typing import Optional, Tuple
 import urllib.error
 import urllib.request
 
@@ -118,16 +119,36 @@ def read_state(root):
         return None
 
 
-def owned_process(state, root):
-    if not state or state.get('directory') != str(root):
+def process_identity(pid: int) -> Optional[Tuple[str, str]]:
+    if pid <= 0:
+        return None
+    try:
+        result = subprocess.run(
+            ['ps', '-ww', '-p', str(pid), '-o', 'lstart=', '-o', 'command='],
+            capture_output=True, text=True, check=False,
+            env={**os.environ, 'LC_ALL': 'C'})
+    except OSError:
+        return None
+    fields = result.stdout.rstrip('\n').split(None, 5)
+    if result.returncode != 0 or len(fields) != 6:
+        return None
+    return ' '.join(fields[:5]), fields[5]
+
+
+def viewer_command(command: str, root: Path) -> bool:
+    suffix = ' local ' + str(root)
+    return command.endswith(suffix) and 'structurizr' in command[:-len(suffix)].lower()
+
+
+def owned_process(state: Optional[dict], root: Path) -> bool:
+    if not isinstance(state, dict) or state.get('directory') != str(root):
         return False
     try:
-        result = subprocess.run(['ps', '-p', str(int(state['pid'])), '-o', 'command='],
-                                capture_output=True, text=True, check=False)
-        command = result.stdout
-        return result.returncode == 0 and 'structurizr' in command.lower() and 'local' in command and str(root) in command
-    except (OSError, KeyError, ValueError):
+        identity = process_identity(int(state['pid']))
+    except (KeyError, TypeError, ValueError):
         return False
+    return (identity is not None and identity[0] == state.get('started_at')
+            and viewer_command(identity[1], root))
 
 
 def start(root, port):
@@ -151,8 +172,7 @@ def start(root, port):
                                    stdin=subprocess.DEVNULL, stdout=log, stderr=log,
                                    start_new_session=True)
     state = {'pid': process.pid, 'directory': str(root), 'port': port,
-             'url': 'http://127.0.0.1:' + str(port), 'started_at': time.time()}
-    state_path.write_text(json.dumps(state, indent=2) + '\n')
+             'url': 'http://127.0.0.1:' + str(port)}
     try:
         deadline = time.monotonic() + 40
         while time.monotonic() < deadline:
@@ -161,6 +181,11 @@ def start(root, port):
             try:
                 with urllib.request.urlopen(state['url'], timeout=1) as response:
                     if response.status == 200:
+                        identity = process_identity(process.pid)
+                        if identity is None or not viewer_command(identity[1], root):
+                            raise RuntimeError('Cannot verify viewer process identity. Log: ' + str(log_path))
+                        state['started_at'] = identity[0]
+                        state_path.write_text(json.dumps(state, indent=2) + '\n')
                         print(state['url'])
                         return
             except (urllib.error.URLError, TimeoutError, OSError):

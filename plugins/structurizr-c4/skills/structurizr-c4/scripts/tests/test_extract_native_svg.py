@@ -12,6 +12,9 @@ from pathlib import Path
 import tempfile
 import unittest
 
+from apply_layout import apply_layout
+from route import solve
+
 
 _SPEC = importlib.util.spec_from_file_location(
     "native_svg_under_test", Path(__file__).parents[1] / "extract_native_svg.py")
@@ -155,6 +158,58 @@ class NativeSvgContractTests(unittest.TestCase):
             link("first", "1: Calls", path="M 100 60 L 300 60", label_y=90)))
         self.assertEqual([r["id"] for r in result["relationships"]], ["R:2", "R:1"])
         self.assertEqual([r["originalId"] for r in result["relationships"]], ["R", "R"])
+
+    def test_native_response_geometry_routes_and_keeps_persistent_model_identity(self):
+        data = workspace(
+            elements=[{"id": "1", "name": "Caller"}, {"id": "3", "name": "Service"}],
+            relationships=[{"id": "5", "sourceId": "1", "destinationId": "3",
+                            "description": "Calls"}],
+            view_relationships=[
+                {"id": "5", "order": "1", "description": "Request", "response": False},
+                {"id": "5", "order": "2", "description": "Response", "response": True}])
+        data["views"]["dynamicViews"] = data["views"].pop("systemContextViews")
+        # Порты воспроизводят Request/Response из нативного SVG версии 2026.09.19.
+        snapshot = self.extract(data, svg(
+            node("caller", "Caller", 149, 230, 450, 250),
+            node("service", "Service", 989, 230, 450, 250),
+            link("request", "1: Request", path="M 599 314.76 L 989 300.76",
+                 label_x=700, label_y=280),
+            link("response", "2: Response", path="M 989 403.36 L 599 382.54",
+                 label_x=700, label_y=410)))
+        request, response = snapshot["relationships"]
+        self.assertEqual((request["renderedSourceId"], request["renderedTargetId"]), ("1", "3"))
+        self.assertEqual((response["renderedSourceId"], response["renderedTargetId"]), ("3", "1"))
+        self.assertEqual((response["sourceId"], response["targetId"]), ("1", "3"))
+        self.assertEqual((response["id"], response["originalId"], response["order"]), ("5:2", "5", "2"))
+        patch = solve(snapshot)
+        self.assertEqual(patch["report"]["unroutedRelationships"], [])
+        self.assertEqual(patch["report"]["unresolved"], [])
+        routed_response = patch["relationships"][1]
+        self.assertEqual(routed_response["vertices"][0], response["start"])
+        self.assertEqual(routed_response["vertices"][-1], response["end"])
+        result, report = apply_layout(data, snapshot, patch)
+        self.assertEqual(result["model"], data["model"])
+        self.assertEqual([r["id"] for r in result["views"]["dynamicViews"][0]["relationships"]], ["5", "5"])
+        self.assertEqual([r["response"] for r in result["views"]["dynamicViews"][0]["relationships"]], [False, True])
+        self.assertTrue(report["modelUnchanged"])
+
+    def test_duplicate_response_labels_are_matched_by_rendered_direction(self):
+        data = workspace(elements=[
+            {"id": "A", "name": "Alpha"}, {"id": "B", "name": "Beta"},
+            {"id": "C", "name": "Gamma"}], relationships=[
+                {"id": "R1", "sourceId": "A", "destinationId": "B", "description": "Calls"},
+                {"id": "R2", "sourceId": "C", "destinationId": "B", "description": "Calls"}],
+            view_relationships=[
+                {"id": "R1", "order": "1", "response": True},
+                {"id": "R2", "order": "1", "response": True}])
+        data["views"]["dynamicViews"] = data["views"].pop("systemContextViews")
+        result = self.extract(data, svg(
+            node("A", "Alpha", 0, 0), node("B", "Beta", 300, 0),
+            node("C", "Gamma", 300, 300),
+            link("second", "1: Calls", path="M 350 80 L 350 300"),
+            link("first", "1: Calls", path="M 300 40 L 100 40")))
+        self.assertEqual([r["id"] for r in result["relationships"]], ["R2:1", "R1:1"])
+        self.assertEqual([r["renderedSourceId"] for r in result["relationships"]], ["B", "B"])
 
     def test_boundary_is_not_treated_as_runtime_obstacle(self):
         data = workspace()

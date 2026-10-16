@@ -162,7 +162,7 @@ Each methodology referenced in the table above. Five lines per card: one-sentenc
 - When NOT to use: Single-service decisions (L1 is overkill); class-level design (L4 belongs in code comments).
 - Source: Simon Brown, https://c4model.com
 - Primary tooling: portable skill `structurizr-c4`; Claude worker `structurizr-c4:structurizr-architect`. Reuse a suitable delivery returned by the ADR/RFC author; dispatch only when it is missing or stale. In other clients use a native worker with this skill, never a skill name as `Task.subagent_type`.
-- Delivery and acceptance: [canonical ForgePlan C4 contract](../../../../structurizr-c4/skills/structurizr-c4/references/forgeplan.md). Native workspace, saved layout, source evidence, checked static export and the actual navigation report are required; new C4 has no Mermaid fallback. The producer never records its own independent verdict.
+- Delivery and acceptance: [canonical ForgePlan C4 contract](../../../structurizr-c4/skills/structurizr-c4/references/forgeplan.md). Native workspace, saved layout, source evidence, checked static export and the actual navigation report are required; new C4 has no Mermaid fallback. The producer never records its own independent verdict.
 
 ### Event Storming
 
@@ -442,7 +442,7 @@ Per CLAUDE.md (Sprint Z6 + EPIC-001 S11 BMAD layer), every Profile B EVID must s
 
 3. **Cited methodology link MUST be present in the EVID body** — either the methodology name + source URL (from the cards above), or the canonical short-form `EPIC-001 4-layer pipeline S11` for adversarial reviews. Methodology-less EVIDs are CONCERNS.
 
-For Standard+ artifacts, smith additionally checks the S10 FPF ADI EVID (≥3 hypotheses, including "do nothing") and — for any ADR touching ≥3 modules — the [native C4 delivery contract](../../../../structurizr-c4/skills/structurizr-c4/references/forgeplan.md): resolve the actual `docs/c4/<ARTIFACT-ID>.md` report to DSL/JSON/evidence/review/static export, and require an independent review matching the current snapshot and required L1+L2 view keys. A Markdown file, legacy Mermaid diagram, stale JSON or unverified render alone does not satisfy C4. Missing runtime/skill/browser is a named gap, not a fallback; remediation is producer plus fresh independent review.
+For Standard+ artifacts, smith additionally checks the S10 FPF ADI EVID (≥3 hypotheses, including "do nothing") and — for any ADR touching ≥3 modules — the [native C4 delivery contract](../../../structurizr-c4/skills/structurizr-c4/references/forgeplan.md): resolve the actual `docs/c4/<ARTIFACT-ID>.md` report to DSL/JSON/evidence/review/static export, and require an independent review matching the current snapshot and required L1+L2 view keys. A Markdown file, legacy Mermaid diagram, stale JSON or unverified render alone does not satisfy C4. Missing runtime/skill/browser is a named gap, not a fallback; remediation is producer plus fresh independent review.
 
 Tactical artifacts (row 5: trivial hotfix) are scoped to S12+S13 only; S10/S11 are marked N/A by `/methodology-check` and smith does not gate on them. The cost-of-process must scale with the risk-of-change — smith is explicit about which row is tactical so the team doesn't pay S10/S11 overhead twice.
 

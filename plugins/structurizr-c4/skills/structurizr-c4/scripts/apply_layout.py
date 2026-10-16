@@ -86,13 +86,18 @@ def model_relationship_endpoints(model):
     return result
 
 
-def validate_snapshot_endpoints(snapshot, model_endpoints):
+def validate_snapshot_endpoints(snapshot, model_endpoints, view_relationship):
     original_id = str(snapshot.get("originalId", snapshot["id"]))
     if original_id not in model_endpoints:
         raise LayoutError("Relationship absent from the current model: " + original_id)
     observed = str(snapshot["sourceId"]), str(snapshot["targetId"])
     if observed != model_endpoints[original_id]:
         raise LayoutError("Snapshot endpoints differ from the current model for relationship " + original_id)
+    expected_rendered = observed[::-1] if view_relationship.get("response") is True else observed
+    rendered = (str(snapshot.get("renderedSourceId", snapshot["sourceId"])),
+                str(snapshot.get("renderedTargetId", snapshot["targetId"])))
+    if rendered != expected_rendered:
+        raise LayoutError("Snapshot rendered endpoints differ from the current view for relationship " + original_id)
 
 
 def map_relationship(snapshot, view_relationships):
@@ -142,7 +147,9 @@ def measured_endpoint(relation, name, node_offsets):
         point = {"x": value[0], "y": value[1]}
     if point is None:
         return None
-    identity = str(relation["sourceId" if name == "start" else "targetId"])
+    rendered_key, model_key = (("renderedSourceId", "sourceId") if name == "start"
+                               else ("renderedTargetId", "targetId"))
+    identity = str(relation.get(rendered_key, relation[model_key]))
     dx, dy = node_offsets.get(identity, (0.0, 0.0))
     return number(point["x"]) + dx, number(point["y"]) + dy
 
@@ -222,10 +229,9 @@ def apply_layout(workspace, snapshot, patch, padding=50):
         raise LayoutError("Snapshot relationship count differs from the view; nothing may be dropped")
     mappings, used, snapshots_in_view_order = [], set(), [None] * len(view_relations)
     for identity, source in snapshot_relations.items():
-        # Dynamic response arrows retain the model relation's source/destination;
-        # the view response flag is presentation, not a reversed model identity.
-        validate_snapshot_endpoints(source, model_endpoints)
         index, relation, method = map_relationship(source, view_relations)
+        # Направление отрисовки не меняет принадлежность к связи семантической модели.
+        validate_snapshot_endpoints(source, model_endpoints, relation)
         if index in used:
             raise LayoutError("Two snapshot relationships map to one view entry")
         used.add(index)
@@ -242,6 +248,17 @@ def apply_layout(workspace, snapshot, patch, padding=50):
             point = {"x": integer(vertex["x"]), "y": integer(vertex["y"])}
             if not vertices or point != vertices[-1]:
                 vertices.append(point)
+        end = measured_endpoint(source, "end", node_offsets)
+        if len(vertices) > 1 and end is not None and vertices[-1] == {
+                "x": integer(end[0]), "y": integer(end[1])}:
+            # Нулевой хвост SVG сбрасывает угол стрелки. Оставляем подход в 1 пиксель.
+            dx = vertices[-2]["x"] - vertices[-1]["x"]
+            dy = vertices[-2]["y"] - vertices[-1]["y"]
+            distance = max(abs(dx), abs(dy))
+            vertices[-1]["x"] += int(round(dx / distance))
+            vertices[-1]["y"] += int(round(dy / distance))
+            if vertices[-1] == vertices[-2]:
+                vertices.pop()
         relation.update(vertices=vertices, routing=routing, position=position)
         mapping = {"snapshotId": identity, "originalId": str(relation["id"]),
                    "order": relation.get("order"), "viewIndex": index, "method": method}

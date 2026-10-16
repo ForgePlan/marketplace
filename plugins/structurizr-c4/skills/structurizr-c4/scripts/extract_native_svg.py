@@ -158,6 +158,11 @@ def native_cylinder_bounds(path):
     return (0, 0, width, body_height+2*ry)
 
 
+def rendered_endpoints(relationship: dict, model_relationship: dict) -> tuple:
+    endpoints = model_relationship['sourceId'], model_relationship['destinationId']
+    return endpoints[::-1] if relationship.get('response') is True else endpoints
+
+
 def extract(workspace, svg, view_key):
     data = json.loads(Path(workspace).read_text())
     elements, relationships = {}, {}
@@ -279,20 +284,25 @@ def extract(workspace, svg, view_key):
                 dx = max(node['x']-point[0], 0, point[0]-node['x']-node['width'])
                 dy = max(node['y']-point[1], 0, point[1]-node['y']-node['height'])
                 return math.hypot(dx, dy)
-            candidates = [index for index in candidates if
-                          distance(points[0], relationships[view['relationships'][index]['id']]['sourceId']) < 2
-                          and distance(points[-1], relationships[view['relationships'][index]['id']]['destinationId']) < 2]
+            candidates = [index for index in candidates if all(
+                distance(point, identifier) < 2
+                for point, identifier in zip(
+                    (points[0], points[-1]),
+                    rendered_endpoints(view['relationships'][index],
+                                       relationships[view['relationships'][index]['id']])))]
         if len(candidates) != 1:
             raise ValueError('Unmatched/ambiguous relationship label: ' + label_text)
         index = candidates[0]
         consumed.add(index)
         rel = view['relationships'][index]
         original = relationships[rel['id']]
+        rendered_source, rendered_target = rendered_endpoints(rel, original)
         xs = [r['x'] for r in rects]+[r['x']+r['width'] for r in rects]
         ys = [r['y'] for r in rects]+[r['y']+r['height'] for r in rects]
         links.append({'id': rel['id']+(':'+str(rel['order']) if rel.get('order') else ''),
                       'originalId': rel['id'], 'order': rel.get('order'), 'viewIndex': index,
                       'sourceId': original['sourceId'], 'targetId': original['destinationId'],
+                      'renderedSourceId': rendered_source, 'renderedTargetId': rendered_target,
                       'label': label_text, 'labelWidth': max(xs)-min(xs) if xs else 0,
                       'labelHeight': max(ys)-min(ys) if ys else 0,
                       'start': dict(zip(('x', 'y'), points[0])),

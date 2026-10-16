@@ -53,6 +53,8 @@ python3 "$structurizr_skill_dir/scripts/architecture.py" stop docs/architecture/
 
 `init` refuses to overwrite existing DSL; preserve that protection. `export` also supports `mermaid`, `plantuml` and `json`; inspect output for the actual destination. Prefer static for interactive handoff. Mermaid/PlantUML are useful translations, not native route preservation.
 
+`start`/`status`/`stop` сверяют точный канонический аргумент workspace после `local` и время запуска экземпляра процесса, полученное через `ps` и сохранённое как `started_at`. Совпадение префикса пути, повторно использованный PID или старая запись без проверяемого времени запуска не дают права посылать сигнал. При невозможности прочитать идентичность helper считает процесс чужим; занятый порт остаётся ошибкой, а не поводом завершать его владельца. Этот локальный Python/CLI-процесс одинаков для OMP, Codex и Claude Code и не требует Claude-specific hooks.
+
 In version 2026.09.19, `inspect` defaults violations to severity `error`, including absent docs/ADRs; its exit code reflects their count. Attach actual docs/evidence with `!docs` and inspect findings rather than disabling every inspection. Never fabricate ADRs. If historical decisions are unavailable, targeted `structurizr.inspection.model.softwaresystem.decisions info` on the affected system is acceptable with a reason in review. See the checklist.
 
 Manual geometry belongs to **`workspace.json`** alongside DSL. Remove `autoLayout` only from a view needing manual editing, then save coordinates, vertices and label positions. Preserve both files, stable IDs and view keys. Every final static export uses the saved native JSON:

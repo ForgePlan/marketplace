@@ -50,6 +50,18 @@ class RoutingTests(unittest.TestCase):
         self.assertEqual(result["elements"][0], {"id": "a", "x": 0, "y": 0})
         self.assertEqual(result["elements"][2], {"id": "c", "x": 1000, "y": 0})
 
+    def test_response_ports_follow_the_rendered_nodes_when_overlap_moves_one(self):
+        response = edge("r:2", "a", "b", (80, 70), (120, 70), width=20)
+        response.update(renderedSourceId="b", renderedTargetId="a")
+        snapshot = {"viewKey": "Flow", "nodes": [node("a", 0, 0), node("b", 80, 0)],
+                    "relationships": [response]}
+        original = copy.deepcopy(snapshot)
+        result = solve(snapshot)
+        self.assertEqual(result["report"]["movedElements"], ["b"])
+        self.assertEqual(result["relationships"][0]["vertices"][0], {"x": 168, "y": 70})
+        self.assertEqual(result["relationships"][0]["vertices"][-1], {"x": 120, "y": 70})
+        self.assertEqual(snapshot, original)
+
     def test_missing_node_fails_instead_of_dropping_edge(self):
         with self.assertRaisesRegex(ValueError, "Missing endpoint"):
             solve({"viewKey": "Invalid", "nodes": [node("a", 0, 0)],
