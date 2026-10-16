@@ -11,6 +11,15 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Backfill (marketplace#250)**: entries v1.133.0 through v1.139.0 were written after the fact, each from the commit that carried its catalog bump. Where a change merged between two bumps and shipped without a version of its own, it is recorded under the release that first delivered it — the plugin cache is keyed on version, so an unbumped change reaches no user until the next bump.
 
+## [1.188.2] - 2026-10-17
+
+### Added
+- `forgeplan-map-pack 0.25.0`: перевод `map.json` в LikeC4 и проверка семантики по нативному JSON-экспорту. Скрипты доступны любому агенту с Node.js и установленным LikeC4.
+
+### Fixed
+- Сохранены канонический namespace по умолчанию, направление и явные IDs динамических связей. Неизвестный тип связи, неразрешимый flow и потерянный участок цепочки больше не могут завершиться `MATCH`.
+- Идентификаторы с ведущим дефисом нормализуются в допустимые LikeC4 IDs без коллизий. OMP-каталог пересобран с тем же составом и версиями.
+
 ## [1.187.1] - 2026-10-16
 
 ### Fixed

@@ -26,6 +26,8 @@
 //     `typed-link` (from the artifact graph) vs `code-dep` (grep-verified)
 //     is a load-bearing distinction -- codeDep renders with a dashed line,
 //     matching the probe.
+//     При отсутствии namespace действует канон edge-verifier/GC-4:
+//     11 артефактных relation -> typed-link, остальные -> code-dep.
 //  4. flow -> `dynamic view`; flow.steps -> the view's `description`.
 //  5. zone drill-down -> `view <id> of <zone>` (NOT `navigateTo`: verified on
 //     the probe that `navigateTo` from a dynamic view only reaches another
@@ -73,8 +75,8 @@ function isArray(v) {
 }
 
 // ---------------------------------------------------------------------------
-// identifier sanitizing -- LikeC4 identifiers: [A-Za-z0-9_-]+, can't start
-// with a digit, no dots (dots are the FQN separator).
+// identifier sanitizing -- LikeC4 identifiers: [A-Za-z_][A-Za-z0-9_-]*,
+// no dots (dots are the FQN separator).
 // ---------------------------------------------------------------------------
 // A conservative reserved-word list: DSL keywords that would otherwise parse
 // as something other than an identifier if a raw id/kind happened to collide.
@@ -88,6 +90,12 @@ const RESERVED = new Set([
   'zone', // reserved by THIS script for the zone-container element kind
 ]);
 
+// SPEC-003 D2/D3; тот же список использует map-guardian.mjs (GC-4).
+const VALID_RELATIONS = new Set([
+  'informs', 'based_on', 'supersedes', 'contradicts', 'refines',
+  'supports', 'demonstrates', 'covers', 'triangulates', 'references', 'belongs_to',
+]);
+
 function makeSanitizer() {
   const seen = new Set();
   return function sanitize(raw) {
@@ -96,7 +104,7 @@ function makeSanitizer() {
     // парсер слипает `.` и `_` в один знак (предикат подстановки) и
     // остаток имени остаётся необъяснённым. Замерено на живой карте
     // AeroNuts: 9 идентификаторов, 25 синтаксических ошибок.
-    if (s === '' || /^[0-9]/.test(s)) s = `n${s}`;
+    if (!/^[A-Za-z_]/.test(s)) s = `n${s}`;
     if (RESERVED.has(s.toLowerCase())) s = `${s}_`;
     let candidate = s;
     let n = 2;
@@ -140,7 +148,7 @@ function build(mapDoc) {
   const zones = mapDoc.zones.filter(isObject);
   const nodes = mapDoc.nodes.filter(isObject);
   const edges = mapDoc.edges.filter(isObject);
-  const flows = (isArray(mapDoc.flows) ? mapDoc.flows : []).filter(isObject);
+  const flows = isArray(mapDoc.flows) ? mapDoc.flows : [];
 
   const zoneId = new Map(); // original zone.id -> sanitized id
   for (const z of zones) {
@@ -290,18 +298,25 @@ function build(mapDoc) {
   // edges (top-level relationships, dotted FQN both sides)
   // -------------------------------------------------------------------------
   const incident = new Set(); // original node ids touched by >=1 edge
-  const edgeKindByPair = []; // for flow-transition label lookup: {from,to,relation}
+  const emittedEdges = [];
+  const edgesById = new Map();
   let edgesSkipped = 0;
   modelLines.push('  // edges');
   for (const e of edges) {
     if (typeof e.from !== 'string' || typeof e.to !== 'string') { edgesSkipped++; continue; }
     if (!nodeId.has(e.from) || !nodeId.has(e.to)) { edgesSkipped++; continue; }
-    const kind = e.namespace === 'code-dep' ? 'codeDep' : 'typedLink'; // rule 3, default typedLink
+    const namespace = e.namespace ?? (VALID_RELATIONS.has(e.relation) ? 'typed-link' : 'code-dep');
+    const kind = namespace === 'code-dep' ? 'codeDep' : 'typedLink';
     const label = typeof e.relation === 'string' && e.relation ? e.relation : '';
     modelLines.push(`  ${fqn(e.from)} -[${kind}]-> ${fqn(e.to)}${label ? ` ${qs(label)}` : ''}`);
     incident.add(e.from);
     incident.add(e.to);
-    edgeKindByPair.push({ from: e.from, to: e.to, relation: label });
+    const emitted = { id: e.id, from: e.from, to: e.to, relation: label, kind };
+    emittedEdges.push(emitted);
+    if (typeof e.id === 'string' && e.id) {
+      if (!edgesById.has(e.id)) edgesById.set(e.id, []);
+      edgesById.get(e.id).push(emitted);
+    }
   }
   modelLines.push('}');
 
@@ -339,11 +354,26 @@ function build(mapDoc) {
   }
 
   let flowsEmitted = 0;
-  let flowsSkipped = 0;
-  for (const f of flows) {
-    if (typeof f.id !== 'string' || !f.id) { flowsSkipped++; continue; }
-    const ids = (isArray(f.node_ids) ? f.node_ids : []).filter((id) => nodeId.has(id));
-    if (ids.length < 2) { flowsSkipped++; continue; }
+  const flowIds = new Set();
+  for (const [index, f] of flows.entries()) {
+    if (!isObject(f) || typeof f.id !== 'string' || !f.id) die(`flows[${index}]: отсутствует непустой id потока`);
+    if (flowIds.has(f.id)) die(`поток ${JSON.stringify(f.id)}: дубликат id`);
+    flowIds.add(f.id);
+    if (!isArray(f.node_ids)) die(`поток ${JSON.stringify(f.id)}: отсутствует node_ids[]`);
+    const ids = f.node_ids;
+    const missingNodes = ids.filter((id) => !nodeId.has(id));
+    if (missingNodes.length > 0) die(`поток ${JSON.stringify(f.id)}: неразрешимые node_ids ${JSON.stringify(missingNodes)}; цепочка не сокращена`);
+    if (ids.length < 2) die(`поток ${JSON.stringify(f.id)}: для dynamic view нужны минимум два узла`);
+    if (f.edge_ids !== undefined && !isArray(f.edge_ids)) die(`поток ${JSON.stringify(f.id)}: edge_ids должен быть массивом`);
+    const selectedEdges = [];
+    for (const id of f.edge_ids ?? []) {
+      const matches = edgesById.get(id) ?? [];
+      if (matches.length !== 1) die(`поток ${JSON.stringify(f.id)}: edge_id ${JSON.stringify(id)} неразрешим или неоднозначен`);
+      selectedEdges.push(matches[0]);
+    }
+    // edge_ids — набор рёбер всего пути, не позиционный список по одному на шаг.
+    // Пустой/отсутствующий набор допустим по схеме; тогда ищем среди всех рёбер.
+    const candidates = selectedEdges.length > 0 ? selectedEdges : emittedEdges;
     const vid = viewSan(`flow_${f.id}`);
     viewLines.push(`  dynamic view ${vid} {`);
     viewLines.push(`    title ${qs(f.name ?? f.id)}`);
@@ -353,9 +383,11 @@ function build(mapDoc) {
     }
     for (let i = 0; i + 1 < ids.length; i++) {
       const a = ids[i], b = ids[i + 1];
-      const hit = edgeKindByPair.find((e) => (e.from === a && e.to === b) || (e.from === b && e.to === a));
+      const hit = candidates.find((e) => e.from === a && e.to === b) ??
+        candidates.find((e) => e.from === b && e.to === a);
+      const arrow = hit ? `-[${hit.kind}]->` : '->';
       const label = hit?.relation ? ` ${qs(hit.relation)}` : '';
-      viewLines.push(`    ${fqn(a)} -> ${fqn(b)}${label}`);
+      viewLines.push(`    ${fqn(a)} ${arrow} ${fqn(b)}${label}`);
     }
     viewLines.push('  }');
     viewLines.push('');
@@ -381,7 +413,6 @@ function build(mapDoc) {
       megaNodes: megaCount,
       flows: flows.length,
       flowsEmitted,
-      flowsSkipped,
     },
   };
 }
@@ -425,7 +456,7 @@ function main() {
   console.log(`  zones:  ${stats.zonesEmitted}/${stats.zones}`);
   console.log(`  nodes:  ${stats.nodesEmitted}/${stats.nodes}` + (stats.nodesSkippedDanglingZone.length > 0 ? ` (skipped, dangling zone: ${stats.nodesSkippedDanglingZone.join(', ')})` : ''));
   console.log(`  edges:  ${stats.edgesEmitted}/${stats.edges}` + (stats.edgesSkipped > 0 ? ` (${stats.edgesSkipped} skipped -- missing endpoint)` : ''));
-  console.log(`  flows:  ${stats.flowsEmitted}/${stats.flows}` + (stats.flowsSkipped > 0 ? ` (${stats.flowsSkipped} skipped -- <2 resolvable nodes)` : ''));
+  console.log(`  flows:  ${stats.flowsEmitted}/${stats.flows}`);
   console.log(`  mega nodes: ${stats.megaNodes}`);
   console.log(`  isolated nodes (explicit include added, would else be dropped by 'include *'): ${stats.isolatedNodes}`);
   process.exit(0);
