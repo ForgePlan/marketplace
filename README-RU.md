@@ -270,10 +270,15 @@ Smith — Profile B-orchestrator агент с четырьмя скилами. 
 
 ### [slopocop](plugins/slopocop/)
 
-> Слоп-полицейский для **текста**. Ловит нейрослоп и очеловечивает по-русски и по-английски — `humanizer-ru` (54 паттерна + HARD BANS + факт-замок + детерминированный сканер 0–100) и `slop-humanizer` (EN). Команды `/slop-audit` (только детект) и `/slop-humanize` (рерайт с авто-роутингом языка), плюс агент-ревьюер `slop-cop` по хуку.
+> Slopocop — дополнительный слой ясной инженерной переписки (скилл `slopocop`); `humanizer-ru` и `slop-humanizer` отдельно редактируют заданный RU/EN-текст. Слой загружается native-интеграциями OMP/Claude/Codex либо управляемым блоком startup-инструкций другого клиента, не заменяет существующие инструкции и не запускает редактор или оценщик на каждую реплику. Редакторские `/slop-audit`, `/slop-humanize` и ревьюер `slop-cop` остаются Claude-native. [Активация, команды включения/отключения Slopocop и требования](plugins/slopocop/README-RU.md#рабочая-переписка).
 
 ```bash
 /plugin install slopocop@ForgePlan-marketplace
+```
+
+```bash
+omp plugin marketplace add ForgePlan/marketplace
+omp plugin install slopocop@forgeplan-marketplace
 ```
 
 ---

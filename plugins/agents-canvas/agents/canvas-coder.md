@@ -45,7 +45,9 @@ disallowedTools:
   - mcp__pencil__set_variables
   - mcp__pencil__export_nodes
   - mcp__hindsight__memory_retain
+  - mcp__hindsight__memory_retain_batch
   - mcp__plugin_fpl-hsmem_hindsight__memory_retain
+  - mcp__plugin_fpl-hsmem_hindsight__memory_retain_batch
   - mcp__hindsight__memory_set_mission
   - mcp__plugin_fpl-hsmem_hindsight__memory_set_mission
   - mcp__hindsight__mental_model_create
