@@ -171,7 +171,7 @@ Orchestra: Task "OAuth" Status=Review, Phase=Evidence
 | Agents | agents-core / agents-domain / agents-pro / agents-github | Specialised subagents that `/audit`, `/sprint`, etc. compose when relevant. |
 | Universal toolkit (legacy) | dev-toolkit | Soft-deprecated, superseded by fpl-skills. Use only if forgeplan CLI is unavailable. |
 | Brownfield ingest | forgeplan-brownfield-pack | 5 mappings (c4, ddd, madr, obsidian, autoresearch) + 12 extraction skills + 2 playbooks for migrating legacy code + docs into a forgeplan graph. |
-| Memory | fpl-hsmem | Hindsight cross-session memory: 13 MCP tools + 3 auto-hooks (recall / retain / force-retain) + 5 helper skills. Per-project bank. |
+| Memory | fpl-hsmem | Hindsight >=0.10.2,<0.11 client: project-only opt-in, explicit multi-bank gate, 28 MCP tools + 3 default-off hooks + 10 skills. |
 | Reference (cookbook) | fp-cookbook | Practical forgeplan CLI recipes — getting-started, troubleshooting, reference. |
 | Reference (skill authoring) | agentic-rag | Methodology skill for writing skills in agentic-RAG format (router + sections + content files). |
 | Reference (Claude Code) | cc-best | Opinionated agentic-RAG guide for CLAUDE.md, plugins, agents, hooks, MCP, and anti-patterns. |

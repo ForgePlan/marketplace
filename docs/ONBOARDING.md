@@ -42,40 +42,50 @@ After each `/plugin install`, you should see a short confirmation like `Installe
 > [!TIP]
 > If `/plugin install` says "already installed" but you don't see new commands → run `/plugin uninstall <name>` then re-install. This is a cache invalidation quirk in Claude Code; the workaround is reliable. Always re-run `/plugin install` after a `/plugin marketplace update` to pick up the new version.
 
-## Step 2 — Set up Hindsight memory (2 minutes)
+## Step 2 — Configure a read-only Hindsight pilot
 
-Hindsight is your **agents' long-term memory**. Facts learned in one session — design decisions, naming conventions, lessons from a tricky bug — get auto-saved and replayed before every prompt in the next session. Without it, agents start cold every time.
-
-It runs as a small local server in Docker. No external API keys needed — Hindsight uses your Claude subscription for fact extraction.
+`fpl-hsmem` 3.7.0 is project-only and default-off. It requires Hindsight API **>=0.10.2 and
+<0.11.0** and has no implicit server URL or folder-derived bank. Pin 0.10.2 for a disposable local
+server; production migration needs the rehearsal/rollback controls in the plugin runbook.
 
 ```bash
-# 1. Start the Hindsight server (one-time, runs in background)
 docker run -d --name hindsight -p 8888:8888 -p 9999:9999 \
   -e HINDSIGHT_API_LLM_PROVIDER=claude-code \
-  ghcr.io/vectorize-io/hindsight:latest
+  ghcr.io/vectorize-io/hindsight:0.10.2
 
-# 2. Install the plugin (wires up the auto-hooks + helper skills)
 /plugin install fpl-hsmem@ForgePlan-marketplace
 
-# 3. Verify it's healthy
-/fpl-hsmem:status
+cat > .hindsight.json <<'JSON'
+{
+  "url": "http://localhost:8888",
+  "banks": ["existing-pilot-bank"],
+  "defaultBank": "existing-pilot-bank",
+  "tokenFile": ".secrets/hindsight.token",
+  "autoRecall": false,
+  "autoRetain": false,
+  "allowTools": [
+    "memory_recall", "memory_status", "memory_get_current_bank",
+    "memory_list", "memory_get", "memory_operations",
+    "mental_model_list", "mental_model_get", "directive_list",
+    "bank_config_get", "document_list"
+  ]
+}
+JSON
 ```
 
-`/fpl-hsmem:status` should print something like `bank: <your-project-name>`, `memories: 0`, `mental_models: 0`. A fresh empty bank is exactly what you want on a new project.
+The token file must already exist inside this project and be excluded from git. For an
+unauthenticated disposable local server, remove `tokenFile`; for an authenticated server,
+provision it through your credential store before starting the client. A missing file makes
+the config invalid. Never put the token itself in `.hindsight.json`.
 
-Three things now happen automatically:
+Restart Claude Code in this project, then run `memory_get_current_bank` and `memory_status`. The
+bank must already exist. The client checks `/version` before bank traffic and refuses incompatible
+servers. Its BankGate/policy is client-side safety, not server authorization.
 
-- **Before each prompt** — relevant past learnings are pulled and silently injected as context (auto-recall)
-- **After each response** — the conversation is saved if it crossed the retain threshold (auto-retain)
-- **At session end** — a final flush captures whatever came up in the last few turns
-
-You don't have to think about it. It just works.
-
-> [!TIP]
-> Each project gets its own memory bank, keyed off the current working directory. Switch to a different repo → memory automatically switches too. Banks never bleed across projects.
-
-> [!WARNING]
-> If `/fpl-hsmem:status` errors with "connection refused", the Docker container isn't running. Check with `docker ps | grep hindsight`. If it's missing, re-run the `docker run` command from above.
+Automatic hooks remain off, retain hooks do nothing, and enrichment apply is absent from the pilot.
+A committed repository config alone is not consent to enable them. Production cutover and later
+write enablement require separate records; see
+[`plugins/fpl-hsmem/CONFIGURATION.md`](../plugins/fpl-hsmem/CONFIGURATION.md).
 
 ## Step 3 — Your first project (5 minutes)
 
@@ -245,7 +255,7 @@ Check the plugin is enabled:
 /fpl-hsmem:diagnose
 ```
 
-`diagnose` runs a 6-step check — server reachable, bank exists, hooks wired, opt-out file absent, MCP block in `.mcp.json`, recent retain activity. The output names the broken step.
+`diagnose` checks project config/opt-out, the configured server/version, bank resolution/content, and the selected registration/hook policy. Plugin-mode does not require a manual `.mcp.json` block. Default-off hooks and absent retain state are expected, not evidence of failure.
 
 **`/smith-plan` classifies the wrong context**
 

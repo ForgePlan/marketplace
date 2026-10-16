@@ -8,10 +8,21 @@
  * A test that always skips is decoration.
  *
  * So the test surface is built like every other entrypoint and committed alongside them. It adds
- * no capability: these are pure validators and string functions, no network, no filesystem, no
- * server. It is not wired into the MCP surface and no tool calls it.
+ * no capability: these are validators, string functions, and the bank gate / batch planner that
+ * the server already uses — no tool calls this file and it is not wired into the MCP surface.
  */
 export { assertPathId, assertBankId } from "./lib/client.js";
 export { stripMemoryTags, escapeMemoryMarkers } from "./lib/content.js";
-export { redact, redactionCount, redactDeep } from "./lib/redact.js";
+export { redact, redactionCount, redactDeep, secretKinds } from "./lib/redact.js";
 export { TOOL_NAMES, isOwnTool } from "./lib/tool-names.js";
+export { loadProjectConfig, findConfigFile, ENRICH_MAX_CHARS_LIMIT } from "./lib/config.js";
+export { BankGate } from "./lib/banks.js";
+export { readProjectFile, MAX_PROJECT_FILE_BYTES } from "./lib/paths.js";
+export {
+  parseCandidates,
+  routeBank,
+  scanSensitive,
+  planEnrich,
+  confirmRefusal,
+  ENRICH_SOURCE_TAG,
+} from "./lib/enrich.js";

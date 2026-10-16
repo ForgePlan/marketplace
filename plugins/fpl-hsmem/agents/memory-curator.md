@@ -137,8 +137,8 @@ preloaded into a subagent at all. A pointer to it would look like instruction
 and carry none. The skill remains the version a *human* runs; this is yours.
 
 **Before anything: `memory_get_current_bank`.** Correcting a fact in the wrong
-bank leaves both banks wrong. If `bank_id_source` is
-`derived-from-directory`, stop and say so — nobody chose that bank.
+bank leaves both banks wrong. Several banks may be allowed; pass `bank`
+explicitly to every call of the correction when the fact is not in `default_bank`.
 
 1. **`memory_list` with structured filters → the id.** Not recall. Recall ranks
    by meaning and cannot enumerate, so it can never hand you the id. Free-text

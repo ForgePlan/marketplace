@@ -40,40 +40,49 @@
 > [!TIP]
 > Если `/plugin install` говорит «already installed», но новых команд не видно — выполни `/plugin uninstall <имя>` и поставь заново. Это особенность инвалидации кэша в Claude Code; обходной путь работает стабильно. После `/plugin marketplace update` всегда заново запускай `/plugin install`, чтобы подхватить новую версию.
 
-## Шаг 2 — Настройка памяти Hindsight (2 минуты)
+## Шаг 2 — Read-only pilot Hindsight
 
-Hindsight — это **долговременная память твоих агентов**. Факты, выученные в одной сессии — архитектурные решения, договорённости об именовании, уроки от тяжёлого бага — автосохраняются и подкладываются перед каждым промптом в следующей сессии. Без него агенты каждый раз стартуют с холодной головы.
-
-Работает как маленький локальный сервер в Docker. Внешние API-ключи не нужны — Hindsight использует твою подписку Claude для извлечения фактов.
+`fpl-hsmem` 3.7.0 включается только проектным `.hindsight.json` и по умолчанию не запускает
+auto-хуки. Нужен Hindsight API **>=0.10.2 и <0.11.0**; URL и банк не выводятся автоматически.
 
 ```bash
-# 1. Запускаем сервер Hindsight (разово, работает в фоне)
 docker run -d --name hindsight -p 8888:8888 -p 9999:9999 \
   -e HINDSIGHT_API_LLM_PROVIDER=claude-code \
-  ghcr.io/vectorize-io/hindsight:latest
+  ghcr.io/vectorize-io/hindsight:0.10.2
 
-# 2. Ставим плагин (подключит авто-хуки + вспомогательные скиллы)
 /plugin install fpl-hsmem@ForgePlan-marketplace
 
-# 3. Проверяем здоровье
-/fpl-hsmem:status
+cat > .hindsight.json <<'JSON'
+{
+  "url": "http://localhost:8888",
+  "banks": ["existing-pilot-bank"],
+  "defaultBank": "existing-pilot-bank",
+  "tokenFile": ".secrets/hindsight.token",
+  "autoRecall": false,
+  "autoRetain": false,
+  "allowTools": [
+    "memory_recall", "memory_status", "memory_get_current_bank",
+    "memory_list", "memory_get", "memory_operations",
+    "mental_model_list", "mental_model_get", "directive_list",
+    "bank_config_get", "document_list"
+  ]
+}
+JSON
 ```
 
-`/fpl-hsmem:status` должен напечатать что-то вроде `bank: <имя-твоего-проекта>`, `memories: 0`, `mental_models: 0`. Чистый пустой банк — именно то, что нужно для нового проекта.
+Файл токена должен заранее существовать внутри проекта и быть исключён из git. Для
+неаутентифицированного одноразового локального сервера убери `tokenFile`; для сервера с
+авторизацией подготовь файл через хранилище учётных данных до запуска клиента. Отсутствующий
+файл делает конфиг невалидным. Сам токен в `.hindsight.json` не записывай.
 
-Дальше автоматически происходят три вещи:
+Перезапусти Claude Code в проекте и вызови `memory_get_current_bank`, затем `memory_status`.
+Банк должен уже существовать. Клиент проверяет `/version` до bank-запросов; BankGate и policy —
+клиентские ограничения, а не серверная авторизация.
 
-- **Перед каждым промптом** — релевантные прошлые знания подтягиваются и молча подмешиваются как контекст (`auto-recall`)
-- **После каждого ответа** — разговор сохраняется, если перешагнул порог retain (`auto-retain`)
-- **На закрытие сессии** — финальный flush ловит всё, что всплыло в последних поворотах диалога
-
-Думать об этом не надо. Просто работает.
-
-> [!TIP]
-> У каждого проекта свой банк памяти, привязанный к текущей рабочей директории. Переключился в другой репо — память автоматически переключилась. Банки никогда не перетекают между проектами.
-
-> [!WARNING]
-> Если `/fpl-hsmem:status` падает с «connection refused» — контейнер Docker не запущен. Проверь `docker ps | grep hindsight`. Если контейнера нет, запусти `docker run` из шага выше заново.
+В pilot auto-хуки выключены, retain не выполняется, enrichment apply отсутствует. Сам факт
+committed-конфига не означает согласия включить хуки. Production cutover и последующее разрешение
+записи оформляются отдельно; runbook — в
+[`plugins/fpl-hsmem/CONFIGURATION.md`](../plugins/fpl-hsmem/CONFIGURATION.md).
 
 ## Шаг 3 — Первый проект (5 минут)
 
@@ -243,7 +252,7 @@ forgeplan --version
 /fpl-hsmem:diagnose
 ```
 
-`diagnose` пробегает 6-шаговую проверку — сервер доступен, банк существует, хуки прокинуты, opt-out файла нет, MCP-блок в `.mcp.json`, недавняя активность retain. Вывод называет сломанный шаг.
+`diagnose` проверяет проектный конфиг/opt-out, явный сервер и его версию, выбор и содержимое банка, режим регистрации и hook policy. Plugin-mode не требует ручного MCP-блока в `.mcp.json`. Выключенные по умолчанию хуки и отсутствие retain state — штатное поведение, не ошибка.
 
 **`/smith-plan` классифицирует не тот контекст**
 
