@@ -15,11 +15,11 @@
 //                     map-to-likec4.mjs -- see `makeSanitizer` below for why.
 //   COMPUTED side  -- what actually landed in the LikeC4 model, read from
 //                     `likec4 export json`'s OWN output: element ids (which
-//                     LikeC4 renders as the dotted zone.node FQN), the
-//                     relations dict (source.model / target.model / kind /
-//                     title), and dynamic views' ordered endpoint pairs for flows --
-//                     all produced entirely by the `likec4` binary, a
-//                     process this script does not control the internals of.
+//                     LikeC4 renders as dotted element FQNs), the model
+//                     relations dictionary and each dynamic step's native
+//                     relationship IDs, label, kind and rendered traversal.
+//                     IDs resolve through that dictionary, not step labels.
+//                     All data comes from the external `likec4` binary.
 //
 // Three, not two, exit codes -- the third one matters as much as the other
 // two. Without it a broken tool (no `likec4` in PATH, a map.json that isn't
@@ -44,6 +44,8 @@
 // MISMATCH, exactly like a translation bug would be -- see the sentinel-key
 // note in `recordedModel` for how that stays distinguishable from a
 // genuine generator defect.
+// Непредставимый точный выбор параллельных связей в LikeC4 1.59.3 тоже
+// возвращает MISMATCH: валидность map.json не гарантирует точность экспорта.
 //
 // Dependency-free Node (node:fs / node:path / node:child_process /
 // node:os only), matching map-emit.mjs / map-guardian.mjs / map-to-likec4.mjs.
@@ -180,7 +182,38 @@ function recordedModel(doc) {
     nodeZone.set(n.id, n.zone);
   }
 
-  const fqn = (origId) => `${zoneId.get(nodeZone.get(origId))}.${nodeId.get(origId)}`;
+  // Каноническая проекция map-emit.mjs: поток называет mega, а edge_id
+  // продолжает обозначать исходную связь скрытого ребёнка.
+  const childToMega = new Map();
+  for (const n of nodes) {
+    if (!nodeId.has(n.id) || n.is_mega !== true || n.collapsed !== true || !Array.isArray(n.children)) continue;
+    for (const child of n.children) {
+      if (!nodeId.has(child)) continue;
+      if (nodeZone.get(child) !== nodeZone.get(n.id)) cannotRun(`mega ${JSON.stringify(n.id)}: ребёнок ${JSON.stringify(child)} принадлежит другой зоне`);
+      childToMega.set(child, n.id);
+    }
+  }
+  const visible = (id) => childToMega.get(id) ?? id;
+  const edgeKind = (edge) => {
+    const namespace = edge.namespace ?? (VALID_RELATIONS.has(edge.relation) ? 'typed-link' : 'code-dep');
+    return namespace === 'code-dep' ? 'codeDep' : 'typedLink';
+  };
+  const relationTuple = (edge) => JSON.stringify([
+    fqn(edge.from), fqn(edge.to), edgeKind(edge), typeof edge.relation === 'string' ? edge.relation : '',
+  ]);
+
+  const fqns = new Map();
+  for (const id of nodeId.keys()) {
+    const parts = [nodeId.get(id)];
+    const seen = new Set([id]);
+    for (let parent = childToMega.get(id); parent !== undefined; parent = childToMega.get(parent)) {
+      if (seen.has(parent)) cannotRun(`цикл children у mega ${JSON.stringify(parent)}`);
+      seen.add(parent);
+      parts.unshift(nodeId.get(parent));
+    }
+    fqns.set(id, `${zoneId.get(nodeZone.get(id))}.${parts.join('.')}`);
+  }
+  const fqn = (id) => fqns.get(id);
 
   const zoneFqns = new Set(zoneId.values());
   const nodeFqns = new Set([...nodeId.keys()].map(fqn));
@@ -235,6 +268,7 @@ function recordedModel(doc) {
       if (!nodeId.has(id)) flowIssues.push(`поток ${JSON.stringify(f.id)}: неразрешимый node_id ${JSON.stringify(id)}`);
     }
     if (f.node_ids.length < 2) flowIssues.push(`поток ${JSON.stringify(f.id)}: для dynamic view нужны минимум два узла`);
+    const selected = [];
     if (f.edge_ids !== undefined && !Array.isArray(f.edge_ids)) {
       flowIssues.push(`поток ${JSON.stringify(f.id)}: edge_ids должен быть массивом`);
     } else {
@@ -242,12 +276,42 @@ function recordedModel(doc) {
         const matches = edgesById.get(id) ?? [];
         if (matches.length !== 1 || !nodeId.has(matches[0].from) || !nodeId.has(matches[0].to)) {
           flowIssues.push(`поток ${JSON.stringify(f.id)}: edge_id ${JSON.stringify(id)} неразрешим или неоднозначен`);
-        }
+        } else selected.push(matches[0]);
       }
     }
     if (flowIssues.length !== before) continue;
     const vid = viewSan(`flow_${f.id}`);
-    const hops = f.node_ids.slice(0, -1).map((id, i) => [fqn(id), fqn(f.node_ids[i + 1])]);
+    const pairs = f.node_ids.slice(0, -1).map((id, i) => [id, f.node_ids[i + 1]]);
+    for (const e of selected) {
+      const from = visible(e.from), to = visible(e.to);
+      if (!pairs.some(([a, b]) => (from === a && to === b) || (from === b && to === a))) {
+        flowIssues.push(`поток ${JSON.stringify(f.id)}: edge_id ${JSON.stringify(e.id)} не принадлежит пути`);
+      }
+    }
+    if (flowIssues.length !== before) continue;
+    const validEdges = edges.filter((e) => nodeId.has(e.from) && nodeId.has(e.to));
+    const candidates = selected.length > 0 ? selected : validEdges;
+    const hops = pairs.map(([a, b]) => {
+      let bindings = candidates.filter((e) => visible(e.from) === a && visible(e.to) === b);
+      const reverse = bindings.length === 0 && candidates.some((e) => visible(e.from) === b && visible(e.to) === a);
+      if (reverse) bindings = candidates.filter((e) => visible(e.from) === b && visible(e.to) === a);
+      const source = reverse ? b : a, target = reverse ? a : b;
+      const within = (node, actor) => fqn(node) === fqn(actor) || fqn(node).startsWith(`${fqn(actor)}.`);
+      const nativeBindings = validEdges.filter((e) => within(e.from, source) && within(e.to, target));
+      const expected = [...new Set(bindings.map(relationTuple))].sort();
+      const available = [...new Set(nativeBindings.map(relationTuple))].sort();
+      if (JSON.stringify(expected) !== JSON.stringify(available)) {
+        flowIssues.push(`поток ${JSON.stringify(f.id)}: LikeC4 1.59.3 не поддерживает точный выбор неоднозначных связей шага ${JSON.stringify(a)} -> ${JSON.stringify(b)}`);
+      }
+      const first = bindings[0];
+      return {
+        source: fqn(a), target: fqn(b),
+        kind: first ? edgeKind(first) : '<absent-kind>',
+        label: first && typeof first.relation === 'string' ? first.relation : '',
+        relations: expected,
+      };
+    });
+    if (flowIssues.length !== before) continue;
     flowPaths.add(`${vid}|${JSON.stringify(hops)}`);
   }
 
@@ -328,7 +392,25 @@ function computedModel(mapPath, workDir) {
 
   const dynamicViews = Object.values(proj.views ?? {}).filter((v) => v._type === 'dynamic');
   const flowPaths = new Set(dynamicViews.map((v) => {
-    const hops = (Array.isArray(v.edges) ? v.edges : []).map((e) => [e.source, e.target]);
+    const hops = (Array.isArray(v.edges) ? v.edges : []).map((e) => {
+      const reverse = e.head === 'none' && e.tail === 'normal';
+      const forward = (e.head ?? 'normal') === 'normal' && (e.tail ?? 'none') === 'none';
+      const relations = (Array.isArray(e.relations) ? e.relations : []).map((id) => {
+        const relation = proj.relations?.[id];
+        if (!relation) return `<unresolved-relation:${id}>`;
+        return JSON.stringify([
+          relation.source?.model, relation.target?.model,
+          relation.kind ?? '<absent-kind>', String(relation.title ?? ''),
+        ]);
+      }).sort();
+      return {
+        source: reverse ? e.target : e.source,
+        target: reverse ? e.source : (forward ? e.target : '<unsupported-arrow-direction>'),
+        kind: e.kind ?? '<absent-kind>',
+        label: String(e.label ?? ''),
+        relations,
+      };
+    });
     return `${v.id}|${JSON.stringify(hops)}`;
   }));
 
@@ -377,7 +459,7 @@ function main() {
   const doc = loadMap(args.input);
   const recorded = recordedModel(doc);
   if (recorded.flowIssues.length > 0) {
-    console.error('verify-likec4: MISMATCH -- неразрешимые потоки в map.json; цепочки не сокращены');
+    console.error('verify-likec4: MISMATCH -- неразрешимые или непредставимые потоки в map.json; потоки не пропущены');
     printDiffList(recorded.flowIssues);
     throw new CliExit(1);
   }
@@ -426,8 +508,8 @@ function main() {
     if (nodeDiff.computedOnly.length > 0) { console.error('  nodes only in output (not in map.json):'); printDiffList(nodeDiff.computedOnly); }
     if (edgeDiff.recordedOnly.length > 0) { console.error('  edges only in map.json (missing/altered in output) [from|to|kind|relation]:'); printDiffList(edgeDiff.recordedOnly); }
     if (edgeDiff.computedOnly.length > 0) { console.error('  edges only in output (not derivable from map.json) [from|to|kind|relation]:'); printDiffList(edgeDiff.computedOnly); }
-    if (flowDiff.recordedOnly.length > 0) { console.error('  flows only in map.json (missing/altered in output) [view|ordered endpoint pairs]:'); printDiffList(flowDiff.recordedOnly); }
-    if (flowDiff.computedOnly.length > 0) { console.error('  flows only in output (not derivable from map.json) [view|ordered endpoint pairs]:'); printDiffList(flowDiff.computedOnly); }
+    if (flowDiff.recordedOnly.length > 0) { console.error('  flows only in map.json (missing/altered in output) [view|ordered steps and referenced relationship tuples]:'); printDiffList(flowDiff.recordedOnly); }
+    if (flowDiff.computedOnly.length > 0) { console.error('  flows only in output (not derivable from map.json) [view|ordered steps and referenced relationship tuples]:'); printDiffList(flowDiff.computedOnly); }
     throw new CliExit(1);
   }
 
@@ -436,7 +518,7 @@ function main() {
       'both sides are trivially empty, which is not the same claim as "a real map was verified"');
   } else {
     console.log('verify-likec4: MATCH -- zones/nodes/edges/flows agree structurally ' +
-      '(node identity, zone placement, edge direction+kind+relation, flow identity+ordered endpoints -- ' +
+      '(node identity, zone placement, edge direction+kind+relation, flow steps+relationship bindings -- ' +
       'NOT checked here: node/zone display labels, description text, mega-node/isolated-node cosmetics, see file header)');
   }
 }
