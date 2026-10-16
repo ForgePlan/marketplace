@@ -14,11 +14,23 @@ looks like a failure — it looks like an answer.
 This document is the reference. `/fpl-hsmem:memory-setup` is the actionable version (what a given
 project should install); the agent `memory-curator` carries the memory half as operating rules.
 
-**Provenance of every number below.** Timings and counts come from ONE repository — a TypeScript
-monorepo, ~1,700 tracked files under git, ~95,000 files on disk including vendored dependencies,
-measured 2026-09-10 in a clean `bash --noprofile --norc`, best of three, warm cache. They are
-**observations, never thresholds.** On a small repository an unindexed searcher wins outright; on a
-400,000-file one the published vendor benchmark claims 52×. Measure your own before you decide.
+**Происхождение исторических измерений.** Источник — TypeScript-монорепозиторий `gerts-hub`,
+2026-09-10, HEAD `94dec532f9e8828e8908f86c1d2421809daba504`, **dirty working copy**:
+**117 строк `git status --porcelain=v1`**, а не чистый снимок коммита.
+Это зафиксировано в EVID-264, `.forgeplan/evidence/EVID-264-adr-028.md` родительского workspace,
+строки 229–244. `bash --noprofile --norc` означает чистую оболочку, не чистое рабочее дерево.
+Отдельно **2,154 tracked paths** привязаны к коммиту командой
+`git ls-tree -r --name-only 94dec532 | wc -l`; историческая сверка индекса — EVID-264:256–259.
+Это размер tracked-дерева, не число файлов, просмотренных поисковиком.
+
+В EVID-264:267–278 записаны команды `rg -l -F Moleculer .` и `tgrep -l -F Moleculer .`,
+их результаты и лучшие времена из трёх запусков с Python-таймером; для AST —
+`ast-grep run --pattern Moleculer --lang ts --json=compact .`.
+Индекс `.tgrep/` тогда **не перестраивался** (EVID-264:306–307).
+Полный dirty-снимок и точные версии инструментов в этом свидетельстве не сохранены;
+один HEAD не позволяет воспроизвести его результаты поиска. Ниже — исторические наблюдения,
+не новые замеры и не пороги. Число файлов «на диске» не используется:
+оно зависит от рабочего дерева и не доказывает причину ускорения.
 
 ---
 
@@ -48,17 +60,19 @@ they will make a small project pay for machinery it does not need — an index t
 embedding model to run — for a saving that does not exist at its size. Read as what they are, they
 tell you roughly where to look and what to measure yourself.
 
-**Count what the tools count**, not what `find` counts. `git ls-files | wc -l` is the number that
-matters: the fast searchers respect `.gitignore`, so vendored dependencies are invisible to them
-and enormous to `grep`. On the repository measured here that is 2,154 tracked against 95,201 on
-disk, and that gap — not the index — is where most of the speedup came from.
+**Различайте единицы подсчёта.** `git ls-files | wc -l` считает tracked paths в индексе Git;
+это ориентир размера проекта, а не охват `rg`. Обычный `rg` может искать в untracked-файлах,
+но пропускает hidden-файлы и пути по действующим ignore-правилам, если флаги не задают иное.
+`rg -l` выводит только файлы **с совпадениями**, не все просмотренные файлы.
+Ни tracked-count, ни число совпавших файлов не измеряют объём исключённого дерева
+и не устанавливают, какая часть выигрыша во времени связана с его исключением.
 
 | Tracked files | Text search | Indexed search | Semantic search | Why |
 |---|---|---|---|---|
 | **under ~1,000** | plain `rg`, nothing else | **no** | **no** | a full scan is already instant; an index costs more to build and keep fresh than it can ever return |
-| **~1,000 – 10,000** | plain `rg` | **probably not** — measure | only if questions are genuinely abstract | measured at 2,154 files: unindexed **36 ms**, indexed **39 ms** (best of three). The index lost. Re-measured independently on the same tree and it lost again — the direction reproduces, the earlier anchor did not. It may win higher in this band; we did not measure that |
+| **~1,000 – 10,000** | plain `rg` | **probably not** — measure | only if questions are genuinely abstract | EVID-264:267–270: `gerts-hub`, 2026-09-10, HEAD `94dec532`, dirty working copy с 117 изменениями, literal `Moleculer`: `rg -l -F` **36.0 ms**, `tgrep -l -F` **39.1 ms**, лучшие из трёх запусков. 2,154 — tracked paths коммита, не число просмотренных файлов. В этом наблюдении индекс проиграл; вывод для других размеров требует своего замера |
 | **~10,000 – 100,000** | `rg` for one-off scans | **measure before adopting** — this is where the crossover lives | worth considering | the honest answer is that we have no data point in this band. Anyone who tells you otherwise is quoting a vendor |
-| **over ~100,000** | `rg` for a subdirectory | **likely yes** | likely yes | the vendor benchmark claims 52× at 388,000 files. UNVERIFIED by us — treat it as a reason to measure, not as a result |
+| **over ~100,000** | `rg` for a subdirectory | **likely yes** | likely yes | Историческое утверждение поставщика: 52× на 388,000 файлов, записано как НЕПРОВЕРЕННОЕ в EVID-264:299–300. Это повод измерить свой проект, не наш результат |
 
 **The measurement that decides it**, on your own repository, in a clean shell — three runs, take the
 best, warm cache, a literal that actually occurs:
@@ -112,15 +126,15 @@ Every one of these produces a **plausible answer**, not an error. That is what m
 
 | Wrong pairing | How you recognise it |
 |---|---|
-| AST tool for a plain literal | **a confident small number.** Measured: `rg -F` 192 files, `ast-grep` 4 — a 48× undercount, no warning. Slowness is NOT the symptom (167 ms vs 53 ms). Cause is broader than "misses strings": an AST tool parses only the language you named, so Markdown, JSON, YAML and config are invisible to it |
+| AST tool for a plain literal | **Уверенный маленький результат.** EVID-264:273–278, `gerts-hub`, 2026-09-10, HEAD `94dec532`, **dirty working copy с 117 изменениями**: `rg -l -F Moleculer .` — **192 файла с совпадениями**; `ast-grep run --pattern Moleculer --lang ts --json=compact .` — **4 совпадения в 2 файлах**. Отношение сопоставимых единиц — **192 / 2 = 96×**, не 192 / 4. Это наблюдение рабочего дерева, не чистого коммита. Симптом — неполный ответ, не задержка: AST-запрос ограничен TypeScript и не покрывает Markdown, JSON, YAML и другие форматы |
 | Invalid AST pattern | **exit 0 and no matches** — indistinguishable from a correct search that found nothing. The pattern must be a parseable fragment of real code |
 | AST tool for "is this variable shadowed" / "what type is this" | a confident match on the wrong binding. The tool documents that it has no scope analysis, no type information, no data-flow |
 | Text search for "who uses this symbol" | hits in comments, strings, and on a same-named different thing; the rename that follows breaks sites you never saw |
-| Semantic search for an exact identifier | top score around 0.65, plausible neighbours above the definition, or the definition absent |
+| Semantic search for an exact identifier | Правдоподобные соседи выше определения в выдаче или самого определения нет; оценка сходства не доказывает точное совпадение |
 | A verbose question given to semantic search | it honours every word and loses the intent; lifecycle files rank above the thing you meant. Query as a noun phrase |
 | **Believing an empty result from a stale index** | the most expensive one. Trigram indexes give false NEGATIVES — a symbol added after the last build is not found, and the exit code is identical to an honest "no such thing". Reproduced live |
 | Verifying with the same layer you searched with | the same snapshot, twice. A "confirmation" taken before the change |
-| `grep -r` on a tree with vendored dependencies | 43 seconds, and matches from code you do not own |
+| `grep -r` on a tree with vendored dependencies | Совпадения в чужом коде и иной охват поиска. Без точного запроса, состава рабочего дерева и одинаковых правил отбора файлов сравнение времени ничего не доказывает |
 | Memory for "where is it" | a confident path. Easy failure: it no longer exists. Expensive failure: it still exists and the claim about it is stale — the coordinate checks out and confirms nothing |
 | Code search for "why is it like this" | a rationale reverse-engineered from an implementation, which nobody actually reasoned from. Reopens a settled argument |
 | Retain then immediately recall | the old statement comes back — extraction has not run. Pass `wait: true` |
@@ -153,18 +167,39 @@ A measured six-layer search policy exists in another project here and was the st
 this document. Two of its conclusions did not survive re-measurement, and both are the kind of error
 that propagates because the document looks rigorous:
 
-1. **The performance verdict is inverted at that repository's size.** It reports the indexed searcher
-   at 0.05 s against 0.10 s for the unindexed one and recommends the index for repo-wide queries.
-   Re-measured on the same repository with the same query: **29 ms unindexed, 36 ms indexed** — the
-   unindexed one wins or ties across every query shape tried.
-2. **The speedup is attributed to the wrong cause.** "200× faster than `grep` because of the index"
-   — in fact `grep` walks 95,000 files while both fast searchers walk ~1,700, because they respect
-   `.gitignore`. The win is *not scanning vendored code*, which the unindexed searcher gets for free,
-   with no index to keep fresh. A wrong cause produces a wrong policy: a team told to maintain an
-   index for a benefit that is not there at their size.
+1. **Исторический замер не поддержал рекомендацию индекса для этого дерева.**
+   EVID-264:249–254 фиксирует исходную рекомендацию; строки 267–270 — проверку:
+   `gerts-hub`, 2026-09-10, HEAD `94dec532`, **dirty working copy с 117 изменениями**,
+   literal `Moleculer`, `rg -l -F Moleculer .` — **36.0 ms**,
+   `tgrep -l -F Moleculer .` — **39.1 ms**, лучшие из трёх запусков.
+   Это одна историческая точка на существовавшем индексе, не универсальный выигрыш
+   unindexed-поиска. Ранние тайминги без восстановимого контекста здесь не используются.
+2. **Разный охват не устанавливает причину ускорения.** Число файлов с совпадениями
+   у `grep`, `rg` или `tgrep` не равно числу просмотренных файлов и не измеряет вклад
+   индекса. Respecting ignore-правил не означает «искать только tracked-файлы»:
+   untracked-файлы тоже могут попасть в поиск.
 
-The lesson generalises: **a timing without its repository, its query shape and its date is not a
-measurement, it is folklore.** Every number in this document carries its provenance for that reason.
+   Пара `rg -l -F '<literal>' .` и `rg -uu -l -F '<literal>' .` меняет **два** условия:
+   `-uu` отключает ignore-фильтрацию и включает hidden-файлы. Поэтому её разность нельзя
+   приписать только `.gitignore`. Это также не обход «всего диска»: обработка бинарных файлов,
+   symlink и другие ограничения поиска сохраняются.
+
+   Для отдельной проверки ignore-фильтрации используйте один literal и одинаковый hidden-режим:
+
+   ```bash
+   literal='<a literal in your code>'
+   rg --no-config --hidden             -l -F -- "$literal" .  # ignore-файлы действуют
+   rg --no-config --hidden --no-ignore -l -F -- "$literal" .  # ignore-файлы отключены
+   ```
+
+   `--no-ignore` отключает **все** ignore-файлы, не только `.gitignore`; `--no-config`
+   исключает пользовательский конфиг `rg`. Оба вывода — пути **с совпадениями**, не полный
+   перечень просмотренных файлов. Это рецепт для своего дерева, не новый замер `gerts-hub`
+   и не доказательство причины разницы во времени. Для вывода именно о `.gitignore` нужен
+   отдельный контроль остальных ignore-источников и одинаковые правила отбора файлов.
+
+Урок обобщается: **у измерения должны быть репозиторий, dirty/clean-состояние, точный запрос,
+флаги, единицы и дата.** Отсутствующие данные надо назвать, а не заменять ссылкой на HEAD.
 
 ---
 
