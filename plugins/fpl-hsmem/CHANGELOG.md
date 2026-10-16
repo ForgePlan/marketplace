@@ -22,6 +22,22 @@ All notable changes to `fpl-hsmem` are documented here. Format:
   а разность результатов — за измерение причины ускорения. Настройки project-only/default-off
   и правила enrichment из 3.7.0 не меняются.
 
+## [3.7.1] — 2026-10-17
+
+### Fixed
+
+- Пробы выбора банка П1/П3 переведены на текущий project-only контракт
+  `url`/`banks`/`defaultBank` и default-off auto-hooks; legacy `.mcp.json`/`bankId`
+  больше не являются ожидаемым значением или обязательным входом.
+- Вместо environment-only «изоляции» добавлены macOS sandbox-exec и Linux bubblewrap:
+  сеть/дочерние процессы изолированы ОС, HOME/state/transcript синтетические,
+  недоступный backend даёт `2` без fallback. URL/credential overrides не дают PASS.
+- П1 обходит все группы и hooks выбранных событий и весь вывод selector; позднее
+  расхождение не скрывается за первым совпадением. Неизвестные hooks не исполняются.
+- Структурированный argv и Bash command strings разделены: quoted paths, пробелы,
+  literal special characters и пустые аргументы сохраняются.
+- Добавлены поведенческие regression tests и smoke с настоящими bundled hooks,
+  синтетическим listener, проверками default-off/opt-out и ошибочных selectors.
 ## [3.7.0] — 2026-10-07
 
 
@@ -521,7 +537,8 @@ RFC-003 + ADR-005, NOTE-004 outcome-feedback pattern adoption).
   keys required).
 
 [Unreleased]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v3.7.2...HEAD
-[3.7.2]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v3.7.0...fpl-hsmem-v3.7.2
+[3.7.2]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v3.7.1...fpl-hsmem-v3.7.2
+[3.7.1]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v3.7.0...fpl-hsmem-v3.7.1
 [3.7.0]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v3.6.3...fpl-hsmem-v3.7.0
 [3.6.3]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v2.1.0...fpl-hsmem-v3.6.3
 [2.1.0]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v2.0.0...fpl-hsmem-v2.1.0
