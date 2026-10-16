@@ -56,6 +56,8 @@ node --test dev/evidencepack/tests/surface-census.test.mjs dev/evidencepack/test
 
 В исходном исследовательском запуске до обновления этой ветки до текущего `main`: `./scripts/validate-all-plugins.sh` **exit1**. Custom/static gates passed and eight existing plugin shell-suite commands returned0. Official Claude Code2.1.282 `--strict` rejected10/23 manifests because hook commands contain unquoted `${CLAUDE_PLUGIN_ROOT}`; [Marketplace#316](https://github.com/ForgePlan/marketplace/issues/316) tracks that class. Это исторический результат, не утверждение о текущем `main` или обновлённой ветке.
 
+После последовательного объединения исправленных веток #312 → #313 → #314 → #315: `./scripts/validate-all-plugins.sh` **exit0 / ALL PASSED** — 24 plugin manifests проходят официальный `--strict`, 22 CI gates и 20 plugin shell suites проходят. Совместный запуск двух dev regression suites — **13 passed, 0 failed, 0 skipped**. Отдельный native LikeC4 batch — **32 passed**, включая неверные/потерянные relationship bindings и явный отказ на неподдерживаемом выборе параллельных связей. Эти результаты относятся к исправлениям инструментов и их интеграции, не к реализации EvidencePack v1.
+
 ## Артефакты вне git-каталога Marketplace
 
 В проектном ForgePlan workspace `.forgeplan` уровнем выше git root:
@@ -94,6 +96,6 @@ Conditional activation остаётся условным followup: сначал�
 
 ## Release disposition
 
-[PR322](https://github.com/ForgePlan/marketplace/pull/322) — **draft investigation PR**, не release train. Plugins, permissions, production templates, versions и оба каталога не менялись. Phase1/Phase2, исторический ремонт и release documentation/catalog cutover не начаты; EVID-289 уже заменён на EVID-294 до этой работы, повторного ремонта нет. Merge и публичный release не выполнялись.
+[PR322](https://github.com/ForgePlan/marketplace/pull/322) — **draft investigation PR**, не разрешение на EvidencePack cutover. Собственные изменения исследования остаются в `dev/evidencepack/`; для согласованной проверки ветка наследует исправленные #312–#315 вместе с их версиями, каталогами и C4-интеграцией. Phase1/Phase2 и исторический ремонт протокола не начаты; EVID-289 уже заменён на EVID-294 до этой работы, повторного ремонта нет. Merge в `main` и публичный release не выполнялись.
 
 После полного Phase0 PASS можно разрешить cutover. Для merge и публичного release всё равно требуется отдельное разрешение пользователя.
