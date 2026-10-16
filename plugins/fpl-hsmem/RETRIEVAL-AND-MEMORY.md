@@ -1,5 +1,11 @@
 # Retrieval layers and memory — which question goes where
 
+> [!IMPORTANT]
+> **3.7.0 is project-only and default-off.** It requires explicit `.hindsight.json` banks and
+> Hindsight API >=0.10.2 and <0.11.0. The initial pilot is minimal/read-only; auto hooks and write
+> paths require separate authorization. See [`CONFIGURATION.md`](./CONFIGURATION.md).
+
+
 A developer asks two kinds of question all day. **"Where is it?"** is answered by search, and which
 kind of search depends entirely on what you already know about the thing. **"Why is it like that?"**
 is answered by decisions and memory. Using the wrong layer is the failure mode, and it almost never

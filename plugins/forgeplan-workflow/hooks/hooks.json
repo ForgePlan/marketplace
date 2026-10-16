@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/forge-safety-hook.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/forge-safety-hook.sh\"",
             "timeout": 3
           }
         ]
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/pre-code-check.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/pre-code-check.sh\"",
             "timeout": 5
           }
         ]
