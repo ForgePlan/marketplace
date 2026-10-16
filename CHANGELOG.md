@@ -11,6 +11,24 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Backfill (marketplace#250)**: entries v1.133.0 through v1.139.0 were written after the fact, each from the commit that carried its catalog bump. Where a change merged between two bumps and shipped without a version of its own, it is recorded under the release that first delivered it — the plugin cache is keyed on version, so an unbumped change reaches no user until the next bump.
 
+## [1.186.0] - 2026-10-16
+
+### Added
+- `slopocop 1.4.0`: единый профиль Palych для краткой инженерной переписки на RU/EN. Ядро закреплено на `ponomr/palych@3d6509a606ac5567d5b354c41d2b04af3c194adf` под MIT; новые сложные термины поясняются при первом появлении, жанр запрошенного материала сохраняется.
+- Native-расширение OMP загружает профиль после установки плагина без вызова скилла. Явный ON/OFF следует активной ветке сессии и восстанавливается после compact; остальные системные инструкции сохраняются.
+- Codex получил собственные manifest/hooks и каталог `.agents/plugins/marketplace.json`; требуется штатное доверие хукам. Claude Code использует общий адаптер с отдельным состоянием.
+- Общий `scripts/activate.py` включает профиль через явно выбранный startup-файл любого агента: сохраняет чужой текст и права, делает резервную копию, поддерживает проверку, обновление и удаление своего блока.
+- Portable alias `.agents/skills/palych` и регрессионные проверки установки, переходов режима, повреждённого состояния, отсутствующего ядра, безопасного session ID и конкурентных сохранений.
+
+### Changed
+- Humanizer-скиллы и команды редактируют явно заданную прозу, а не задают постоянный литературный голос coding-агенту. Каталоги паттернов и сканеры не изменены.
+- Уточнён cross-CLI контракт: native-автоматизация зависит от клиента. В OMP 18.11.1 один `--plugin-dir` не загружает `omp.extensions`; общий способ через startup-инструкции требует, чтобы клиент действительно читал выбранный файл.
+
+### Fixed
+- Включённый Codex fork получает metadata и команду переключения для дочерней беседы, а не унаследованную команду родителя; повторная передача ядра по-прежнему подавляется.
+- Удаление общего управляемого блока не требует сохранившегося исходного ядра.
+- Режим OMP не перетекает из соседних веток; наличие имени файла журнала не выдаётся за подтверждённую запись на диск.
+
 ## [1.171.0] - 2026-09-08
 
 ### Every agent is now bound to the tier it asks for — and the binding disproved four ratings
