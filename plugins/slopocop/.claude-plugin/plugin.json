@@ -1,7 +1,7 @@
 {
   "name": "slopocop",
-  "version": "1.4.0",
-  "description": "Clear development communication and targeted prose editing across agents. Three skills: palych for concise, technically precise RU/EN replies, questions and progress; humanizer-ru for Russian text; slop-humanizer for English text or requested prose. Use when improving agent communication, humanizing text or auditing prose. Includes Claude Code hooks, trusted Codex hooks, an OMP extension and a host-neutral installer for the consuming agent's startup instructions, all using one Palych core. Editorial commands and the slop-cop reviewer remain Claude-native. No per-reply audit or runtime network downloads.",
+  "version": "2.0.0",
+  "description": "Slopocop communication layer for clear development replies, plus targeted RU/EN prose editing across agents. Three skills: slopocop for concise, technically precise replies, questions and progress; humanizer-ru for Russian text; slop-humanizer for English text or requested prose. Use when improving agent communication, humanizing text or auditing prose. Adds to existing instructions through Claude Code hooks, trusted Codex hooks, an OMP extension or a host-neutral startup-instruction installer. Editorial commands and the slop-cop reviewer remain Claude-native. No per-reply editor, evaluator or runtime network downloads.",
   "author": {
     "name": "ForgePlan"
   },

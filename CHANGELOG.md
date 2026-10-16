@@ -11,6 +11,17 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Backfill (marketplace#250)**: entries v1.133.0 through v1.139.0 were written after the fact, each from the commit that carried its catalog bump. Where a change merged between two bumps and shipped without a version of its own, it is recorded under the release that first delivered it — the plugin cache is keyed on version, so an unbumped change reaches no user until the next bump.
 
+## [1.187.0] - 2026-10-16
+
+### Changed
+- **BREAKING — `slopocop 2.0.0`:** Rename the public communication skill from `palych` to `slopocop` (`skills/slopocop`, `.agents/skills/slopocop`) and the OMP entrypoint from `omp/palych.mjs` to `omp/slopocop.mjs`. Public controls now use `Enable Slopocop` / `Turn off Slopocop`, with Slopocop-only default-mode controls; old public names and aliases are removed.
+- Present Slopocop as an additional communication instruction layer, not a replacement, per-reply editor or evaluator. Preserve the communication rules and `Development replies`, along with the existing humanizer patterns, commands and cross-agent activation routes.
+- Brand new state, managed instruction blocks, backups and adapter messages as Slopocop. Preserve the upstream MIT notice and pinned source/SHA attribution.
+
+### Fixed
+- Import validated pre-2.0 Claude/Codex mode data only when no Slopocop state exists, preserving OFF modes and explicit session overrides; an explicit `--state-dir` never consults legacy default state.
+- Validate and replace one intact pre-2.0 managed instruction block on explicit reinstall rather than adding a duplicate. Edited or ambiguous blocks remain errors; uninstall can remove the integrity-checked old or new block without a source core.
+
 ## [1.186.0] - 2026-10-16
 
 ### Added

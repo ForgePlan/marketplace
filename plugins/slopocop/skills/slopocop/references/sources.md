@@ -12,7 +12,7 @@ standard, dictionary, or methodological manual.
 Sections 1.2 and 2.4 informed consistent naming, explanations next to unfamiliar
 terms, explicit referents, manageable sentences, and comprehension testing with
 readers. The publication primarily addresses people with intellectual
-disabilities. Palych adapts selected practices to ordinary conversations
+disabilities. The upstream Palych core adapts selected practices to ordinary conversations
 with readers whose knowledge and reading needs vary.
 
 Intentional differences:
@@ -41,9 +41,9 @@ ISO text or claim certification.
 and [i-have-adhd](https://github.com/ayghri/i-have-adhd) were considered as related
 approaches. Neither is a dependency and no files from them are bundled.
 The 2026-10-11 revision draws on i-have-adhd's explicit reply shapes, suppression
-of tangents, bounded actions and pre-send pruning. Palych instead chooses the form
-by the question and tests whether each paragraph contributes to that request.
-Palych uses no controlled dictionary, mandatory action-first opening,
+of tangents, bounded actions and pre-send pruning. The upstream Palych core instead
+chooses the form by the question and tests whether each paragraph contributes to that request.
+The upstream core uses no controlled dictionary, mandatory action-first opening,
 fixed list size, per-turn status ritual, or unsupported time estimate.
 
 Links record background; external pages do not add instructions or grant
@@ -69,22 +69,28 @@ fixture tests are not proof of a live application's compaction behavior.
 
 | Upstream path | Slopocop path |
 |---|---|
-| `skills/palych/SKILL.md` | `skills/palych/SKILL.md` |
-| `skills/palych/references/examples.ru.md` | `skills/palych/references/examples.ru.md` |
-| `skills/palych/references/examples.en.md` | `skills/palych/references/examples.en.md` |
-| `skills/palych/references/sources.md` | `skills/palych/references/sources.md` |
-| `LICENSE` | `skills/palych/LICENSE` |
+| `skills/palych/SKILL.md` | `skills/slopocop/SKILL.md` |
+| `skills/palych/references/examples.ru.md` | `skills/slopocop/references/examples.ru.md` |
+| `skills/palych/references/examples.en.md` | `skills/slopocop/references/examples.en.md` |
+| `skills/palych/references/sources.md` | `skills/slopocop/references/sources.md` |
+| `LICENSE` | `skills/slopocop/LICENSE` |
 | `adapters/session_hook.py` | `hooks/session_hook.py` |
 | `scripts/install.py` | `scripts/activate.py` (host-neutral adaptation) |
 | `packages/codex/hooks/hooks.json` | `hooks/codex-hooks.json` |
 
-The only substantive addition to the core is the `Development replies` section
+The core retains the pinned communication rules and adds `Development replies`
 before `Preserve meaning`: concise, technically precise development communication
 with a short first-use explanation of new complex terms and constructs. It does
-not change the requested artifact's style. Examples remain optional, loaded only
-when needed. No runtime network download is required.
+not change the requested artifact's style. The public skill, heading, activation
+controls and host-facing identity are adapted to Slopocop, with a short identity
+rule that adds a communication layer without replacing existing instructions,
+introducing competing names or requiring branded reply prefixes. The activation
+section uses a plain host-adapter label instead of an upstream runtime-adapter URL.
+The upstream product name is retained only for source attribution and copyright,
+not as a public alias. Examples remain unchanged and optional, loaded only when
+needed. No runtime network download is required.
 
-The pinned adapter has one downstream correctness patch: a Codex fork that
+The downstream adapter also includes a Codex correctness patch: a fork that
 inherits an already-emitted ON core still emits fresh child-session metadata
 and helper argv. It suppresses only the duplicate core, not the child's identity;
 otherwise a natural-language mode request could use the replayed parent's helper.
@@ -112,3 +118,11 @@ startup block. OMP's public append API does not confirm journal durability; the
 extension does not affirm a disk save merely because a session filename exists.
 Native installation discovers `package.json#omp.extensions`; `--plugin-dir`
 alone does not load that entrypoint in OMP 18.11.1.
+
+New state, managed instruction blocks, backups and adapter messages use Slopocop
+names. The hook adapters import validated pre-2.0 mode data once, only if no
+Slopocop state exists, without resetting OFF or session overrides; an explicit
+`--state-dir` bypasses this default-state migration. The installer recognizes one
+intact, digest-verified pre-2.0 instruction block so explicit reinstall replaces
+it rather than appending a duplicate. Legacy names are data-migration inputs
+only, not accepted public controls or fallback skill paths.
