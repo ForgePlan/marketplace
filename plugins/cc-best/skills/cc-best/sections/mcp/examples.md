@@ -49,20 +49,26 @@ Orchestra (tasks, messages, documents) exposes ~50 tools so the assistant can re
 
 ---
 
-## Example 3 — hindsight: memory, the model decides when
+## Example 3 — fpl-hsmem: project-opted memory, the model decides when
 
-Cross-session memory. The assistant decides when to recall or retain — exactly the "AI needs the surface" criterion (`when-to-use.md`). A human would never invoke "recall project context" by hand mid-task.
+Cross-session memory. The runtime registers the built client once; project identity and safety
+policy live in that project's `.hindsight.json`.
 
 ```jsonc
-// plugin-shipped .mcp.json (fpl-hsmem); HINDSIGHT_BANK_ID is per-project
-{ "mcpServers": { "hindsight": { "command": "hindsight-mcp", "args": ["serve"],
-    "env": { "HINDSIGHT_BANK_ID": "<project-bank>" } } } }
+// Direct Codex/OMP-style stdio registration. Claude Code plugin users do not duplicate this.
+{ "mcpServers": { "hindsight": {
+  "command": "node",
+  "args": ["/absolute/path/to/fpl-hsmem/dist/index.mjs"]
+} } }
 ```
 
 **Annotation**:
-- Tool scoping is plugin-namespaced here: `mcp__plugin_fpl-hsmem_hindsight__memory_recall`.
-- Banks are **per-project** via an env var — the wiring carries config the model never sees.
-- **Trap**: the env var is config, not a secret — but real secrets must NEVER go in `env` blocks that land in a committed `.mcp.json`. Secrets stay in the host environment (`gotchas.md`, Gotcha 4).
+- `.hindsight.json` supplies an explicit `url`, `banks`, `defaultBank`, token source and tool
+  policy. There is no legacy bank environment selector and no implied URL.
+- The initial 3.7 pilot is read-only with both automatic hooks off. Client BankGate/policy narrows
+  calls but is not server authorization.
+- Real secrets never belong in committed MCP config; use the bounded token mechanisms documented
+  by fpl-hsmem.
 
 ---
 

@@ -41,7 +41,9 @@ color: "#26A69A"
 disallowedTools:
   - mcp__forgeplan__forgeplan_reason
   - mcp__hindsight__memory_retain
+  - mcp__hindsight__memory_retain_batch
   - mcp__plugin_fpl-hsmem_hindsight__memory_retain
+  - mcp__plugin_fpl-hsmem_hindsight__memory_retain_batch
   - mcp__hindsight__memory_set_mission
   - mcp__plugin_fpl-hsmem_hindsight__memory_set_mission
   - mcp__hindsight__memory_invalidate

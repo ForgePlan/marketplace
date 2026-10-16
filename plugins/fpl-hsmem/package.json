@@ -1,7 +1,7 @@
 {
   "name": "fpl-hsmem",
-  "version": "3.6.3",
-  "description": "ForgePlan Hindsight memory plugin for Claude Code — MCP server + auto-recall/retain hooks + skills",
+  "version": "3.7.0",
+  "description": "ForgePlan memory client (project opt-in, multi-bank, Hindsight API >=0.10.2 and <0.11.0)",
   "type": "module",
   "main": "dist/index.mjs",
   "bin": {
@@ -9,7 +9,8 @@
     "fpl-hsmem-recall": "dist/hooks/recall.mjs",
     "fpl-hsmem-retain": "dist/hooks/retain.mjs",
     "fpl-hsmem-session-end": "dist/hooks/session-end.mjs",
-    "fpl-hsmem-setup": "dist/setup.mjs"
+    "fpl-hsmem-setup": "dist/setup.mjs",
+    "fpl-hsmem-enrich": "dist/enrich.mjs"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

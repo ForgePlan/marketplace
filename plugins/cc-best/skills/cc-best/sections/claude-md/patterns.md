@@ -53,7 +53,7 @@ canonical frontmatter schema formalises skills:/maxTurns:/isolation: fields.
 | Plugin | Version |
 |--------|:-------:|
 | **fpl-skills** | **1.24.5** (Sprint T: forge-cleanup Step 2.5 + Profile B EVID 2-step) |
-| **fpl-hsmem** | 2.1.0 |
+| **fpl-hsmem** | 3.7.0 |
 | **forgeplan-workflow** | **1.10.3** (Sprint T: forgeplan_unlink MCP adopted) |
 ```
 

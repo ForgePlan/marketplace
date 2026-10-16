@@ -1,60 +1,38 @@
 #!/usr/bin/env node
 
 // src/setup.ts
-import { readFileSync as readFileSync2, writeFileSync, existsSync as existsSync2, mkdirSync } from "node:fs";
-import { dirname as dirname2, join as join2, resolve } from "node:path";
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+var __dirname = dirname(fileURLToPath(import.meta.url));
+var PLUGIN_ROOT = resolve(__dirname, "..");
+function printHelp() {
+  console.log(`fpl-hsmem setup
 
-// src/lib/bank.ts
-import { execFileSync } from "node:child_process";
-import { basename, dirname, normalize, join } from "node:path";
-import { readFileSync, existsSync } from "node:fs";
-function resolveProjectName(cwd, resolveWorktrees = true) {
-  if (!cwd) return "unknown";
-  if (!resolveWorktrees) {
-    return basename(normalize(cwd));
-  }
-  try {
-    const out = execFileSync(
-      "git",
-      ["-C", cwd, "rev-parse", "--path-format=absolute", "--git-common-dir"],
-      { encoding: "utf-8", stdio: ["ignore", "pipe", "ignore"], timeout: 5e3 }
-    ).trim();
-    if (out) {
-      const mainRepoPath = out.replace(/\/\.git\/?$/, "");
-      const name = basename(mainRepoPath);
-      if (name) return name;
-    }
-  } catch {
-  }
-  return basename(normalize(cwd));
+Opt the current project in to Hindsight memory by writing .hindsight.json.
+
+Options:
+  --url <url>          Hindsight API URL (required)
+  --bank <id>          Allowed bank (required; repeat for several \u2014 the first is the default)
+  --token-file <path>  File holding the bearer token, relative to the project root
+  --no-rules           Skip writing .claude/rules/hindsight.md
+  --force              Overwrite existing files
+  -h, --help           Show this help
+`);
 }
-
-// src/setup.ts
-var __dirname = dirname2(fileURLToPath(import.meta.url));
-var HINDSIGHT_MCP_PATH = resolve(__dirname, "..");
 function parseArgs(argv) {
-  const opts = {
-    url: "http://localhost:8888",
-    committed: false,
-    noHooks: false,
-    noRules: false,
-    force: false
-  };
+  const opts = { banks: [], noRules: false, force: false };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     switch (arg) {
       case "--bank":
-        opts.bank = argv[++i];
+        opts.banks.push(argv[++i]);
         break;
       case "--url":
         opts.url = argv[++i];
         break;
-      case "--committed":
-        opts.committed = true;
-        break;
-      case "--no-hooks":
-        opts.noHooks = true;
+      case "--token-file":
+        opts.tokenFile = argv[++i];
         break;
       case "--no-rules":
         opts.noRules = true;
@@ -72,93 +50,58 @@ function parseArgs(argv) {
         process.exit(1);
     }
   }
+  if (!opts.url || opts.banks.length === 0) {
+    console.error("--url and at least one --bank are required");
+    printHelp();
+    process.exit(1);
+  }
   return opts;
 }
-function printHelp() {
-  console.log(`hindsight-mcp setup
-
-Scaffold .mcp.json + Claude Code hook settings + Hindsight usage rules
-into the current project.
-
-Options:
-  --bank <id>      Bank ID (default: derived from project name)
-  --url <url>      Hindsight URL (default: http://localhost:8888)
-  --committed      Write .claude/settings.json (visible to team via git)
-                   Default: .claude/settings.local.json (your machine only)
-  --no-hooks       Skip hook registration
-  --no-rules       Skip writing .claude/rules/hindsight.md
-  --force          Overwrite existing files
-  -h, --help       Show this help
-`);
-}
-function renderTemplate(name, vars) {
-  const path = join2(HINDSIGHT_MCP_PATH, "templates", name);
-  let raw = readFileSync2(path, "utf-8");
-  for (const [k, v] of Object.entries(vars)) {
-    raw = raw.replaceAll(`{{${k}}}`, v);
-  }
-  return raw;
-}
 function writeFile(path, content, force) {
-  if (existsSync2(path) && !force) {
-    return "skipped";
-  }
-  mkdirSync(dirname2(path), { recursive: true });
+  if (existsSync(path) && !force) return "skipped";
+  mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, content);
   return "written";
 }
 function main() {
   const opts = parseArgs(process.argv.slice(2));
   const cwd = process.cwd();
-  const bankId = opts.bank ?? resolveProjectName(cwd);
-  console.log("\u{1F9E0} Hindsight MCP setup");
-  console.log("\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500");
-  console.log(`\u{1F4CD} Project:        ${cwd}`);
-  console.log(`\u{1F3E6} Bank ID:        ${bankId}`);
-  console.log(`\u{1F310} Hindsight URL:  ${opts.url}`);
-  console.log(`\u{1F4E6} MCP path:       ${HINDSIGHT_MCP_PATH}`);
-  console.log("");
-  const vars = {
-    HINDSIGHT_MCP_PATH,
-    HINDSIGHT_URL: opts.url,
-    BANK_ID: bankId
+  const config = {
+    url: opts.url,
+    banks: opts.banks,
+    defaultBank: opts.banks[0],
+    autoRecall: false,
+    autoRetain: false,
+    // Stage-0 pilot: explicit, minimal, read-only. Writes need a later authorization and policy edit.
+    allowTools: [
+      "memory_recall",
+      "memory_status",
+      "memory_get_current_bank",
+      "memory_list",
+      "memory_get",
+      "memory_operations",
+      "mental_model_list",
+      "mental_model_get",
+      "directive_list",
+      "bank_config_get",
+      "document_list"
+    ]
   };
-  const mcpContent = renderTemplate("mcp.json.template", vars);
-  const mcpPath = join2(cwd, ".mcp.json");
-  const mcpStatus = writeFile(mcpPath, mcpContent, opts.force);
-  console.log(`  .mcp.json                       ${mcpStatus}`);
-  if (!opts.noHooks) {
-    const hookContent = renderTemplate("claude-settings.json.template", vars);
-    const hookFile = opts.committed ? "settings.json" : "settings.local.json";
-    const hookPath = join2(cwd, ".claude", hookFile);
-    const hookStatus = writeFile(hookPath, hookContent, opts.force);
-    console.log(`  .claude/${hookFile.padEnd(24)}${hookStatus}`);
-    if (!opts.committed) {
-      const gitignorePath = join2(cwd, ".gitignore");
-      if (existsSync2(gitignorePath)) {
-        const gi = readFileSync2(gitignorePath, "utf-8");
-        if (!gi.includes(".claude/settings.local.json")) {
-          writeFileSync(gitignorePath, `${gi.replace(/\n?$/, "\n")}.claude/settings.local.json
-`);
-          console.log("  .gitignore                      updated");
-        }
-      }
-    }
-  }
+  if (opts.tokenFile) config.tokenFile = opts.tokenFile;
+  console.log("\u{1F9E0} fpl-hsmem setup");
+  console.log(`\u{1F4CD} Project:  ${cwd}`);
+  console.log(`\u{1F3E6} Banks:    ${opts.banks.join(", ")} (default ${opts.banks[0]})`);
+  console.log(`\u{1F310} URL:      ${opts.url}`);
+  const cfgStatus = writeFile(join(cwd, ".hindsight.json"), JSON.stringify(config, null, 2) + "\n", opts.force);
+  console.log(`  .hindsight.json                 ${cfgStatus}`);
   if (!opts.noRules) {
-    const rulesContent = renderTemplate("hindsight-rules.md.template", vars);
-    const rulesPath = join2(cwd, ".claude", "rules", "hindsight.md");
-    const rulesStatus = writeFile(rulesPath, rulesContent, opts.force);
-    console.log(`  .claude/rules/hindsight.md      ${rulesStatus}`);
+    let rules = readFileSync(join(PLUGIN_ROOT, "templates", "hindsight-rules.md.template"), "utf-8");
+    rules = rules.replaceAll("{{BANK_ID}}", opts.banks[0]);
+    const status = writeFile(join(cwd, ".claude", "rules", "hindsight.md"), rules, opts.force);
+    console.log(`  .claude/rules/hindsight.md      ${status}`);
   }
-  console.log("");
-  console.log("\u2705 Done. Next steps:");
-  console.log(`   1. Make sure Hindsight is running:  curl ${opts.url}/health`);
-  console.log("   2. Restart Claude Code in this project");
-  console.log("   3. Try: 'memory_status' tool to verify connection");
-  if (mcpStatus === "skipped") {
-    console.log("");
-    console.log("\u26A0\uFE0F  .mcp.json already exists \u2014 use --force to overwrite");
-  }
+  console.log("\n\u2705 Done. The generated pilot is read-only with both hooks off.");
+  console.log("Restart Claude Code here and run memory_get_current_bank to verify.");
+  if (cfgStatus === "skipped") console.log("\u26A0\uFE0F  .hindsight.json already exists \u2014 use --force to overwrite");
 }
 main();

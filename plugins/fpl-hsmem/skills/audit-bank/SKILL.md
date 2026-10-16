@@ -45,19 +45,15 @@ tell, miss **upward**. Saving cost means giving a skill less work, not a weaker 
 memory_get_current_bank
 ```
 
-Report `bank_id_source` verbatim. The three sources mean different things:
+Report `default_bank`, `allowed_banks` and `config_file` verbatim. Every bank is chosen on purpose: the only source is the project's
+`.hindsight.json`, and a bank is never derived from a directory name or created
+on first write. Audit each bank in `allowed_banks` separately — pass `bank` to
+every call below — because there is no cross-bank view.
 
-| Source | What it means |
-|---|---|
-| `mcp.json` / `hindsight.json` / `user-config` | someone chose this bank on purpose |
-| `env` | the environment chose it — check whether more than one config sets it |
-| `derived-from-directory` | nobody chose it. Rename the directory and the memory moves to a new bank, silently |
-
-**The failure this catches.** One project can end up with several banks, none
-of which can see the others, because different entry points resolve the name
-differently — the MCP server reads one config, the background hooks inherit
-another. If you are auditing a project that has felt "forgetful", check every
-config that can set `HINDSIGHT_BANK_ID`, not just the one in front of you.
+**The failure this catches.** A fact written to the default bank that belonged
+in another one is invisible to whoever reads the other bank. If a project feels
+"forgetful", check which bank the missing fact was written to before concluding
+it was never written.
 
 ## Step 2 — privacy posture (do this before counting anything)
 
