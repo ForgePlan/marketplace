@@ -103,8 +103,20 @@ Slopocop» / `Turn off Slopocop` и «Включи Slopocop» / `Enable Slopocop
 
 ```bash
 codex plugin marketplace add ForgePlan/marketplace
-codex plugin add slopocop@forgeplan-marketplace
+codex plugin add slopocop@ForgePlan-marketplace
 ```
+
+Для уже установленного каталога:
+
+```bash
+codex plugin marketplace upgrade ForgePlan-marketplace
+codex plugin add slopocop@ForgePlan-marketplace
+```
+
+Регистр имени важен: Codex использует полный `.claude-plugin/marketplace.json`
+с прежним именем `ForgePlan-marketplace`. Каталог `.omp-plugin/marketplace.json`
+с именем `forgeplan-marketplace` предназначен для OMP; переименовывать существующие
+плагины и записи доверия хукам Codex не нужно.
 
 Проверь и разреши хуки плагина через Codex `/hooks`, затем начни новую сессию.
 Установка без доверия хуку не подтверждает автозагрузку. Codex-манифест выбирает

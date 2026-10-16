@@ -11,6 +11,13 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Backfill (marketplace#250)**: entries v1.133.0 through v1.139.0 were written after the fact, each from the commit that carried its catalog bump. Where a change merged between two bumps and shipped without a version of its own, it is recorded under the release that first delivered it — the plugin cache is keyed on version, so an unbumped change reaches no user until the next bump.
 
+## [1.187.1] - 2026-10-16
+
+### Fixed
+- Удалён частичный Codex-каталог `.agents/plugins/marketplace.json`, который перекрывал полный каталог, менял имя `ForgePlan-marketplace` на `forgeplan-marketplace` и блокировал обновление существующих Git-установок.
+- Codex снова использует полный `.claude-plugin/marketplace.json`: прежние идентификаторы плагинов и записи доверия хукам сохраняются. Native-манифест и хуки Slopocop остаются Codex-specific; `.agents/skills` не меняется.
+- Исправлены команды установки и обновления Slopocop в Codex. Нижний регистр имени каталога OMP не переносится в настройки Codex.
+
 ## [1.187.0] - 2026-10-16
 
 ### Changed
