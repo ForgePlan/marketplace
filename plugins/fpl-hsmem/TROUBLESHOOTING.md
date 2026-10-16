@@ -107,6 +107,78 @@ cat .hindsight.json
 test ! -e .hindsight-disabled
 ```
 
+### Офлайн-проверка выбора банка в hooks (П1/П3)
+
+Эти диагностические CLI не требуют Claude Code или живого Hindsight. Они проверяют
+**выбор банка**, а не успешность API-запроса или серверную авторизацию. Не включайте
+auto-hooks ради диагностики: при `autoRecall`/`autoRetain`, отсутствующих или равных
+`false`, П1 честно возвращает `2`, а не меняет согласие проекта.
+
+```bash
+PLUGIN=/absolute/path/to/fpl-hsmem
+CLAUDE_PLUGIN_ROOT="$PLUGIN" bash "$PLUGIN/scripts/bank-selector-check.sh" \
+  /absolute/path/to/merged-settings.json /absolute/path/to/project all
+bash "$PLUGIN/scripts/bank-selector-negative-control.sh" "$PLUGIN/dist/hooks/recall.mjs"
+```
+
+Для П1 передайте фактическую сводную конфигурацию с объектом `hooks`, включая
+ручные и plugin hooks. Отдельный `hooks/hooks.json` проверяет только этот файл,
+не доказывает отсутствие дополнительных писателей. По умолчанию (`all`) обходятся
+все группы и hooks событий `UserPromptSubmit`, `Stop`, `SessionEnd`; третьим
+аргументом можно выбрать одно из них, но результат тогда относится только к нему.
+Ожидаемое значение берётся из текущего project-only resolver: `.hindsight.json`
+с `url`, `banks`, `defaultBank`, с учётом границ discovery и opt-out. `.mcp.json`,
+`bankId`, имя каталога и `HINDSIGHT_BANK_ID` не являются декларацией банка.
+
+Коды обоих CLI:
+
+- **0:** все выбранные hooks назвали `defaultBank`; для П3 выполнен весь контроль.
+- **1:** измерено расхождение хотя бы у одного hook, в том числе в поздней группе
+  или поздней строке вывода; для П3 — неверный банк или нарушение opt-in.
+- **2:** замер недоступен/неполон: нет файла, конфигурация missing/disabled/invalid,
+  auto-hook выключен, selector молчит, команда завершилась с ошибкой, не распознана
+  или отсутствует работоспособная OS-песочница. Это **не PASS** и не измеренный FAIL.
+
+Обязательны Node.js >=20 и независимая изоляция ОС:
+
+- **macOS:** `/usr/bin/sandbox-exec`, deny-default профиль без сети (включая loopback)
+  и Mach IPC; чтение ограничено runtime, bundle, входными файлами и конфигурацией.
+- **Linux:** `/usr/bin/bwrap` или `/bin/bwrap` (bubblewrap), разрешённые user/network/pid
+  namespaces; `--unshare-all`, read-only mounts и отдельные `/proc`/`/dev`.
+- Другие платформы, запрещённые namespaces или неудачный preflight дают `2`.
+  Песочница проверяет запуск Node, дочернего процесса и запрет соединения до первого
+  configured hook. Переменная `HINDSIGHT_URL=http://127.0.0.1:9` сама по себе
+  **не является** изоляцией; fallback без OS-защиты отсутствует.
+
+Защита наследуется дочерними процессами. HOME, state, счётчик retain и transcript
+синтетические; запись разрешена только в каталоге пробы. Реальные transcript,
+токены окружения и содержимое token files не передаются. `tokenCommand` в дочернем
+окружении не разрешается; если без него selector не отвечает, результат `2`.
+Configured overrides URL/секрета/HOME/state не получают PASS даже при совпадении
+банка. Сырые argv, stdout/stderr и токены в отчёт не выводятся.
+
+`command` с массивом `args` запускается как точный argv без shell; пробелы, кавычки
+и пустые аргументы сохраняются. Без `args` строка исполняется через
+`/bin/bash --noprofile --norc -c` внутри песочницы. `${CLAUDE_PLUGIN_ROOT}` в argv
+разрешается из явно заданного окружения, а в shell — по правилам Bash. Для безопасного
+обнаружения поддерживаются пути к `recall.mjs`, `retain.mjs`, `session-end.mjs`
+или явно названным Hindsight/hsmem scripts. Неизвестные/чужие hooks не исполняются
+и делают покрытие неполным (`2`), а не скрываются за PASS соседнего hook.
+Неопределённый `matcher`, command substitution и backticks также дают `2`;
+проба не пытается вычислять их вне песочницы.
+
+П3 использует один синтетический проект с двумя разными `defaultBank` из одного
+allowlist, затем проверяет default-off, explicit-off, disabled, invalid и missing.
+Ложные legacy MCP/env selectors неизменны между состояниями. Контроль отвергает
+directory-only, MCP-only, constant-bank и игнорирующие opt-in реализации; молчание
+во всех активных состояниях остаётся `2`, а не зелёным результатом.
+
+Поведенческая проверка: `bash tests/test-bank-selector.sh` из каталога плагина.
+Она использует текущие bundled hooks и локальный синтетический HTTP listener,
+проверяет отсутствие запросов при URL override и в дочернем процессе, правильный
+argv и запрет реальных project writes. Если backend ОС доступен, пропуск runtime
+проверок считается ошибкой теста, а не допустимым skip.
+
 ### "Unsupported Hindsight API version"
 
 The first bank-list or bank-scoped request calls `/version` and caches the result. API 0.9.1,
