@@ -52,14 +52,16 @@ to reach for.
 
 ## Step 1 — measure the repository, do not guess about it
 
-**Count what the fast tools count.** `git ls-files` is the number that decides everything below:
-those tools respect `.gitignore`, so vendored dependencies are invisible to them and enormous to
-`grep`. Report both, because the gap is usually where a "speedup" actually comes from.
+**Не смешивайте tracked paths, файлы на диске и результаты поиска.**
+`git ls-files` даёт размер индекса Git для выбора начального size bracket, не охват поисковика.
+Обычный `rg` может читать untracked-файлы и пропускать hidden/ignored-пути;
+`rg -l` перечисляет только файлы с совпадениями. Число файлов «на диске» — отдельное наблюдение
+текущего рабочего дерева: не выдавайте его разность с tracked-count за причину ускорения.
 
 ```bash
-# size and shape — the FIRST number is the one that decides
-git ls-files 2>/dev/null | wc -l                     # tracked files  ← use this
-find . -type f -not -path '*/.git/*' | wc -l          # files on disk (for contrast)
+# размер и состав — tracked paths служат только ориентиром размера проекта
+git ls-files 2>/dev/null | wc -l                     # tracked paths, не охват поиска
+find . -type f -not -path '*/.git/*' | wc -l          # файлы рабочего дерева без .git
 git ls-files 2>/dev/null | sed 's/.*\.//' | sort | uniq -c | sort -rn | head -8
 du -sh .git 2>/dev/null                              # history weight
 git log --oneline 2>/dev/null | wc -l                # how much history exists to mine
@@ -94,14 +96,22 @@ somebody else's monorepo.
 | Tracked files | What to propose | What to say |
 |---|---|---|
 | **under ~1,000** | plain text search only | "A full scan here is already instant. An index would cost more to build and keep fresh than it can return — not recommended." |
-| **~1,000 – 10,000** | plain text search; index only if a measurement says so | "Measured on `gerts-hub` at 2,154 tracked files (commit 94dec532, 2026-09-10, literal `Moleculer`): unindexed 29 ms, indexed 36 ms — the index lost. Yours may differ; the command to check is below." |
+| **~1,000 – 10,000** | plain text search; index only if a measurement says so | «Исторический EVID-264:267–270: `gerts-hub`, 2026-09-10, HEAD `94dec532`, dirty working copy с 117 изменениями, literal `Moleculer`: `rg -l -F Moleculer .` — 36.0 ms, `tgrep -l -F Moleculer .` — 39.1 ms, лучшие из трёх запусков. 2,154 tracked paths — размер коммита (`git ls-tree -r --name-only 94dec532 \| wc -l`), не охват поиска. Тогда индекс проиграл; ваш результат требует своего замера» |
 | **~10,000 – 100,000** | measure before adopting an index | "This is where the crossover lives and **we have no measurement in this band**. I am not going to guess it for you." |
-| **over ~100,000** | an index is likely to win | "The 52× figure comes from a vendor benchmark at 388,000 files and is UNVERIFIED here. It is a reason to measure, not a result." |
+| **over ~100,000** | an index is likely to win | «52× на 388,000 файлов — историческое утверждение поставщика, НЕПРОВЕРЕННОЕ в EVID-264:299–300, не результат нашего замера. Это повод проверить свой проект» |
 
 **The warning is mandatory whenever a recommendation leans on a borrowed number.** Say it in these
 terms: *"the timings I am quoting come from one repository on one machine on one day — they tell
 you where to look, not what to do."* A recommendation that hides its provenance is how a team ends
 up maintaining an index for a saving that does not exist at their size.
+
+Исторический источник — `.forgeplan/evidence/EVID-264-adr-028.md` родительского workspace.
+Строки 229–244 фиксируют HEAD `94dec532f9e8828e8908f86c1d2421809daba504` и
+**117 строк `git status --porcelain=v1`**. Чистая оболочка `bash --noprofile --norc`
+не означает чистое рабочее дерево. Полный dirty-снимок и точные версии инструментов
+не сохранены; существовавший `.tgrep/` не перестраивался (строки 306–307).
+Не обещайте воспроизвести исторический поиск одним checkout коммита и не выдавайте
+эти тайминги за свежую проверку. Границы size brackets — эвристика, не измеренные пороги.
 
 Hand the user the measurement rather than the conclusion:
 
@@ -137,21 +147,19 @@ search was the wrong kind.
 pairing has a distinct symptom — and in every case the symptom is a *plausible
 answer*, not an error:
 
-- **AST tool used for a literal** → a confident small number. Measured on
-  `gerts-hub` (commit 94dec532, literal `Moleculer`, 2026-09-10): `rg -F`
-  returned 192 files, `ast-grep` 2 files (containing 4 matches). Not an
-  error, not a warning — a **96×** undercount that reads as a result.
-  Slowness is NOT the symptom (167 ms vs 53 ms, same repository and date;
-  you will never notice). The cause is broader than "misses strings":
-  an AST tool parses only the language you named, so everything in Markdown,
-  JSON, YAML and config is invisible to it. And an invalid pattern exits **0**
-  with no matches, which is indistinguishable from a correct search that found
-  nothing.
+- **AST-инструмент для литерала** → уверенный маленький ответ. EVID-264:273–278,
+  `gerts-hub`, 2026-09-10, HEAD `94dec532`, **dirty working copy с 117 изменениями**:
+  `rg -l -F Moleculer .` вернул **192 файла с совпадениями**;
+  `ast-grep run --pattern Moleculer --lang ts --json=compact .` — **4 совпадения в 2 файлах**.
+  Сопоставимое отношение — **192 / 2 = 96×**, не деление числа файлов на число совпадений.
+  Это не результат чистого коммита. Симптом — неполнота ответа, не задержка:
+  TypeScript-запрос не покрывает Markdown, JSON, YAML и другие форматы.
+  Невалидный AST-pattern тоже может завершиться с exit **0** без совпадений —
+  это не подтверждение отсутствия литерала.
 - **Text search used for a rename** → callsites silently left behind; the build
   passes and production does not.
-- **Semantic search used for an exact identifier** → plausible neighbours
-  ranked above the exact hit, top score around 0.65, the definition itself
-  fourth or absent.
+- **Semantic search для точного идентификатора** → правдоподобные соседи выше точного
+  определения или самого определения нет. Оценка сходства не доказывает точное совпадение.
 - **A stale index believed** → the most expensive one. Trigram indexes give
   false NEGATIVES: a symbol added after the last build is not found, and the
   exit code is identical to an honest "no such thing". Reproduced live. An

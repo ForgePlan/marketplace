@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code — UX, frontend, workflow, and developer tools",
-    "version": "1.187.1"
+    "version": "1.188.1"
   },
   "plugins": [
     {
@@ -19,7 +19,7 @@
         "claude-code"
       ],
       "description": "Project-scoped cross-session memory for Hindsight API >=0.10.2 and <0.11.0. Use when a repository explicitly opts in via .hindsight.json; hooks default off, enrichment is operator-gated, and BankGate is client safety, not server authorization.",
-      "version": "3.7.0",
+      "version": "3.7.2",
       "requires": {
         "hindsight_server": "Hindsight API >=0.10.2 and <0.11.0 at the explicit url in the project's .hindsight.json. No URL is implied. The config must declare banks and defaultBank; selected banks must already exist on the server. Credentials are optional for unauthenticated local servers; when required, use a contained tokenFile or an explicitly consented tokenCommand."
       },
