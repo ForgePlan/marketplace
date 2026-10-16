@@ -1,0 +1,29 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "^(startup|resume|clear|compact|fork)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${PLUGIN_ROOT}/hooks/session_hook.py\" --host codex",
+            "timeout": 10,
+            "additionalContextLimit": 6000
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${PLUGIN_ROOT}/hooks/session_hook.py\" --host codex",
+            "timeout": 10,
+            "additionalContextLimit": 6000
+          }
+        ]
+      }
+    ]
+  }
+}

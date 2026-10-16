@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/ux-hint.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/ux-hint.sh\"",
             "timeout": 3
           }
         ]

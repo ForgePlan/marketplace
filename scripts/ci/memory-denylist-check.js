@@ -62,7 +62,7 @@ const PREFIXES = ["mcp__hindsight__", "mcp__plugin_fpl-hsmem_hindsight__"];
  * deliberate edit in a different file, which is the difference between a decision and a slip
  * (EVID-257 F6). Bump it in the same commit that removes a name, and say why there.
  */
-const EXPECTED_REQUIRED_COUNT = 12;
+const EXPECTED_REQUIRED_COUNT = 13; // 3.7.0 added memory_retain_batch (a new memory-write tool)
 
 function loadRequired() {
   if (!fs.existsSync(SOURCE_OF_TRUTH)) {
