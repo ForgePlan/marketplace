@@ -9,7 +9,7 @@
 //                     straight out of the ORIGINAL map.json, independently
 //                     walked into FQN node ids / (from,to,kind,relation)
 //                     edge triples. The id-sanitizing rule (identical
-//                     characters -> `_`, digit/empty prefix -> `n`, reserved
+//                     characters -> `_`, invalid initial character -> `n`, reserved
 //                     words suffixed, collisions disambiguated) is
 //                     DUPLICATED here on purpose rather than imported from
 //                     map-to-likec4.mjs -- see `makeSanitizer` below for why.
@@ -17,7 +17,7 @@
 //                     `likec4 export json`'s OWN output: element ids (which
 //                     LikeC4 renders as the dotted zone.node FQN), the
 //                     relations dict (source.model / target.model / kind /
-//                     title), and view ids of `_type: "dynamic"` for flows --
+//                     title), and dynamic views' ordered endpoint pairs for flows --
 //                     all produced entirely by the `likec4` binary, a
 //                     process this script does not control the internals of.
 //
@@ -40,7 +40,7 @@
 // MATCH -- correctly, because there is nothing to lose in translation.
 // Input completeness is map-guardian.mjs's job, not this script's.
 // A reference that map.json itself cannot resolve (a node naming a
-// nonexistent zone, a flow naming <2 real nodes) is caught here as a loud
+// nonexistent zone, a flow naming unknown nodes/edges or <2 real nodes) is a
 // MISMATCH, exactly like a translation bug would be -- see the sentinel-key
 // note in `recordedModel` for how that stays distinguishable from a
 // genuine generator defect.
@@ -107,11 +107,17 @@ const RESERVED = new Set([
   'zone',
 ]);
 
+// Канонический список SPEC-003 D2/D3, независимо от кода конвертера.
+const VALID_RELATIONS = new Set([
+  'informs', 'based_on', 'supersedes', 'contradicts', 'refines',
+  'supports', 'demonstrates', 'covers', 'triangulates', 'references', 'belongs_to',
+]);
+
 function makeSanitizer() {
   const seen = new Set();
   return function sanitize(raw) {
     let s = String(raw).replace(/[^A-Za-z0-9_-]/g, '_');
-    if (s === '' || /^[0-9]/.test(s)) s = `n${s}`;
+    if (!/^[A-Za-z_]/.test(s)) s = `n${s}`;
     if (RESERVED.has(s.toLowerCase())) s = `${s}_`;
     let candidate = s;
     let n = 2;
@@ -141,11 +147,12 @@ function loadMap(mapPath) {
 function recordedModel(doc) {
   const zoneSan = makeSanitizer();
   const nodeSan = makeSanitizer();
+  const viewSan = makeSanitizer();
 
   const zones = doc.zones.filter(isObject);
   const nodes = doc.nodes.filter(isObject);
   const edges = doc.edges.filter(isObject);
-  const flows = (Array.isArray(doc.flows) ? doc.flows : []).filter(isObject);
+  const flows = Array.isArray(doc.flows) ? doc.flows : [];
 
   const zoneId = new Map();
   for (const z of zones) {
@@ -189,7 +196,8 @@ function recordedModel(doc) {
       danglingEdges.push(e);
       continue;
     }
-    const kind = e.namespace === 'code-dep' ? 'codeDep' : 'typedLink'; // same rule map-to-likec4.mjs documents (rule 3)
+    const namespace = e.namespace ?? (VALID_RELATIONS.has(e.relation) ? 'typed-link' : 'code-dep');
+    const kind = namespace === 'code-dep' ? 'codeDep' : 'typedLink';
     const relation = typeof e.relation === 'string' ? e.relation : '';
     edgeTriples.add(`${fqn(e.from)}|${fqn(e.to)}|${kind}|${relation}`);
   }
@@ -200,19 +208,55 @@ function recordedModel(doc) {
     edgeTriples.add(`<dangling-edge>|from=${e.from}|to=${e.to}`);
   }
 
-  let resolvableFlows = 0;
-  for (const f of flows) {
-    if (typeof f.id !== 'string' || !f.id) continue;
-    const ids = (Array.isArray(f.node_ids) ? f.node_ids : []).filter((id) => nodeId.has(id));
-    if (ids.length < 2) continue; // same drop rule map-to-likec4.mjs applies -- unresolvable input, not a translation defect
-    resolvableFlows++;
+  viewSan('overview');
+  for (const zid of zoneId.values()) viewSan(`layer_${zid}`);
+  const flowPaths = new Set();
+  const flowIssues = [];
+  const flowIds = new Set();
+  const edgesById = new Map();
+  for (const e of edges) {
+    if (typeof e.id !== 'string' || !e.id) continue;
+    if (!edgesById.has(e.id)) edgesById.set(e.id, []);
+    edgesById.get(e.id).push(e);
+  }
+  for (const [index, f] of flows.entries()) {
+    const before = flowIssues.length;
+    if (!isObject(f) || typeof f.id !== 'string' || !f.id) {
+      flowIssues.push(`flows[${index}]: отсутствует непустой id потока`);
+      continue;
+    }
+    if (flowIds.has(f.id)) flowIssues.push(`поток ${JSON.stringify(f.id)}: дубликат id`);
+    flowIds.add(f.id);
+    if (!Array.isArray(f.node_ids)) {
+      flowIssues.push(`поток ${JSON.stringify(f.id)}: отсутствует node_ids[]`);
+      continue;
+    }
+    for (const id of f.node_ids) {
+      if (!nodeId.has(id)) flowIssues.push(`поток ${JSON.stringify(f.id)}: неразрешимый node_id ${JSON.stringify(id)}`);
+    }
+    if (f.node_ids.length < 2) flowIssues.push(`поток ${JSON.stringify(f.id)}: для dynamic view нужны минимум два узла`);
+    if (f.edge_ids !== undefined && !Array.isArray(f.edge_ids)) {
+      flowIssues.push(`поток ${JSON.stringify(f.id)}: edge_ids должен быть массивом`);
+    } else {
+      for (const id of f.edge_ids ?? []) {
+        const matches = edgesById.get(id) ?? [];
+        if (matches.length !== 1 || !nodeId.has(matches[0].from) || !nodeId.has(matches[0].to)) {
+          flowIssues.push(`поток ${JSON.stringify(f.id)}: edge_id ${JSON.stringify(id)} неразрешим или неоднозначен`);
+        }
+      }
+    }
+    if (flowIssues.length !== before) continue;
+    const vid = viewSan(`flow_${f.id}`);
+    const hops = f.node_ids.slice(0, -1).map((id, i) => [fqn(id), fqn(f.node_ids[i + 1])]);
+    flowPaths.add(`${vid}|${JSON.stringify(hops)}`);
   }
 
   return {
     zoneFqns,
     nodeFqns,
     edgeTriples,
-    resolvableFlows,
+    flowPaths,
+    flowIssues,
     raw: { zones: zones.length, nodes: nodes.length, edges: edges.length, flows: flows.length },
   };
 }
@@ -277,14 +321,18 @@ function computedModel(mapPath, workDir) {
     const from = rel.source?.model;
     const to = rel.target?.model;
     if (typeof from !== 'string' || typeof to !== 'string') continue;
-    const kind = rel.kind === 'codeDep' ? 'codeDep' : 'typedLink';
+    const kind = rel.kind ?? '<absent-kind>';
     const relation = String(rel.title ?? '');
     edgeTriples.add(`${from}|${to}|${kind}|${relation}`);
   }
 
-  const dynamicViewCount = Object.values(proj.views ?? {}).filter((v) => v._type === 'dynamic').length;
+  const dynamicViews = Object.values(proj.views ?? {}).filter((v) => v._type === 'dynamic');
+  const flowPaths = new Set(dynamicViews.map((v) => {
+    const hops = (Array.isArray(v.edges) ? v.edges : []).map((e) => [e.source, e.target]);
+    return `${v.id}|${JSON.stringify(hops)}`;
+  }));
 
-  return { zoneFqns, nodeFqns, edgeTriples, dynamicViewCount };
+  return { zoneFqns, nodeFqns, edgeTriples, flowPaths, dynamicViewCount: dynamicViews.length };
 }
 
 // ---------------------------------------------------------------------------
@@ -328,6 +376,11 @@ function main() {
 
   const doc = loadMap(args.input);
   const recorded = recordedModel(doc);
+  if (recorded.flowIssues.length > 0) {
+    console.error('verify-likec4: MISMATCH -- неразрешимые потоки в map.json; цепочки не сокращены');
+    printDiffList(recorded.flowIssues);
+    throw new CliExit(1);
+  }
 
   // F7: an empty map.json (0 zones/nodes/edges) trivially matches an empty
   // output. That is a real, correct MATCH by this script's own definition --
@@ -348,7 +401,7 @@ function main() {
   }
 
   console.log('verify-likec4: recorded (from map.json)  ' +
-    `zones=${recorded.zoneFqns.size} nodes=${recorded.nodeFqns.size} edges=${recorded.edgeTriples.size} resolvable_flows=${recorded.resolvableFlows}` +
+    `zones=${recorded.zoneFqns.size} nodes=${recorded.nodeFqns.size} edges=${recorded.edgeTriples.size} flows=${recorded.flowPaths.size}` +
     ` (raw: zones=${recorded.raw.zones} nodes=${recorded.raw.nodes} edges=${recorded.raw.edges} flows=${recorded.raw.flows})`);
   console.log('verify-likec4: computed (from likec4 export json) ' +
     `zones=${computed.zoneFqns.size} nodes=${computed.nodeFqns.size} edges=${computed.edgeTriples.size} dynamic_views=${computed.dynamicViewCount}`);
@@ -358,12 +411,12 @@ function main() {
   const zoneDiff = setDiff(recorded.zoneFqns, computed.zoneFqns);
   const nodeDiff = setDiff(recorded.nodeFqns, computed.nodeFqns);
   const edgeDiff = setDiff(recorded.edgeTriples, computed.edgeTriples);
-  const flowsMismatch = recorded.resolvableFlows !== computed.dynamicViewCount;
+  const flowDiff = setDiff(recorded.flowPaths, computed.flowPaths);
 
   const hasDiff = zoneDiff.recordedOnly.length > 0 || zoneDiff.computedOnly.length > 0 ||
     nodeDiff.recordedOnly.length > 0 || nodeDiff.computedOnly.length > 0 ||
     edgeDiff.recordedOnly.length > 0 || edgeDiff.computedOnly.length > 0 ||
-    flowsMismatch;
+    flowDiff.recordedOnly.length > 0 || flowDiff.computedOnly.length > 0;
 
   if (hasDiff) {
     console.error('verify-likec4: MISMATCH -- structure disagrees');
@@ -373,7 +426,8 @@ function main() {
     if (nodeDiff.computedOnly.length > 0) { console.error('  nodes only in output (not in map.json):'); printDiffList(nodeDiff.computedOnly); }
     if (edgeDiff.recordedOnly.length > 0) { console.error('  edges only in map.json (missing/altered in output) [from|to|kind|relation]:'); printDiffList(edgeDiff.recordedOnly); }
     if (edgeDiff.computedOnly.length > 0) { console.error('  edges only in output (not derivable from map.json) [from|to|kind|relation]:'); printDiffList(edgeDiff.computedOnly); }
-    if (flowsMismatch) console.error(`  flows: map.json has ${recorded.resolvableFlows} resolvable flow(s), output has ${computed.dynamicViewCount} dynamic view(s)`);
+    if (flowDiff.recordedOnly.length > 0) { console.error('  flows only in map.json (missing/altered in output) [view|ordered endpoint pairs]:'); printDiffList(flowDiff.recordedOnly); }
+    if (flowDiff.computedOnly.length > 0) { console.error('  flows only in output (not derivable from map.json) [view|ordered endpoint pairs]:'); printDiffList(flowDiff.computedOnly); }
     throw new CliExit(1);
   }
 
@@ -382,7 +436,7 @@ function main() {
       'both sides are trivially empty, which is not the same claim as "a real map was verified"');
   } else {
     console.log('verify-likec4: MATCH -- zones/nodes/edges/flows agree structurally ' +
-      '(node identity, zone placement, edge direction+kind+relation, flow count -- ' +
+      '(node identity, zone placement, edge direction+kind+relation, flow identity+ordered endpoints -- ' +
       'NOT checked here: node/zone display labels, description text, mega-node/isolated-node cosmetics, see file header)');
   }
 }
