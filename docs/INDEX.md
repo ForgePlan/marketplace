@@ -42,7 +42,7 @@ Source of truth: [`.claude-plugin/marketplace.json`](../.claude-plugin/marketpla
 |---|---|---|
 | **fpl-skills** | `plugins/fpl-skills/` | flagship — 44 engineering skills + dev-advisor agent + hooks; hosts **smith** routing brain (`skills/smith/`) |
 | **structurizr-c4** | `plugins/structurizr-c4/` | primary native C4: portable skill; Claude `/structurizr-c4:c4-build`, `/structurizr-c4:c4-review` and real `structurizr-c4:structurizr-architect` agent |
-| **fpl-hsmem** | `plugins/fpl-hsmem/` | Hindsight v2 cross-session memory (auto UserPromptSubmit/Stop/SessionEnd hooks) |
+| **fpl-hsmem** | `plugins/fpl-hsmem/` | Hindsight >=0.10.2,<0.11 memory client: project opt-in, explicit banks, 28 MCP tools, default-off hooks |
 | **forgeplan-workflow** | `plugins/forgeplan-workflow/` | `/forge-cycle`, `/forge-audit` — the reactive 4-layer enforcer |
 | **forgeplan-orchestra** | `plugins/forgeplan-orchestra/` | Orchestra ↔ forgeplan task sync |
 | **forgeplan-brownfield-pack** | `plugins/forgeplan-brownfield-pack/` | Discover Agent — brownfield onboarding (`agents/discover/`) |

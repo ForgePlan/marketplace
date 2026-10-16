@@ -85,7 +85,7 @@ mkdir -p ~/my-project && cd ~/my-project
 |------|---------------|
 | Probe | Проверяет наличие forgeplan CLI на `$PATH` и состояние существующего проекта |
 | `forgeplan init` | Создаёт `.forgeplan/` с LanceDB-индексом + 13 поддиректорий для kind'ов (prds/, rfcs/, adrs/, evidence/, notes/, problems/, solutions/, specs/, refresh/, discovery/, epics/, memory/, lance/) |
-| `.mcp.json` | Прописывает MCP-сервер `forgeplan` (и `hindsight`, если установлен) |
+| `.mcp.json` | Прописывает MCP-сервер `forgeplan`; fpl-hsmem использует отдельную runtime-регистрацию и проектный `.hindsight.json` |
 | `.claude/settings.json` | Локальные настройки Claude Code |
 | CLAUDE.md | Универсальный шаблон (через скилл `/bootstrap`) |
 | **Operating contract v3** | Внедряет блок маркера v3 в CLAUDE.md — говорит будущим агентам использовать forgeplan MCP-first, диспатчить канонических B2-агентов и какие 16 из 22 fpl-skills являются MCP-first vs Tier B no-forgeplan |
@@ -297,26 +297,22 @@ UserPromptSubmit хук `prompt-router` (Sprint A) классифицирует 
 
 ---
 
-## Шаг 7 — Подключение памяти Hindsight
+## Шаг 7 — Read-only pilot Hindsight
 
-Если установлен плагин `fpl-hsmem`, memory-инструменты доступны:
+После явного проектного `.hindsight.json` из `plugins/fpl-hsmem/CONFIGURATION.md` оставьте
+`autoRecall`/`autoRetain` выключенными и используйте минимальную read-only policy:
 
 ```
-# Сохранить факт
-mcp__plugin_fpl-hsmem_hindsight__memory_retain(
-  content="Решили использовать Postgres для feed активности из-за LISTEN/NOTIFY семантики",
-  context="2026-05-19 прогон",
-  tags=["decision", "postgres", "activity-feed"]
-)
-
-# Позже, в другой сессии
+mcp__plugin_fpl-hsmem_hindsight__memory_get_current_bank()
+mcp__plugin_fpl-hsmem_hindsight__memory_status()
 mcp__plugin_fpl-hsmem_hindsight__memory_recall(
   query="выбор БД для feed активности"
 )
-# → вернёт сохранённый контент через semantic-поиск
 ```
 
-Банки **per-project** — деривируются из текущей рабочей директории по умолчанию. См. `plugins/fpl-hsmem/CONFIGURATION.md` для трёх режимов активации.
+Банки задаются в проекте (`banks` + `defaultBank`), а не выводятся из cwd. Банк должен уже
+существовать. Начальная policy исключает `memory_retain_batch`; committed-конфиг сам по себе не
+разрешает auto-хуки или запись.
 
 ---
 
@@ -396,11 +392,12 @@ mcp__forgeplan__forgeplan_health
 ### Memory plugin
 
 ```
-mcp__plugin_fpl-hsmem_hindsight__memory_retain(...)
-→ Saved to bank "forge-marketplace". Tokens: n/a
+mcp__plugin_fpl-hsmem_hindsight__memory_get_current_bank()
+mcp__plugin_fpl-hsmem_hindsight__memory_recall(query="проверка существующей памяти")
 ```
 
-✅ Retain работает. Recall + reflect инструменты доступны, банк per-project.
+✅ Read-only инструменты работают с явно выбранным проектным банком; запись и auto-хуки не
+включались.
 
 ### Финальное состояние
 
