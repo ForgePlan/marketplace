@@ -103,8 +103,20 @@ package's extension entrypoint. For a one-shot local run also pass
 
 ```bash
 codex plugin marketplace add ForgePlan/marketplace
-codex plugin add slopocop@forgeplan-marketplace
+codex plugin add slopocop@ForgePlan-marketplace
 ```
+
+To update an existing marketplace:
+
+```bash
+codex plugin marketplace upgrade ForgePlan-marketplace
+codex plugin add slopocop@ForgePlan-marketplace
+```
+
+The name is case-sensitive: Codex uses the full `.claude-plugin/marketplace.json`
+under the established `ForgePlan-marketplace` identity. The lower-case
+`forgeplan-marketplace` catalog in `.omp-plugin/marketplace.json` belongs to OMP;
+existing Codex plugin IDs and hook trust records do not need renaming.
 
 Review and trust the plugin hooks through Codex `/hooks`, then start a new session.
 Installation without hook trust does not establish automatic loading. The Codex

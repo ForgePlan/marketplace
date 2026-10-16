@@ -239,6 +239,15 @@ tells you which of the two an agent actually read.
   block instead of creating a second one. See the activation guide for controls,
   host requirements and the explicit startup-file install/check/uninstall commands.
 
+  **Catalog identity matters.** Codex consumes the complete compatibility catalog
+  `.claude-plugin/marketplace.json` under its established `ForgePlan-marketplace`
+  name; Slopocop still selects its native `.codex-plugin/plugin.json` and hooks.
+  Do not add a partial `.agents/plugins/marketplace.json` under a different name:
+  it takes precedence and breaks refreshes of existing Git marketplace sources.
+  `.agents/skills` aliases remain portable. The generated lower-case
+  `forgeplan-marketplace` catalog in `.omp-plugin` is OMP-specific, not a reason
+  to rename Codex plugin IDs or their hook trust records.
+
 **Posture (ADR-025).** The general portable surface remains **MCP tools + skills +
 startup instructions**. There is no marketplace-wide translator for commands,
 agents, hooks or permission policies. The Slopocop-specific communication adapters
