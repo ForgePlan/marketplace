@@ -9,12 +9,15 @@ Legacy Mermaid C4 diagrams and inline C4 sketches remain historical sources. The
 | Concern | Value |
 |---|---|
 | Portable skill | `structurizr-c4` |
-| Claude commands | `/structurizr-c4:c4-build`, `/structurizr-c4:c4-review` |
-| Claude subagent (real) | `structurizr-c4:structurizr-architect` |
+| Claude Code / OMP commands | `/structurizr-c4:c4-build`, `/structurizr-c4:c4-review` |
+| Claude Code producer | `structurizr-c4:structurizr-architect` |
+| OMP producer | `structurizr-architect` (native task-agent name, no plugin prefix) |
+| OMP portable skill | `/skill:structurizr-c4` or read `skill://structurizr-c4` |
 | Codex portable skill | `$structurizr-c4` (discovered through `.agents/skills/structurizr-c4`) |
+| Other agents | Read the installed `SKILL.md` and this reference, then use the client's native worker and file/CLI/browser tools. No Claude process or credentials are required. |
 | Adapter files (thin) | `agents/structurizr-architect.md`, `commands/c4-build.md`, `commands/c4-review.md`, optional `adapters/codex/structurizr-architect.toml` |
 
-Never use a skill name as `Task.subagent_type`. Use the real Claude subagent above, or the current client's native worker with the portable skill and the same architecture-scoped Profile C-coder boundaries.
+Never use a skill name as an agent selector. Confirm the producer in the current runtime's actual agent catalog; command syntax and role registration are adapter-specific, not prerequisites for using the shared workflow. A client without dedicated role registration uses its native architecture-scoped worker.
 
 `c4-review` is producer-side repair on the assigned workspace. It does not replace `architect-reviewer`, `system-dev`, or `guardian`, and it never asserts its own verdict. A reviewer is a different agent context.
 
@@ -26,7 +29,7 @@ Never use a skill name as `Task.subagent_type`. Use the real Claude subagent abo
 - Must **not** write: product source files, infrastructure as code, CI configuration or anything under `.forgeplan/`. The lifecycle helper may maintain its own local viewer process state; this does not authorize modifying client configuration.
 - Must **not** invoke: `forgeplan_new`, `forgeplan_update`, `forgeplan_link`, `forgeplan_activate`, `forgeplan_claim`, `forgeplan_release`. Architecture decisions are the orchestrator's; the producer suggests evidence and trade-offs, it does not author or activate ADR/RFC/SPEC artefacts. Unknown boundaries escalate to the ADR/RFC author, never to "do whatever fits".
 
-The producer's agent frontmatter enforces the existing `agents-core` C-coder ForgePlan/Hindsight denylist without denying Write/Edit. Model binding belongs to the runtime-specific adapter, not this portable contract.
+The Claude Code adapter declares the existing `agents-core` C-coder ForgePlan/Hindsight denylist without denying Write/Edit. That frontmatter is not a universal permission API: other clients must apply their native permission controls where supported and must not claim that an unsupported denylist is enforced. The architecture-only scope above applies in every runtime. Model binding belongs to the runtime adapter, not this portable contract; Claude aliases must not become another client's provider requirement.
 
 ## Job input (no new wire/schema)
 
@@ -68,9 +71,13 @@ python3 "$structurizr_skill_dir/scripts/architecture.py" export "$workspace_path
 
 Do not bypass the stale-JSON check by touching timestamps. The initial preview can omit `--use-layout`; the **final** export never does.
 
+`--use-layout` proves only which JSON was supplied, not that geometry was saved. A JSON containing only `automaticLayout` settings and no persisted rendered positions — including placeholder `x: 0, y: 0` for every element — is **incomplete**. Persist the actual rendered element positions and applicable routes/labels through the native editor, then perform a **full page reload** and inspect the saved result. Switching URL fragments between views is not a reload test. Re-running automatic layout in both the viewer and export is not proof that saved coordinates survived. If the client cannot complete native save/reload, keep the delivery explicitly incomplete; do not redefine completion as automatic-layout configuration.
+
 Fresh timestamps and matching report hashes do not prove DSL/JSON agreement. Before final export, independently parse/export the current DSL as JSON into a disposable directory using the installed CLI (`structurizr export -workspace <workspace.dsl> -format json -output <temporary-directory>`; inspect its actual output filename). Compare that parsed model with saved `workspace.json`: element IDs/types/names/technologies, relationship IDs/endpoints/descriptions/technologies, view keys/types/scopes and included element/relation IDs must agree. Ignore only layout coordinates/vertices/label positions, automatic-layout settings and volatile runtime metadata. Do not discard semantic differences through broad normalization. A newer JSON from a different model is incomplete delivery even if its hashes are truthful. Record the comparison and remove the temporary export; do not overwrite the saved JSON during this read-only check.
 
 Record final hashes after the last native-viewer visit and final export: the local viewer can persist `lastSavedView`/`lastModifiedDate` even without a diagram edit. Freeze the accepted original before handoff. Independent native-viewer checks may use a disposable copy of that exact hashed snapshot; compare its model/layout with the original and never save changes into the submitted workspace. Static export inspection is read-only.
+
+Record a navigation report's own hash externally in the orchestration/evidence record after writing it, not inside the report being hashed. Do not publish a stale self-hash with a disclaimer that later edits may have changed it.
 
 ## Levels and views
 

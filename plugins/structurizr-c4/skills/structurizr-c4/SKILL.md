@@ -9,6 +9,8 @@ Create a verifiable model that produces consistent, readable views. Use the offi
 
 This is ForgePlan's primary C4 workflow. Read [references/forgeplan.md](references/forgeplan.md) first for job inputs, workspace reuse, full native delivery, report idempotency and independent acceptance. That contract takes precedence over an illustrative starter. No automatic Mermaid fallback closes new C4 work.
 
+The workflow is runtime-neutral: an agent needs file read/write, local command execution and browser automation for native render verification. Claude Code, OMP and Codex expose different entrypoints listed in the reference; none is required by the core. An agent without skill discovery may read this file directly from the installed payload. Keep the whole skill directory, including references, scripts and assets; copying only this instruction loses required tooling.
+
 ## Interactive intake
 
 When not dispatched with sufficient inputs, ask only unresolved questions: system boundary and audience; people/external systems; relation purposes/directions/protocols; runtime containers and stores; current (`as-is`) versus proposed (`to-be`) state; and whether one selected container needs L3. Prefer evidence already available in sources over asking. Record unknowns rather than inventing topology. A dispatched job passes these answers as prompt fields, not a new ForgePlan schema.
@@ -65,7 +67,7 @@ Use local styles/resources by default: no remote includes/themes, executable DSL
 
 ## Handoff
 
-Return actual model/export/report links, checked view keys, hashes, key unknowns and verification limits per [references/forgeplan.md](references/forgeplan.md). Respect report collision/versioning before writing and return the path actually written. Do not claim all views were reviewed after opening only one. Independent acceptance belongs to another reviewer context; producer self-check is not an EVID verdict. The real Claude role is `structurizr-c4:structurizr-architect`; other clients use their native architecture-scoped worker with this portable skill. Missing runtime/skill/browser leaves an explicitly incomplete draft, never a Mermaid substitute.
+Return actual model/export/report links, checked view keys, hashes, key unknowns and verification limits per [references/forgeplan.md](references/forgeplan.md). Respect report collision/versioning before writing and return the path actually written. Do not claim all views were reviewed after opening only one. Independent acceptance belongs to another reviewer context; producer self-check is not an EVID verdict. Use the producer actually registered in the current runtime, or its native architecture-scoped worker with this portable skill. Missing runtime/skill/browser leaves an explicitly incomplete draft, never a Mermaid substitute.
 
 ## Canonical sources
 

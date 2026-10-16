@@ -1,8 +1,8 @@
 # Cross-CLI setup
 
-ForgePlan Marketplace is **CLI-agnostic**. The same plugins, skills, and the
-forgeplan MCP server work across any agent CLI that speaks the MCP standard
-and/or the [agents.md](https://agents.md) standard.
+ForgePlan Marketplace publishes portable skills and the forgeplan MCP server.
+Clients consume the surfaces they support: MCP compatibility does not imply
+plugin, command, agent or hook compatibility.
 
 This guide is the per-CLI setup companion to the root
 [`AGENTS.md`](../AGENTS.md) - the cross-CLI primary context file. Where this
@@ -15,7 +15,7 @@ Three things travel across CLIs, and they cross at different maturity levels:
 |---|---|---|
 | **MCP server** (forgeplan tools) | Yes - any MCP client | Section (a) |
 | **Skills** (plugin knowledge bases) | Yes - any agentskills.io client | Section (b) |
-| **Agents / commands / hooks** | No - Claude-Code-native by design | Section (c) |
+| **Agents / commands / hooks** | Runtime-specific | Claude Code and compatible OMP plugin loaders; other clients need their own adapters. Do not infer hook or permission equivalence. |
 
 ---
 
@@ -189,9 +189,12 @@ The primary C4 entrypoint is the portable [`structurizr-c4` skill](../plugins/st
 
 | Runtime | Installation and invocation |
 |---|---|
-| Claude Code | `/plugin install structurizr-c4@ForgePlan-marketplace` installs the full plugin. Invoke `/structurizr-c4:c4-build` or `/structurizr-c4:c4-review`; orchestrators dispatch the real `structurizr-c4:structurizr-architect` subagent. The catalog's `targets: ["claude-code"]` describes this native plugin surface. |
+| Claude Code | `/plugin install structurizr-c4@ForgePlan-marketplace` installs the full plugin. Invoke `/structurizr-c4:c4-build` or `/structurizr-c4:c4-review`; orchestrators dispatch `structurizr-c4:structurizr-architect`. |
+| OMP | First register `omp plugin marketplace add ForgePlan/marketplace`; if already registered, use `omp plugin marketplace update forgeplan-marketplace` instead. Then `omp plugin install --scope project structurizr-c4@forgeplan-marketplace`. In a fresh session, use the same namespaced build/review commands, `/skill:structurizr-c4`, or `skill://structurizr-c4`. OMP's native task-agent name is **`structurizr-architect`**, without a plugin prefix. It loads the compatible plugin format and discards Claude model aliases rather than requiring Claude credentials. For an uninstalled checkout: `omp --plugin-dir <plugin-directory>`. |
 | Codex | Install the portable skill into the project's `.agents/skills/structurizr-c4` (or another supported skill-discovery root). Invoke `$structurizr-c4` and use a native worker with the contract's architecture-only write scope. The optional TOML adapter is not automatically registered as a role. |
-| OMP and other skill-capable clients | Install the same portable skill and confirm the host discovers `structurizr-c4` through its supported `.agents/skills` path. Use the host's native worker; Claude commands/subagent names are not registrations in these clients. An OMP catalog entry is not a promise that Claude agents are available there. |
+| Other agents | Install the entire `skills/structurizr-c4/` directory via the host's skill mechanism, or explicitly read its `SKILL.md`; then use native file/CLI/browser tools. No Claude commands, subprocess or credentials are needed. Skill installation does not automatically register a dedicated agent. |
+
+The catalog's `targets: ["claude-code", "omp"]` lists native plugin adapters, not a restriction on the portable workflow. File read/write, local command execution, the official Structurizr runtime and browser automation are the capability contract for any consumer. If browser verification is unavailable, report an unverified draft rather than closing the C4 row. Client-specific permission controls must preserve architecture-only writes; a Claude `disallowedTools` declaration is not a universal sandbox.
 
 For a local checkout, keep the whole plugin payload (skill references, scripts and assets included), then link the canonical skill into the consumer project. For example, from that project's root:
 
@@ -212,14 +215,13 @@ Native delivery needs `structurizr`, `python3` and browser access for viewer/exp
 
 ## (c) What is Claude-Code-native by design
 
-**Agents, commands, and hooks are Claude-Code-native — terminally, not pending emit (ADR-025).**
+**The published agents, commands and hooks use Claude Code formats; that is not a claim that only Claude Code can load them (ADR-025).** OMP can discover compatible plugin agents and commands directly. No second generated agent/hook format is introduced by that compatibility.
 
-- **Agents** (`plugins/<name>/agents/*.md`) - Claude Code subagent format
-  (frontmatter `tools` / `disallowedTools` denylist per the PRD-026 B2 paradigm).
-  Other CLIs dispatch through their own agent layers; the skill bodies an agent
-  orchestrates are portable Markdown; the agent definition itself is not emitted
-  in a cross-CLI format, and none will be built without a new decision — a
-  concrete request opens one (ADR-025 Trigger 2).
+- **Agents** (`plugins/<name>/agents/*.md`) use Claude Code frontmatter.
+  OMP loads these plugin agents under their frontmatter `name` and discards
+  Claude model aliases; other clients dispatch through their own agent layers.
+  Portable workflow bodies remain in skills. Do not assume identical tool
+  permissions merely because a role was discovered.
 
   **The denylist does not travel, and its absence is silent.** `disallowedTools`
   is a Claude Code key — verified absent from the OMP binary entirely. 42 agents
@@ -229,11 +231,10 @@ Native delivery needs `structurizr`, `python3` and browser access for viewer/exp
   only part that travels. See the "Denylists are Claude Code-only" section of
   `AGENT-AUTHORING-GUIDE.md` before writing a new agent.
 
-- **Commands** (`plugins/<name>/commands/*.md`) - Claude Code slash-command
-  format. Codex deprecated custom prompts in favour of skills and has no command
-  directory at all; OpenCode reads `.opencode/commands`, not `.claude/commands`.
-  So a plugin whose entry point is a slash command is a plugin those two runtimes
-  cannot start.
+- **Commands** (`plugins/<name>/commands/*.md`) use Claude Code slash-command
+  format, also loaded by OMP with the plugin namespace. Codex uses skills
+  instead; OpenCode reads `.opencode/commands`, not `.claude/commands`.
+  Therefore a slash command alone is not a portable entrypoint.
 
   **The pattern that works**: ship the command *and* a skill that points at it —
   the skill carries the trigger description plus the irreducible core, and says
@@ -248,9 +249,9 @@ Native delivery needs `structurizr`, `python3` and browser access for viewer/exp
 **Posture (ADR-025).** The portable surface is **MCP tools + skills + AGENTS.md**
 — by design and terminally, as compliance with open standards (MCP,
 agentskills.io, AGENTS.md), not as Tier 0 of a deferred adapter programme.
-Agents, commands and hooks are Claude-Code-native, with **no cross-CLI emit on
-any horizon by decision**; a concrete request opens a **new** decision rather
-than unblocking an old programme (ADR-025 supersedes ADR-014).
+The adapter source format remains Claude-Code-native, with **no separate
+cross-CLI emit by decision**; compatible consumers such as OMP may load it
+directly. A new emitted format requires a new decision (ADR-025 supersedes ADR-014).
 
 One thing already bridges all CLIs at the orchestration layer: **smith**, the
 master-orchestrator. Its routing logic is declared in `AGENTS.md` so the same

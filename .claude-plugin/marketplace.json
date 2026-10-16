@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code — UX, frontend, workflow, and developer tools",
-    "version": "1.185.0"
+    "version": "1.186.0"
   },
   "plugins": [
     {
@@ -798,7 +798,7 @@
     {
       "name": "structurizr-c4",
       "source": "./plugins/structurizr-c4",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "author": { "name": "ForgePlan" },
       "homepage": "https://github.com/ForgePlan/marketplace",
       "license": "MIT",
@@ -807,7 +807,7 @@
       "cost": "light",
       "stability": "beta",
       "dependencies": [],
-      "targets": ["claude-code"],
+      "targets": ["claude-code", "omp"],
       "requires": {
         "cli": [
           { "name": "structurizr", "optional": false, "reason": "Official modern Structurizr CLI for validation, native viewer and static export; initial tested version 2026.09.19." },

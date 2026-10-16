@@ -11,6 +11,16 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Backfill (marketplace#250)**: entries v1.133.0 through v1.139.0 were written after the fact, each from the commit that carried its catalog bump. Where a change merged between two bumps and shipped without a version of its own, it is recorded under the release that first delivered it — the plugin cache is keyed on version, so an unbumped change reaches no user until the next bump.
 
+## [1.186.0] - 2026-10-16
+
+### Changed
+- `structurizr-c4 0.2.0`: переносимый skill — основной интерфейс для любого агента с file/CLI/browser-инструментами, без процесса и авторизации Claude. Нативные plugin-адаптеры объявлены для Claude Code и OMP; Codex и остальные клиенты используют тот же skill без копий процесса.
+- Уточнены установка и реальные имена OMP: namespaced build/review-команды, `/skill:structurizr-c4`, producer `structurizr-architect` без префикса плагина. Совместимый loader не означает перенос Claude denylist; ограничения и модель настраиваются средствами клиента.
+
+### Fixed
+- Проверка реальным OMP выявила ложное завершение с `automaticLayout`, нулевыми координатами и переключением view вместо reload. Общий контракт явно отвергает такой результат: нужны сохранённая нативная геометрия, полная перезагрузка и проверка финального экспорта. Отчёт не содержит собственного устаревающего hash.
+- Нативный OMP producer довёл тот же workspace без смены IDs/keys: сохранение через editor, полный reload обоих views, DSL/JSON-сверка и `--use-layout` export. Повторный отчёт версионирован; исходный отклонённый отчёт сохранён.
+
 ## [1.185.0] - 2026-10-16
 
 ### Added

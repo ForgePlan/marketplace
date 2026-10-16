@@ -9,8 +9,8 @@ Build architecture models from source evidence, produce focused C4 views, and ke
 - `skills/structurizr-c4/`: the reusable workflow, review criteria, starter DSL, local lifecycle helper and read-only rendered SVG checker. The shared ForgePlan contract lives in `references/forgeplan.md` and is the authoritative specification for delivery and acceptance.
 - Its scripts include `extract_native_svg.py` for measured geometry, `route.py` for routing candidates, and `apply_layout.py` for checked layout patches with backups. See [routing tools](skills/structurizr-c4/references/routing-tools.md).
 - `.agents/skills/structurizr-c4`: relative interop symlink to the same skill, following the ForgePlan marketplace convention.
-- `agents/structurizr-architect.md`: a thin Claude Code agent that loads the skill. Scoped as Profile C-coder to **architecture files only**: may write/edit model, report, layout and export; may not write product source, infrastructure, `.forgeplan/`, or activate artifacts. Architecture decisions and unknown boundaries escalate to the ADR/RFC author.
-- `commands/c4-build.md` and `commands/c4-review.md`: Claude Code entry points. `c4-review` is **producer-side** repair/refresh; it does not replace `architect-reviewer`, `system-dev`, or `guardian`.
+- `agents/structurizr-architect.md`: a thin agent loaded by Claude Code and OMP. Scoped as Profile C-coder to **architecture files only**: may write/edit model, report, layout and export; may not write product source, infrastructure, `.forgeplan/`, or activate artifacts. Architecture decisions and unknown boundaries escalate to the ADR/RFC author. Client permission enforcement is adapter-specific; Claude frontmatter is not a cross-client sandbox.
+- `commands/c4-build.md` and `commands/c4-review.md`: entry points loaded by Claude Code and OMP. `c4-review` is **producer-side** repair/refresh; it does not replace `architect-reviewer`, `system-dev`, or `guardian`.
 - `adapters/codex/structurizr-architect.toml`: an optional Codex custom-role template. It is not auto-registered by the Claude plugin manifest; portable skill discovery happens through `.agents/skills/structurizr-c4`.
 
 The skill is the source of architecture and geometry instructions. The agents and commands only select it, so fixes do not drift between duplicated prompts.
@@ -23,9 +23,16 @@ On macOS, `brew install structurizr` provides the modern application. Other plat
 
 ## Usage
 
-Claude Code: load this directory using its local plugin mechanism, then invoke `/structurizr-c4:c4-build` for a new/as-is/to-be model, or `/structurizr-c4:c4-review` for producer-side repair on an existing workspace. For a local development session, the CLI supports `claude --plugin-dir <plugin-directory>`; confirm the option with the installed CLI's help.
+The primary interface is the **portable skill**, not a Claude subprocess. Any agent with file read/write, local command execution and browser automation can follow it using its own model and tools; neither Claude authentication nor a Structurizr MCP server is required.
 
-Codex and other agentskills.io clients: expose `.agents/skills/structurizr-c4` through the client's documented skill installation mechanism, then invoke `$structurizr-c4`. If the client's runtime cannot resolve a Claude subagent, fall back to the client's native worker with the same portable skill and the same Profile C-coder boundaries. Do not assume Claude command or agent auto-discovery in another client. For a dedicated Codex role, use the optional TOML adapter only after confirming the installed runtime's custom-role format and choosing project or user scope.
+| Runtime | Install / invoke |
+|---|---|
+| Claude Code | Install the plugin; invoke `/structurizr-c4:c4-build` or `/structurizr-c4:c4-review`. Producer role: `structurizr-c4:structurizr-architect`. Local session: `claude --plugin-dir <plugin-directory>`. |
+| OMP | First register `omp plugin marketplace add ForgePlan/marketplace`; if already registered, use `omp plugin marketplace update forgeplan-marketplace` instead. Then `omp plugin install --scope project structurizr-c4@forgeplan-marketplace`. Start a fresh session; use the same namespaced build/review commands, `/skill:structurizr-c4`, or `skill://structurizr-c4`. The native task-agent name is **`structurizr-architect`**, without a plugin prefix. Local session: `omp --plugin-dir <plugin-directory>`. |
+| Codex | Install the full skill directory into a supported skill root, such as `.agents/skills/structurizr-c4`; invoke `$structurizr-c4` with a native worker. The optional TOML role adapter needs separate registration using the installed Codex version's format. |
+| Other agents | Install the full `skills/structurizr-c4/` directory through the client's skill mechanism, or read its `SKILL.md` directly. Follow it with native file/CLI/browser tools and the same architecture-only scope. Do not assume another client's slash syntax or agent registration. |
+
+The catalog's `targets` names native plugin adapters, not all consumers of the portable skill. Relative helper paths and one shared contract keep model generation and acceptance independent of the client.
 
 The helper is resolved relative to the skill's actual installed directory:
 

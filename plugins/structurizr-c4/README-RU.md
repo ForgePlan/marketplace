@@ -15,9 +15,14 @@
 
 Для повторяемого исправления включены: чтение нативного SVG, маршрутизатор с обходом препятствий и безопасное применение раскладки с резервной копией. Инструкция — [routing-tools.md](skills/structurizr-c4/references/routing-tools.md). Скрипты сохраняют модель, IDs, порядок шагов и все связи; после расчёта агент обязан проверить реальный рендер. Проверка инструментов: `bash tests/test-routing.sh`.
 
-- В Claude Code: `/structurizr-c4:c4-build` для новой/as-is/to-be модели; `/structurizr-c4:c4-review` для producer-side ремонта уже существующего workspace. `c4-review` **не заменяет** `architect-reviewer`, `system-dev` или `guardian` и не выдаёт verdict по собственной работе.
-- В Codex: установить навык через механизм skills своего клиента и вызвать `$structurizr-c4`. Если runtime клиента не поддерживает Claude subagent, используется его собственный worker с тем же переносимым навыком и теми же ограничениями Profile C-coder. Interop-ссылка `.agents/skills/structurizr-c4` ведёт на тот же исходник.
-- Для выделенного Codex-субагента подготовлен [TOML-шаблон](adapters/codex/structurizr-architect.toml). Его нужно подключать отдельно по правилам установленной версии Codex. Claude-манифест сам его не регистрирует.
+Основной интерфейс — переносимый навык, а не процесс Claude Code. Подходит любой агент с чтением/записью файлов, запуском локальных команд и браузером для проверки нативного рендера. Агент использует собственную модель; авторизация Claude ему не нужна.
+
+- В Claude Code: `/structurizr-c4:c4-build` для новой/as-is/to-be модели; `/structurizr-c4:c4-review` для producer-side ремонта уже существующего workspace. Роль производителя — `structurizr-c4:structurizr-architect`.
+- В OMP: сначала `omp plugin marketplace add ForgePlan/marketplace`; если каталог уже подключён — `omp plugin marketplace update forgeplan-marketplace` вместо повторного добавления. Затем `omp plugin install --scope project structurizr-c4@forgeplan-marketplace`. В новой сессии доступны те же build/review-команды, `/skill:structurizr-c4` и чтение `skill://structurizr-c4`. Имя агента для OMP `task` — **`structurizr-architect`**, без префикса плагина. Без установки можно загрузить локальный пакет: `omp --plugin-dir <plugin-directory>`.
+- В Codex: установить весь каталог навыка в поддерживаемый skill root, например `.agents/skills/structurizr-c4`, и вызвать `$structurizr-c4` с собственным worker. [TOML-шаблон роли](adapters/codex/structurizr-architect.toml) подключается отдельно по правилам установленной версии Codex.
+- В другом клиенте: установить весь `skills/structurizr-c4/` с references/scripts/assets либо явно прочитать его `SKILL.md`. Использовать собственные file/CLI/browser-инструменты с теми же архитектурными ограничениями. Отсутствие slash-команд и subagent-регистрации не мешает выполнить общий процесс.
+
+`c4-review` **не заменяет** независимых reviewers и не выдаёт verdict по собственной работе. `targets` в каталоге перечисляет нативные plugin-адаптеры, а не ограничивает потребителей переносимого навыка. Разрешения инструментов настраиваются средствами клиента: Claude frontmatter нельзя считать межклиентской песочницей.
 
 Нужны официальный `structurizr`, Python 3.9+ и браузер для просмотра SVG. На macOS приложение устанавливается через Homebrew. Плагин не устанавливает программы и не запускает сервер при подключении. **Native-инструмент и браузер обязательны** для закрытия C4-строки; без них модель остаётся draft с явной пометкой о непроверке.
 
