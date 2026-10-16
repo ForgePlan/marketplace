@@ -65,7 +65,7 @@ Decide:
 |---|---|
 | `not a git repo` | Refuse. Ask user to run `git init -b main`. |
 | `REFUSE: this is a plugin source` | Refuse. Tell the user this skill is for project repos, not plugin sources. |
-| All four (`.forgeplan/`, `CLAUDE.md`, `docs/agents/`, `.mcp.json`) present | Tell the user setup is already complete; suggest `/restore` for context recall — but still offer step 8.5 (canonical agent layer) if `.forgeplan/project-agent-matrix.yaml` is absent or `--canonize` was passed. Otherwise exit. |
+| All four (`.forgeplan/`, `CLAUDE.md`, `docs/agents/`, `.mcp.json`) present | Setup wiring is complete; still run the step 7-bis marker/consent check so an approved v1/v2/v3 → v4 contract upgrade is reachable. Then suggest `/restore` and offer step 8.5 if `.forgeplan/project-agent-matrix.yaml` is absent or `--canonize` was passed; otherwise exit. |
 | Anything missing | Continue to step 2. Step 8.5 (canonical agent layer, v2.0 — PRD-026 Phase 5) runs after `/setup`. |
 
 ### 2. Probe forgeplan CLI
@@ -277,26 +277,28 @@ scratch" because the template seems too verbose. The verbosity is the
 point — the U-curve attention model needs primacy/recency zones to be
 populated. A thin file silently strips guard rails.
 
-### 7-bis. Inject forgeplan operating contract into CLAUDE.md (v3 — Phase 2 complete)
+### 7-bis. Inject forgeplan operating contract into CLAUDE.md (v4 — primary native C4)
 
 If forgeplan CLI is on `$PATH` (probed in step 2), append the **operating contract** to CLAUDE.md. This makes forgeplan-aware behaviour the default for every session in the project — without it, agents revert to general heuristics and skip artifact-graph operations under context pressure.
 
 **Contract version history**:
 - `v1` (PRD-018) — initial CLI-only contract
 - `v2` (PRD-021) — MCP-first preferences with shell fallback
-- `v3` (PRD-022 Phase 2 COMPLETE + PRD-026) — 16/22 skills MCP-first + 6 Tier B classified, 17 canonical agents with B2 paradigm, CRUD-R-A profile matrix awareness
+- `v3` (PRD-022 Phase 2 COMPLETE + PRD-026) — MCP-first skills, canonical agents with B2 paradigm, CRUD-R-A profile matrix awareness
+- `v4` — primary Structurizr C4, native model/evidence links and separate producer/independent reviewer responsibilities
 
 **Idempotency check** — read CLAUDE.md and look for **any** marker:
 
 | Marker found | Action |
 |---|---|
-| `<!-- forgeplan-operating-contract:v3 -->` | ✓ Latest version present — skip silently, continue to step 8 |
-| `<!-- forgeplan-operating-contract:v2 -->` (only) | Prior version present (PRD-021 era; pre-Phase 2 closure). Prompt user to **upgrade to v3** (one yes/no). On yes: replace `:v2` block with `:v3` block. On no: leave alone, continue. |
-| `<!-- forgeplan-operating-contract:v1 -->` (only) | Legacy version (PRD-018 era; pre-MCP). Prompt user to **upgrade to v3** (skips v2). On yes: replace `:v1` block with `:v3` block. On no: leave alone, continue. |
-| Neither present | Prompt user once (default yes per step-3 plan approval) to inject `:v3` block fresh |
+| `<!-- forgeplan-operating-contract:v4 -->` | ✓ Latest version present — skip silently, continue to step 8 |
+| `<!-- forgeplan-operating-contract:v3 -->` (only) | Prompt user to **upgrade to v4** (one yes/no). On yes: replace only the `:v3` contract region with `:v4`. On no: leave the file untouched and continue. |
+| `<!-- forgeplan-operating-contract:v2 -->` (only) | Prompt user to **upgrade to v4** (one yes/no). On yes: replace only the `:v2` contract region with `:v4`. On no: leave the file untouched and continue. |
+| `<!-- forgeplan-operating-contract:v1 -->` (only) | Prompt user to **upgrade to v4** (one yes/no). On yes: replace only the `:v1` contract region with `:v4`. On no: leave the file untouched and continue. |
+| No marker present | Prompt user once (default yes per step-3 plan approval) to inject one `:v4` block fresh |
 
 ```
-Inject the forgeplan operating contract into CLAUDE.md (v3 — Phase 2 complete + canonical agents)?
+Inject the forgeplan operating contract into CLAUDE.md (v4 — canonical agents + primary Structurizr C4)?
 It tells future agents to use forgeplan as source-of-truth on every non-trivial
 task — search before creating, claim before working, evidence after finishing,
 preferring mcp__forgeplan__* tools over shell, and dispatching to canonical
@@ -306,10 +308,10 @@ when artifact lifecycle operations are needed. [y/n]
 
 If user says no — skip; do not warn again.
 
-If yes — append the following `:v3` block (or replace `:v1`/`:v2` block if upgrading):
+If yes — append the following `:v4` block (or replace only the approved `:v1`/`:v2`/`:v3` region if upgrading):
 
 ```markdown
-<!-- forgeplan-operating-contract:v3 -->
+<!-- forgeplan-operating-contract:v4 -->
 ## Forgeplan operating contract (this project)
 
 Forgeplan is the source of truth for artifacts in this project. On every non-trivial task you MUST follow this workflow.
@@ -320,22 +322,24 @@ Forgeplan is the source of truth for artifacts in this project. On every non-tri
 **During** (multi-agent / artifact-driven) — `forgeplan_claim id=<ID> agent=<name>` per teammate before they start; `forgeplan_dispatch agents=N` for parallel-safe wave grouping.
 **After** — `forgeplan_new kind=evidence title=...` + `forgeplan_link source=EVID-MMM target=<ARTIFACT-ID> relation=informs` + `forgeplan_score id=<ARTIFACT-ID>` + `forgeplan_activate id=<ARTIFACT-ID>` if R_eff > 0.
 
-**Agent dispatch** — for artifact lifecycle operations, prefer dispatching the right canonical agent (PRD-026, B2 paradigm with `disallowedTools` denylist) over doing the work yourself. Profile A creators (artifact-author, adr-architect, specification, architecture, brief-intake, goal-planner, evidence-recorder) for CREATE; Profile B reviewers (artifact-reviewer, code-reviewer, security-expert, architect-reviewer, tester, system-dev, guardian-gate) for REVIEW+EVID; Profile C-coder (coder) for source-file mutations only; Profile D maintainer (artifact-maintainer) for in-place artifact metadata fixes. See `plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md` for the full CRUD-R-A matrix.
+**Agent dispatch** — for artifact lifecycle operations, prefer the right canonical agent (B2 paradigm with `disallowedTools` denylist). Profile A creators (artifact-author, adr-architect, specification, architecture, brief-intake, goal-planner) CREATE; Profile B reviewers (artifact-reviewer, code-reviewer, security-expert, architect-reviewer, tester, system-dev, guardian) REVIEW and record EVID; evidence-recorder records independent evidence. Profile C-coder (coder) writes product source; the specialized structurizr-c4:structurizr-architect writes only assigned architecture model/report/layout/export files, never product source, infrastructure or ForgePlan artifacts. Profile D (artifact-maintainer) maintains existing artifacts. See `plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md` for the full CRUD-R-A matrix.
 
-**Skill awareness** — 16 of 22 fpl-skills are MCP-first with CLI fallback (audit, autorun, briefing, build, c4-diagram, ddd-decompose, diagnose, fpl-init, gh-project, refine, research, restore, rfc, riper, shape, sprint). 6 are explicitly classified as no-forgeplan (do, team, bootstrap, setup, forge-report, migrate-from-dev-toolkit) — they delegate or operate on local files only.
+**Primary C4** — use portable `structurizr-c4` (Claude worker `structurizr-c4:structurizr-architect`, commands `/structurizr-c4:c4-build` and `/structurizr-c4:c4-review`) for new or amended C4. Discover the skill through the current runtime's installed skill catalogue, then resolve `references/forgeplan.md` against that skill's actual directory as the single delivery contract; never assume a `plugins/` checkout exists in the consumer project or pin a cache version. For ≥3-module architectural decisions obtain native workspace/layout/evidence/review/static export and link the actual navigation report plus model/evidence in the ADR/RFC; reuse suitable supplied delivery rather than dispatch twice. The producer's review is not an independent verdict: dispatch architect-reviewer separately, then guardian. No Mermaid fallback; unavailable runtime/skill/browser leaves an explicitly incomplete C4 check. Other clients use their native worker with the portable skill, never a skill name as Task.subagent_type.
+
+**Skill awareness** — use each skill's current tool contract; MCP-first artifact workflows fall back to CLI only when necessary. Local-only skills delegate artifact lifecycle work to the proper profile. Do not infer capabilities from a fixed skill count.
 
 This is enforcement, not recommendation. Skipping leaves the artifact graph empty — `forgeplan_health` will flag orphans / missing evidence / stale stubs.
 ```
 
-The marker `<!-- forgeplan-operating-contract:v3 -->` is **load-bearing**: re-running `/fpl-init` keys off this marker to detect already-current state. The `:v1`/`:v2` → `:v3` upgrade path preserves user-customised content above/below the contract block by replacing only the marker-delimited region.
+The marker `<!-- forgeplan-operating-contract:v4 -->` is **load-bearing**: re-running `/fpl-init` leaves an existing v4 file byte-for-byte unchanged. The approved `:v1`/`:v2`/`:v3` → `:v4` upgrade replaces only the existing contract region, preserving user text before/after it and its separator whitespace. A declined upgrade never runs the migration or writes the file.
 
-**Migration implementation** (Python — same pattern as `.mcp.json` merge):
+**Migration implementation** (Python — run **only after the user's yes** above; on no, do not invoke it):
 
 ```bash
 python3 - <<'PY'
 import re, pathlib
 
-V3_BLOCK = '''<!-- forgeplan-operating-contract:v3 -->
+V4_BLOCK = '''<!-- forgeplan-operating-contract:v4 -->
 ## Forgeplan operating contract (this project)
 
 Forgeplan is the source of truth for artifacts in this project. On every non-trivial task you MUST follow this workflow.
@@ -346,36 +350,40 @@ Forgeplan is the source of truth for artifacts in this project. On every non-tri
 **During** (multi-agent / artifact-driven) — `forgeplan_claim id=<ID> agent=<name>` per teammate before they start; `forgeplan_dispatch agents=N` for parallel-safe wave grouping.
 **After** — `forgeplan_new kind=evidence title=...` + `forgeplan_link source=EVID-MMM target=<ARTIFACT-ID> relation=informs` + `forgeplan_score id=<ARTIFACT-ID>` + `forgeplan_activate id=<ARTIFACT-ID>` if R_eff > 0.
 
-**Agent dispatch** — for artifact lifecycle operations, prefer dispatching the right canonical agent (PRD-026, B2 paradigm with `disallowedTools` denylist) over doing the work yourself. Profile A creators (artifact-author, adr-architect, specification, architecture, brief-intake, goal-planner, evidence-recorder) for CREATE; Profile B reviewers (artifact-reviewer, code-reviewer, security-expert, architect-reviewer, tester, system-dev, guardian-gate) for REVIEW+EVID; Profile C-coder (coder) for source-file mutations only; Profile D maintainer (artifact-maintainer) for in-place artifact metadata fixes. See `plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md` for the full CRUD-R-A matrix.
+**Agent dispatch** — for artifact lifecycle operations, prefer the right canonical agent (B2 paradigm with `disallowedTools` denylist). Profile A creators (artifact-author, adr-architect, specification, architecture, brief-intake, goal-planner) CREATE; Profile B reviewers (artifact-reviewer, code-reviewer, security-expert, architect-reviewer, tester, system-dev, guardian) REVIEW and record EVID; evidence-recorder records independent evidence. Profile C-coder (coder) writes product source; the specialized structurizr-c4:structurizr-architect writes only assigned architecture model/report/layout/export files, never product source, infrastructure or ForgePlan artifacts. Profile D (artifact-maintainer) maintains existing artifacts. See `plugins/fpl-skills/AGENT-AUTHORING-GUIDE.md` for the full CRUD-R-A matrix.
 
-**Skill awareness** — 16 of 22 fpl-skills are MCP-first with CLI fallback (audit, autorun, briefing, build, c4-diagram, ddd-decompose, diagnose, fpl-init, gh-project, refine, research, restore, rfc, riper, shape, sprint). 6 are explicitly classified as no-forgeplan (do, team, bootstrap, setup, forge-report, migrate-from-dev-toolkit) — they delegate or operate on local files only.
+**Primary C4** — use portable `structurizr-c4` (Claude worker `structurizr-c4:structurizr-architect`, commands `/structurizr-c4:c4-build` and `/structurizr-c4:c4-review`) for new or amended C4. Discover the skill through the current runtime's installed skill catalogue, then resolve `references/forgeplan.md` against that skill's actual directory as the single delivery contract; never assume a `plugins/` checkout exists in the consumer project or pin a cache version. For ≥3-module architectural decisions obtain native workspace/layout/evidence/review/static export and link the actual navigation report plus model/evidence in the ADR/RFC; reuse suitable supplied delivery rather than dispatch twice. The producer's review is not an independent verdict: dispatch architect-reviewer separately, then guardian. No Mermaid fallback; unavailable runtime/skill/browser leaves an explicitly incomplete C4 check. Other clients use their native worker with the portable skill, never a skill name as Task.subagent_type.
+
+**Skill awareness** — use each skill's current tool contract; MCP-first artifact workflows fall back to CLI only when necessary. Local-only skills delegate artifact lifecycle work to the proper profile. Do not infer capabilities from a fixed skill count.
 
 This is enforcement, not recommendation. Skipping leaves the artifact graph empty — `forgeplan_health` will flag orphans / missing evidence / stale stubs.'''
 
 p = pathlib.Path("CLAUDE.md")
-txt = p.read_text() if p.exists() else ""
+txt = p.read_bytes().decode("utf-8") if p.exists() else ""
 
-if "<!-- forgeplan-operating-contract:v3 -->" in txt:
-    print("v3 already present, no change")
-elif "<!-- forgeplan-operating-contract:v2 -->" in txt:
-    # Replace v2 block (marker through end of contract section)
-    pattern = r'<!-- forgeplan-operating-contract:v2 -->.*?(?=\n---|\n## (?!Forgeplan)|\Z)'
-    new_txt = re.sub(pattern, V3_BLOCK, txt, count=1, flags=re.DOTALL)
-    p.write_text(new_txt)
-    print("upgraded :v2 → :v3")
-elif "<!-- forgeplan-operating-contract:v1 -->" in txt:
-    # Replace v1 block — skip v2 intermediate
-    pattern = r'<!-- forgeplan-operating-contract:v1 -->.*?(?=\n---|\n## (?!Forgeplan)|\Z)'
-    new_txt = re.sub(pattern, V3_BLOCK, txt, count=1, flags=re.DOTALL)
-    p.write_text(new_txt)
-    print("upgraded :v1 → :v3 (skipped v2)")
+if "<!-- forgeplan-operating-contract:v4 -->" in txt:
+    print("v4 already present, no change")
 else:
-    p.write_text(txt.rstrip() + "\n\n" + V3_BLOCK + "\n")
-    print("v3 injected fresh")
+    old_version = next(
+        (v for v in (3, 2, 1) if f"<!-- forgeplan-operating-contract:v{v} -->" in txt),
+        None,
+    )
+    if old_version is not None:
+        # Keep the existing contract-region boundary; preserve separator whitespace.
+        pattern = rf'<!-- forgeplan-operating-contract:v{old_version} -->.*?(?=\r?\n---|\r?\n## (?!Forgeplan)|\Z)'
+        match = re.search(pattern, txt, flags=re.DOTALL)
+        trailing = re.search(r"\s*\Z", match.group()).group()
+        new_txt = txt[:match.start()] + V4_BLOCK + trailing + txt[match.end():]
+        p.write_bytes(new_txt.encode("utf-8"))
+        print(f"upgraded :v{old_version} → :v4")
+    else:
+        separator = "" if not txt else ("\n" if txt.endswith("\n") else "\n\n")
+        p.write_bytes((txt + separator + V4_BLOCK + "\n").encode("utf-8"))
+        print("v4 injected fresh")
 PY
 ```
 
-**Verify**: `grep -q 'forgeplan-operating-contract:v3' CLAUDE.md` returns 0. Echo "✓ operating contract v3 injected" / "✓ upgraded v2 → v3" / "✓ upgraded v1 → v3" / "✓ v3 already present, skipped" depending on path taken.
+**Verify**: in disposable migration checks, confirm exactly one v4 region, unchanged external user text, a no-op second run and an untouched file after declined upgrade. Echo "✓ operating contract v4 injected" / "✓ upgraded v1/v2/v3 → v4" / "✓ v4 already present, skipped" only for the path actually taken.
 
 ### 8. Run `/setup` flow
 
@@ -689,8 +697,8 @@ If any step in the plan failed — replace its ✓ with ✗ and show the error.
 `/fpl-init` should be safe to re-run. Re-runs:
 
 - Detect what's already in place (step 1) and skip those branches.
-- Never overwrite existing `CLAUDE.md` content (always append).
-- Operating contract injection (step 7-bis) keys off markers `<!-- forgeplan-operating-contract:v2 -->` (current) or `<!-- forgeplan-operating-contract:v1 -->` (legacy — prompts user to upgrade) — re-runs detect and skip without prompting if v2 already present.
+- Never overwrite existing `CLAUDE.md` user content: append new sections; replace only an explicitly approved legacy operating-contract region.
+- Operating contract injection (step 7-bis) treats `<!-- forgeplan-operating-contract:v4 -->` as current and leaves it untouched; v1/v2/v3 prompt once for upgrade to v4, and a declined upgrade makes no write. Preserve all text outside the approved region.
 - Never overwrite existing `.mcp.json` entries (always merge).
 - Never overwrite existing `docs/agents/*.md` (`/setup` re-prompts).
 - Canonical agent layer (step 8.5) keys off `.forgeplan/project-agent-matrix.yaml` existence + the `# Created by fpl-init v2.0` stamp — re-runs detect and skip the copy. Re-canonize requires manual deletion of the matrix file or explicit `--canonize` (which currently still skips if the file exists — to force overwrite, delete it first).

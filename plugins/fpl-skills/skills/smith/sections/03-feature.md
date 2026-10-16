@@ -43,7 +43,7 @@ If the feature touches ≥3 modules, additionally:
 1. **The PRD is written in implementation language** ("add a `/users/notify` endpoint with POST + JWT auth") **instead of JTBD outcome language** ("notify users when X happens so they can Y"). The team builds the endpoint; the user need is met in a clumsier way than necessary. **Recovery**: rewrite PRD Goals section with JTBD; re-run `artifact-reviewer`.
 2. **The architecture phase is skipped because "it's a small feature".** Coder lands code that breaks the hexagonal boundary; existing tests pass but the codebase now has a worse layering. **Recovery**: dispatch `architecture` retroactively, identify the boundary violations, refactor in a follow-up PRD.
 3. **No tester EVID because "the existing tests pass".** Means the feature is untested; coverage drops silently. **Recovery**: dispatch `tester` with explicit instruction to write tests for the new feature, not just verify existing tests pass.
-4. **Feature crosses ≥3 modules but no ADR is filed.** Sprint Z9 rule violated; `guardian` flags CONCERNS. **Recovery**: dispatch `adr-architect` retroactively; auto-dispatches `c4-diagram`.
+4. **Feature crosses ≥3 modules but no ADR is filed.** Sprint Z9 rule violated; `guardian` flags CONCERNS. **Recovery**: dispatch `adr-architect` retroactively; reuse a suitable native C4 delivery or obtain one via `structurizr-c4:structurizr-architect` under the [canonical contract](../../../../structurizr-c4/skills/structurizr-c4/references/forgeplan.md), then fresh independent architectural review before guardian.
 
 ## Example invocation
 

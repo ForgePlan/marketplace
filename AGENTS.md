@@ -8,7 +8,7 @@
 
 **Repo**: [ForgePlan/marketplace](https://github.com/ForgePlan/marketplace)
 **Catalog version**: see `.claude-plugin/marketplace.json`
-**Plugins**: 23 (workflow plugins + agent packs)
+**Plugins**: 24 (workflow plugins + agent packs)
 **Project board**: [orgs/ForgePlan/projects/5](https://github.com/orgs/ForgePlan/projects/5)
 
 ForgePlan marketplace is a catalog of plugins for AI coding agents with a central `forgeplan` MCP server that delivers an **artifact-driven SDLC pipeline**.
@@ -107,6 +107,14 @@ Thirty-three methodologies are catalogued in `routing-map.md` with cards coverin
 - **PDLC / product**: Jobs-To-Be-Done (JTBD), Lean Startup, Double Diamond.
 
 Every row of the routing map cites a primary methodology + 1–2 secondary methodologies; smith never invents combinations not present in the table.
+
+### Primary C4 modelling across runtimes
+
+For new or amended C4 architecture, use the portable **`structurizr-c4`** skill and the [canonical delivery contract](plugins/structurizr-c4/skills/structurizr-c4/references/forgeplan.md). Architecture decisions affecting ≥3 modules require native L1+L2 delivery before the ADR/RFC body is finalized; an explicit C4 request also uses this contract. Choosing a full ADR for another reason does not widen that threshold.
+
+Claude Code dispatches `structurizr-c4:structurizr-architect` (commands: `/structurizr-c4:c4-build`, `/structurizr-c4:c4-review`). Other runtimes use their native worker with the installed portable skill, discovered through `.agents/skills/structurizr-c4`; a repository alias alone is not installation. See [Cross-CLI setup](docs/CROSS-CLI.md#primary-c4-in-each-runtime).
+
+The architecture-scoped producer writes the assigned native model/report, not product source or ForgePlan artifacts. Profile A links the actual report into the ADR/RFC; independent Profile B reviewers check the current model snapshot. Reuse a suitable delivery instead of dispatching twice. Mermaid is not a fallback for new C4; historical diagrams and non-C4 diagrams remain valid in their own scope. Missing runtime/browser verification leaves C4 incomplete, not satisfied.
 
 ### Cross-CLI portability
 

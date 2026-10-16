@@ -1,0 +1,6 @@
+interface:
+  display_name: "Structurizr C4"
+  short_description: "Evidence-based C4 models and rendered diagram checks"
+  default_prompt: "Use $structurizr-c4 to inspect system sources, create a verifiable Structurizr C4 model, check every rendered view and export the saved layout."
+policy:
+  allow_implicit_invocation: true

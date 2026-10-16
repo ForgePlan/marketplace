@@ -205,18 +205,21 @@ evidence and is a genuine gap.
 
 If ≥3 distinct module/service/component names are found → C4 check applies.
 
-**C4 file detection**:
-1. Look for a relative link to `docs/c4/` in the body (e.g. `docs/c4/ADR-NNN.md`)
-2. Check body for C4 diagram markers: ` ```mermaid` block containing `flowchart` or `C4Context`
-3. Look for `## C4 Diagrams` section or reference to `/c4-diagram` skill
+**Native C4 delivery check**:
+1. Discover the installed portable `structurizr-c4` skill and read its `references/forgeplan.md` as acceptance criteria, not a producer/repair workflow. Follow the parent's actual report link, including versioned `docs/c4/<ADR-or-RFC-ID>…md` paths; resolve report links relative to that file and artifact-body links using the project's link base.
+2. Read the substantive navigation report and the assigned workspace's `workspace.dsl`, saved `workspace.json`, `evidence.md`, `assumptions.md`, `review.md`, and actual native export under `exports/static/`. Check the system boundary, appropriate `as-is`/`to-be` state, source provenance, L1+L2 and actual view keys (normally `Context`/`Containers`, preserving existing keys); selected L3 only if requested. A greenfield target is `proposed`; require both states only for a requested comparison.
+3. Independently recompute DSL/JSON SHA-256 and compare source revision/working-copy scope and export snapshot with the report and producer review. Read the linked independent architecture-review EVID (`informs` the parent ADR/RFC) and verify it pins the **current** snapshot and required view keys. Confirm it records native viewer reload, visual/routing inspection and final `--format static --use-layout` export checks for all required views. The producer's `review.md` is not an independent verdict.
+4. Missing files, stale JSON, changed DSL/JSON hashes after review, one checked view out of two, or unavailable/unverified render/runtime/browser checks mean delivery is incomplete. A report, heading, skill mention, successful parse or inline Mermaid alone never earns 2. Keep this check read-only: do not save models, regenerate exports, run write-enabled appliers, repair files or dispatch agents.
 
 **Scoring**:
 | Condition | Score | Status |
 |---|---|---|
-| C4 file referenced OR mermaid C4 block present in body | 2 | ✅ SATISFIED |
-| C4 mentioned in prose but no file/diagram found | 1 | ⚠️ PARTIAL |
-| ≥3 modules detected but no C4 mention at all | 0 | ❌ MISSING |
+| Resolvable native delivery for the required boundary/state and L1+L2, with current matching snapshot and confirmed independent checks of every required view under the contract | 2 | ✅ SATISFIED |
+| Native model, substantive C4 report or legacy diagram exists, but native delivery or independent verification is missing, incomplete or stale | 1 | ⚠️ PARTIAL |
+| ≥3 modules detected but no substantive C4 material exists (a bare heading, skill mention or broken report link alone is not material) | 0 | ❌ MISSING |
 | <3 modules detected | N/A | — |
+
+**Action item if score <2**: recommend the orchestrator dispatch `structurizr-c4:structurizr-architect` (or its host-native worker using portable `structurizr-c4`) for the assigned workspace, followed by an independent `architect-reviewer` review of the renewed snapshot. Name the exact missing/stale files, views or checks. Do not create a Mermaid fallback. Preserve unchanged historical active diagrams and past EVID as sources; new architecture work or substantive re-acceptance must meet the native contract.
 
 ### Step 10 — RIPER check (production-bug discipline)
 

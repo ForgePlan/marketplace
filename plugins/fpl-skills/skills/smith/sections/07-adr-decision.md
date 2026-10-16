@@ -18,8 +18,8 @@ ADI may reveal a fourth option they hadn't considered.
 ## Dispatch sequence
 
 1. **research-analyst** (Profile A) — produces NOTE with options + prior art (other teams' choices, vendor docs, benchmarks). Why first: ADI's Abduction phase needs material to abduct from.
-2. **adr-architect** (Profile A) — runs `forgeplan_reason <ARTIFACT-ID>` to produce ≥3 hypotheses, picks one, drafts ADR-NNN. Why second: this is the canonical ADI workflow per CLAUDE.md Z7. Auto-dispatches `c4-diagram` skill for ≥3-module decisions.
-3. **c4-diagram skill** (Dispatch mode, **only if ≥3 modules**) — produces `docs/c4/ADR-NNN.md` with L1+L2 Mermaid diagrams. Why conditional: Sprint Z9 rule — full ADRs touching ≥3 modules must have C4 diagrams before the ADR body is finalised.
+2. **adr-architect** (Profile A) — runs `forgeplan_reason <ARTIFACT-ID>` to produce ≥3 hypotheses, picks one, drafts ADR-NNN. Why second: this is the canonical ADI workflow per CLAUDE.md Z7. For ≥3 modules, obtains suitable native C4 before finalising the body and links the producer's actual returned report.
+3. **structurizr-c4:structurizr-architect** (architecture-scoped Profile C-coder, **only if ≥3 modules and the author has not supplied suitable current native delivery**) — produces native model/layout/evidence/review/static export plus the navigation report under the [canonical contract](../../../../structurizr-c4/skills/structurizr-c4/references/forgeplan.md), not Mermaid. Pass system boundary, sources, `to-be`, L1+L2, concrete workspace directory, parent ADR ID, `report_path=docs/c4/<ADR-ID>.md` and `auto_versioning`. Reuse existing workspace IDs/view keys and serialize its writers; never create a second model for the same boundary/state. Other clients use a native worker with portable `structurizr-c4`. Why conditional: ≥3-module decisions need a checked native delivery, not a second dispatch when the author already returned one.
 4. **architect-reviewer** (Profile B) — produces EVID auditing the ADR against the parent PRD/RFC and prior ADRs. Why penultimate: catches "the new decision contradicts ADR-NNN that we forgot about".
 5. **guardian** (Profile B-gate) — produces gate EVID with PASS/CONCERNS/BLOCKER. Why last: aggregates the ADI EVID + BMAD EVID + architect-reviewer EVID.
 
@@ -34,7 +34,7 @@ separate PRD that cites this ADR.
 - [ ] NOTE with options + prior art research
 - [ ] ADR-NNN (full template per Sprint Z1 if ≥3 modules OR supersede OR irreversible; light template otherwise)
 - [ ] ADI EVID with **≥3 hypotheses** including "do nothing / in-process alternative / scope reduction" per CLAUDE.md S10
-- [ ] If ≥3 modules: `docs/c4/ADR-NNN.md` with L1+L2 Mermaid diagrams
+- [ ] If ≥3 modules: accepted native L1+L2 delivery per `structurizr-c4`'s `references/forgeplan.md`, linked through the actual returned `docs/c4/ADR-NNN[.vN].md` report and independently reviewed snapshot
 - [ ] If supersedes prior ADR: delta-spec with ADDED/MODIFIED/REMOVED/UNCHANGED sections per Sprint Z8 (use `/supersede` skill)
 - [ ] BMAD adversarial EVID with ≥1 finding from `artifact-reviewer` or `architect-reviewer`
 - [ ] guardian Profile B EVID with verdict=PASS
@@ -43,7 +43,7 @@ separate PRD that cites this ADR.
 
 1. **Only 2 hypotheses considered — false dichotomy.** The chosen option wins by default; the third option ("don't do it" or "scope it smaller") was never on the table. **Recovery**: re-run `forgeplan_reason` with explicit prompt to surface a 3rd hypothesis; reconsider.
 2. **ADR is written after the decision is already implemented.** The "decision" reads as justification, not reasoning. **Recovery**: this is a smell but not always a blocker — if the implementation matches a defensible ADI walk, accept it; if not, file an ADR-supersede with delta-spec for the *actual* choice.
-3. **≥3 modules touched but no C4 diagram.** `adr-architect` Step 5b.1 should have auto-dispatched; if it didn't, `guardian` flags CONCERNS. **Recovery**: dispatch `c4-diagram` retroactively; cite as anomaly if `adr-architect` skipped its auto-dispatch.
+3. **≥3 modules touched but no accepted native C4 delivery.** `adr-architect` Step 5b.1 should have obtained it; a report alone, inline Mermaid, stale JSON or unverified view does not satisfy C4, and `guardian` flags CONCERNS. **Recovery**: dispatch `structurizr-c4:structurizr-architect` against the assigned workspace, link the actual returned report (including any `.v2.md` version), obtain a fresh independent `architect-reviewer` snapshot review, then re-run guardian. Missing skill/runtime/browser is an explicit gap, never a Mermaid fallback.
 4. **Supersedes a prior ADR but no delta-spec.** Sprint Z8 rule violated; `/decay-watch` Step 2e will flag CONCERNS. **Recovery**: use `/supersede` skill to compute the delta retroactively; backfill ADDED/MODIFIED/REMOVED/UNCHANGED into the body.
 5. **The "do nothing" hypothesis was checked off as a formality, not seriously argued.** Decision proceeds with hidden cost. **Recovery**: argue "do nothing" out loud in writing; if it loses, the loss should be visible in the ADI EVID body.
 
@@ -65,7 +65,7 @@ Smith: Context=adr-decision (row 7). Methodology=FPF ADI + MADR + C4 (≥3 modul
           H4: "Do nothing" — synchronous webhook delivery, no queue
           → chosen: H3 (AWS SQS FIFO) — managed, AWS-native, ordering via FIFO
           ADR-NNN drafted with full template (irreversible, 4 modules)
-          + c4-diagram dispatch (L1+L2, 4 modules: payment-api,
+          + native Structurizr C4 delivery/report (reuse suitable supplied model, otherwise structurizr-c4:structurizr-architect; L1+L2, 4 modules: payment-api,
             sqs-queue, payment-worker, dlq-handler)
        3. architect-reviewer → EVID (ADR consistent with ADR-N-3
           which pinned us to AWS; throughput math checks out for FIFO

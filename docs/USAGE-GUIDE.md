@@ -77,7 +77,7 @@ Mirror of root [README.md](../README.md) "Where to Start?" matrix, with cross-li
 
 ## Quick reference (all commands)
 
-`fpl-skills` provides 44 skills (most slash-invocable); the companion plugins add 14 `commands/` (dev-toolkit, forgeplan-workflow, forgeplan-orchestra, fpf, laws-of-ux).
+`fpl-skills` provides the flagship engineering skills (most slash-invocable); companion plugins add commands, including the primary native C4 workflow in `structurizr-c4`.
 
 > [!TIP]
 > **Not sure which command to use?** Run `/smith` — it reads project state and recommends the next dispatch (e.g. `/forge-cycle`, `/autorun`, `/forge-cleanup`, `/sprint`). For an educational walkthrough of all 14 routing rows, run `/smith-routing`.
@@ -96,7 +96,6 @@ Mirror of root [README.md](../README.md) "Where to Start?" matrix, with cross-li
 | `/research <topic>` | Deep multi-agent research (5 parallel: code · docs · status · references · memory) → `research/reports/`. |
 | `/shape <idea>` | Interview-from-scratch — turns a fuzzy idea into a draft PRD via 8-12 focused questions. Front-end of the lifecycle (write the plan WITH you). |
 | `/ddd-decompose` | Interview-driven Domain-Driven Design decomposition — bounded contexts, ubiquitous language, aggregates, domain events. Outputs context map (Markdown + Mermaid) plus optional Epic + per-context PRDs + Spec via forgeplan. |
-| `/c4-diagram` | Interactive C4 architecture diagram generator — Context, Container, Component levels with Mermaid. Maps to forgeplan via c4-to-forge.yaml. |
 | `/riper` | RIPER orchestrator (Research → Innovate → Plan → Execute → Review) — thin wrapper that delegates each phase to the right existing skill. Use when team uses RIPER terminology; otherwise prefer `/forge-cycle`. |
 | `/refine <plan>` | Interview-driven refinement of an existing plan — sharpens terminology, surfaces contradictions, lazy-creates ADRs. Polish what you already wrote. |
 | `/rfc <action>` | Create/read/update RFCs and ADRs (canonical structure, phase progress). |
@@ -115,6 +114,8 @@ Mirror of root [README.md](../README.md) "Where to Start?" matrix, with cross-li
 
 | Command | Plugin | What it does |
 |---|---|---|
+| `/structurizr-c4:c4-build` | structurizr-c4 | Primary native C4 modelling: source-backed DSL, saved JSON/layout, evidence and checked static export. Portable skill: `structurizr-c4`. |
+| `/structurizr-c4:c4-review` | structurizr-c4 | Producer-side review/repair of the assigned model; not an independent acceptance verdict. |
 | `/fpf` | fpf | Universal router: `/fpf decompose`, `/fpf evaluate`, `/fpf reason`, `/fpf lookup`. |
 | `/fpf-decompose` | fpf | Bounded contexts, roles, interfaces. |
 | `/fpf-evaluate` | fpf | F-G-R scoring + ADI reasoning. |
@@ -127,6 +128,8 @@ Mirror of root [README.md](../README.md) "Where to Start?" matrix, with cross-li
 | `/session` | forgeplan-orchestra | Session Start Protocol with Inbox Pattern. |
 | `/canvas` | agents-canvas | CANVAS orchestrator — design-system→code port: Pencil→Storybook→framework. hook-gate=Yes (tokens before code). Run `/canvas-init` once, then `/canvas`. |
 | `/canvas-init` | agents-canvas | One-time CANVAS state init for the current branch (detects package layout, seeds the guarded globs the tokens-before-code hook reads). |
+
+C4 delivery and acceptance follow the [canonical contract](../plugins/structurizr-c4/skills/structurizr-c4/references/forgeplan.md). Install the full Claude plugin with `/plugin install structurizr-c4@ForgePlan-marketplace`; the real subagent is `structurizr-c4:structurizr-architect`. Codex/OMP use the portable skill after explicit installation/discovery, not Claude command registration: see [Cross-CLI setup](CROSS-CLI.md#primary-c4-in-each-runtime). New C4 requires the native runtime/browser checks; Mermaid is not a fallback. DDD context maps and other non-C4 Mermaid diagrams are unchanged.
 
 ### Legacy commands (dev-toolkit, deprecated)
 
@@ -265,7 +268,7 @@ Structured reasoning for decompose / evaluate / reason / lookup. 224 FPF spec se
 
 ### `forgeplan-brownfield-pack` — Legacy ingest
 
-12 extraction skills + 2 playbooks + 5 mappings (`c4-to-forge`, `ddd-to-forge`, `madr-to-forge`, `obsidian-to-forge`, `autoresearch-to-forge`) → forgeplan graph. Composes `c4-architecture`, `autoresearch`, `ddd-expert`, `feature-dev`. See [plugins/forgeplan-brownfield-pack/README.md](../plugins/forgeplan-brownfield-pack/README.md).
+12 extraction skills + 2 playbooks + 5 mappings (`c4-to-forge`, `ddd-to-forge`, `madr-to-forge`, `obsidian-to-forge`, `autoresearch-to-forge`) → forgeplan graph. New or amended C4 uses `structurizr-c4`; Profile A links the native model/report into artifacts. `c4-to-forge.yaml` imports the historical `C4-Documentation/c4-*.md` Markdown format, not Structurizr DSL. See [plugins/forgeplan-brownfield-pack/README.md](../plugins/forgeplan-brownfield-pack/README.md).
 
 **Requires**: forgeplan CLI v0.25+.
 
