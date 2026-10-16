@@ -11,6 +11,38 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Backfill (marketplace#250)**: entries v1.133.0 through v1.139.0 were written after the fact, each from the commit that carried its catalog bump. Where a change merged between two bumps and shipped without a version of its own, it is recorded under the release that first delivered it — the plugin cache is keyed on version, so an unbumped change reaches no user until the next bump.
 
+## [1.189.0] - 2026-10-17
+
+### Added
+- `structurizr-c4 0.2.1` как основной C4-инструмент: нативные DSL/JSON, сохранённая раскладка, независимое review и проверяемый static export. Канонический процесс находится в portable skill, а не в Claude-специфичной команде; адаптеры объявлены для Claude Code и OMP, остальные агенты используют тот же skill.
+- Плагин включён в профили `forgeplan-core`, `developer`, `security`, `agents`, `full`; обязательные `structurizr` и `python3` устанавливаются явно. Совместимый loader не переносит политики прав другого клиента.
+
+### Changed
+- Производители ADR/RFC и условный brownfield handoff используют нативную C4-модель; reviewers, methodology-check и guardian сверяют snapshot, DSL/JSON, сохранённые views и экспорт.
+- Operating contract v4 в `fpl-init` поддерживает upgrade v1/v2/v3, сохраняет внешний пользовательский текст и при повторе ничего не меняет. Версии интеграции: `agents-pro 1.31.0`, `agents-sparc 1.9.0`, `forgeplan-brownfield-pack 1.8.0`.
+
+### Removed
+- **BREAKING (`fpl-skills 2.0.0`):** удалены публичный Mermaid entrypoint `/c4-diagram` и его interop alias без redirect. Новые модели создаются через portable `structurizr-c4`; неизменённые исторические диаграммы и Markdown importer сохранены.
+
+### Fixed
+- Динамический response-маршрут следует фактическому направлению нативного SVG без подмены модельных IDs; ненулевой терминальный подход сохраняет правильное направление стрелки после editor save, полного reload и static export.
+- Владение viewer требует точного workspace и времени запуска экземпляра PID; совпадение префикса пути или повторно использованный PID больше не разрешает остановку процесса.
+- Исправлены девять ссылок на канонический C4-контракт. Нативный Request/Response smoke, package/interop и initializer checks выполнены; это не заявление о новом полном L1/L2 или model-driven запуске каждого клиента.
+- Сохранены актуальные Hindsight 3.7 и Slopocop 2.0 из `main`; OMP-каталог пересобран без отдельной копии процесса.
+
+## [1.188.1] - 2026-10-17
+
+### Fixed
+- `fpl-hsmem 3.7.2`: исторические измерения привязаны к dirty working copy, а не только к HEAD. Удалены неподтверждённые числа «на диске»; matching files отделены от tracked paths и просмотренных файлов.
+- Сравнение поиска больше не приписывает разницу `rg` / `rg -uu` только ignore-правилам: hidden-режим и остальные ограничения названы отдельно.
+- Сохранён контракт Hindsight 3.7 с project opt-in и default-off hooks; версии package/plugin/catalog согласованы, каталог OMP пересобран.
+
+## [1.188.0] - 2026-10-17
+
+### Fixed
+- `fpl-hsmem 3.7.1`: проверки выбора банка используют текущий project-only контракт `banks` / `defaultBank` и проверяют все применимые hooks, не только первый.
+- Настроенные команды выполняются с сохранением аргументов и независимой сетевой изоляцией ОС; невозможность изоляции — ошибка, не `PASS`. Переменные URL/token больше не считаются песочницей.
+- Отрицательные контроли и безопасные локальные пробы покрывают поздний hook с другим банком, пути с пробелами, переопределение URL и дочерний POST. Версии plugin/package/catalog согласованы; каталог OMP пересобран.
 ## [1.187.1] - 2026-10-16
 
 ### Fixed
@@ -46,7 +78,6 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Включённый Codex fork получает metadata и команду переключения для дочерней беседы, а не унаследованную команду родителя; повторная передача ядра по-прежнему подавляется.
 - Удаление общего управляемого блока не требует сохранившегося исходного ядра.
 - Режим OMP не перетекает из соседних веток; наличие имени файла журнала не выдаётся за подтверждённую запись на диск.
-
 ## [1.171.0] - 2026-09-08
 
 ### Every agent is now bound to the tier it asks for — and the binding disproved four ratings

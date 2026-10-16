@@ -158,7 +158,7 @@ methodology_preferences:
 
   # DESIGN — producing the RFC / technical design.
   #   sparc       → Specification → Pseudocode → Architecture → Refinement → Completion
-  #   c4          → C4 model (Context → Container → Component → Code)
+  #   c4          → C4 model (Context → Container → Component → Code), Structurizr native backend
   #   adr-only    → skip RFC; capture only the decision (ADR) — small changes
   design: sparc
 

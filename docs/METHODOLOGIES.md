@@ -166,7 +166,7 @@ Activates `ux-reviewer` automatically inside `/audit` when the changeset include
 
 ---
 
-## External (referenced but not implemented in this ecosystem)
+## Additional methodologies and integrations
 
 ### DDD (Domain-Driven Design)
 
@@ -183,7 +183,9 @@ If you want full DDD modelling — combine the agent + brownfield pack + your ow
 
 **What it is**: an architecture-diagram methodology by Simon Brown.
 
-**Status**: similar to DDD — we ship `c4-to-forge.yaml` mapping in `forgeplan-brownfield-pack` (translates C4 docs into forgeplan artifacts) but no C4-specific agent or modelling skill.
+**Primary implementation**: [`structurizr-c4`](../plugins/structurizr-c4/) provides the portable modelling skill, the Claude Code subagent `structurizr-c4:structurizr-architect` and `/structurizr-c4:c4-build` / `/structurizr-c4:c4-review`. New or amended C4 follows the [native delivery contract](../plugins/structurizr-c4/skills/structurizr-c4/references/forgeplan.md): model, saved layout, provenance and checked native export, with independent Profile B acceptance rather than producer self-approval. Mermaid is not a fallback. See [Cross-CLI setup](CROSS-CLI.md#primary-c4-in-each-runtime) for portable skill installation; Claude agents are not automatically registered elsewhere.
+
+**Legacy ingest**: `forgeplan-brownfield-pack/mappings/c4-to-forge.yaml` reads historical `C4-Documentation/c4-*.md` Markdown, not Structurizr DSL. Profile A links native model/report references into existing ADR/RFC bodies; no DSL importer is implied.
 
 ### MADR (Markdown Architectural Decision Records)
 
@@ -274,7 +276,7 @@ When the two disagree, `routing-map.md` wins — it is the file the router reads
 | Two-tier (Factum/Intent) | `forgeplan-brownfield-pack` (when ported) | `/extract intent --confidence-tagged` |
 | Laws of UX | `laws-of-ux` plugin | `/ux-review`, `/ux-law <name>` |
 | DDD | `agents-pro` + brownfield pack | Advisory only — no engine |
-| C4 | brownfield pack mapping | YAML conversion only |
+| C4 | `structurizr-c4` plugin / portable skill | Native modelling via `/structurizr-c4:c4-build`; independent review under the canonical contract |
 | MADR | brownfield pack mapping | `madr-to-forge.yaml` ingest only |
 | Obsidian | brownfield pack mapping | `obsidian-to-forge.yaml` ingest only |
 | Autoresearch | external companion (`uditgoenka/autoresearch`) | Install separately; ingest via `autoresearch-to-forge.yaml`. See [AUTORESEARCH-INTEGRATION.md](AUTORESEARCH-INTEGRATION.md). |

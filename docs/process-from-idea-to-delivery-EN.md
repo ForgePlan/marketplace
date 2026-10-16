@@ -788,8 +788,9 @@ Per-kind flow in detail follows in the next sections.
 |             historical experience                    |
 |                                                      |
 | If 3 or more modules affected:                       |
-|   Step 5b.1 - dispatch `c4-diagram` skill            |
-|   -> produces C4 L1 + L2 diagrams in Mermaid         |
+|   Step 5b.1 - reuse native C4 or dispatch producer:    |
+|   `structurizr-c4:structurizr-architect`              |
+|   -> native L1+L2 model/layout + evidence + export    |
 |                                                      |
 | If replacing an old ADR:                             |
 |   Uses adr-supersede.md template                     |
@@ -815,6 +816,10 @@ Per-kind flow in detail follows in the next sections.
                           v
                 Old ADR -> status superseded
 ```
+
+C4 delivery follows the [canonical Structurizr contract](../plugins/structurizr-c4/skills/structurizr-c4/references/forgeplan.md), not a Mermaid-only diagram requirement. The ADR author passes sources, boundary, `to-be` state, assigned workspace and report path before finalizing the body; greenfield topology is explicitly `proposed`. The same applies to architecture-affecting RFCs at ≥3 modules or an explicit C4 request. A suitable existing native delivery is reused, not regenerated for each artifact.
+
+The architecture-scoped producer returns the actual report path; Profile A links it into the ADR/RFC and independent Profile B review checks the current model snapshot. `/structurizr-c4:c4-review` is producer repair, not acceptance. Claude Code uses the subagent above or `/structurizr-c4:c4-build`; other runtimes use the installed portable `structurizr-c4` skill ([setup](CROSS-CLI.md#primary-c4-in-each-runtime)). Missing runtime/browser checks leave C4 incomplete. Non-C4 Mermaid diagrams and the independent-verifier **C4 contract element** of methodology sub-cycles are unrelated and unchanged.
 
 ### 4.6 Production bug -> fix (RIPER-5 methodology)
 
@@ -1291,7 +1296,8 @@ Guardian is the **arbiter role**, the last step before activating any artifact. 
 |                                                      |
 |   S12 OpenSpec: For replacement, is there a delta    |
 |                 (ADDED/MODIFIED/REMOVED/UNCHANGED) ? |
-|                 For 3+ modules, are C4 diagrams there?|
+|   C4 extension (3+ modules): native delivery and      |
+|               independent current-snapshot review?  |
 |                                                      |
 |   S13 Forgeplan: Correct parent/child links ?        |
 +------------------------------------------------------+
@@ -1370,6 +1376,8 @@ Do not confuse with the additive F+G+R of the Trust Calculus (hypothesis-rating 
 - Aggregate percentage
 - Concrete action items per gap
 
+For applicable C4 work, **2/SATISFIED** means native delivery with confirmed checks under the [canonical contract](../plugins/structurizr-c4/skills/structurizr-c4/references/forgeplan.md); **1/PARTIAL** means model/legacy material exists but delivery or checks are incomplete; **0/MISSING** means no C4 material. A Markdown heading, inline Mermaid, stale JSON or producer-only self-check cannot earn 2. Below the ≥3-module threshold the automatic row is N/A; an explicit C4 request still uses the native contract.
+
 **Command**: `/methodology-check <ARTIFACT-ID>`
 
 **When to invoke**: **before every activation** of a Standard+ artifact as a final sanity check.
@@ -1438,7 +1446,7 @@ This is the **mandatory filter** that every Standard+ artifact must pass before 
 +------------------------------------------------------------------------+
 ```
 
-**Plus C4** (orthogonal layer) - auto-recommended for decisions touching 3+ modules via `adr-architect` Step 5b.1. This is not part of the main four-layer pipeline but a complement.
+**Plus C4** (orthogonal layer) — decisions touching ≥3 modules use `adr-architect` Step 5b.1 to reuse or request native Structurizr L1+L2 delivery; explicit C4 requests use the same contract. This complements, rather than changes, the four-layer pipeline. Choosing a full ADR for another reason does not widen the threshold.
 
 **Motivation**: MSR 2026 research showed that AI assistance **without structural controls** produces +25-41% code complexity. Each of the four layers closes one category of problems:
 
