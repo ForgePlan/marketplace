@@ -1,64 +1,63 @@
 #!/usr/bin/env node
 /**
- * Hindsight MCP onboarding CLI.
+ * Hindsight onboarding CLI.
  *
  * Run inside a project to scaffold:
- *   .mcp.json                          — MCP server registration (per-project bank)
- *   .claude/settings.local.json        — local hooks (default, gitignored)
- *   .claude/settings.json              — committed hooks (with --committed flag)
- *   .claude/rules/hindsight.md         — project-specific Hindsight usage rules
+ *   .hindsight.json              — the opt-in project config (url, banks, defaultBank, tokenFile)
+ *   .claude/rules/hindsight.md   — project-specific Hindsight usage rules
+ *
+ * The plugin itself registers the MCP server and the hooks; this only opts the project in. There
+ * is no default bank: a bank derived from the directory name is how orphan banks were created, so
+ * `--bank` is required. The bank must already exist on the server — nothing here creates one.
  *
  * Usage:
- *   node /path/to/hindsight-mcp/dist/setup.js [options]
- *
- * Options:
- *   --bank <id>           Bank ID (default: derived from git/cwd)
- *   --url <url>           Hindsight URL (default: http://localhost:8888)
- *   --committed           Write .claude/settings.json (visible to team via git)
- *   --no-hooks            Skip writing hook settings
- *   --no-rules            Skip writing .claude/rules/hindsight.md
- *   --force               Overwrite existing files
+ *   node /path/to/fpl-hsmem/dist/setup.mjs --url <url> --bank <id> [--bank <id> ...]
+ *        [--token-file <path>] [--no-rules] [--force]
  */
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { resolveProjectName } from "./lib/bank.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const HINDSIGHT_MCP_PATH = resolve(__dirname, "..");
+const PLUGIN_ROOT = resolve(__dirname, "..");
 
 interface Options {
-  bank?: string;
-  url: string;
-  committed: boolean;
-  noHooks: boolean;
+  banks: string[];
+  url?: string;
+  tokenFile?: string;
   noRules: boolean;
   force: boolean;
 }
 
+function printHelp(): void {
+  console.log(`fpl-hsmem setup
+
+Opt the current project in to Hindsight memory by writing .hindsight.json.
+
+Options:
+  --url <url>          Hindsight API URL (required)
+  --bank <id>          Allowed bank (required; repeat for several — the first is the default)
+  --token-file <path>  File holding the bearer token, relative to the project root
+  --no-rules           Skip writing .claude/rules/hindsight.md
+  --force              Overwrite existing files
+  -h, --help           Show this help
+`);
+}
+
 function parseArgs(argv: string[]): Options {
-  const opts: Options = {
-    url: "http://localhost:8888",
-    committed: false,
-    noHooks: false,
-    noRules: false,
-    force: false,
-  };
+  const opts: Options = { banks: [], noRules: false, force: false };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     switch (arg) {
       case "--bank":
-        opts.bank = argv[++i];
+        opts.banks.push(argv[++i]);
         break;
       case "--url":
         opts.url = argv[++i];
         break;
-      case "--committed":
-        opts.committed = true;
-        break;
-      case "--no-hooks":
-        opts.noHooks = true;
+      case "--token-file":
+        opts.tokenFile = argv[++i];
         break;
       case "--no-rules":
         opts.noRules = true;
@@ -76,40 +75,16 @@ function parseArgs(argv: string[]): Options {
         process.exit(1);
     }
   }
+  if (!opts.url || opts.banks.length === 0) {
+    console.error("--url and at least one --bank are required");
+    printHelp();
+    process.exit(1);
+  }
   return opts;
 }
 
-function printHelp(): void {
-  console.log(`hindsight-mcp setup
-
-Scaffold .mcp.json + Claude Code hook settings + Hindsight usage rules
-into the current project.
-
-Options:
-  --bank <id>      Bank ID (default: derived from project name)
-  --url <url>      Hindsight URL (default: http://localhost:8888)
-  --committed      Write .claude/settings.json (visible to team via git)
-                   Default: .claude/settings.local.json (your machine only)
-  --no-hooks       Skip hook registration
-  --no-rules       Skip writing .claude/rules/hindsight.md
-  --force          Overwrite existing files
-  -h, --help       Show this help
-`);
-}
-
-function renderTemplate(name: string, vars: Record<string, string>): string {
-  const path = join(HINDSIGHT_MCP_PATH, "templates", name);
-  let raw = readFileSync(path, "utf-8");
-  for (const [k, v] of Object.entries(vars)) {
-    raw = raw.replaceAll(`{{${k}}}`, v);
-  }
-  return raw;
-}
-
 function writeFile(path: string, content: string, force: boolean): "written" | "skipped" {
-  if (existsSync(path) && !force) {
-    return "skipped";
-  }
+  if (existsSync(path) && !force) return "skipped";
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, content);
   return "written";
@@ -118,62 +93,47 @@ function writeFile(path: string, content: string, force: boolean): "written" | "
 function main(): void {
   const opts = parseArgs(process.argv.slice(2));
   const cwd = process.cwd();
-  const bankId = opts.bank ?? resolveProjectName(cwd);
-
-  console.log("🧠 Hindsight MCP setup");
-  console.log("──────────────────────");
-  console.log(`📍 Project:        ${cwd}`);
-  console.log(`🏦 Bank ID:        ${bankId}`);
-  console.log(`🌐 Hindsight URL:  ${opts.url}`);
-  console.log(`📦 MCP path:       ${HINDSIGHT_MCP_PATH}`);
-  console.log("");
-
-  const vars = {
-    HINDSIGHT_MCP_PATH,
-    HINDSIGHT_URL: opts.url,
-    BANK_ID: bankId,
+  const config: Record<string, unknown> = {
+    url: opts.url,
+    banks: opts.banks,
+    defaultBank: opts.banks[0],
+    autoRecall: false,
+    autoRetain: false,
+    // Stage-0 pilot: explicit, minimal, read-only. Writes need a later authorization and policy edit.
+    allowTools: [
+      "memory_recall",
+      "memory_status",
+      "memory_get_current_bank",
+      "memory_list",
+      "memory_get",
+      "memory_operations",
+      "mental_model_list",
+      "mental_model_get",
+      "directive_list",
+      "bank_config_get",
+      "document_list",
+    ],
   };
+  if (opts.tokenFile) config.tokenFile = opts.tokenFile;
 
-  const mcpContent = renderTemplate("mcp.json.template", vars);
-  const mcpPath = join(cwd, ".mcp.json");
-  const mcpStatus = writeFile(mcpPath, mcpContent, opts.force);
-  console.log(`  .mcp.json                       ${mcpStatus}`);
+  console.log("🧠 fpl-hsmem setup");
+  console.log(`📍 Project:  ${cwd}`);
+  console.log(`🏦 Banks:    ${opts.banks.join(", ")} (default ${opts.banks[0]})`);
+  console.log(`🌐 URL:      ${opts.url}`);
 
-  if (!opts.noHooks) {
-    const hookContent = renderTemplate("claude-settings.json.template", vars);
-    const hookFile = opts.committed ? "settings.json" : "settings.local.json";
-    const hookPath = join(cwd, ".claude", hookFile);
-    const hookStatus = writeFile(hookPath, hookContent, opts.force);
-    console.log(`  .claude/${hookFile.padEnd(24)}${hookStatus}`);
-
-    if (!opts.committed) {
-      const gitignorePath = join(cwd, ".gitignore");
-      if (existsSync(gitignorePath)) {
-        const gi = readFileSync(gitignorePath, "utf-8");
-        if (!gi.includes(".claude/settings.local.json")) {
-          writeFileSync(gitignorePath, `${gi.replace(/\n?$/, "\n")}.claude/settings.local.json\n`);
-          console.log("  .gitignore                      updated");
-        }
-      }
-    }
-  }
+  const cfgStatus = writeFile(join(cwd, ".hindsight.json"), JSON.stringify(config, null, 2) + "\n", opts.force);
+  console.log(`  .hindsight.json                 ${cfgStatus}`);
 
   if (!opts.noRules) {
-    const rulesContent = renderTemplate("hindsight-rules.md.template", vars);
-    const rulesPath = join(cwd, ".claude", "rules", "hindsight.md");
-    const rulesStatus = writeFile(rulesPath, rulesContent, opts.force);
-    console.log(`  .claude/rules/hindsight.md      ${rulesStatus}`);
+    let rules = readFileSync(join(PLUGIN_ROOT, "templates", "hindsight-rules.md.template"), "utf-8");
+    rules = rules.replaceAll("{{BANK_ID}}", opts.banks[0]);
+    const status = writeFile(join(cwd, ".claude", "rules", "hindsight.md"), rules, opts.force);
+    console.log(`  .claude/rules/hindsight.md      ${status}`);
   }
 
-  console.log("");
-  console.log("✅ Done. Next steps:");
-  console.log(`   1. Make sure Hindsight is running:  curl ${opts.url}/health`);
-  console.log("   2. Restart Claude Code in this project");
-  console.log("   3. Try: 'memory_status' tool to verify connection");
-  if (mcpStatus === "skipped") {
-    console.log("");
-    console.log("⚠️  .mcp.json already exists — use --force to overwrite");
-  }
+  console.log("\n✅ Done. The generated pilot is read-only with both hooks off.");
+  console.log("Restart Claude Code here and run memory_get_current_bank to verify.");
+  if (cfgStatus === "skipped") console.log("⚠️  .hindsight.json already exists — use --force to overwrite");
 }
 
 main();

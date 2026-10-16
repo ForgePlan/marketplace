@@ -75,7 +75,7 @@ Rules:
 | Plugin | Version |
 |--------|:-------:|
 | **fpl-skills** | **1.24.5** (Sprint T: forge-cleanup Step 2.5) |
-| **fpl-hsmem** | 2.1.0 |
+| **fpl-hsmem** | 3.7.0 |
 ```
 
 ## Link conventions

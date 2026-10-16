@@ -215,7 +215,7 @@ Native delivery needs `structurizr`, `python3` and browser access for viewer/exp
 
 ## (c) What is Claude-Code-native by design
 
-**The published agents, commands and hooks use Claude Code formats; that is not a claim that only Claude Code can load them (ADR-025).** OMP can discover compatible plugin agents and commands directly. No second generated agent/hook format is introduced by that compatibility.
+**Agents, commands and automation are host-native; portable skills do not imply automatic translation.**
 
 - **Agents** (`plugins/<name>/agents/*.md`) use Claude Code frontmatter.
   OMP loads these plugin agents under their frontmatter `name` and discards
@@ -241,17 +241,45 @@ Native delivery needs `structurizr`, `python3` and browser access for viewer/exp
   "read the command file and follow it". One source of truth, discoverable from
   the portable path. Four synchronised copies of a 200-line router is a promise
   nobody keeps past the second edit.
-- **Hooks** (`plugins/<name>/hooks/hooks.json`) - Claude Code hook events
-  (`PreToolUse`, `PostToolUse`, `SessionStart`, etc.). Other CLIs have their own
-  automation primitives; no cross-CLI hook emit is shipped, and none will be
-  built without a new decision — a concrete request opens one (ADR-025 Trigger 2).
+- **Hooks and extensions** use each client's native automation API. Most marketplace
+  hooks remain Claude-Code-native. The Slopocop communication layer is an
+  explicit exception: Claude hooks, trusted Codex hooks and an OMP extension load
+  the same `skills/slopocop/SKILL.md` core; no generic cross-CLI hook emitter is
+  involved. This adds instructions without replacing existing ones or running a
+  per-reply editor/evaluator. Editorial slash commands and the `slop-cop` agent
+  remain Claude-native.
 
-**Posture (ADR-025).** The portable surface is **MCP tools + skills + AGENTS.md**
-— by design and terminally, as compliance with open standards (MCP,
-agentskills.io, AGENTS.md), not as Tier 0 of a deferred adapter programme.
-The adapter source format remains Claude-Code-native, with **no separate
-cross-CLI emit by decision**; compatible consumers such as OMP may load it
-directly. A new emitted format requires a new decision (ADR-025 supersedes ADR-014).
+  Slopocop also ships a host-neutral installer that adds a managed block to an
+  explicitly selected startup instruction file (`AGENTS.md` or the consuming
+  client's equivalent). It preserves other instructions and has no implicit
+  personal target. This makes future-session activation independent of model and
+  skill matching when the client actually reads that file. A client without a
+  supported startup-file, skill or extension mechanism cannot be auto-activated
+  by merely copying plugin files. See [Slopocop activation](../plugins/slopocop/README.md#development-communication).
+
+  Portable skill discovery uses `.agents/skills/slopocop`; discovery alone is not
+  always-on. Enable or turn off the layer with `Enable Slopocop` / `Turn off Slopocop`.
+  OMP's extension entrypoint is `omp/slopocop.mjs`. Upgrading to 2.0.0 preserves
+  validated pre-2.0 native mode data through a one-time migration when no new state
+  exists; explicit reinstall replaces one intact, integrity-checked old managed
+  block instead of creating a second one. See the activation guide for controls,
+  host requirements and the explicit startup-file install/check/uninstall commands.
+
+  **Catalog identity matters.** Codex consumes the complete compatibility catalog
+  `.claude-plugin/marketplace.json` under its established `ForgePlan-marketplace`
+  name; Slopocop still selects its native `.codex-plugin/plugin.json` and hooks.
+  Do not add a partial `.agents/plugins/marketplace.json` under a different name:
+  it takes precedence and breaks refreshes of existing Git marketplace sources.
+  `.agents/skills` aliases remain portable. The generated lower-case
+  `forgeplan-marketplace` catalog in `.omp-plugin` is OMP-specific, not a reason
+  to rename Codex plugin IDs or their hook trust records.
+
+**Posture (ADR-025).** The general portable surface remains **MCP tools + skills +
+startup instructions**. There is no marketplace-wide translator for commands,
+agents, hooks or permission policies. The Slopocop-specific communication adapters
+are explicit integrations, not evidence that other Claude-native plugin features
+work in Codex/OMP. Codex requires hook trust; OMP 18.11.1 loads the extension after
+native installation, while `--plugin-dir` alone does not load `omp.extensions`.
 
 One thing already bridges all CLIs at the orchestration layer: **smith**, the
 master-orchestrator. Its routing logic is declared in `AGENTS.md` so the same

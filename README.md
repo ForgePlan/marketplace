@@ -308,10 +308,15 @@ All 6 sections authored: `claude-md`, `plugins`, `agents`, `hooks`, `mcp`, `anti
 
 ### [slopocop](plugins/slopocop/)
 
-> Slop cop for **text**. Detects AI slop and humanizes it in Russian and English — `humanizer-ru` (54 patterns + HARD BANS + fact-lock + a deterministic 0–100 scanner) and `slop-humanizer` (EN). Commands `/slop-audit` (read-only detection) and `/slop-humanize` (rewrite with language auto-routing), plus a hook-triggered `slop-cop` reviewer agent.
+> Slopocop is the additional communication layer for clear engineering replies (`slopocop` skill), alongside targeted RU/EN prose editing with `humanizer-ru` and `slop-humanizer`. It loads through native OMP/Claude/Codex integrations or a managed startup instruction block for other clients, without replacing existing instructions or running a per-reply editor/evaluator. Editorial `/slop-audit`, `/slop-humanize` and the `slop-cop` reviewer remain Claude-native. [Activation, Slopocop on/off controls and prerequisites](plugins/slopocop/README.md#development-communication).
 
 ```bash
 /plugin install slopocop@ForgePlan-marketplace
+```
+
+```bash
+omp plugin marketplace add ForgePlan/marketplace
+omp plugin install slopocop@forgeplan-marketplace
 ```
 
 ---
