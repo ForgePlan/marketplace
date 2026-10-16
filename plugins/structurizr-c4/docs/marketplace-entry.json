@@ -1,0 +1,23 @@
+{
+  "name": "structurizr-c4",
+  "source": "./plugins/structurizr-c4",
+  "version": "0.2.1",
+  "author": { "name": "ForgePlan" },
+  "homepage": "https://github.com/ForgePlan/marketplace",
+  "license": "MIT",
+  "description": "Evidence-based C4 architecture in Structurizr: source discovery, scoped context/container/component views, saved routing, rendered geometry checks and reproducible local exports. Use when a system needs architecture diagrams grounded in its code and documents, or existing Structurizr views need clearer lines and labels.",
+  "category": "developer-tools",
+  "cost": "light",
+  "stability": "beta",
+  "dependencies": [],
+  "targets": ["claude-code", "omp"],
+  "requires": {
+    "cli": [
+      { "name": "structurizr", "optional": false, "reason": "Official modern Structurizr CLI for validation, native viewer and static export; initial tested version 2026.09.19." },
+      { "name": "python3", "optional": false, "reason": "Local lifecycle helper (init/validate/start/export) plus routing and rendered-SVG extractors." }
+    ],
+    "mcp": [],
+    "plugins": []
+  },
+  "keywords": ["architecture", "c4", "structurizr", "diagrams", "routing", "architecture-as-code"]
+}

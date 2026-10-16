@@ -46,7 +46,7 @@ Five sub-steps, executed in order. Only Step 0a halts on miss — the rest act o
 Required plugins for greenfield bootstrap (matches Step 4 MUST tier). Plus a SHOULD probe for `fpl-hsmem` (Hindsight) — not blocking, but Step 0c needs to know whether it's enabled.
 
 ```bash
-REQUIRED=(fpl-skills agents-pro agents-sparc agents-core forgeplan-workflow)
+REQUIRED=(fpl-skills structurizr-c4 agents-pro agents-sparc agents-core forgeplan-workflow)
 SHOULD=(fpl-hsmem fpf)
 
 # Probe enabled plugins from Claude Code's user config (~/.claude/settings.json holds enabledPlugins).
@@ -80,6 +80,7 @@ Install (one-time), then re-run /smith-bootstrap:
 
   /plugin marketplace add ForgePlan/marketplace
   /plugin install fpl-skills@ForgePlan-marketplace
+  /plugin install structurizr-c4@ForgePlan-marketplace
   /plugin install agents-pro@ForgePlan-marketplace
   /plugin install agents-sparc@ForgePlan-marketplace
   /plugin install agents-core@ForgePlan-marketplace
@@ -99,7 +100,7 @@ Halting up-front is cheaper than a re-run after /methodology-check flags the gap
 **If `MISSING_MUST` is empty** — print one line plus a note about any missing SHOULD plugins, and continue to Step 0b:
 
 ```
-✓ Step 0a: 5/5 MUST plugins enabled (fpl-skills, agents-pro, agents-sparc, agents-core, forgeplan-workflow)
+✓ Step 0a: 6/6 MUST plugins enabled (fpl-skills, structurizr-c4, agents-pro, agents-sparc, agents-core, forgeplan-workflow)
 [~] Step 0a: 1/2 SHOULD plugins enabled (fpf enabled, fpl-hsmem missing — Step 0c will print Hindsight setup guidance)
 ```
 
@@ -561,7 +562,8 @@ Install plugins in three priority tiers. Show the user the table, install MUST a
 
 | Priority | Plugin | Why |
 |---|---|---|
-| MUST | `fpl-skills` | Core skills incl. `/smith`, `/forge-cycle`, `/decay-watch`, `/methodology-check`, `/decision`, `/supersede`, `/c4-diagram` |
+| MUST | `fpl-skills` | Core skills incl. `/smith`, `/decay-watch`, `/methodology-check`, `/decision`, `/supersede` |
+| MUST | `structurizr-c4` | Primary native C4 skill + `structurizr-c4:structurizr-architect`; install before architectural packs; requires `structurizr`, `python3` and browser capability for complete delivery |
 | MUST | `forgeplan-workflow` | `/forge-cycle` reactive enforcer + `/forge-audit` + guardian agent (gate enforcement) |
 | MUST | `agents-pro` | `smith` (master orchestrator) + `adr-architect` + `guardian` + `brief-intake` + `architect-reviewer` + `security-expert` + 20+ other Profile A/B agents |
 | MUST | `agents-sparc` | `specification` + `architecture` + `pseudocode` + `refinement` + `sparc-orchestrator` (Profile A SPARC phase agents — smith dispatches `agents-sparc:specification` for the first PRD) |
@@ -577,6 +579,7 @@ Install plugins in three priority tiers. Show the user the table, install MUST a
 # In a Claude Code session:
 /plugin marketplace add ForgePlan/marketplace          # one-time, if marketplace not yet added
 /plugin install fpl-skills@ForgePlan-marketplace
+/plugin install structurizr-c4@ForgePlan-marketplace   # MUST — primary C4, before architectural packs
 /plugin install forgeplan-workflow@ForgePlan-marketplace
 /plugin install agents-pro@ForgePlan-marketplace
 /plugin install agents-sparc@ForgePlan-marketplace     # MUST — Step 6 dispatches agents-sparc:specification
@@ -588,10 +591,10 @@ Install plugins in three priority tiers. Show the user the table, install MUST a
 Verify after install:
 
 ```bash
-/plugin list                                            # all 4 MUST + chosen SHOULD enabled
+/plugin list                                            # all 6 MUST + chosen SHOULD enabled
 ```
 
-Acceptance: ≥4 MUST plugins enabled. SHOULD plugins enabled if user confirmed. OPTIONAL plugins NEVER installed by default.
+Acceptance: all 6 MUST plugins enabled. SHOULD plugins enabled if user confirmed. OPTIONAL plugins NEVER installed by default. C4 follows the [native delivery contract](../../../structurizr-c4/skills/structurizr-c4/references/forgeplan.md); a missing runtime/browser is an explicit incomplete-check gap, never a Mermaid fallback. `agents-sparc:architecture` remains the design primary; the Structurizr worker only renders the assigned architecture.
 
 ---
 

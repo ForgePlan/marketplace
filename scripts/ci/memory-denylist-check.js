@@ -327,8 +327,10 @@ function main() {
   console.log(
     `Memory denylist OK: ${scanned} agent(s) scanned. ${symmetryChecked} deny at least one memory ` +
       `write tool under BOTH relay spellings, and none names only one. ${inScope} of those have ` +
-      `decided they do not write memory at all, and each denies all ${required.length} distinct ` +
-      `write tools under both prefixes (${required.length * PREFIXES.length} entries).`,
+      `decided they do not write memory at all, and each names all ${required.length} distinct ` +
+      `write tools under both prefixes (${required.length * PREFIXES.length} entries). ` +
+      `Names, not takes effect: whether that frontmatter parses the way the runtime parses it ` +
+      `is the official-plugin-validate gate, not this one.`,
   );
 }
 

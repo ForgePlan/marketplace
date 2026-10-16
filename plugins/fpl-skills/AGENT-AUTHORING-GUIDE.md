@@ -364,6 +364,8 @@ disallowedTools: mcp__forgeplan__forgeplan_new, mcp__forgeplan__forgeplan_update
 
 **Denied**: `forgeplan_new`/`update`/`link`/`activate`/`supersede`/`deprecate`/`reason` — coder never creates artifacts or decides artifact lifecycle.
 
+**Architecture-scoped specialization (same Profile C-coder, not a new profile):** `structurizr-c4:structurizr-architect` keeps Write/Edit for assigned model, navigation report, layout and export files only. It cannot write product source, infrastructure or `.forgeplan/`, mutate ForgePlan/Hindsight, create/activate artifacts, or record EVID verdicts. Unknown system boundaries or architectural decisions return to the ADR/RFC author. It follows [the canonical C4 contract](../structurizr-c4/skills/structurizr-c4/references/forgeplan.md); independent Profile B reviewers inspect its delivery without repairing the model. This exception grants no new permissions to Profile A/B.
+
 ---
 
 ## forgeplan_generate — primary creation path (NEW)
@@ -1911,12 +1913,12 @@ A Profile B-orchestrator agent body MUST contain, in order:
 6. **`## Output contract`** — describe the structured Markdown plan format. Six canonical sections recommended (Context, Methodology, Dispatch sequence, Evidence requirements, Risks, Handoff) — match smith's contract for cross-orchestrator consistency.
 7. **`## Hard rules`** — **minimum 6 rules**. MUST include: never write source files; never activate forgeplan artifacts; never invent agents that do not exist in marketplace; always cite methodology by name + source link; always specify dispatch ORDER explicitly (Wave 1 / Wave 2, parallel/serial); when unsure between methodologies, emit `<<NEED_USER_INPUT>>` sentinel instead of guessing (≥3 hypotheses).
 8. **`## What <agent> does NOT do`** — explicit non-goals (no source code, no forgeplan mutations, no hindsight mutations, no test execution, no deployment, no verdicts on artifacts).
-9. **`## Integration with existing skills`** — mapping to `/forge-cycle`, `/autorun`, `/forge-cleanup`, `/methodology-check`, `/agent-advisor`, `/decay-watch`, `/c4-diagram`, `/supersede`, `forgeplan playbook run`, etc.
+9. **`## Integration with existing skills`** — mapping to `/forge-cycle`, `/autorun`, `/forge-cleanup`, `/methodology-check`, `/agent-advisor`, `/decay-watch`, portable `structurizr-c4` (real Claude diagram worker `structurizr-c4:structurizr-architect`, not a skill as `Task.subagent_type`), `/supersede`, `forgeplan playbook run`, etc.
 10. **`## References`** — methodology sources (one link per methodology in the matrix) + in-repo references (AGENT-AUTHORING-GUIDE, CLAUDE.md, parent EPIC artifact, sibling agents like guardian/goal-planner).
 
 **Body length budget**: 400-600 lines. Longer than standard Profile A/B (100-200) because the routing matrix dominates. If the matrix has 10+ rows and each methodology has a one-line definition, 400 lines is the floor; 600 is the ceiling. Beyond 600 lines, split the methodology citations into a co-located knowledge file referenced from the body.
 
-**Which Profile A/B/C agents may be recommended**: any agent that exists in `plugins/agents-core/`, `plugins/agents-pro/`, `plugins/agents-sparc/`, `plugins/agents-tdd/`, `plugins/agents-bmad/`, `plugins/agents-canvas/`, `plugins/agents-domain/`, `plugins/agents-github/`, or `plugins/forgeplan-brownfield-pack/`. Verify the agent file exists before naming it; missing-agent fabrication is the worst routing failure mode (HARD RULE 3 in `smith.md`).
+**Which Profile A/B/C agents may be recommended**: any agent that exists in `plugins/agents-core/`, `plugins/agents-pro/`, `plugins/agents-sparc/`, `plugins/agents-tdd/`, `plugins/agents-bmad/`, `plugins/agents-canvas/`, `plugins/agents-domain/`, `plugins/agents-github/`, `plugins/structurizr-c4/`, or `plugins/forgeplan-brownfield-pack/`. Verify the agent file exists before naming it; missing-agent fabrication is the worst routing failure mode (HARD RULE 3 in `smith.md`).
 
 ### Cross-reference
 
