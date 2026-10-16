@@ -12,6 +12,7 @@ A Claude Code marketplace pack for **brownfield extraction**: take inherited cod
 ## Quick Start
 
 ```bash
+/plugin install structurizr-c4@ForgePlan-marketplace
 /plugin install forgeplan-brownfield-pack@ForgePlan-marketplace
 /reload-plugins
 ```
@@ -50,7 +51,7 @@ A Claude Code marketplace pack for **brownfield extraction**: take inherited cod
 
 All five follow schema-v1.0; each emits forge artifacts with a `## Sources` section for traceability.
 
-- `c4-to-forge.yaml` — C4 Context/Container/Component → forgeplan Epic + PRDs + Notes (validated CL3 on Forgeplan repo, 2026-04-20)
+- `c4-to-forge.yaml` — historical `C4-Documentation/c4-*.md` Markdown (C4 Context/Container/Component) → forgeplan Epic + PRDs + Notes (validated CL3 on Forgeplan repo, 2026-04-20). **Not a Structurizr DSL parser.**
 - `ddd-to-forge.yaml` — DDD bounded-context map → Epic + PRDs + Spec (Spike-3, 2026-04-21)
 - `madr-to-forge.yaml` — MADR 3.x/4.x ADR markdown → forgeplan `adr` (1:1) with status normalization and supersession-link extraction
 - `obsidian-to-forge.yaml` — Obsidian vault (`.obsidian/` marker) → Note/Epic/PRD/ADR/Hypothesis with 4-tier signal priority (frontmatter → tag → folder → default) and lazy wikilink resolution
@@ -102,6 +103,12 @@ rag-packager            → packages everything for RAG retrieval
 # Output: forgeplan graph populated with PRDs, RFCs, ADRs, Evidence
 ```
 
+### Native C4 architecture handoff
+
+When discovery includes C4/architecture documentation, pass the collected sources and contradictions to `structurizr-c4:structurizr-architect` for an `as-is` model, or to the host's native worker with the installed portable `structurizr-c4` skill. General business extraction does not require a viewer run.
+
+New or amended C4 follows the [canonical native contract](../structurizr-c4/skills/structurizr-c4/references/forgeplan.md): reuse the assigned model, preserve provenance, save layout and verify native export. Discover does not write DSL or invent topology. Profile A links native model/report references into existing ADR/RFC bodies via MCP, reusing IDs; independent Profile B reviewers check the current snapshot. Do not pass DSL to `c4-to-forge.yaml` or manufacture a parallel artifact graph. Historical Markdown remains importable; Mermaid is not a fallback for a new delivery. For Codex/OMP portable installation and Claude full-plugin boundaries, see [Cross-CLI setup](../../docs/CROSS-CLI.md#primary-c4-in-each-runtime).
+
 ## When to use this pack
 
 - Inherited a legacy codebase with no internal documentation.
@@ -120,6 +127,7 @@ rag-packager            → packages everything for RAG retrieval
 | Plugin | Why pair it |
 |---|---|
 | [`fpl-skills`](../fpl-skills/README.md) | Required — provides `/fpl-init`, `/refine`, `/audit`, the lifecycle skills you'll use after extraction |
+| [`structurizr-c4`](../structurizr-c4/) | Primary C4 producer and portable skill; explicitly install for architecture handoff (not a DSL ingest extension) |
 | [`forgeplan-workflow`](../forgeplan-workflow/README.md) | Required for `/forge-cycle` — used during canonical reproduction phase |
 | [`agents-pro`](../agents-pro/README.md) | `ddd-domain-expert` agent helps with bounded-context modelling |
 | External: [`autoresearch@anthropic-marketplace`](https://github.com/anthropic) | If you have access — automates parts of the discovery phase |

@@ -110,6 +110,26 @@ mcp__forgeplan__forgeplan_new(
 ```
 Returns `RFC-NNN`. Keep `NNN` for later steps. Title names the chosen design ("Split auth into stateless verifier + session ledger"), not the question ("How should we design auth?").
 
+### Step 5b — Obtain or reuse native C4 delivery
+
+After obtaining `RFC-NNN` and **before finalising the body**, obtain native C4 delivery when the affected architecture spans **≥3 modules**, or when the task explicitly requests C4. Read the portable `structurizr-c4` skill's `references/forgeplan.md` through the current runtime's skill catalogue (repository source: `plugins/structurizr-c4/skills/structurizr-c4/references/forgeplan.md`). It is the canonical delivery and role contract, not a workflow for this Profile A author to write model files.
+
+First read any native delivery already passed by the orchestrator or ADR author. Reuse it when its boundary, `to-be` state, affected scope, source snapshot and required views match this RFC and its report resolves to current DSL, saved JSON, provenance, review record and verified native static export under the contract. A legacy diagram or report link alone is insufficient. Preserve the existing workspace and IDs/view keys; do not build a competing RFC-specific copy or dispatch a second writer for an already suitable model.
+
+Otherwise delegate rendering, passing the design and contracts you own:
+
+```
+Task(
+  subagent_type = "structurizr-c4:structurizr-architect",
+  prompt = "Produce the native delivery defined by structurizr-c4 references/forgeplan.md. system_boundary: <agreed system name/scope>; sources: <parent PRD/SPEC, related ADR, selected design, module contracts and referenced source revision/working-copy scope>; state: to-be; required_levels: L1+L2 <selected-container L3 only if the question requires it>; workspace_path: <existing assigned/shared workspace, otherwise docs/architecture/to-be/>; parent_id: <RFC-NNN>; report_path: docs/c4/<RFC-NNN>.md; auto_versioning: <explicit task choice, default false>. Greenfield claims are proposed, not deployed topology. Update an existing workspace in place. Return the actual report path written, workspace path, view coverage and limitations. Write only assigned architecture model/report/layout/export files. Escalate unknown boundaries or design changes to this RFC author; do not mutate ForgePlan artifacts or issue independent gate verdicts."
+)
+```
+
+Without Claude subagent support, have the orchestrator use its runtime-native worker with the portable `structurizr-c4` skill, the same inputs and architecture-scoped Profile C-coder restrictions. A skill name is not a `Task.subagent_type`, and an optional Codex TOML adapter is not automatic registration.
+
+Read the actual returned or reused report before Step 6, resolving its links relative to the report and checking scope/snapshot/coverage against the contract. Link that actual path (including any returned version suffix) and the shared workspace in the RFC using the project's artifact-link base; reuse existing artifact IDs rather than creating another graph. Route report collisions (`<<NEED_USER_INPUT>>`) or missing prerequisites through the orchestrator: no silent overwrite, Mermaid fallback or completion claim for an unverified C4 draft. Independent review remains a separate agent's job.
+
+
 ### Step 6 — Fill the body
 ```
 mcp__forgeplan__forgeplan_update(
@@ -118,6 +138,7 @@ mcp__forgeplan__forgeplan_update(
 )
 ```
 Use the template at the bottom of this file. Never embed mock benchmarks or invented latency numbers — write `TBD` and link to an EVIDENCE artifact when measurement happens.
+Keep Profile A ownership of the prose, component contracts and artifact links via MCP. Incorporate the navigation report's context summary in `## Context`, and link the actual report and workspace in `## Component Diagram (prose)` when Step 5b applies. Do not use `Write`/`Edit` to render or repair the model.
 
 ### Step 7 — Link to parent and related artifacts
 ```
@@ -162,7 +183,7 @@ Do **not** retain things already captured by the RFC body itself — Hindsight i
 4. **Always** identity-tag `claim`/`release` calls with `agent="claude-code/<ver>/architecture-task-<id>"`. Anonymous claims are rejected by reviewer agents.
 5. **Always** include at least 2 genuinely considered design alternatives in the `Trade-offs` section. A single-option RFC is decision theatre — refuse and ask the orchestrator for context instead.
 6. **Never** invent benchmarks, latency numbers, throughput figures, or capacity estimates. Use `TBD` with a note pointing to an EVIDENCE artifact where measurement will be recorded.
-7. **Describe diagrams in prose**, not by drawing them. Component diagrams are described in words (nodes, edges, direction); rendering belongs in downstream documentation, not in the RFC body.
+7. **Describe diagrams in prose**, not by drawing them. Own the topology description and component contracts; for Step 5b, delegate native model/layout/export work to `structurizr-c4:structurizr-architect` (or the runtime-native worker using its portable skill) and link the actual report and workspace. Remain Profile A: no `Write`/`Edit`, no model repair, no producer self-approval.
 8. **Never** activate without linked EVIDENCE. Leave RFC in `draft`; `forgeplan_activate` requires reviewer audit + EVIDENCE artifact already linked.
 
 ## RFC body template
@@ -190,7 +211,7 @@ Describe the topology in words: which module talks to which, in which direction,
 
 > `<module-a>` calls `<module-b>` synchronously over HTTP/JSON for read paths. `<module-b>` publishes `<event-name>` events to `<bus>`, which `<module-c>` subscribes to for projection. `<module-c>` writes only to its own store.
 
-No drawn diagrams in the RFC body — describe topology so a downstream agent can render it consistently.
+No drawn diagrams in the RFC body — retain the topology description and contracts here. When Step 5b applies, add links to the actual returned/reused native C4 report and shared workspace, with state and covered view keys from that report. Rendering belongs to the architecture-scoped producer, not this Profile A author.
 
 ## Data Flow
 
