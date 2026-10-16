@@ -14,13 +14,15 @@
 |---|---|---|---|
 | **Concept / Idea** | Выявление потребности, грубые требования | [`/shape <idea>`](../plugins/fpl-skills/skills/shape/SKILL.md) | Черновик PRD |
 | **Research / Discovery** | Существующие практики, альтернативы, разбор пробелов | [`/research <topic>`](../plugins/fpl-skills/skills/research/SKILL.md) | `research/reports/<topic>/REPORT.md`, опционально Note |
-| **Design / Architecture** | Доменное моделирование, архитектура, решения | [`/refine <plan>`](../plugins/fpl-skills/skills/refine/SKILL.md), [`/ddd-decompose`](../plugins/fpl-skills/skills/ddd-decompose/SKILL.md), [`/c4-diagram`](../plugins/fpl-skills/skills/c4-diagram/SKILL.md), [`/fpf-decompose`](../plugins/fpf/) | PRD, RFC, ADR, Spec, Mermaid-диаграммы |
+| **Design / Architecture** | Доменное моделирование, архитектура, решения | [`/refine <plan>`](../plugins/fpl-skills/skills/refine/SKILL.md), [`/ddd-decompose`](../plugins/fpl-skills/skills/ddd-decompose/SKILL.md), [`structurizr-c4`](../plugins/structurizr-c4/skills/structurizr-c4/SKILL.md), [`/fpf-decompose`](../plugins/fpf/) | PRD, RFC, ADR, Spec; нативная C4-модель/layout, evidence и static export; DDD context map |
 | **Specification** | Формальные API-контракты, схемы, спецификации поведения | [`/rfc create`](../plugins/fpl-skills/skills/rfc/SKILL.md), `forgeplan new spec` | RFC, Spec |
 | **Build / Implementation** | Код, тесты, рабочее ПО | [`/sprint`](../plugins/fpl-skills/skills/sprint/SKILL.md), [`/forge-cycle`](../plugins/forgeplan-workflow/), [`/autorun`](../plugins/fpl-skills/skills/autorun/SKILL.md), [`/do`](../plugins/fpl-skills/skills/do/SKILL.md), [`/build`](../plugins/fpl-skills/skills/build/SKILL.md) | Код + тесты; Evidence по завершении |
 | **Test / Verification** | Мульти-экспертный обзор, отладка, контроль качества | [`/audit`](../plugins/fpl-skills/skills/audit/SKILL.md), [`/diagnose <bug>`](../plugins/fpl-skills/skills/diagnose/SKILL.md), [autoresearch](AUTORESEARCH-INTEGRATION-RU.md) | Evidence (verdict + congruence_level + evidence_type) |
 | **Release / Deploy** | Активация артефакта, подготовка коммита, выпуск | `forgeplan activate <id>`, `gh pr create` | Активированный PRD, conventional commit с `Refs:` |
 | **Operate / Monitor** | Здоровье продакшена, слепые пятна, устаревшие решения | [`/restore`](../plugins/fpl-skills/skills/restore/SKILL.md), [`/briefing`](../plugins/fpl-skills/skills/briefing/SKILL.md), `forgeplan health`, `forgeplan stale` | Дневные сигналы, оповещения о слепых пятнах, триггеры по `valid_until` |
 | **Maintain / Evolve** | Обновление существующих решений, замена артефактов | `forgeplan supersede <id> --by <new>`, `forgeplan deprecate <id>`, [`/refine`](../plugins/fpl-skills/skills/refine/SKILL.md) над существующим PRD/RFC | Переходы lifecycle, refresh-заметки |
+
+C4 следует [единому нативному контракту поставки](../plugins/structurizr-c4/skills/structurizr-c4/references/forgeplan.md): ограниченный architecture-файлами producer пишет модель/отчёт, Profile A добавляет фактическую ссылку в ADR/RFC, а независимые Profile B reviewers проверяют текущий snapshot. Claude Code использует `/structurizr-c4:c4-build`; другие runtime вызывают установленный переносимый скилл через своего worker ([setup](CROSS-CLI.md#primary-c4-in-each-runtime)). Mermaid не является fallback для C4; не-C4 context maps не меняются.
 
 ---
 
@@ -30,7 +32,7 @@
 |---|---|
 | Concept / Idea | ✅ `/shape` (интервью с нуля) |
 | Research / Discovery | ✅ `/research` (5 параллельных агентов) |
-| Design / Architecture | ✅ `/refine` + `/ddd-decompose` + `/c4-diagram` + `/fpf-decompose` (четыре интерактивных дизайн-скилла) |
+| Design / Architecture | ✅ `/refine` + `/ddd-decompose` + `structurizr-c4` + `/fpf-decompose` (интерактивное проектирование и нативное C4-моделирование) |
 | Specification | ✅ `/rfc create` + `forgeplan new spec` |
 | Build / Implementation | ✅ `/sprint` (интерактивно), `/forge-cycle` (с оркестрацией), `/autorun` (без участия), `/do` (с контрольными точками), `/build` (из готового плана) |
 | Test / Verification | ✅ `/audit` (4-6 ревьюеров), `/diagnose` (6-фазная отладка), [autoresearch](AUTORESEARCH-INTEGRATION-RU.md) (цикл под мерой) |
@@ -58,8 +60,8 @@
   → доработанный PRD; ADR на «почему magic-link, а не OAuth»
   /ddd-decompose
   → ограниченные контексты: Identity, Session, Notification
-  /c4-diagram
-  → L1 Context + L2 Container диаграммы (Mermaid)
+  /structurizr-c4:c4-build
+  → нативная L1 Context + L2 Containers модель, сохранённый layout, evidence, проверенный static export
 
 Фаза 4 — Specification
   /rfc create

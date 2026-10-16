@@ -11,6 +11,22 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Backfill (marketplace#250)**: entries v1.133.0 through v1.139.0 were written after the fact, each from the commit that carried its catalog bump. Where a change merged between two bumps and shipped without a version of its own, it is recorded under the release that first delivered it — the plugin cache is keyed on version, so an unbumped change reaches no user until the next bump.
 
+## [1.185.0] - 2026-10-16
+
+### Added
+- Добавлен `structurizr-c4 0.1.0` как основной C4-инструмент: нативные DSL/JSON, сохранённая раскладка, evidence/review и проверенный static export. Единый контракт — в skill `references/forgeplan.md`; Claude worker — `structurizr-c4:structurizr-architect`, другие runtime используют portable skill.
+- Плагин включён в `forgeplan-core`, `developer`, `security`, `agents`, `full`; объявлены обязательные `structurizr` и `python3`. Установка runtime и глобальная регистрация Codex-роли не выполняются автоматически.
+
+### Changed
+- Производители ADR/RFC и условный brownfield handoff используют нативную модель с повторным использованием workspace; независимые reviewers, methodology-check и guardian сверяют текущий snapshot, DSL/JSON-семантику, views и экспорт.
+- Operating contract v4 в `fpl-init` поддерживает согласованный upgrade v1/v2/v3 с сохранением внешнего пользовательского текста; `agents-pro 1.31.0`, `agents-sparc 1.9.0`, `forgeplan-brownfield-pack 1.8.0`.
+
+### Removed
+- **BREAKING (`fpl-skills 2.0.0`):** удалён публичный Mermaid entrypoint `/c4-diagram` и его interop alias без redirect. Новые модели создаются через portable `structurizr-c4` или `/structurizr-c4:c4-build`; неизменённые исторические диаграммы и Markdown importer сохранены.
+
+### Fixed
+- Standalone compatibility suite нового плагина принимает 0/1 аргумент; без аргумента определяет checkout по положению скрипта, а не cwd. Отсутствующие gates и неверное число аргументов остаются ошибками.
+
 ## [1.171.0] - 2026-09-08
 
 ### Every agent is now bound to the tier it asks for — and the binding disproved four ratings

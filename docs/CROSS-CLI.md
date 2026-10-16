@@ -124,11 +124,11 @@ Plugins publish their skills in two locations:
   (`<skill> -> ../../skills/<skill>`), so there is exactly one copy of every
   skill body on disk; the `.agents/` path is a discovery alias, not a duplicate.
 
-Any CLI with agentskills.io support loads skills from `.agents/skills/` -
-including Cursor, Windsurf, Cline, Codex, Gemini, OpenCode, Goose, and Kilo.
-This makes **all** plugin skills discoverable cross-CLI: a Russian- or
-English-speaking user on any of those clients reaches the same skill bodies a
-Claude Code user does.
+Clients with agentskills.io discovery can load skills from `.agents/skills/`.
+The aliases above publish the portable bodies; they do **not** install plugin
+payloads into a consuming project or register Claude agents in another runtime.
+A user reaches the same skill body only after installing it into a discovery
+location supported by that client.
 
 The symlinks are relative (never absolute), so they resolve correctly after a
 fresh clone on any machine and never leak a developer's home path.
@@ -182,6 +182,31 @@ layout, which is what the tool above wires.
 
 Prefer symlinks over copies either way: a copy forks silently on the next edit, and nothing
 tells you which of the two an agent actually read.
+
+### Primary C4 in each runtime
+
+The primary C4 entrypoint is the portable [`structurizr-c4` skill](../plugins/structurizr-c4/skills/structurizr-c4/SKILL.md). Its [ForgePlan contract](../plugins/structurizr-c4/skills/structurizr-c4/references/forgeplan.md) defines delivery and independent acceptance; this setup section does not replace it.
+
+| Runtime | Installation and invocation |
+|---|---|
+| Claude Code | `/plugin install structurizr-c4@ForgePlan-marketplace` installs the full plugin. Invoke `/structurizr-c4:c4-build` or `/structurizr-c4:c4-review`; orchestrators dispatch the real `structurizr-c4:structurizr-architect` subagent. The catalog's `targets: ["claude-code"]` describes this native plugin surface. |
+| Codex | Install the portable skill into the project's `.agents/skills/structurizr-c4` (or another supported skill-discovery root). Invoke `$structurizr-c4` and use a native worker with the contract's architecture-only write scope. The optional TOML adapter is not automatically registered as a role. |
+| OMP and other skill-capable clients | Install the same portable skill and confirm the host discovers `structurizr-c4` through its supported `.agents/skills` path. Use the host's native worker; Claude commands/subagent names are not registrations in these clients. An OMP catalog entry is not a promise that Claude agents are available there. |
+
+For a local checkout, keep the whole plugin payload (skill references, scripts and assets included), then link the canonical skill into the consumer project. For example, from that project's root:
+
+```bash
+# Point this at the installed/checked-out plugin, not a fixed cache version.
+STRUCTURIZR_PLUGIN=/absolute/path/to/forgeplan-marketplace/plugins/structurizr-c4
+mkdir -p .agents/skills
+# Only create when the destination is absent; preserve an existing installation.
+test ! -e .agents/skills/structurizr-c4 && test ! -L .agents/skills/structurizr-c4 &&
+  ln -s "$STRUCTURIZR_PLUGIN/skills/structurizr-c4" .agents/skills/structurizr-c4
+```
+
+Use a relative link when the installed payload shares a stable project-relative location. Confirm discovery in a fresh session; the plugin's own `.agents/skills` alias is publisher-side only, not a global installation. `cross-runtime.mjs` repairs project discovery links; it does not download this payload or register the Codex TOML adapter.
+
+Native delivery needs `structurizr`, `python3` and browser access for viewer/export checks. Install prerequisites explicitly using official instructions (macOS: `brew install structurizr`); loading the plugin does not install Java or system packages. Models belong in the consuming project, not the installed plugin. Missing runtime/browser checks leave an unverified draft; Mermaid is not a C4 fallback. Producer-side review/repair does not replace independent Profile B review.
 
 ---
 

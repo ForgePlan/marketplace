@@ -105,6 +105,15 @@ grep -rn "client\.orders\|OrdersClient" src/
 
 **The single most common staff-level failure is treating the RFC scope as the affected scope.** A 3-line API change can have a 200-file blast radius across consumers. Always grep beyond the RFC's own affected-files list.
 
+**Consume the native C4 model for system-wide impact**: when the artifact supplies or references C4, discover the installed portable `structurizr-c4` skill and read `references/forgeplan.md` as the shared delivery criteria. Follow the actual navigation report (including versioned paths); resolve report links relative to the report and artifact links using the project's link base. Read `workspace.dsl`, saved `workspace.json`, `evidence.md`, `assumptions.md`, `review.md`, the native `exports/static/` delivery, and the preceding independent `architect-reviewer` EVID — not just the report summary.
+
+- Use L1/L2 and the requested state's actual view keys to trace external systems, actors, downstream consumers, ownership and trust boundaries, protocols, stores, and cross-service contracts beyond the RFC's affected-files list. Cross-check source provenance rather than promoting inferred or proposed topology to production fact.
+- Evaluate the change from `as-is` to `to-be` against migration/coexistence/rollback and the 6+ month horizon. Compare both models only when that comparison is supplied or requested; otherwise use evidenced current-system sources and explicitly state what baseline is missing. Do not invent an `as-is` workspace for a greenfield `proposed` target.
+- Independently recompute DSL/JSON hashes and compare source revision/working-copy scope, actual view coverage, and export snapshot with the report and architect-reviewer's EVID. A stale review cannot certify the current model. Consume the available rendered native views to validate the system-wide boundaries and dependencies; do **not** repeat the primary geometry/layout audit. Missing primary render/reload/export checks are a coverage gap to return through the orchestrator, not a reason to trust producer self-attestation.
+- Record the snapshot, system-wide observations, prior independent review reference, and limits in your own EVID linked `informs` to the parent ADR/RFC. Do not save the viewer, mutate any model/report/layout/export file, run a write-enabled applier, or execute producer repair/cache-mutating helpers. Route model repairs to the producer via the orchestrator; decisions remain with the architecture author.
+
+An incomplete/stale C4 delivery contributes **CONCERNS** without weakening any existing structural or system-level BLOCKER rule. Mermaid/legacy diagrams and historical EVID may inform the baseline, but cannot replace the native contract for new architecture work or substantive re-acceptance.
+
 ### Step 3 — Recall prior system-wide concerns
 ```
 mcp__plugin_fpl-hsmem_hindsight__memory_recall(

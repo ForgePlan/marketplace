@@ -20,7 +20,7 @@ that's a refactor inside the feature PRD (section 03 + 06), not this row.
 1. **code-analyzer** (Profile C) — produces NOTE with debt inventory: complexity hotspots, deprecated dependencies, TODO/FIXME density, test coverage gaps. Why first: portfolio decisions need a portfolio view.
 2. **research-analyst** (Profile C — read-only; the synthesis goes TO the orchestrator, who persists the NOTE) — A3 sheet analysis per **`templates/a3-problem-solving.md`** (the form this step promised since revision 1 and got in ADR-024 wave 3) + Fishbone. Why second: turns the debt list into a coherent narrative with systemic-vs-local distinction. Close via `/gate-check <ID> --loop debt_close`. (Third instance of the Profile-A mislabel this cohort carried — sections 10 and 12 were fixed the same day; EVID-231 §3.1.)
 3. **architect-reviewer** (Profile B) — produces EVID prioritising debt items: which cluster pays the most interest? Which is safest to touch first? Why third: priority must be defensible, not "items the team finds most annoying".
-4. **adr-architect** (Profile A) — produces ADR-NNN with the target architecture *and* any ADR-supersedes (with delta-spec per Sprint Z8) for the old decisions being walked back. Auto-dispatches `c4-diagram` for ≥3-module decisions.
+4. **adr-architect** (Profile A) — produces ADR-NNN with the target architecture *and* any ADR-supersedes (with delta-spec per Sprint Z8) for the old decisions being walked back. For ≥3-module decisions, reuses suitable current native C4 delivery or dispatches `structurizr-c4:structurizr-architect` under the [canonical contract](../../../../../structurizr-c4/skills/structurizr-c4/references/forgeplan.md).
 5. **goal-planner** (Profile A) — produces task DAG with debt items ordered by risk-weighted priority. Why fifth: parallelisation across coders.
 6. **coder** (Profile C-coder) — implements the DAG. Why sixth: only after the portfolio is gated.
 7. **tester** (Profile B) — produces tester EVID confirming behaviour preserved (debt cleanup must not change behaviour) and coverage at least matches baseline. Why second-to-last: regression risk is the dominant failure mode.
@@ -84,7 +84,7 @@ Smith: Context=tech-debt (row 11). Methodology=A3 + Fishbone +
           ADR-NNN+1 (ORM v1 → v2 migration) +
           ADR-supersede ADR-Old-2023 (data-access ad-hoc, with
           delta-spec ADDED/MODIFIED/REMOVED/UNCHANGED) +
-          c4-diagram (L1+L2, 5 modules)
+          native Structurizr C4 delivery/report (L1+L2, 5 modules; reuse suitable current delivery)
        5. goal-planner → task DAG (5 nodes, 2 parallel pairs)
        6. coder × 2 (worktree-isolated) → repository pattern + ORM upgrade
        7. tester → EVID (regression suite 100% pass; coverage 78% >

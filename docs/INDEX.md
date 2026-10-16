@@ -41,6 +41,7 @@ Source of truth: [`.claude-plugin/marketplace.json`](../.claude-plugin/marketpla
 | Plugin | Path | One-line |
 |---|---|---|
 | **fpl-skills** | `plugins/fpl-skills/` | flagship — 44 engineering skills + dev-advisor agent + hooks; hosts **smith** routing brain (`skills/smith/`) |
+| **structurizr-c4** | `plugins/structurizr-c4/` | primary native C4: portable skill; Claude `/structurizr-c4:c4-build`, `/structurizr-c4:c4-review` and real `structurizr-c4:structurizr-architect` agent |
 | **fpl-hsmem** | `plugins/fpl-hsmem/` | Hindsight v2 cross-session memory (auto UserPromptSubmit/Stop/SessionEnd hooks) |
 | **forgeplan-workflow** | `plugins/forgeplan-workflow/` | `/forge-cycle`, `/forge-audit` — the reactive 4-layer enforcer |
 | **forgeplan-orchestra** | `plugins/forgeplan-orchestra/` | Orchestra ↔ forgeplan task sync |
@@ -55,6 +56,8 @@ Source of truth: [`.claude-plugin/marketplace.json`](../.claude-plugin/marketpla
 | **slopocop-design** | `plugins/slopocop-design/` | design anti-slop — hallmark + frontend-design + design-taste + `/design-audit` + `/design-redesign` + design-cop agent |
 | **slopocop-code** | `plugins/slopocop-code/` | code anti-slop — deterministic 0-100 scanner (JS/TS/Py/Go/Rust/Java/PHP) + `/code-audit` + `/code-deslop` + code-slop-cop agent |
 | **dev-toolkit** | `plugins/dev-toolkit/` | ⚠️ soft-deprecated (ADR-003) — migrate to fpl-skills |
+
+C4 delivery and independent acceptance use the [canonical native contract](../plugins/structurizr-c4/skills/structurizr-c4/references/forgeplan.md). Install the full Claude plugin with `/plugin install structurizr-c4@ForgePlan-marketplace`; Codex/OMP install/discover the portable skill, not Claude roles ([runtime setup](CROSS-CLI.md#primary-c4-in-each-runtime)). Repository aliases and the optional Codex TOML adapter are not automatic installations/registrations.
 
 ### Agent packs (8) — see §4 for the agents inside
 | Pack | Path | Agents | Focus |
@@ -116,7 +119,7 @@ CANVAS agents (`plugins/agents-canvas/agents/`): `canvas-coordinator` (master) �
 | [`CROSS-CLI.md`](CROSS-CLI.md) | running across Claude Code / Cursor / Gemini / Codex / Goose |
 | [`GITHUB-PROJECTS.md`](GITHUB-PROJECTS.md) (+RU) | board sync (project 5) |
 | [`AI-SDLC-MAPPING.md`](AI-SDLC-MAPPING.md) (+RU), [`UPSTREAM-METHODOLOGIES.md`](UPSTREAM-METHODOLOGIES.md) (+RU), [`AUTORESEARCH-INTEGRATION.md`](AUTORESEARCH-INTEGRATION.md) (+RU), [`TRACKER-INTEGRATION.md`](TRACKER-INTEGRATION.md) (+RU), [`FORGEPLAN-WEB.md`](FORGEPLAN-WEB.md) (+RU), [`MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS.md`](MIGRATION-DEV-TOOLKIT-TO-FPL-SKILLS.md) (+RU) | topical references |
-| [`c4/`](c4/) | C4 architecture diagrams (per-ADR) |
+| [`c4/`](c4/) | Historical C4 diagrams and ADR/RFC navigation reports; new/amended C4 links to native model/layout/evidence/export under the [canonical contract](../plugins/structurizr-c4/skills/structurizr-c4/references/forgeplan.md) |
 | `SESSION-CHECKPOINT-SCHEMA.md`, `SESSION-RESUME-PROMPT.md`, `*-SPRINT-*.md`, `POST-325-ACTIONS.md` | session/sprint operational records |
 
 Root: [`CHANGELOG.md`](../CHANGELOG.md) · [`CONTRIBUTING.md`](../CONTRIBUTING.md) (how to add a plugin).

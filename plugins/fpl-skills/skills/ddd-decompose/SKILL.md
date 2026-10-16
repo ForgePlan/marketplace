@@ -26,7 +26,7 @@ This skill is the **interactive companion** to the `ddd-domain-expert` agent in 
 - General system decomposition without DDD framing — use [`/fpf-decompose`](../../../fpf/skills/fpf-knowledge/SKILL.md) (broader, less ceremony).
 - A single-team CRUD app — DDD ceremony is overkill; just write a PRD.
 - Brownfield code where DDD is the goal — pair with [`forgeplan-brownfield-pack`](../../../forgeplan-brownfield-pack/skills/ubiquitous-language/SKILL.md) extraction skills which work bottom-up from code.
-- Pure architecture diagrams without domain modelling — use [`/c4-diagram`](../c4-diagram/SKILL.md).
+- Pure architecture diagrams without domain modelling — use [`structurizr-c4`](../../../structurizr-c4/skills/structurizr-c4/SKILL.md).
 
 ---
 
@@ -199,7 +199,7 @@ Show the user where artefacts went and what's next:
 
 Next steps:
   • /refine each PRD to surface contradictions and lock terminology
-  • /c4-diagram to add Container/Component diagrams complementing the DDD map
+  • structurizr-c4 to add native Container/selected Component views complementing the DDD map
   • /forge-cycle "<implement first context>" to start building one context end-to-end
 ```
 
@@ -244,7 +244,7 @@ forgeplan link ADR-NNN EPIC-NNN --relation informs
 
 ## Companion skills
 
-- [`/c4-diagram`](../c4-diagram/SKILL.md) — Context/Container/Component diagrams as a complement to the DDD map. Use after DDD decomposition to add deployment-level structure.
+- [`structurizr-c4`](../../../structurizr-c4/skills/structurizr-c4/SKILL.md) — native Context/Container/selected Component views as a complement to the DDD Mermaid context map (which remains unchanged). Use after DDD decomposition to add runtime structure under the [native delivery contract](../../../structurizr-c4/skills/structurizr-c4/references/forgeplan.md); Claude worker: `structurizr-c4:structurizr-architect`.
 - [`/fpf-decompose`](../../../fpf/skills/fpf-knowledge/SKILL.md) — general FPF decomposition without DDD-specific framing. Use when DDD vocabulary doesn't fit (e.g. internal tooling, single-team app).
 - [`/refine`](../refine/SKILL.md) — interview-style refinement of an existing decomposition. Use after `/ddd-decompose` to lock terminology.
 - Brownfield extraction skills ([`ubiquitous-language`](../../../forgeplan-brownfield-pack/skills/ubiquitous-language/SKILL.md), `intent-inferrer`, `causal-linker`) — bottom-up from existing code instead of top-down interview.

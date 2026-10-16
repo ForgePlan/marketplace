@@ -127,32 +127,30 @@ Read the chosen ADR template from the **fpl-skills** plugin's `templates/` direc
 
 Both templates make **`## Revisit Trigger`** (Evidence Decay) a MUST field — not optional. Sprint Z2 (PRD-053) enforces this via `guardian` agent + `/decay-watch` skill.
 
-### Step 5b.1 — C4 diagram dispatch trigger (Sprint Z9 — PRD-060)
+### Step 5b.1 — Native C4 delivery before the ADR body
 
-**When criterion #1 fires (decision touches ≥3 modules) AND full template is chosen, ALSO dispatch `/c4-diagram` skill BEFORE filling the ADR body.**
+**When criterion #1 fires (decision touches ≥3 modules), obtain the native C4 delivery BEFORE filling the ADR body.** Criterion #1 selects the full template; choosing full for another reason does not itself trigger C4.
 
-Rationale: multi-module decisions benefit from a system-context view (C4 L1) and container view (C4 L2) **before** writing the decision body — diagrams force explicit boundary discipline and shape the prose. If you can name the modules but can't draw their boundaries with arrows, the ADR body will be hand-wavy. C4 makes the boundaries explicit before they go into prose.
+Read the portable `structurizr-c4` skill's `references/forgeplan.md` through the current runtime's skill catalogue (repository source: `plugins/structurizr-c4/skills/structurizr-c4/references/forgeplan.md`). That is the canonical delivery, report-idempotency, and role contract; do not maintain a second specification here.
 
-Default depth: **L1 + L2** (Context + Container). Add L3 only if the parent PRD body explicitly discusses component internals of a single container.
+Default depth is **L1 + L2**. Add L3 only for a selected container whose internals are discussed in the parent PRD. A designed solution uses **`to-be`**; greenfield is not a reason to skip C4: model its target architecture with `proposed` claims rather than inventing deployed topology.
 
-Dispatch:
+**Reuse before dispatch:** read any delivery supplied by the orchestrator, resolve its report links, and check it against the canonical contract. Reuse it only if the system boundary, state, affected scope, source snapshot and required views fit this decision, with current DSL, saved JSON, provenance, review record and verified native static export. A Markdown path, legacy Mermaid diagram, stale snapshot or incomplete render check alone is not suitable. Preserve the existing workspace path, element IDs and view keys; do not fork a shared model per ADR or run concurrent writers against it.
+
+If no suitable delivery is available, dispatch the real Claude subagent:
 
 ```
 Task(
-  subagent_type = "fpl-skills:c4-diagram",
-  prompt = "Dispatch mode (Sprint Z9 PRD-060 — adr-architect Step 5b.1). System name: <name from PRD parent>. Modules touched: <list from criterion #1>. Target depth: L1+L2 (add L3 only if component internals discussed in PRD body). Output path: docs/c4/<ADR-NNN>.md (write both Mermaid diagrams and a 2-sentence context summary to this file). Return: path to generated file + 2-sentence text summary describing the system context (the summary will be used to seed the ADR body's Context section)."
+  subagent_type = "structurizr-c4:structurizr-architect",
+  prompt = "Implement native C4 delivery under the structurizr-c4 references/forgeplan.md contract. system_boundary: <system name and agreed scope>; sources: <parent PRD/RFC, chosen decision, referenced source paths and revision/working-copy scope>; state: to-be; required_levels: L1+L2 <plus selected container for L3 only if required>; workspace_path: <existing assigned/shared workspace, otherwise docs/architecture/to-be/>; parent_id: <ADR-NNN>; report_path: docs/c4/<ADR-NNN>.md; auto_versioning: <explicit task choice, default false>. Modules touched: <criterion #1 list>. Greenfield claims are proposed. Read and update an existing model in place. Return the actual report path written, workspace path, view coverage and limitations. Write only the assigned architecture delivery; escalate unknown boundaries or decisions to this ADR author. Do not mutate ForgePlan artifacts or issue an independent review verdict."
 )
 ```
 
-After `Task` returns:
-1. Note the output path and 2-sentence summary.
-2. Use the summary to populate the **`## Context`** section of the ADR body (cite the C4 file via relative link).
-3. Continue with Step 6 — fill the rest of the ADR body using the template.
+If the runtime does not support this Claude subagent, have the orchestrator dispatch its native worker with the portable `structurizr-c4` skill, the same inputs and architecture-scoped Profile C-coder restrictions. Never use a skill name as `Task.subagent_type` or assume the optional Codex TOML adapter is registered.
 
-**Skip Step 5b.1 when:**
-- Template is `adr-light.md` (criterion #1 didn't fire).
-- System is brand-new with no deployed containers yet — skip C4 and note "C4 deferred: no deployed topology to diagram yet" in the ADR Context section.
-- Orchestrator already provided a C4 file path in the task prompt — use it, don't re-dispatch.
+After reuse or producer return, **read the actual navigation report**, not merely the requested filename. Resolve model links relative to that report and confirm its scope/snapshot/coverage against the contract. Use its two-sentence `## Context` summary in the ADR's **`## Context`**, linking the actual returned report path (including a version suffix when returned) using the project's artifact-link base. Then continue to Step 6. A `<<NEED_USER_INPUT>>` report collision or missing runtime/skill/browser must be surfaced with its precise limitation; no silent overwrite, Mermaid fallback or claim that an unverified draft completes C4.
+
+The ADR author remains **Profile A**: own the decision, final body and artifact links via MCP. The producer owns model/report/layout/export files only; its self-check does not replace independent review. Skip this step only when criterion #1 did not fire, or skip the additional dispatch when a suitable native delivery was reused.
 
 ### Step 6 — Fill the body using the chosen template
 ```
