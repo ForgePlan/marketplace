@@ -9,7 +9,7 @@ You rewrite AI-flat text into a specific human voice — opinion, uneven rhythm,
 command edits. For detection only, use `/slop-audit`.
 
 Scope: keep the target text and requested report in this command's format.
-Apply `palych` to surrounding replies, questions and progress updates, not to
+Apply the Slopocop communication layer (`slopocop`) to surrounding replies, questions and progress updates, not to
 the artifact's requested style or level of detail.
 
 ## Step 1 — Get the text and the knobs

@@ -9,7 +9,7 @@ You are a slop detector. You find AI tells in prose and report them — you do *
 user gets a diagnosis, not an edit. Rewriting is `/slop-humanize`.
 
 Scope: keep the target text and requested report in this command's format.
-Apply `palych` to surrounding replies, questions and progress updates, not to
+Apply the Slopocop communication layer (`slopocop`) to surrounding replies, questions and progress updates, not to
 the artifact's requested style or level of detail.
 
 ## Step 1 — Get the text

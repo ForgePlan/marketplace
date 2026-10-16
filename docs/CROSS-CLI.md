@@ -216,10 +216,12 @@ tells you which of the two an agent actually read.
   the portable path. Four synchronised copies of a 200-line router is a promise
   nobody keeps past the second edit.
 - **Hooks and extensions** use each client's native automation API. Most marketplace
-  hooks remain Claude-Code-native. Slopocop's Palych communication profile is an
+  hooks remain Claude-Code-native. The Slopocop communication layer is an
   explicit exception: Claude hooks, trusted Codex hooks and an OMP extension load
-  the same core; no generic cross-CLI hook emitter is involved. Editorial slash
-  commands and the `slop-cop` agent remain Claude-native.
+  the same `skills/slopocop/SKILL.md` core; no generic cross-CLI hook emitter is
+  involved. This adds instructions without replacing existing ones or running a
+  per-reply editor/evaluator. Editorial slash commands and the `slop-cop` agent
+  remain Claude-native.
 
   Slopocop also ships a host-neutral installer that adds a managed block to an
   explicitly selected startup instruction file (`AGENTS.md` or the consuming
@@ -228,6 +230,14 @@ tells you which of the two an agent actually read.
   skill matching when the client actually reads that file. A client without a
   supported startup-file, skill or extension mechanism cannot be auto-activated
   by merely copying plugin files. See [Slopocop activation](../plugins/slopocop/README.md#development-communication).
+
+  Portable skill discovery uses `.agents/skills/slopocop`; discovery alone is not
+  always-on. Enable or turn off the layer with `Enable Slopocop` / `Turn off Slopocop`.
+  OMP's extension entrypoint is `omp/slopocop.mjs`. Upgrading to 2.0.0 preserves
+  validated pre-2.0 native mode data through a one-time migration when no new state
+  exists; explicit reinstall replaces one intact, integrity-checked old managed
+  block instead of creating a second one. See the activation guide for controls,
+  host requirements and the explicit startup-file install/check/uninstall commands.
 
 **Posture (ADR-025).** The general portable surface remains **MCP tools + skills +
 startup instructions**. There is no marketplace-wide translator for commands,

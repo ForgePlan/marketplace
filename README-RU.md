@@ -270,7 +270,7 @@ Smith — Profile B-orchestrator агент с четырьмя скилами. 
 
 ### [slopocop](plugins/slopocop/)
 
-> Краткая инженерная переписка через `palych` и переработка заданного RU/EN-текста через `humanizer-ru` и `slop-humanizer`. Palych загружается native-интеграциями OMP/Claude/Codex либо общим блоком startup-инструкций другого клиента. Редакторские `/slop-audit`, `/slop-humanize` и ревьюер `slop-cop` остаются Claude-native. [Активация и требования](plugins/slopocop/README-RU.md#рабочая-переписка).
+> Slopocop — дополнительный слой ясной инженерной переписки (скилл `slopocop`); `humanizer-ru` и `slop-humanizer` отдельно редактируют заданный RU/EN-текст. Слой загружается native-интеграциями OMP/Claude/Codex либо управляемым блоком startup-инструкций другого клиента, не заменяет существующие инструкции и не запускает редактор или оценщик на каждую реплику. Редакторские `/slop-audit`, `/slop-humanize` и ревьюер `slop-cop` остаются Claude-native. [Активация, команды включения/отключения Slopocop и требования](plugins/slopocop/README-RU.md#рабочая-переписка).
 
 ```bash
 /plugin install slopocop@ForgePlan-marketplace

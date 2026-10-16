@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-"""Установка Palych в явный файл startup-инструкций любого агента, без сети.
+"""Установка Slopocop в явный файл startup-инструкций любого агента, без сети.
 
 Адаптация scripts/install.py из ponomr/palych (MIT); происхождение — в sources.md.
+Явная переустановка валидирует целый унаследованный Palych-блок и заменяет его
+целым Slopocop-блоком; отключение не требует источника ядра.
 """
 import argparse
 from contextlib import contextmanager
@@ -16,11 +18,13 @@ import sys
 import tempfile
 import uuid
 
-START = '<!-- palych:start -->\n'
-END = '<!-- palych:end -->\n\n'
-STAMP = re.compile(r'<!-- palych:sha256 ([0-9a-f]{64}) -->\n')
+START = '<!-- slopocop:start -->\n'
+END = '<!-- slopocop:end -->\n\n'
+STAMP = re.compile(r'<!-- slopocop:sha256 ([0-9a-f]{64}) -->\n')
+LEGACY_START = '<!-- palych:start -->\n'
+LEGACY_END = '<!-- palych:end -->\n\n'
+LEGACY_STAMP = re.compile(r'<!-- palych:sha256 ([0-9a-f]{64}) -->\n')
 ROOT = Path(__file__).resolve().parents[1]
-ADAPTER_DOCS = 'https://github.com/ponomr/palych/blob/main/adapters/README.md'
 
 
 def digest(text: str) -> str:
@@ -28,11 +32,10 @@ def digest(text: str) -> str:
 
 
 def payload(source: Path = ROOT) -> str:
-    core = (source / 'skills/palych/SKILL.md').read_text(encoding='utf-8')
+    core = (source / 'skills/slopocop/SKILL.md').read_text(encoding='utf-8')
     body = core.split('---', 2)[2].split('## Optional examples', 1)[0]
     body = body.split('Consult only relevant optional', 1)[0].strip()
-    body = body.replace(f'[host adapter]({ADAPTER_DOCS})', 'host adapter')
-    return ('Palych is enabled by default for every chat reply in this conversation.\n'
+    return ('Slopocop is enabled by default for every chat reply in this conversation.\n'
             'An explicit request to turn it off takes priority until enabled again.\n'
             'Keep the current on/off state when compacting or handing off context.\n\n'
             + body + '\n')
@@ -40,20 +43,32 @@ def payload(source: Path = ROOT) -> str:
 
 def block(source: Path = ROOT) -> str:
     text = payload(source)
-    return START + '<!-- palych:sha256 ' + digest(text) + ' -->\n' + text + END
+    return START + '<!-- slopocop:sha256 ' + digest(text) + ' -->\n' + text + END
+
+
+def _locate_marker(text: str, start: str, end: str, stamp: re.Pattern, label: str):
+    if text.count(start) != 1 or text.count(end) != 1:
+        raise ValueError(f'malformed {label} block; inspect it before changing instructions')
+    index = text.index(start)
+    closing = text.index(end, index) + len(end)
+    digest_match = stamp.match(text, index + len(start))
+    if not digest_match or digest(text[digest_match.end():closing - len(end)]) != digest_match.group(1):
+        raise ValueError(f'{label} block was edited; preserve your edits before replacing it')
+    return index, closing
 
 
 def locate(text: str):
-    if 'palych:start' not in text and 'palych:end' not in text:
+    # Any single delimiter counts as present: a truncated block must be reported as
+    # malformed, never treated as "nothing installed" and silently left behind.
+    has_new = 'slopocop:start' in text or 'slopocop:end' in text
+    has_legacy = 'palych:start' in text or 'palych:end' in text
+    if not has_new and not has_legacy:
         return None
-    if text.count(START) != 1 or text.count(END) != 1:
-        raise ValueError('malformed Palych block; inspect it before changing instructions')
-    start = text.index(START)
-    end = text.index(END, start) + len(END)
-    stamp = STAMP.match(text, start + len(START))
-    if not stamp or digest(text[stamp.end():end - len(END)]) != stamp.group(1):
-        raise ValueError('Palych block was edited; preserve your edits before replacing it')
-    return start, end
+    if has_new and has_legacy:
+        raise ValueError('both Slopocop and legacy managed blocks present; resolve duplicates manually')
+    if has_new:
+        return _locate_marker(text, START, END, STAMP, 'Slopocop')
+    return _locate_marker(text, LEGACY_START, LEGACY_END, LEGACY_STAMP, 'Palych')
 
 
 def read_target(path: Path) -> bytes:
@@ -67,7 +82,7 @@ def read_target(path: Path) -> bytes:
 @contextmanager
 def locked(folder: Path):
     folder.mkdir(parents=True, exist_ok=True, mode=0o700)
-    path = folder / '.palych-install.lock'
+    path = folder / '.slopocop-install.lock'
     if path.is_symlink():
         raise ValueError('installer lock is a symlink')
     fd = os.open(path, os.O_CREAT | os.O_RDWR, 0o600)
@@ -85,10 +100,20 @@ def change(path: Path, action: str, source: Path = ROOT) -> dict:
         # the managed region is still reported as not installed.
         desired = block(source)
         if not span or text[span[0]:span[1]] != desired:
-            raise ValueError('current Palych rules are not installed in this instruction file')
+            raise ValueError('current Slopocop rules are not installed in this instruction file')
         return {'installed': True, 'path': str(path), 'changed': False}
     if action == 'install':
         desired = block(source)
+        # Explicit reinstall of a validated legacy block (or absent block) becomes
+        # the Slopocop block at the same byte range; missing core fails loudly.
+        if span is None:
+            if not (source / 'skills' / 'slopocop' / 'SKILL.md').exists():
+                raise ValueError('Slopocop core is missing; cannot install')
+        else:
+            try:
+                payload(source)
+            except FileNotFoundError as error:
+                raise ValueError('Slopocop core is missing; cannot install') from error
         updated = (text[:span[0]] + desired + text[span[1]:]) if span else desired + text
     else:
         # Uninstall removes whatever block locate() validated; the desired
@@ -99,7 +124,7 @@ def change(path: Path, action: str, source: Path = ROOT) -> dict:
         return {'installed': action == 'install', 'path': str(path), 'changed': False}
     backup = None
     if path.exists():
-        folder = path.parent / '.palych-backups'
+        folder = path.parent / '.slopocop-backups'
         if folder.is_symlink():
             raise ValueError('backup directory is a symlink')
         folder.mkdir(mode=0o700, exist_ok=True)
@@ -110,7 +135,7 @@ def change(path: Path, action: str, source: Path = ROOT) -> dict:
             stream.flush()
             os.fsync(stream.fileno())
     mode = stat.S_IMODE(path.stat().st_mode) if path.exists() else 0o600
-    fd, temporary = tempfile.mkstemp(prefix='.palych-', dir=path.parent)
+    fd, temporary = tempfile.mkstemp(prefix='.slopocop-', dir=path.parent)
     try:
         with os.fdopen(fd, 'wb') as stream:
             os.fchmod(stream.fileno(), mode)
@@ -130,7 +155,7 @@ def change(path: Path, action: str, source: Path = ROOT) -> dict:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(prog='slopocop-activate', description=__doc__)
     parser.add_argument('action', choices=('install', 'check', 'uninstall'))
     parser.add_argument('--instructions', required=True, type=Path,
                         help='explicit startup instruction file read by the consuming agent')
@@ -145,7 +170,7 @@ def main() -> int:
         print(json.dumps(result))
         return 0
     except (OSError, ValueError, UnicodeError, IndexError) as error:
-        print(f'Palych activation: {error}', file=sys.stderr)
+        print(f'Slopocop activation: {error}', file=sys.stderr)
         return 1
 
 

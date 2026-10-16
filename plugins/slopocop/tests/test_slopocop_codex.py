@@ -12,7 +12,7 @@ PLUGIN = Path(__file__).resolve().parents[1]
 
 class CodexLifecycleTests(unittest.TestCase):
     def setUp(self) -> None:
-        temporary = tempfile.TemporaryDirectory(prefix='palych-codex-test-')
+        temporary = tempfile.TemporaryDirectory(prefix='slopocop-codex-test-')
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name)
 
@@ -36,15 +36,15 @@ class CodexLifecycleTests(unittest.TestCase):
     def test_resume_deduplicates_but_compact_restores_current_mode(self) -> None:
         self.assertTrue(self.event()['enabled'])
         self.assertIsNone(self.event('resume'))
-        self.assertFalse(self.event(prompt='Turn off palych')['enabled'])
+        self.assertFalse(self.event(prompt='Turn off Slopocop')['enabled'])
         self.assertFalse(self.event('compact')['enabled'])
         self.assertFalse(self.event('resume')['enabled'])
-        self.assertTrue(self.event(prompt='Enable palych')['enabled'])
+        self.assertTrue(self.event(prompt='Enable Slopocop')['enabled'])
         self.assertIsNone(self.event('resume'))
         self.assertTrue(self.event('compact')['enabled'])
 
     def test_fork_inherits_parent_off_without_disabling_other_sessions(self) -> None:
-        self.event(prompt='Turn off palych')
+        self.event(prompt='Turn off Slopocop')
         rollout = self.root / 'child.jsonl'
         rollout.write_text(json.dumps({
             'type': 'session_meta',

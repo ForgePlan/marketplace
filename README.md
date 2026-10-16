@@ -296,7 +296,7 @@ All 6 sections authored: `claude-md`, `plugins`, `agents`, `hooks`, `mcp`, `anti
 
 ### [slopocop](plugins/slopocop/)
 
-> Clear engineering replies with `palych`, plus targeted RU/EN prose editing with `humanizer-ru` and `slop-humanizer`. Palych loads through native OMP/Claude/Codex integrations or a managed startup instruction block for other clients. Editorial `/slop-audit`, `/slop-humanize` and the `slop-cop` reviewer remain Claude-native. [Activation and prerequisites](plugins/slopocop/README.md#development-communication).
+> Slopocop is the additional communication layer for clear engineering replies (`slopocop` skill), alongside targeted RU/EN prose editing with `humanizer-ru` and `slop-humanizer`. It loads through native OMP/Claude/Codex integrations or a managed startup instruction block for other clients, without replacing existing instructions or running a per-reply editor/evaluator. Editorial `/slop-audit`, `/slop-humanize` and the `slop-cop` reviewer remain Claude-native. [Activation, Slopocop on/off controls and prerequisites](plugins/slopocop/README.md#development-communication).
 
 ```bash
 /plugin install slopocop@ForgePlan-marketplace
