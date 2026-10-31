@@ -29,6 +29,8 @@ CLI/MCP probe создаёт изолированный временный `.for
 
 Census resolves realpath for descendants of directory symlinks, preserves aliases, records source hashes/line matches, and explicitly leaves normative profile/responsibility reconciliation incomplete. `normative_inventory_complete=false` is intentional, not a PASS.
 
+Alias metadata lists only distinct paths that differ from the canonical path, regardless of traversal order. A regression fixture covers multiple aliases visited before their target; the retained historical census was not regenerated.
+
 ## Безопасные регрессии исследовательских программ
 
 Canonical path проверяется по тем же исключённым компонентам, что и lexical walk: `.git`, `node_modules`, `.forgeplan`, `lance`, `.tgrep`, `.chunkhound`, `dev`. Исключения имён context files также действуют на видимый и канонический путь. Alias в исключённый каталог или файл остаётся в alias metadata, но его содержимое и snippets не читаются. Те же ограничения действуют на вторичное чтение plugin version из manifest. Разрешённые внутренние aliases сохраняются; внешние aliases не обходятся.

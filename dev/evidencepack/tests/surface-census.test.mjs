@@ -99,3 +99,13 @@ test('allowed internal aliases retain one canonical record; outside-root aliases
   assert.deepEqual(report.aliases.filter((alias) => alias.outside_root).map((alias) => alias.canonical_path), [null, null]);
   assert.equal(report.alias_count, 4);
 });
+
+test('canonical paths are never recorded as aliases when an alias sorts first', (t) => {
+  const { root } = fixture(t);
+  write(path.join(root, 'docs/z.md'), 'EvidencePack alias ordering fixture\n');
+  fs.symlinkSync('z.md', path.join(root, 'docs/a.md'));
+  fs.symlinkSync('z.md', path.join(root, 'docs/b.md'));
+  const report = scan(root);
+  const record = report.records.find((entry) => entry.canonical_path === 'docs/z.md');
+  assert.deepEqual(record.alias_paths.sort(), ['docs/a.md', 'docs/b.md']);
+});

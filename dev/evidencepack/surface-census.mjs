@@ -57,7 +57,12 @@ function visitTarget(visible, canonical) {
   }
   if (!hits.length) return;
   const key = relative(canonical);
-  if (records.has(key)) { records.get(key).alias_paths.push(relative(visible)); return; }
+  if (records.has(key)) {
+    const alias = relative(visible);
+    const aliases = records.get(key).alias_paths;
+    if (alias !== key && !aliases.includes(alias)) aliases.push(alias);
+    return;
+  }
   const plugin = key.startsWith('plugins/') ? key.split('/')[1] : null;
   let version = null;
   if (plugin) {
