@@ -17,6 +17,25 @@ Foundation: EPIC-002 «smith master orchestrator». Sibling skills: `/smith` (de
 
 ---
 
+## Чтение ресурсов установленного пакета
+
+Разрешите реальный файловый путь загруженного `SKILL.md` через `realpath`,
+включая symlink из `.agents/skills/`. Корень `fpl-skills` — два каталога выше.
+Сохраните его абсолютный путь как `FPL_SKILLS_ROOT` для shell-примера Step 0d.
+
+| Ресурс | Файловый путь относительно этого `SKILL.md` |
+|---|---|
+| Выходной шаблон | [../../templates/smith-bootstrap.md](../../templates/smith-bootstrap.md) |
+| Claude-specific hook bundle | [../../templates/hooks/](../../templates/hooks/) |
+| Routing map | [../smith/routing-map.md](../smith/routing-map.md) |
+| Playbooks | [../smith/sections/](../smith/sections/) |
+
+Нормализованные абсолютные пути читайте обычным Read, не переходами `../`
+внутри `skill://smith-bootstrap`. Не ищите ресурсы в cwd нового проекта,
+не закрепляйте версию кеша и не требуйте переменных окружения другого клиента.
+Шаблоны поставляются со всем плагином, не с отдельной копией каталога skill.
+Разрешение пути hook bundle не делает Claude hooks совместимыми с другим host.
+
 ## When to invoke
 
 - Fresh repo with no `.git` or empty `.git` (no commits yet).
@@ -234,10 +253,12 @@ A canonical safety bundle ships with this plugin at `plugins/fpl-skills/template
 | `pre-pr-evidence-check.sh` | `PreToolUse:Bash` (gates `gh pr create`) | Forgeplan-aware: scans branch name + last 20 commit messages for artifact IDs (PRD/RFC/ADR/EPIC/...), then verifies each referenced artifact has linked EVID. Blocks PR creation if evidence is missing. Bypass via `FORGEPLAN_SKIP_EVIDENCE=1` env var or branch patterns (`docs/*`, `hotfix/*`, `release/v*`). |
 | `forge-safety-hook.sh` | `PreToolUse:Bash` | Forgeplan operations safety: blocks destructive forgeplan commands (`forgeplan delete`, `forgeplan reset`) without explicit `--yes`. Delegates to `dev-toolkit` safety hook when both plugins are installed. |
 
-If the project's `.claude/hooks/` is empty or absent, offer to copy the bundle:
+If the project's `.claude/hooks/` is empty or absent, offer to copy the bundle.
+Set `FPL_SKILLS_ROOT` to the installed filesystem root resolved above before running:
 
 ```bash
-TEMPLATES="${CLAUDE_PLUGIN_ROOT}/templates/hooks"
+: "${FPL_SKILLS_ROOT:?Set the resolved installed fpl-skills filesystem root}"
+TEMPLATES="${FPL_SKILLS_ROOT}/templates/hooks"
 PROJECT_HOOKS=".claude/hooks"
 
 if [ ! -d "$TEMPLATES" ]; then

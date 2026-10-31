@@ -23,6 +23,15 @@ Foundation: `plugins/fpl-skills/skills/smith/routing-map.md` (14 contexts × 33 
 
 ---
 
+## Чтение ресурсов установленного пакета
+
+Пути ниже разрешаются от реального файлового расположения этого `SKILL.md`
+после `realpath`, не от cwd проекта и не переходами `../` внутри URI skill.
+Routing map — [../smith/routing-map.md](../smith/routing-map.md), playbooks —
+[../smith/sections/](../smith/sections/). Передавайте нормализованные
+абсолютные файловые пути обычному Read; версия кеша и переменные другого CLI
+для этого не нужны.
+
 ## When to invoke
 
 - The user wants to **learn**, not commit ("explain when BMAD vs SPARC", "что лучше — Strangler Fig или rewrite?").
