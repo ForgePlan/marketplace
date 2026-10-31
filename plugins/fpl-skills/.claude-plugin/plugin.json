@@ -1,6 +1,6 @@
 {
   "name": "fpl-skills",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Flagship workflow plugin of the ForgePlan ecosystem — the skills, templates and authoring contract the rest of the marketplace is written against: the smith methodology router (14 contexts), the agent-authoring guide every forgeplan-aware agent follows, and the gate, cleanup and insight skills that keep a pipeline honest. Use when you want the methodology itself rather than one specialist — deciding how to approach a task, gating an artifact before activation, or authoring a new agent to the house canon. Full history in CHANGELOG.md.",
   "author": {
     "name": "ForgePlan"

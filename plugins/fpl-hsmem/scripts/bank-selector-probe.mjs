@@ -96,7 +96,8 @@ function sandbox(scratch, files, configPath, root) {
     // Только синтетические HOME/state/transcript доступны для записи; сокеты host не монтируются.
     args.push("--bind", scratch, scratch, "--dir", root);
     if (configPath) args.push("--dir", join(dirname(configPath), ".git"));
-    args.push("--chdir", root, "--");
+    // Корневой tmpfs иначе остаётся writable; отдельный bind scratch сохраняет запись.
+    args.push("--remount-ro", "/", "--chdir", root, "--");
     return { name: "Linux bubblewrap (unshare-all, read-only mounts)", wrap: (argv) => [bwrap, ...args, ...argv] };
   }
   throw new Error("нет OS-песочницы: требуются macOS sandbox-exec или Linux bubblewrap с разрешёнными namespaces; fallback запрещён");

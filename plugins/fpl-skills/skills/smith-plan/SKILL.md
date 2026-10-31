@@ -17,6 +17,25 @@ Foundation: EPIC-002 (smith master-orchestrator) + CLAUDE.md «4-layer pipeline 
 
 ---
 
+## Чтение ресурсов установленного пакета
+
+Отталкивайтесь от реального файлового пути загруженного `SKILL.md`, после
+разрешения symlink, а не от cwd проекта или строки `skill://smith-plan`.
+Корень установленного `fpl-skills` находится на два каталога выше.
+
+| Ресурс | Файловый путь относительно этого `SKILL.md` |
+|---|---|
+| Шаблон Plan | [../../templates/smith-plan.md](../../templates/smith-plan.md) |
+| Шаблон выбора methodology | [../../templates/routing-decision.md](../../templates/routing-decision.md) |
+| Routing map | [../smith/routing-map.md](../smith/routing-map.md) |
+| Playbooks | [../smith/sections/](../smith/sections/) |
+
+Разрешайте ссылки в абсолютные файловые пути и читайте обычным Read.
+Переход за пределы skill через `../` в host-specific URI не используйте.
+Установка должна сохранять общий `templates/` плагина; фиксированный cache path
+и `${CLAUDE_PLUGIN_ROOT}` не требуются. В dispatch ниже подставляйте уже
+разрешённые пути или содержимое шаблона, а не только его относительное имя.
+
 ## When to invoke
 
 - **User has a specific task in mind** — "refactor the auth module", "audit our API gateway for OWASP issues", "fix the checkout race condition", "ship a fresh billing microservice". The task is named, the playbook is not.
@@ -101,7 +120,7 @@ Where NN is the row number (01 greenfield, 02 brownfield, … 12 incident). The 
 
 ```
 Task(subagent_type="agents-pro:smith",
-     prompt="<task description>. Classified as context=<NN>-<name>. State snapshot: <one paragraph from Step 2>. Methodology playbook: sections/NN-<context>.md. Return a filled Plan per templates/smith-plan.md.")
+     prompt="<task description>. Classified as context=<NN>-<name>. State snapshot: <one paragraph from Step 2>. Routing map file: <resolved absolute path>. Methodology playbook file: <resolved absolute path from Step 4>. Plan template file: <resolved absolute path to smith-plan.md, or its content>. Return a filled Plan using these supplied resources; do not resolve them from project cwd.")
 ```
 
 `smith` is Profile B-orchestrator: it reads state, applies routing-map, produces the Plan markdown. It does NOT dispatch the recommended agents and does NOT mutate forgeplan state (its denylist enforces this).

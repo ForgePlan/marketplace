@@ -2,6 +2,14 @@
 
 All notable changes to `fpl-skills` are documented here.
 
+## [2.0.1] — 2026-11-01
+
+### Fixed
+- Smith, smith-plan, smith-bootstrap и smith-routing разрешают ресурсы от фактического `SKILL.md` после `realpath`, включая interop aliases, а не через `../..` внутри URI skill или cwd проекта.
+- Дочерний Smith получает разрешённые файловые пути либо содержимое routing map и Plan template; общий `templates/` остаётся единственным источником без копий и hardcoded cache versions.
+- Bootstrap hook example использует явно разрешённый `FPL_SKILLS_ROOT`, не требует окружения Claude в другом клиенте и не объявляет Claude hooks переносимыми.
+- Проверены установленный OMP payload и полный архив плагина после распаковки из постороннего cwd с пробелами: 117 чтений ресурсов; неполная копия одного skill не выдаётся за рабочий пакет. Установленный кеш не изменялся.
+
 ## Release notes migrated from the plugin manifest — 2026-09-10
 
 Until this file existed, every release appended its notes to the `description` field in
