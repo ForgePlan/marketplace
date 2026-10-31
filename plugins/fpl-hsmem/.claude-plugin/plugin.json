@@ -1,6 +1,6 @@
 {
   "name": "fpl-hsmem",
-  "version": "3.7.0",
+  "version": "3.7.1",
   "description": "Project-scoped cross-session memory for Hindsight API >=0.10.2 and <0.11.0. Use when a repository explicitly opts in via .hindsight.json; hooks default off, enrichment is operator-gated, and BankGate is client safety, not server authorization.",
   "author": {
     "name": "ForgePlan"
