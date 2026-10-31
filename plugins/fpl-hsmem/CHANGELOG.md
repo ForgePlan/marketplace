@@ -6,6 +6,38 @@ All notable changes to `fpl-hsmem` are documented here. Format:
 
 ## [Unreleased]
 
+## [3.7.2] — 2026-10-17
+
+### Fixed
+
+- Уточнён provenance исторической выборки `gerts-hub` в retrieval reference и `/memory-setup`:
+  HEAD `94dec532` с 117 незакоммиченными изменениями, а не чистый коммит.
+  EVID-264 фиксирует 192 файла с literal-совпадениями против двух AST-файлов
+  (четыре совпадения), то есть 96× в одинаковых единицах.
+- Сохранена отдельная привязка 2,154 tracked paths к коммиту; удалено текущее утверждение
+  о размере дерева на диске и тайминги без достаточного контекста. Времена из EVID-264
+  помечены историческими: полный dirty-снимок и версии инструментов не сохранены.
+- Разделены matching files, tracked paths и охват поиска. Сравнение ignore-фильтрации
+  теперь сохраняет hidden-режим; `--no-ignore` не выдаётся за переключатель только `.gitignore`,
+  а разность результатов — за измерение причины ускорения. Настройки project-only/default-off
+  и правила enrichment из 3.7.0 не меняются.
+
+## [3.7.1] — 2026-10-17
+
+### Fixed
+
+- Пробы выбора банка П1/П3 переведены на текущий project-only контракт
+  `url`/`banks`/`defaultBank` и default-off auto-hooks; legacy `.mcp.json`/`bankId`
+  больше не являются ожидаемым значением или обязательным входом.
+- Вместо environment-only «изоляции» добавлены macOS sandbox-exec и Linux bubblewrap:
+  сеть/дочерние процессы изолированы ОС, HOME/state/transcript синтетические,
+  недоступный backend даёт `2` без fallback. URL/credential overrides не дают PASS.
+- П1 обходит все группы и hooks выбранных событий и весь вывод selector; позднее
+  расхождение не скрывается за первым совпадением. Неизвестные hooks не исполняются.
+- Структурированный argv и Bash command strings разделены: quoted paths, пробелы,
+  literal special characters и пустые аргументы сохраняются.
+- Добавлены поведенческие regression tests и smoke с настоящими bundled hooks,
+  синтетическим listener, проверками default-off/opt-out и ошибочных selectors.
 ## [3.7.0] — 2026-10-07
 
 
@@ -124,9 +156,12 @@ All notable changes to `fpl-hsmem` are documented here. Format:
   measurement date that tree held **2,154** tracked files, and 1,674 appears at
   no point in the observable window (1,926 → 2,102 → 2,117 → 2,154).
 
-  Corrected to 2,154 / 95,201 in all five places it had spread to: the
-  provenance paragraph, the size-bracket table, `/memory-setup`'s worked
-  example, the plugin description, and the catalog.
+  Corrected to 2,154 in four of the five places it had spread to: the
+  size-bracket table, `/memory-setup`'s worked example, the plugin
+  description, and the catalog. The provenance paragraph in
+  `RETRIEVAL-AND-MEMORY.md` (line 12) and its "on disk" companion figure
+  (line 155) were missed by this pass and kept the stale `~1,700` / `~95,000`
+  figures until a follow-up fix on 2026-09-17 (ADR-028).
 
   **The conclusion survives; only the anchor was wrong.** 2,154 sits in the same
   bracket, and an independent re-measurement on the same tree has the index
@@ -501,7 +536,9 @@ RFC-003 + ADR-005, NOTE-004 outcome-feedback pattern adoption).
   `claude-code` (uses your Claude Pro/Max subscription, no extra API
   keys required).
 
-[Unreleased]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v3.7.0...HEAD
+[Unreleased]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v3.7.2...HEAD
+[3.7.2]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v3.7.1...fpl-hsmem-v3.7.2
+[3.7.1]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v3.7.0...fpl-hsmem-v3.7.1
 [3.7.0]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v3.6.3...fpl-hsmem-v3.7.0
 [3.6.3]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v2.1.0...fpl-hsmem-v3.6.3
 [2.1.0]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v2.0.0...fpl-hsmem-v2.1.0
