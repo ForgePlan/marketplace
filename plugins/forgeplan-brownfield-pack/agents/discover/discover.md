@@ -425,6 +425,27 @@ mcp__forgeplan__forgeplan_discover_finding(
 )
 ```
 
+### Conditional architecture handoff — native as-is C4
+
+**Only when the assignment includes C4 or architecture documentation**, hand the source-first synthesis to the architecture producer before closing the requested architecture work. General business extraction does **not** require a viewer, export or C4 dispatch. Complete the code/git/tests-first investigation and document doc/code contradictions before this handoff; do not substitute an independently imagined topology for discovered sources.
+
+Read the portable `structurizr-c4` skill's `references/forgeplan.md` through the current runtime's skill catalogue (repository source: `plugins/structurizr-c4/skills/structurizr-c4/references/forgeplan.md`). Use its canonical delivery and role contract rather than duplicating it here. Pass the collected Tier 1/2 source paths and revision/working-copy scope, Tier 3 `[legacy-doc]` material, contradiction finding IDs with both claims, and unresolved boundaries. Keep `identified`, `inferred` and `unknown` claims distinct; existing documentation is not proof of deployed topology.
+
+Reuse an orchestrator-supplied native delivery if its boundary, **`as-is`** state, source snapshot, required views and verification fit the discovery scope under the contract. A report or legacy diagram alone is insufficient. Use its existing workspace path; preserve model IDs/view keys and sequence writers rather than forking or overwriting a shared model.
+
+If a suitable delivery is absent, dispatch:
+
+```
+Task(
+  subagent_type = "structurizr-c4:structurizr-architect",
+  prompt = "Build/update as-is C4 from this source-first discovery under structurizr-c4 references/forgeplan.md. system_boundary: <discovered system name and evidence-backed scope>; sources: <Tier 1/2 paths, revision/working-copy scope, supporting legacy-doc sources, contradiction findings with both claims and unresolved questions>; state: as-is; required_levels: L1+L2 <selected-container L3 only if requested/needed>; workspace_path: <existing assigned/shared workspace, otherwise docs/architecture/as-is/>; parent_id: <existing ADR/RFC ID if supplied, otherwise none>; report_path: <concrete task architecture-report path, docs/c4/<ARTIFACT-ID>.md when a parent exists>; auto_versioning: <explicit task choice, default false>. Do not invent current topology or initialise over an existing model. Return the actual report/workspace paths, view coverage and limitations. Write only assigned architecture model/report/layout/export files; escalate unknown boundaries to the orchestrator or ADR/RFC author. Do not mutate ForgePlan artifacts or issue independent gate verdicts."
+)
+```
+
+When Claude subagents are unavailable, hand the same inputs to the orchestrator's runtime-native worker using the portable `structurizr-c4` skill and the same architecture-scoped Profile C-coder restrictions. Do not dispatch a skill name as a subagent or assume the optional Codex TOML adapter is registered.
+
+Discover does not write DSL, save layouts or independently decide the architecture. Read the actual returned/reused report and resolve its links relative to the report; pass those concrete paths and remaining contradictions to the orchestrator. Artifact creation/linking remains with the existing discovery procedure or the responsible Profile A kind specialist, reusing existing IDs; never feed DSL to the historical Markdown importer. Report a collision (`<<NEED_USER_INPUT>>`) or missing runtime/skill/browser as an explicit incomplete architecture delivery, without Mermaid fallback or a claimed independent verdict. Business-discovery completion does not certify C4; independent review remains separate.
+
 ---
 
 # 9 new MCP brownfield tools wiring

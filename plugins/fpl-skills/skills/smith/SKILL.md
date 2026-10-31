@@ -28,6 +28,29 @@ map + sections + templates), Wave 2 (this entry-point skill + sub-skills).
 
 ---
 
+## Чтение ресурсов установленного пакета
+
+`templates/` ниже — общий каталог **плагина**, не подкаталог `skills/smith/`.
+Возьмите фактический файловый путь загруженного `SKILL.md` из ответа loader и
+разрешите symlink (`realpath`), включая загрузку через `.agents/skills/`.
+От каталога этого файла `../..` ведёт в установленный корень `fpl-skills`.
+
+| Ресурс | Файловый путь относительно этого `SKILL.md` |
+|---|---|
+| Шаблон Plan | [../../templates/smith-plan.md](../../templates/smith-plan.md) |
+| Шаблон handoff | [../../templates/smith-handoff.md](../../templates/smith-handoff.md) |
+| Полный набор шаблонов | [../../templates/SMITH-TEMPLATES.md](../../templates/SMITH-TEMPLATES.md) |
+| Routing map | [routing-map.md](routing-map.md) |
+| Playbooks | [sections/](sections/) |
+
+Нормализуйте нужный путь и передайте **абсолютный файловый путь** обычному Read.
+Не добавляйте `../..` к `skill://smith`: URI именованного skill не является
+файловым путём к корню плагина. Не используйте cwd проекта, фиксированную версию
+кеша или обязательную `${CLAUDE_PLUGIN_ROOT}`. Весь установленный пакет должен
+содержать общий `templates/`; копия одного каталога skill его не заменяет.
+В дочерний dispatch передавайте разрешённые пути или содержимое ресурсов,
+а не неоднозначное `templates/smith-plan.md`.
+
 ## When to invoke
 
 - At **session start** when the user is unsure what to do next — "что дальше?", "where are we?",
@@ -169,11 +192,13 @@ Task(subagent_type="agents-pro:smith",
        - hindsight recall: <snippets from Step 3, or 'none'>
        - git: branch=<name>, uncommitted=<count>, recent_commits=<count>
        - user intent (verbatim): <what the user actually typed; may be empty>
+       - routing map file: <resolved absolute filesystem path to routing-map.md>
+       - plan template file: <resolved absolute filesystem path to smith-plan.md, or its content>
 
-       Read routing-map.md, classify the context against the 14-row matrix,
+       Read the supplied routing map file, classify the context against the 14-row matrix,
        Do NOT recommend work on a claimed artifact — name the holder for the user.
        Ground the route in the health digest, not on conversation alone.
-       and return a Plan using templates/smith-plan.md.
+       and return a Plan using the supplied plan template; never resolve it from project cwd.
      """)
 ```
 

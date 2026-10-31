@@ -12,6 +12,7 @@
 ## Быстрый старт
 
 ```bash
+/plugin install structurizr-c4@ForgePlan-marketplace
 /plugin install forgeplan-brownfield-pack@ForgePlan-marketplace
 /reload-plugins
 ```
@@ -50,7 +51,7 @@
 
 Все пять используют schema-v1.0; каждая создаёт артефакты forgeplan с секцией `## Sources` для трассировки.
 
-- `c4-to-forge.yaml` — C4 Context/Container/Component → Epic + PRD + Notes (проверена CL3 на репозитории Forgeplan, 2026-04-20)
+- `c4-to-forge.yaml` — исторический Markdown `C4-Documentation/c4-*.md` (C4 Context/Container/Component) → Epic + PRD + Notes (проверена CL3 на репозитории Forgeplan, 2026-04-20). **Не парсер Structurizr DSL.**
 - `ddd-to-forge.yaml` — карта ограниченных контекстов DDD → Epic + PRD + Spec (Spike-3, 2026-04-21)
 - `madr-to-forge.yaml` — MADR 3.x/4.x markdown ADR → forgeplan `adr` (1:1) с нормализацией статусов и извлечением ссылок supersedes/superseded by
 - `obsidian-to-forge.yaml` — Obsidian-волт (маркер `.obsidian/`) → Note/Epic/PRD/ADR/Hypothesis с 4-уровневым приоритетом сигналов (frontmatter → тег → папка → fallback) и ленивым резолвом wikilinks
@@ -102,6 +103,12 @@ rag-packager            → пакует всё для RAG-выдачи
 # На выходе: граф forgeplan с PRD, RFC, ADR, Evidence
 ```
 
+### Передача нативного C4-моделирования
+
+Если discovery включает C4/архитектурную документацию, передай собранные источники и противоречия в `structurizr-c4:structurizr-architect` для модели `as-is` или native worker своего клиента с установленным переносимым скиллом `structurizr-c4`. Общее извлечение бизнес-знаний не требует запуска viewer.
+
+Новый/обновляемый C4 следует [единому нативному контракту](../structurizr-c4/skills/structurizr-c4/references/forgeplan.md): переиспользовать назначенную модель, сохранить происхождение данных и раскладку, проверить native export. Discover не пишет DSL и не придумывает топологию. Profile A через MCP добавляет ссылки на native model/report в существующие ADR/RFC, переиспользуя IDs; независимые Profile B reviewers проверяют текущий snapshot. Не передавать DSL в `c4-to-forge.yaml` и не создавать параллельный граф артефактов. Исторический Markdown остаётся импортируемым; Mermaid не является fallback новой поставки. Установка переносимого скилла для Codex/OMP и границы полного Claude-плагина: [Cross-CLI setup](../../docs/CROSS-CLI.md#primary-c4-in-each-runtime).
+
 ## Когда брать этот пакет
 
 - Достался унаследованный код без внутренней документации.
@@ -120,6 +127,7 @@ rag-packager            → пакует всё для RAG-выдачи
 | Плагин | Зачем в паре |
 |---|---|
 | [`fpl-skills`](../fpl-skills/README-RU.md) | Обязателен — даёт `/fpl-init`, `/refine`, `/audit`, скиллы жизненного цикла после извлечения |
+| [`structurizr-c4`](../structurizr-c4/) | Основной C4 producer и переносимый скилл; явно установить для архитектурной передачи (не расширение DSL-ингеста) |
 | [`forgeplan-workflow`](../forgeplan-workflow/README-RU.md) | Обязателен для `/forge-cycle` — используется на фазе канонического воспроизведения |
 | [`agents-pro`](../agents-pro/README-RU.md) | Агент `ddd-domain-expert` помогает с моделированием ограниченных контекстов |
 | Внешнее: [`autoresearch@anthropic-marketplace`](https://github.com/anthropic) | Если есть доступ — автоматизирует часть фазы разведки |

@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official ForgePlan plugin marketplace for Claude Code — UX, frontend, workflow, and developer tools",
-    "version": "1.187.1"
+    "version": "1.189.1"
   },
   "plugins": [
     {
@@ -19,7 +19,7 @@
         "claude-code"
       ],
       "description": "Project-scoped cross-session memory for Hindsight API >=0.10.2 and <0.11.0. Use when a repository explicitly opts in via .hindsight.json; hooks default off, enrichment is operator-gated, and BankGate is client safety, not server authorization.",
-      "version": "3.7.0",
+      "version": "3.7.3",
       "requires": {
         "hindsight_server": "Hindsight API >=0.10.2 and <0.11.0 at the explicit url in the project's .hindsight.json. No URL is implied. The config must declare banks and defaultBank; selected banks must already exist on the server. Credentials are optional for unauthenticated local servers; when required, use a contained tokenFile or an explicitly consented tokenCommand."
       },
@@ -46,12 +46,14 @@
       "source": "./plugins/fpl-skills",
       "cost": "heavy",
       "stability": "stable",
-      "dependencies": [],
+      "dependencies": [
+        "structurizr-c4"
+      ],
       "targets": [
         "claude-code"
       ],
       "description": "Flagship workflow plugin of the ForgePlan ecosystem — the skills, templates and authoring contract the rest of the marketplace is written against: the smith methodology router (14 contexts), the agent-authoring guide every forgeplan-aware agent follows, and the gate, cleanup and insight skills that keep a pipeline honest. Use when you want the methodology itself rather than one specialist — deciding how to approach a task, gating an artifact before activation, or authoring a new agent to the house canon. Full history in CHANGELOG.md.",
-      "version": "1.75.1",
+      "version": "2.0.1",
       "category": "developer-tools",
       "requires": {
         "cli": [
@@ -334,12 +336,14 @@
       "source": "./plugins/forgeplan-brownfield-pack",
       "cost": "medium",
       "stability": "stable",
-      "dependencies": [],
+      "dependencies": [
+        "structurizr-c4"
+      ],
       "targets": [
         "claude-code"
       ],
       "description": "Brownfield extraction pack — turns legacy code and documents into a structured forgeplan graph through a discover agent and twelve extraction skills (ubiquitous language, use cases, invariants, causal links, scenarios, knowledge-graph curation, reproducibility). Use when taking over an undocumented codebase and the first problem is not what to build but what is already there and why it is that way. Full history in CHANGELOG.md.",
-      "version": "1.7.1",
+      "version": "1.8.0",
       "category": "workflow",
       "requires": {
         "cli": [
@@ -412,12 +416,14 @@
       "source": "./plugins/agents-pro",
       "cost": "heavy",
       "stability": "stable",
-      "dependencies": [],
+      "dependencies": [
+        "structurizr-c4"
+      ],
       "targets": [
         "claude-code"
       ],
       "description": "Professional specialist agents: security and prompt-injection review, PII detection, architecture and staff-level system review, the pre-activation guardian gate, ADR and specification authors, research analysts and infrastructure roles. Use when a task needs a named expert rather than a generalist — an OWASP/STRIDE pass, an architectural fitness review, a decision recorded as an ADR, or the last gate before an artifact is activated. Full history in CHANGELOG.md.",
-      "version": "1.30.0",
+      "version": "1.31.0",
       "category": "developer-tools",
       "author": {
         "name": "ForgePlan"
@@ -458,12 +464,14 @@
       "source": "./plugins/agents-sparc",
       "cost": "light",
       "stability": "stable",
-      "dependencies": [],
+      "dependencies": [
+        "structurizr-c4"
+      ],
       "targets": [
         "claude-code"
       ],
       "description": "SPARC methodology agents — specification, pseudocode, architecture, refinement, and the orchestrator that walks a single feature through all five phases with a blocking quality gate between each. Use when adding one feature to an existing, active system and the design should be settled before code: the middle path between greenfield BMAD and a tactical fix. Full history in CHANGELOG.md.",
-      "version": "1.8.0",
+      "version": "1.9.0",
       "category": "workflow",
       "author": {
         "name": "ForgePlan"
@@ -656,7 +664,7 @@
         "claude-code"
       ],
       "description": "Builds a navigable map of a project — zones, nodes and verified edges — as a `map.json`, through an eight-agent pipeline (scan -> extract -> verify -> emit -> validate) where every stage runs in a fresh isolated context and a deterministic guardian script, not an LLM, is the sole authority on whether the result can be trusted. Use when you need a structural view of a large or unfamiliar repository that a file tree cannot give, or when a project's forgeplan artifact graph should be shown alongside its code. Not a documentation generator: an edge is either sourced from the artifact graph or proven by a grep, and an unproven one is dropped rather than shipped as noise. Full history in CHANGELOG.md.",
-      "version": "0.24.0",
+      "version": "0.25.0",
       "requires": {
         "cli": [
           {
@@ -796,16 +804,61 @@
         "code-review",
         "static-analysis"
       ]
+    },
+    {
+      "name": "structurizr-c4",
+      "source": "./plugins/structurizr-c4",
+      "version": "0.2.1",
+      "author": {
+        "name": "ForgePlan"
+      },
+      "homepage": "https://github.com/ForgePlan/marketplace",
+      "license": "MIT",
+      "description": "Evidence-based C4 architecture in Structurizr: source discovery, scoped context/container/component views, saved routing, rendered geometry checks and reproducible local exports. Use when a system needs architecture diagrams grounded in its code and documents, or existing Structurizr views need clearer lines and labels.",
+      "category": "developer-tools",
+      "cost": "light",
+      "stability": "beta",
+      "dependencies": [],
+      "targets": [
+        "claude-code",
+        "omp"
+      ],
+      "requires": {
+        "cli": [
+          {
+            "name": "structurizr",
+            "optional": false,
+            "reason": "Official modern Structurizr CLI for validation, native viewer and static export; initial tested version 2026.09.19."
+          },
+          {
+            "name": "python3",
+            "optional": false,
+            "reason": "Local lifecycle helper (init/validate/start/export) plus routing and rendered-SVG extractors."
+          }
+        ],
+        "mcp": [],
+        "plugins": []
+      },
+      "keywords": [
+        "architecture",
+        "c4",
+        "structurizr",
+        "diagrams",
+        "routing",
+        "architecture-as-code"
+      ]
     }
   ],
   "profiles": {
     "forgeplan-core": [
+      "structurizr-c4",
       "fpl-skills",
       "forgeplan-workflow",
       "fpl-hsmem",
       "fpf"
     ],
     "developer": [
+      "structurizr-c4",
       "fpl-skills",
       "agents-core",
       "agents-domain",
@@ -814,6 +867,7 @@
       "cc-best"
     ],
     "security": [
+      "structurizr-c4",
       "agents-pro",
       "forgeplan-workflow"
     ],
@@ -822,6 +876,7 @@
       "agents-domain"
     ],
     "agents": [
+      "structurizr-c4",
       "agents-core",
       "agents-domain",
       "agents-pro",
@@ -832,6 +887,7 @@
       "agents-canvas"
     ],
     "full": [
+      "structurizr-c4",
       "fpl-hsmem",
       "fpl-skills",
       "fp-cookbook",

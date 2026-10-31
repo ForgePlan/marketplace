@@ -166,7 +166,7 @@
 
 ---
 
-## Внешние (упоминается, но не реализовано в этой экосистеме)
+## Другие методологии и интеграции
 
 ### DDD — Domain-Driven Design
 
@@ -183,7 +183,9 @@
 
 **Что это**: методология архитектурных диаграмм Саймона Брауна.
 
-**Статус**: как у DDD — есть только карта `c4-to-forge.yaml` в `forgeplan-brownfield-pack` (переводит C4-документы в артефакты forgeplan). Своего C4-агента или скилла моделирования нет.
+**Основная реализация**: [`structurizr-c4`](../plugins/structurizr-c4/) даёт переносимый скилл моделирования, Claude Code subagent `structurizr-c4:structurizr-architect` и команды `/structurizr-c4:c4-build` / `/structurizr-c4:c4-review`. Новый/обновляемый C4 следует [нативному контракту поставки](../plugins/structurizr-c4/skills/structurizr-c4/references/forgeplan.md): модель, сохранённая раскладка, происхождение данных и проверенный native export, с независимой приёмкой Profile B вместо самоутверждения producer. Mermaid не является fallback. Установка переносимого скилла описана в [Cross-CLI setup](CROSS-CLI.md#primary-c4-in-each-runtime); Claude-агенты не регистрируются автоматически в других клиентах.
+
+**Legacy-ингест**: `forgeplan-brownfield-pack/mappings/c4-to-forge.yaml` читает исторический Markdown `C4-Documentation/c4-*.md`, не Structurizr DSL. Profile A добавляет нативные ссылки model/report в существующие ADR/RFC; DSL-импортера это не подразумевает.
 
 ### MADR (Markdown Architectural Decision Records)
 
@@ -276,7 +278,7 @@
 | Двухуровневое извлечение (Factum/Intent) | `forgeplan-brownfield-pack` (после переноса) | `/extract intent --confidence-tagged` |
 | Laws of UX | Плагин `laws-of-ux` | `/ux-review`, `/ux-law <имя>` |
 | DDD | `agents-pro` + brownfield-pack | Только консультации — движка нет |
-| C4 | Карта в brownfield-pack | Только YAML-преобразование |
+| C4 | Плагин / переносимый скилл `structurizr-c4` | Нативное моделирование через `/structurizr-c4:c4-build`; независимое review по единому контракту |
 | MADR | Карта в brownfield-pack | Только ингест через `madr-to-forge.yaml` |
 | Obsidian | Карта в brownfield-pack | Только ингест через `obsidian-to-forge.yaml` |
 | Autoresearch | Внешний companion (`uditgoenka/autoresearch`) | Ставится отдельно; ингест через `autoresearch-to-forge.yaml`. См. [AUTORESEARCH-INTEGRATION-RU.md](AUTORESEARCH-INTEGRATION-RU.md). |
