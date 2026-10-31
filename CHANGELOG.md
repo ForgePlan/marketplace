@@ -11,6 +11,29 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 >
 > **Backfill (marketplace#250)**: entries v1.133.0 through v1.139.0 were written after the fact, each from the commit that carried its catalog bump. Where a change merged between two bumps and shipped without a version of its own, it is recorded under the release that first delivered it — the plugin cache is keyed on version, so an unbumped change reaches no user until the next bump.
 
+## [1.188.2] - 2026-10-17
+
+### Added
+- `forgeplan-map-pack 0.25.0`: перевод `map.json` в LikeC4 и проверка семантики по нативному JSON-экспорту. Скрипты доступны любому агенту с Node.js и установленным LikeC4.
+
+### Fixed
+- Сохранены канонический namespace по умолчанию, направление и явные IDs динамических связей. Неизвестный тип связи, неразрешимый flow и потерянный участок цепочки больше не могут завершиться `MATCH`.
+- Идентификаторы с ведущим дефисом нормализуются в допустимые LikeC4 IDs без коллизий. OMP-каталог пересобран с тем же составом и версиями.
+- Динамические шаги проверяются по фактическим нативным relationship IDs, подписи и направлению стрелки. LikeC4 1.59.3 не умеет выбрать точное подмножество параллельных связей: такой flow явно отклоняется, а не получает ложный `MATCH`.
+
+## [1.188.1] - 2026-10-17
+
+### Fixed
+- `fpl-hsmem 3.7.2`: исторические измерения привязаны к dirty working copy, а не только к HEAD. Удалены неподтверждённые числа «на диске»; matching files отделены от tracked paths и просмотренных файлов.
+- Сравнение поиска больше не приписывает разницу `rg` / `rg -uu` только ignore-правилам: hidden-режим и остальные ограничения названы отдельно.
+- Сохранён контракт Hindsight 3.7 с project opt-in и default-off hooks; версии package/plugin/catalog согласованы, каталог OMP пересобран.
+
+## [1.188.0] - 2026-10-17
+
+### Fixed
+- `fpl-hsmem 3.7.1`: проверки выбора банка используют текущий project-only контракт `banks` / `defaultBank` и проверяют все применимые hooks, не только первый.
+- Настроенные команды выполняются с сохранением аргументов и независимой сетевой изоляцией ОС; невозможность изоляции — ошибка, не `PASS`. Переменные URL/token больше не считаются песочницей.
+- Отрицательные контроли и безопасные локальные пробы покрывают поздний hook с другим банком, пути с пробелами, переопределение URL и дочерний POST. Версии plugin/package/catalog согласованы; каталог OMP пересобран.
 ## [1.187.1] - 2026-10-16
 
 ### Fixed
