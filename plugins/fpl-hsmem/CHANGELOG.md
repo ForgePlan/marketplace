@@ -6,6 +6,12 @@ All notable changes to `fpl-hsmem` are documented here. Format:
 
 ## [Unreleased]
 
+## [3.7.3] — 2026-11-01
+
+### Fixed
+- Linux bubblewrap probe после setup переводит временную корневую файловую систему в read-only. Иначе `--dir` оставлял пустой, но writable корень проекта, хотя входные файлы и пути host уже были read-only.
+- Отдельный scratch bind остаётся writable для synthetic HOME/state/transcript. Существующая поведенческая проверка запрещает запись в корень проекта; при первом фактическом Linux-прогоне в CI её не ослабляли и не пропускали.
+
 ## [3.7.2] — 2026-10-17
 
 ### Fixed
@@ -536,7 +542,8 @@ RFC-003 + ADR-005, NOTE-004 outcome-feedback pattern adoption).
   `claude-code` (uses your Claude Pro/Max subscription, no extra API
   keys required).
 
-[Unreleased]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v3.7.2...HEAD
+[Unreleased]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v3.7.3...HEAD
+[3.7.3]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v3.7.2...fpl-hsmem-v3.7.3
 [3.7.2]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v3.7.1...fpl-hsmem-v3.7.2
 [3.7.1]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v3.7.0...fpl-hsmem-v3.7.1
 [3.7.0]: https://github.com/ForgePlan/marketplace/compare/fpl-hsmem-v3.6.3...fpl-hsmem-v3.7.0
