@@ -8,7 +8,7 @@
 
 Официальный маркетплейс плагинов Claude Code от [ForgePlan](https://github.com/ForgePlan) — UX, воркфлоу, инженерные и dev-инструменты.
 
-**23 плагинов** | **44 marketplace-aware агентов (97 всего)** | **80+ скиллов** | **9+ баз знаний**
+**24 плагинов** | **45 marketplace-aware агентов (98 всего)** | **80+ скиллов** | **9+ баз знаний**
 
 > **Что это — одной фразой?** Фабрика, которая умеет строить, проверять саму себя и честно записывать, где она ошиблась — [docs/FACTORY-RU.md](docs/FACTORY-RU.md).
 
@@ -62,12 +62,24 @@
 | **Пользователь Forgeplan (рекомендуется)** | **fpl-skills** | Одна установка, 44 скилла, полный цикл route → ship |
 | Любой разработчик (без forgeplan) | dev-toolkit + agents-core | Универсальные инструменты, без CLI зависимости |
 | Фронтенд | fpl-skills + laws-of-ux + agents-domain | UX + агенты фреймворков |
-| Архитектор | fpl-skills + fpf + agents-pro + agents-sparc | Мышление + SPARC |
+| Архитектор | fpl-skills + structurizr-c4 + fpf + agents-pro + agents-sparc | Мышление + SPARC + нативный C4 |
 | Многосессионная работа / команда | fpl-skills + forgeplan-orchestra | Координация + Inbox Pattern |
-| Brownfield миграция | fpl-skills + forgeplan-brownfield-pack | Ингест legacy-доков + C4/DDD/research analyses |
+| Brownfield миграция | fpl-skills + structurizr-c4 + forgeplan-brownfield-pack | Legacy-ингест + нативный C4/DDD/research analyses |
 | Всё сразу | Все 23 плагинов | Полная экосистема |
 
 ## Доступные плагины
+
+### [structurizr-c4](plugins/structurizr-c4/)
+
+Основной инструмент C4 для новой/обновляемой архитектуры: переносимый скилл `structurizr-c4`, нативные исходники Structurizr и сохранённая раскладка, происхождение данных и проверенный static export. Поставка и независимая приёмка определены в [едином контракте ForgePlan](plugins/structurizr-c4/skills/structurizr-c4/references/forgeplan.md). Mermaid не является fallback; исторические и не-C4 диаграммы сохраняются.
+
+```text
+/plugin install structurizr-c4@ForgePlan-marketplace
+/structurizr-c4:c4-build
+```
+
+Claude Code получает полный плагин (`targets: ["claude-code"]`), включая настоящий subagent `structurizr-c4:structurizr-architect` и команду producer-side `/structurizr-c4:c4-review`. Codex/OMP используют переносимый скилл после явной установки в свой discovery path; необязательный Codex TOML adapter автоматически не регистрируется. См. [Cross-CLI setup](docs/CROSS-CLI.md#primary-c4-in-each-runtime). Для полной проверки нужны `structurizr`, `python3` и браузер; подключение плагина не устанавливает системные пакеты. Модели создаются в проекте-потребителе. Самопроверка producer не заменяет независимый Profile B review. Статус стабильности остаётся beta.
+
 
 ### [fpl-skills](plugins/fpl-skills/)
 

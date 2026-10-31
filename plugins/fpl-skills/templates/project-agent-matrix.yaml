@@ -74,7 +74,7 @@
 # `tdd-classical`  — Classic Detroit-style TDD
 # `bdd`            — Behaviour-Driven Development
 # `wbs`            — Work-Breakdown Structure (decomposition)
-# `c4`             — C4 architectural diagrams
+# `c4`             — C4 architectural views via Structurizr native workspace/layout/export
 # `checklist`      — plain checklist (no formal methodology)
 # `none`           — no methodology applies
 #
@@ -305,6 +305,7 @@ hindsight:
 
 required_plugins:
   - "fpl-skills@ForgePlan-marketplace"            # orchestration skills + canonical pattern
+  - "structurizr-c4@ForgePlan-marketplace"         # primary C4 model producer; design stays agents-sparc:architecture
   - "fpl-hsmem@ForgePlan-marketplace"             # Hindsight memory
   - "fpf@ForgePlan-marketplace"                   # First Principles Framework reasoning
   - "forgeplan-workflow@ForgePlan-marketplace"    # /forge-cycle, /forge-audit commands

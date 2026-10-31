@@ -77,7 +77,7 @@ End-to-end развёртка: `forgeplan init`, MCP wiring, CLAUDE.md, docs/age
 
 ## Quick reference (все команды)
 
-`fpl-skills` даёт 44 скилла (большинство slash-invocable); companion-плагины добавляют 14 `commands/` (dev-toolkit, forgeplan-workflow, forgeplan-orchestra, fpf, laws-of-ux).
+`fpl-skills` даёт основные инженерные скиллы (большинство slash-invocable); companion-плагины добавляют команды, включая основной нативный C4-процесс в `structurizr-c4`.
 
 > [!TIP]
 > **Не понимаешь какую команду брать?** Запусти `/smith` — он прочитает состояние проекта и порекомендует следующий dispatch (например `/forge-cycle`, `/autorun`, `/forge-cleanup`, `/sprint`). Для обучающего walkthrough по всем 14 строкам роутинга — `/smith-routing`.
@@ -96,7 +96,6 @@ End-to-end развёртка: `forgeplan init`, MCP wiring, CLAUDE.md, docs/age
 | `/research <тема>` | Глубокое многоагентное исследование (5 параллельно: code · docs · status · references · memory) → `research/reports/`. |
 | `/shape <идея>` | Интервью с нуля — превращает сырую идею в черновик PRD через 8-12 направленных вопросов. Передняя сторона жизненного цикла (пишет план ВМЕСТЕ с тобой). |
 | `/ddd-decompose` | Интервью-разложение по Domain-Driven Design — ограниченные контексты, единый язык, агрегаты, доменные события. Выдаёт карту контекстов (Markdown + Mermaid) плюс опционально Epic + PRD по контексту + Spec через forgeplan. |
-| `/c4-diagram` | Интерактивный генератор C4-диаграмм архитектуры — уровни Context, Container, Component на Mermaid. Связывается с forgeplan через c4-to-forge.yaml. |
 | `/riper` | RIPER-оркестратор (Research → Innovate → Plan → Execute → Review) — тонкая обёртка которая на каждой фазе вызывает нужный существующий скилл. Бери если команда говорит на языке RIPER; иначе предпочитай `/forge-cycle`. |
 | `/refine <план>` | Интервью для уточнения существующего плана — терминология, противоречия, попутные ADR. Шлифует то что уже написано. |
 | `/rfc <action>` | Create/read/update RFC и ADR (каноничная структура, фазы). |
@@ -115,6 +114,8 @@ End-to-end развёртка: `forgeplan init`, MCP wiring, CLAUDE.md, docs/age
 
 | Команда | Плагин | Что делает |
 |---|---|---|
+| `/structurizr-c4:c4-build` | structurizr-c4 | Основное нативное C4-моделирование: DSL по источникам, сохранённый JSON/layout, evidence и проверенный static export. Переносимый скилл: `structurizr-c4`. |
+| `/structurizr-c4:c4-review` | structurizr-c4 | Проверка/исправление назначенной модели производителем, не независимый вердикт приёмки. |
 | `/fpf` | fpf | Универсальный роутер: `/fpf decompose`, `/fpf evaluate`, `/fpf reason`, `/fpf lookup`. |
 | `/fpf-decompose` | fpf | Bounded contexts, роли, интерфейсы. |
 | `/fpf-evaluate` | fpf | F-G-R скоринг + ADI рассуждение. |
@@ -127,6 +128,8 @@ End-to-end развёртка: `forgeplan init`, MCP wiring, CLAUDE.md, docs/age
 | `/session` | forgeplan-orchestra | Session Start Protocol с Inbox Pattern. |
 | `/canvas` | agents-canvas | CANVAS-оркестратор — порт дизайн-системы в код: Pencil→Storybook→фреймворк. hook-gate=Yes (токены до кода). Один раз `/canvas-init`, потом `/canvas`. |
 | `/canvas-init` | agents-canvas | Разовая инициализация состояния CANVAS для текущей ветки (детектит раскладку пакетов, прописывает guarded globs, которые читает hook «токены до кода»). |
+
+Поставка и приёмка C4 следуют [единому контракту](../plugins/structurizr-c4/skills/structurizr-c4/references/forgeplan.md). Полный Claude-плагин ставится через `/plugin install structurizr-c4@ForgePlan-marketplace`; настоящий subagent — `structurizr-c4:structurizr-architect`. Codex/OMP используют переносимый скилл после явной установки и discovery, а не регистрацию Claude-команд: см. [Cross-CLI setup](CROSS-CLI.md#primary-c4-in-each-runtime). Новому C4 нужны нативные runtime/browser-проверки; Mermaid не является fallback. DDD context maps и остальные не-C4 диаграммы Mermaid не меняются.
 
 ### Legacy команды (dev-toolkit, deprecated)
 
@@ -265,7 +268,7 @@ Worked example (`добавить аутентификацию` end-to-end) — 
 
 ### `forgeplan-brownfield-pack` — Legacy ингест
 
-12 скиллов извлечения + 2 playbooks + 5 карт соответствия (`c4-to-forge`, `ddd-to-forge`, `madr-to-forge`, `obsidian-to-forge`, `autoresearch-to-forge`) → граф forgeplan. Композит `c4-architecture`, `autoresearch`, `ddd-expert`, `feature-dev`. См. [plugins/forgeplan-brownfield-pack/README-RU.md](../plugins/forgeplan-brownfield-pack/README-RU.md).
+12 скиллов извлечения + 2 playbooks + 5 карт соответствия (`c4-to-forge`, `ddd-to-forge`, `madr-to-forge`, `obsidian-to-forge`, `autoresearch-to-forge`) → граф forgeplan. Новый/обновляемый C4 идёт через `structurizr-c4`; Profile A добавляет ссылки на native model/report в артефакты. `c4-to-forge.yaml` импортирует исторический Markdown-формат `C4-Documentation/c4-*.md`, не Structurizr DSL. См. [plugins/forgeplan-brownfield-pack/README-RU.md](../plugins/forgeplan-brownfield-pack/README-RU.md).
 
 **Требует**: CLI forgeplan v0.25+.
 

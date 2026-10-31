@@ -8,7 +8,7 @@
 
 Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/ForgePlan) — UX, workflow, engineering, and developer tools.
 
-**23 plugins** | **44 marketplace-aware agents (97 total)** | **80+ skills** | **9+ knowledge bases**
+**24 plugins** | **45 marketplace-aware agents (98 total)** | **80+ skills** | **9+ knowledge bases**
 
 > **What is this, in one sentence?** A factory that can build, inspect itself, and honestly record where it went wrong — [docs/FACTORY.md](docs/FACTORY.md).
 
@@ -64,12 +64,24 @@ Official plugin marketplace for Claude Code from [ForgePlan](https://github.com/
 | **Forgeplan user (recommended)** | **fpl-skills** | One install, 44 skills, full route → ship loop |
 | Any developer (no forgeplan) | dev-toolkit + agents-core | Universal tools, no CLI dependency |
 | Frontend | fpl-skills + laws-of-ux + agents-domain | UX + framework agents |
-| Architect | fpl-skills + fpf + agents-pro + agents-sparc | Thinking + SPARC |
+| Architect | fpl-skills + structurizr-c4 + fpf + agents-pro + agents-sparc | Thinking + SPARC + native C4 |
 | Multi-session / team | fpl-skills + forgeplan-orchestra | Coordination + Inbox Pattern |
-| Brownfield migration | fpl-skills + forgeplan-brownfield-pack | Ingest legacy docs + C4/DDD/research analyses |
+| Brownfield migration | fpl-skills + structurizr-c4 + forgeplan-brownfield-pack | Legacy ingest + native C4/DDD/research analyses |
 | Everything | All 23 plugins | Complete ecosystem |
 
 ## Available Plugins
+
+### [structurizr-c4](plugins/structurizr-c4/)
+
+Primary C4 modelling for new or amended architecture: portable `structurizr-c4` skill, native Structurizr source and saved layout, provenance and checked static export. The [canonical ForgePlan contract](plugins/structurizr-c4/skills/structurizr-c4/references/forgeplan.md) defines delivery and independent acceptance. Mermaid is not a fallback; existing historical and non-C4 diagrams are preserved.
+
+```text
+/plugin install structurizr-c4@ForgePlan-marketplace
+/structurizr-c4:c4-build
+```
+
+Claude Code gets the full plugin (`targets: ["claude-code"]`), including the real `structurizr-c4:structurizr-architect` subagent and producer-side `/structurizr-c4:c4-review`. Codex/OMP use the portable skill after explicit installation into their discovery path; the optional Codex TOML adapter is not auto-registered. See [Cross-CLI setup](docs/CROSS-CLI.md#primary-c4-in-each-runtime). Requires `structurizr`, `python3` and browser access for full verification; installation does not auto-install system packages. Models live in the consuming project. Producer-side checks never replace independent Profile B review. Stability remains beta.
+
 
 ### [fpl-skills](plugins/fpl-skills/)
 
@@ -244,11 +256,11 @@ Bidirectional sync, Session Start Protocol with Inbox Pattern, and methodology k
 
 > Brownfield migration pack — ingest legacy docs and agent analyses into a structured forgeplan graph.
 
-Implements the **orchestrator model** ([ADR-009](https://github.com/ForgePlan/forgeplan/blob/dev/.forgeplan/adrs/ADR-009-forgeplan-as-orchestrator-playbook-skill-agent-mapping-pack-marketplace-model.md)): forgeplan does not re-implement extraction. Instead, this pack composes existing marketplace plugins (`c4-architecture`, `autoresearch`, `ddd-expert`, `feature-dev`) with forgeplan's ingest engine via mapping YAMLs and playbook recipes.
+Implements the **orchestrator model** ([ADR-009](https://github.com/ForgePlan/forgeplan/blob/dev/.forgeplan/adrs/ADR-009-forgeplan-as-orchestrator-playbook-skill-agent-mapping-pack-marketplace-model.md)): forgeplan does not re-implement extraction. The pack composes discovery/extraction with mapping YAMLs and playbook recipes. New or amended C4 goes through `structurizr-c4`; Profile A links native model/report references into artifacts, without ingesting DSL as Markdown.
 
 | Component | What you get |
 |-----------|-------------|
-| `mappings/c4-to-forge.yaml` | Maps C4 context markdown to forge artifacts (Epic, PRD, ADR, Evidence) |
+| `mappings/c4-to-forge.yaml` | Imports historical `C4-Documentation/c4-*.md` Markdown into forge artifacts; not a Structurizr DSL parser |
 | `playbooks/` | (scaffolded) Recipes for brownfield discovery + migration — requires forgeplan runtime v0.25+ |
 | `skills/` | (scaffolded) Extraction-specific guidance — forge-classify, madr-detection |
 | `agents/` | (scaffolded) Brownfield-specific sub-agents |

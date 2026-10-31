@@ -54,7 +54,7 @@ activates** before guardian reads the chain.
 | orchestrator (main session) | main | full surface; persists C-synthesis; ACTIVATES EVIDs; runs the fix-hypothesis ADI | perf-budget sign-off is a three-party decision (engineering + product + SRE) — a human represents the other two; accepting "do nothing" is a human call | `forgeplan_reason` — yes (its territory) | `/estimate`, `/gate-check`, `/methodology-check` |
 | performance-engineer | fresh isolated dispatch; re-dispatched for 6a in a NEW context (never reuses the baseline context) | B surface; NO activate/reason/claims/memory_retain | no | `fpf-evaluate` on contested numbers — yes; ADI — no | — |
 | research-analyst / code-analyzer | fresh isolated dispatch each | read-only | no | no | — |
-| adr-architect | fresh isolated dispatch | Profile A surface | irreversible changes (schema denormalisation, data migration) → human confirms before activation | yes — ADI is its contract | `/decision`, `c4-diagram` if ≥3 modules |
+| adr-architect | fresh isolated dispatch | Profile A surface | irreversible changes (schema denormalisation, data migration) → human confirms before activation | yes — ADI is its contract | `/decision`; for ≥3 modules reuse native C4 delivery or dispatch `structurizr-c4:structurizr-architect` under the canonical contract |
 | coder | fresh isolated dispatch, own worktree | none (forgeplan mutators denied) | no | no | — |
 | tester | fresh isolated dispatch | B surface | no | no | — |
 | guardian | fresh isolated dispatch | B-gate surface | human may overrule CONCERNS | no | — |

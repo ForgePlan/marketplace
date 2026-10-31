@@ -1,0 +1,10 @@
+{
+  "name": "structurizr-c4",
+  "version": "0.2.1",
+  "description": "Evidence-based C4 architecture in Structurizr: source discovery, scoped context/container/component views, saved routing, rendered geometry checks and reproducible local exports. Use when a system needs architecture diagrams grounded in its code and documents, or existing Structurizr views need clearer lines and labels.",
+  "author": { "name": "ForgePlan" },
+  "homepage": "https://github.com/ForgePlan/marketplace",
+  "repository": "https://github.com/ForgePlan/marketplace",
+  "license": "MIT",
+  "keywords": ["architecture", "c4", "structurizr", "diagrams", "routing", "architecture-as-code"]
+}

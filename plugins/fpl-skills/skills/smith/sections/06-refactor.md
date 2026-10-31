@@ -21,7 +21,7 @@ behaviour change) belong here.
 1. **research-analyst** (Profile A) — produces NOTE: current-state map + Mikado graph of unknowns. Why first: a refactor without a target shape is yak-shaving; the Mikado graph surfaces the real cost up front.
 2. **code-analyzer** (Profile C) — produces NOTE with current complexity/coupling metrics. Why second: refactors must be measurable — without baseline metrics, "I refactored it" is unfalsifiable.
 3. **architect-reviewer** (Profile B, **pre-refactor**) — produces EVID confirming the proposed end-state is architecturally better than the current state. Why third: catches "I made it different, not better" before any code is touched.
-4. **adr-architect** (Profile A) — produces ADR-NNN with the target architecture (and ADR-supersede + delta-spec if it changes a prior ADR per Sprint Z8). Auto-dispatches `c4-diagram` for ≥3-module decisions.
+4. **adr-architect** (Profile A) — produces ADR-NNN with the target architecture (and ADR-supersede + delta-spec if it changes a prior ADR per Sprint Z8). For ≥3-module decisions, reuses suitable native C4 or dispatches `structurizr-c4:structurizr-architect` for `to-be` under the [canonical contract](../../../../structurizr-c4/skills/structurizr-c4/references/forgeplan.md); build a separate `as-is` only when comparison is requested.
 5. **goal-planner** (Profile A) — produces task DAG with Branch-by-Abstraction steps (introduce abstraction → swap → delete abstraction). Why fifth: ordering matters; safe refactors are stepwise.
 6. **coder** (Profile C-coder) — implements the DAG. Why sixth: only after the target is agreed.
 7. **architect-reviewer** (Profile B, **post-refactor**) — produces EVID confirming the actual end-state matches the proposed end-state. Why seventh: the pre/post pair catches drift between intent and execution.
@@ -66,7 +66,7 @@ Smith: Context=refactor (row 6). Methodology=Branch-by-Abstraction + Mikado +
        3. architect-reviewer pre → EVID (target: 4 services + 1 façade;
           each ≤500 LOC; transaction boundary stays on façade; PASS)
        4. adr-architect → ADR-NNN (split PaymentService into 4 services
-          behind façade) + c4-diagram (L1+L2, 5 modules)
+          behind façade) + native Structurizr C4 delivery/report (L1+L2, 5 modules; reuse suitable current delivery)
        5. goal-replanner → task DAG:
           a) introduce façade interface (abstraction step)
           b) extract Charges service behind façade
