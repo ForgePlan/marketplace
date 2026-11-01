@@ -187,7 +187,7 @@ jobs:
           [ "$errors" -eq 0 ] || exit 1
 
       - name: Run EvidencePack investigation regressions
-        run: node --test dev/evidencepack/tests/surface-census.test.mjs dev/evidencepack/tests/mcp-client.test.mjs
+        run: node --test dev/evidencepack/tests/*.test.mjs
 
       # The `official-plugin-validate` gate below runs the runtime's OWN manifest validator. It
       # is not on the runner by default, and without it the gate reports SKIPPED — honest, but it
