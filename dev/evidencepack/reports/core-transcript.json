@@ -1,0 +1,1069 @@
+[
+  {
+    "surface": "cli",
+    "args": [
+      "--version"
+    ],
+    "status": 0,
+    "signal": null,
+    "stdout": "forgeplan 0.38.0\n",
+    "stderr": "",
+    "error": null
+  },
+  {
+    "surface": "cli",
+    "args": [
+      "init",
+      "-y"
+    ],
+    "status": 0,
+    "signal": null,
+    "stdout": "  Initialized .forgeplan/ in /private/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl\n  Project: evidencepack-core-probe-WbfAZl\n\nNext: forgeplan new prd \"<title>\"\n",
+    "stderr": "",
+    "error": null
+  },
+  {
+    "surface": "cli",
+    "args": [
+      "new",
+      "prd",
+      "EvidencePack boundary probe parent"
+    ],
+    "status": 0,
+    "signal": null,
+    "stdout": "  Created: /private/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl/.forgeplan/prds/PRD-001-evidencepack-boundary-probe-parent.md\n  ID:      PRD-001\n  Kind:    prd\n  Title:   EvidencePack boundary probe parent\n\n  fill Problem, Goals, Non-Goals, Target Users, FR sections, then validate\n\nNext: forgeplan reason PRD-001\n",
+    "stderr": "git ls-tree (slug check skipped): fatal: not a git repository (or any of the parent directories): .git\n",
+    "error": null
+  },
+  {
+    "surface": "cli",
+    "args": [
+      "new",
+      "evidence",
+      "CLI boundary probe supports"
+    ],
+    "status": 0,
+    "signal": null,
+    "stdout": "  Created: /private/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl/.forgeplan/evidence/EVID-001-cli-boundary-probe-supports.md\n  ID:      EVID-001\n  Kind:    evidence\n  Title:   CLI boundary probe supports\n\n  fill Structured Fields (verdict, congruence_level, evidence_type), then validate\n\nNext: forgeplan validate EVID-001\n",
+    "stderr": "git ls-tree (slug check skipped): fatal: not a git repository (or any of the parent directories): .git\n",
+    "error": null
+  },
+  {
+    "surface": "cli",
+    "args": [
+      "update",
+      "EVID-001",
+      "--body",
+      "## Structured Fields\n\nverdict: supports\ncongruence_level: 3\nevidence_type: test\n\n## Observation\n\nReleased-binary Phase0 boundary probe; this is a synthetic isolated measurement of core semantics, not verification of Marketplace implementation.\n"
+    ],
+    "status": 0,
+    "signal": null,
+    "stdout": "  Updated: EVID-001\n  Body:    updated\n\nNext: forgeplan validate EVID-001\n",
+    "stderr": "  ⚠ Warning: new body (244 chars) is much shorter than existing (1841 chars).\n  Tip: use --body @file.md for safe multi-line updates (avoids shell escaping issues).\n",
+    "error": null
+  },
+  {
+    "surface": "cli",
+    "args": [
+      "validate",
+      "EVID-001"
+    ],
+    "status": 0,
+    "signal": null,
+    "stdout": "\nEVID-001 \"CLI boundary probe supports\" (depth: Tactical)\n──────────────────────────────────────────────────\n  All checks passed!\n\n  Result: PASS -- 0 error(s), 0 warning(s)\n\nNext: forgeplan activate EVID-001\n",
+    "stderr": "",
+    "error": null
+  },
+  {
+    "surface": "cli",
+    "args": [
+      "get",
+      "EVID-001",
+      "--json"
+    ],
+    "status": 0,
+    "signal": null,
+    "stdout": "{\n  \"_next_action\": \"forgeplan validate EVID-001\",\n  \"author\": null,\n  \"body\": \"---\\nassigned_number: 1\\ncreated: 2026-10-13\\npredicted_number: 1\\nslug: evid-cli-boundary-probe-supports\\nupdated: 2026-10-13\\n---\\n\\n## Structured Fields\\n\\nverdict: supports\\ncongruence_level: 3\\nevidence_type: test\\n\\n## Observation\\n\\nReleased-binary Phase0 boundary probe; this is a synthetic isolated measurement of core semantics, not verification of Marketplace implementation.\\n\",\n  \"created_at\": \"2026-10-13T14:03:34.728893+00:00\",\n  \"depth\": \"tactical\",\n  \"id\": \"EVID-001\",\n  \"kind\": \"evidence\",\n  \"links\": {\n    \"inbound\": [],\n    \"outbound\": []\n  },\n  \"parent_epic\": null,\n  \"r_eff\": 0.0,\n  \"slug\": \"evid-cli-boundary-probe-supports\",\n  \"status\": \"draft\",\n  \"title\": \"CLI boundary probe supports\",\n  \"updated_at\": \"2026-10-13T14:03:34.753560+00:00\",\n  \"valid_until\": null\n}\n",
+    "stderr": "",
+    "error": null
+  },
+  {
+    "surface": "cli",
+    "args": [
+      "link",
+      "EVID-001",
+      "PRD-001",
+      "--relation",
+      "informs",
+      "--auto-activate-complete"
+    ],
+    "status": 0,
+    "signal": null,
+    "stdout": "Linked: EVID-001 --informs--> PRD-001\nAuto-activated: EVID-001 (draft → active)\n\nNext: forgeplan score --all\n",
+    "stderr": "",
+    "error": null
+  },
+  {
+    "surface": "cli",
+    "args": [
+      "get",
+      "EVID-001",
+      "--json"
+    ],
+    "status": 0,
+    "signal": null,
+    "stdout": "{\n  \"_next_action\": null,\n  \"author\": null,\n  \"body\": \"---\\nassigned_number: 1\\ncreated: 2026-10-13\\npredicted_number: 1\\nslug: evid-cli-boundary-probe-supports\\nupdated: 2026-10-13\\n---\\n\\n## Structured Fields\\n\\nverdict: supports\\ncongruence_level: 3\\nevidence_type: test\\n\\n## Observation\\n\\nReleased-binary Phase0 boundary probe; this is a synthetic isolated measurement of core semantics, not verification of Marketplace implementation.\\n\",\n  \"created_at\": \"2026-10-13T14:03:34.728893+00:00\",\n  \"depth\": \"tactical\",\n  \"id\": \"EVID-001\",\n  \"kind\": \"evidence\",\n  \"links\": {\n    \"inbound\": [],\n    \"outbound\": [\n      {\n        \"relation\": \"informs\",\n        \"target\": \"PRD-001\"\n      }\n    ]\n  },\n  \"parent_epic\": null,\n  \"r_eff\": 1.0,\n  \"slug\": \"evid-cli-boundary-probe-supports\",\n  \"status\": \"active\",\n  \"title\": \"CLI boundary probe supports\",\n  \"updated_at\": \"2026-10-13T14:03:34.835649+00:00\",\n  \"valid_until\": null\n}\n",
+    "stderr": "",
+    "error": null
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 1,
+    "method": "initialize",
+    "params": {
+      "protocolVersion": "2024-11-05",
+      "capabilities": {},
+      "clientInfo": {
+        "name": "phase0-script-not-a-host",
+        "version": "probe-1"
+      }
+    },
+    "state": "response",
+    "result": {
+      "protocolVersion": "2024-11-05",
+      "capabilities": {
+        "tools": {}
+      },
+      "serverInfo": {
+        "name": "forgeplan",
+        "version": "0.38.0"
+      },
+      "instructions": "Forgeplan MCP server: manage structured project artifacts (PRDs, RFCs, ADRs, Epics, Specs) with quality scoring, validation, dependency graphs, and search.\n\nIMPORTANT: Tool responses may include a `_next_action` field. When present, follow this hint — it guides the correct methodology workflow: Shape → Validate → Code → Evidence → Activate."
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 2,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_new",
+      "arguments": {
+        "kind": "evidence",
+        "title": "MCP boundary probe supports",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"Add structured fields (verdict, congruence_level, evidence_type) to body, then: forgeplan link EVID-002 <TARGET> --relation informs\",\n  \"assigned_number\": 2,\n  \"filepath\": \"/private/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl/.forgeplan/evidence/EVID-002-mcp-boundary-probe-supports.md\",\n  \"hint\": \"Number is final (EVID-002). Use `evid-mcp-boundary-probe-supports` or `EVID-002` in commit Refs interchangeably.\",\n  \"id\": \"EVID-002\",\n  \"id_canonical\": \"evid-mcp-boundary-probe-supports\",\n  \"id_display\": \"EVID-002\",\n  \"kind\": \"evidence\",\n  \"predicted_number\": 2,\n  \"resolved_via\": \"param\",\n  \"resolved_workspace\": \"/private/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl/.forgeplan\",\n  \"slug\": \"evid-mcp-boundary-probe-supports\",\n  \"title\": \"MCP boundary probe supports\",\n  \"warnings\": []\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 3,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_update",
+      "arguments": {
+        "id": "EVID-002",
+        "body": "## Structured Fields\n\nverdict: supports\ncongruence_level: 3\nevidence_type: test\n\n## Observation\n\nReleased-binary Phase0 boundary probe; this is a synthetic isolated measurement of core semantics, not verification of Marketplace implementation.\n",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"Updated (draft). Re-validate: `forgeplan_validate EVID-002`.\",\n  \"id\": \"EVID-002\",\n  \"message\": \"Updated successfully\",\n  \"resolved_via\": \"param\",\n  \"resolved_workspace\": \"/private/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl/.forgeplan\",\n  \"status\": \"draft\",\n  \"title\": \"MCP boundary probe supports\"\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 4,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_validate",
+      "arguments": {
+        "id": "EVID-002",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"results\": [\n    {\n      \"artifact_id\": \"EVID-002\",\n      \"kind\": \"EvidencePack\",\n      \"depth\": \"Standard\",\n      \"passed\": true,\n      \"error_count\": 0,\n      \"warning_count\": 0,\n      \"findings\": []\n    }\n  ],\n  \"total_artifacts\": 1,\n  \"total_passed\": 1,\n  \"total_errors\": 0,\n  \"total_warnings\": 0,\n  \"_next_action\": \"All passed! Implement → create EvidencePack with structured fields (verdict/congruence_level/evidence_type) → `forgeplan_link EVID-XXX <id>` → `forgeplan_activate <id>`.\"\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 5,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_get",
+      "arguments": {
+        "id": "EVID-002",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"Draft. Validate: `forgeplan_validate EVID-002`. Phase: `validate` → next `adi`.\",\n  \"assigned_number\": 2,\n  \"author\": null,\n  \"body\": \"---\\nassigned_number: 2\\ncreated: 2026-10-13\\npredicted_number: 2\\nslug: evid-mcp-boundary-probe-supports\\nupdated: 2026-10-13\\n---\\n\\n## Structured Fields\\n\\nverdict: supports\\ncongruence_level: 3\\nevidence_type: test\\n\\n## Observation\\n\\nReleased-binary Phase0 boundary probe; this is a synthetic isolated measurement of core semantics, not verification of Marketplace implementation.\\n\",\n  \"created_at\": \"2026-10-13T14:03:34.907631+00:00\",\n  \"depth\": \"standard\",\n  \"id\": \"EVID-002\",\n  \"id_canonical\": \"evid-mcp-boundary-probe-supports\",\n  \"id_display\": \"EVID-002\",\n  \"kind\": \"evidence\",\n  \"links\": {\n    \"inbound\": [],\n    \"outbound\": []\n  },\n  \"parent_epic\": null,\n  \"predicted_number\": 2,\n  \"r_eff_score\": 0.0,\n  \"slug\": \"evid-mcp-boundary-probe-supports\",\n  \"status\": \"draft\",\n  \"title\": \"MCP boundary probe supports\",\n  \"updated_at\": \"2026-10-13T14:03:34.928808+00:00\",\n  \"valid_until\": null\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 6,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_link",
+      "arguments": {
+        "source": "EVID-002",
+        "target": "PRD-001",
+        "relation": "informs",
+        "auto_activate_source_if_complete": true,
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"Linked. R_eff=1.00 on EVID-002 (complete evidence). Source auto-activated draft → active. Reconcile parents: `forgeplan_score_all`.\",\n  \"auto_activated\": \"EVID-002\",\n  \"message\": \"Linked: EVID-002 --informs--> PRD-001\",\n  \"resolved_via\": \"param\",\n  \"resolved_workspace\": \"/private/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl/.forgeplan\"\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 7,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_get",
+      "arguments": {
+        "id": "EVID-002",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"Active. Verify trust: `forgeplan_score EVID-002`. Phase: `validate` → next `adi`.\",\n  \"assigned_number\": 2,\n  \"author\": null,\n  \"body\": \"---\\nassigned_number: 2\\ncreated: 2026-10-13\\npredicted_number: 2\\nslug: evid-mcp-boundary-probe-supports\\nupdated: 2026-10-13\\n---\\n\\n## Structured Fields\\n\\nverdict: supports\\ncongruence_level: 3\\nevidence_type: test\\n\\n## Observation\\n\\nReleased-binary Phase0 boundary probe; this is a synthetic isolated measurement of core semantics, not verification of Marketplace implementation.\\n\",\n  \"created_at\": \"2026-10-13T14:03:34.907631+00:00\",\n  \"depth\": \"standard\",\n  \"id\": \"EVID-002\",\n  \"id_canonical\": \"evid-mcp-boundary-probe-supports\",\n  \"id_display\": \"EVID-002\",\n  \"kind\": \"evidence\",\n  \"links\": {\n    \"inbound\": [],\n    \"outbound\": [\n      {\n        \"relation\": \"informs\",\n        \"target\": \"PRD-001\"\n      }\n    ]\n  },\n  \"parent_epic\": null,\n  \"predicted_number\": 2,\n  \"r_eff_score\": 1.0,\n  \"slug\": \"evid-mcp-boundary-probe-supports\",\n  \"status\": \"active\",\n  \"title\": \"MCP boundary probe supports\",\n  \"updated_at\": \"2026-10-13T14:03:34.978424+00:00\",\n  \"valid_until\": null\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 8,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_score",
+      "arguments": {
+        "id": "PRD-001",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"R_eff = 1.00 (strong). Ready: `forgeplan_activate PRD-001`.\",\n  \"decay_penalty\": 0.0,\n  \"evidence\": [\n    {\n      \"congruence_level\": 3,\n      \"excluded\": false,\n      \"expired\": false,\n      \"id\": \"EVID-001\",\n      \"score\": 1.0,\n      \"status\": \"active\",\n      \"verdict\": \"Supports\"\n    },\n    {\n      \"congruence_level\": 3,\n      \"excluded\": false,\n      \"expired\": false,\n      \"id\": \"EVID-002\",\n      \"score\": 1.0,\n      \"status\": \"active\",\n      \"verdict\": \"Supports\"\n    }\n  ],\n  \"factors\": [],\n  \"formality\": 0.8333333333333334,\n  \"granularity\": 0.8,\n  \"id\": \"PRD-001\",\n  \"overall_grade\": \"A\",\n  \"r_eff\": 1.0,\n  \"reliability\": 0.901,\n  \"self_score\": 1.0,\n  \"title\": \"EvidencePack boundary probe parent\",\n  \"weakest_link\": null\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "guardian-forged-by-ordinary-client",
+    "rpc_id": 1,
+    "method": "initialize",
+    "params": {
+      "protocolVersion": "2024-11-05",
+      "capabilities": {},
+      "clientInfo": {
+        "name": "guardian-forged-by-ordinary-client",
+        "version": "probe-1"
+      }
+    },
+    "state": "response",
+    "result": {
+      "protocolVersion": "2024-11-05",
+      "capabilities": {
+        "tools": {}
+      },
+      "serverInfo": {
+        "name": "forgeplan",
+        "version": "0.38.0"
+      },
+      "instructions": "Forgeplan MCP server: manage structured project artifacts (PRDs, RFCs, ADRs, Epics, Specs) with quality scoring, validation, dependency graphs, and search.\n\nIMPORTANT: Tool responses may include a `_next_action` field. When present, follow this hint — it guides the correct methodology workflow: Shape → Validate → Code → Evidence → Activate."
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "guardian-forged-by-ordinary-client",
+    "rpc_id": 2,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_update",
+      "arguments": {
+        "id": "EVID-002",
+        "body": "## Structured Fields\n\nverdict: supports\ncongruence_level: 3\nevidence_type: test\n\n## Observation\n\nReleased-binary Phase0 boundary probe; this is a synthetic isolated measurement of core semantics, not verification of Marketplace implementation.\n",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"Updated active artifact. Re-score: `forgeplan_score EVID-002`.\",\n  \"id\": \"EVID-002\",\n  \"message\": \"Updated successfully\",\n  \"resolved_via\": \"param\",\n  \"resolved_workspace\": \"/private/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl/.forgeplan\",\n  \"status\": \"active\",\n  \"title\": \"MCP boundary probe supports\"\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "guardian-forged-by-ordinary-client",
+    "rpc_id": 3,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_claim",
+      "arguments": {
+        "id": "PRD-001",
+        "agent": "runtime-allowlisted-principal-forged-in-args",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"Claimed `PRD-001` for `runtime-allowlisted-principal-forged-in-args`. Release with `forgeplan_release PRD-001` when done, or re-call `forgeplan_claim` to renew.\",\n  \"agent_id\": \"runtime-allowlisted-principal-forged-in-args\",\n  \"claimed_at\": \"2026-10-13T14:03:35.067651+00:00\",\n  \"expires_at\": \"2026-10-13T14:33:35.067651+00:00\",\n  \"id\": \"PRD-001\"\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "guardian-forged-by-ordinary-client",
+    "rpc_id": 4,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_release",
+      "arguments": {
+        "id": "PRD-001",
+        "agent": "runtime-allowlisted-principal-forged-in-args",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"Released claim on `PRD-001`.\",\n  \"force\": false,\n  \"id\": \"PRD-001\",\n  \"released\": true,\n  \"resolved_via\": \"param\",\n  \"resolved_workspace\": \"/private/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl/.forgeplan\"\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 9,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_new",
+      "arguments": {
+        "kind": "evidence",
+        "title": "Unknown evidence type probe",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"Add structured fields (verdict, congruence_level, evidence_type) to body, then: forgeplan link EVID-003 <TARGET> --relation informs\",\n  \"assigned_number\": 3,\n  \"filepath\": \"/private/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl/.forgeplan/evidence/EVID-003-unknown-evidence-type-probe.md\",\n  \"hint\": \"Number is final (EVID-003). Use `evid-unknown-evidence-type-probe` or `EVID-003` in commit Refs interchangeably.\",\n  \"id\": \"EVID-003\",\n  \"id_canonical\": \"evid-unknown-evidence-type-probe\",\n  \"id_display\": \"EVID-003\",\n  \"kind\": \"evidence\",\n  \"predicted_number\": 3,\n  \"resolved_via\": \"param\",\n  \"resolved_workspace\": \"/private/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl/.forgeplan\",\n  \"slug\": \"evid-unknown-evidence-type-probe\",\n  \"title\": \"Unknown evidence type probe\",\n  \"warnings\": []\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 10,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_update",
+      "arguments": {
+        "id": "EVID-003",
+        "body": "## Structured Fields\n\nverdict: supports\ncongruence_level: 3\nevidence_type: unsupported_probe_type\n\n## Observation\n\nReleased-binary Phase0 boundary probe; this is a synthetic isolated measurement of core semantics, not verification of Marketplace implementation.\n",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"Updated (draft). Re-validate: `forgeplan_validate EVID-003`.\",\n  \"id\": \"EVID-003\",\n  \"message\": \"Updated successfully\",\n  \"resolved_via\": \"param\",\n  \"resolved_workspace\": \"/private/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl/.forgeplan\",\n  \"status\": \"draft\",\n  \"title\": \"Unknown evidence type probe\"\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 11,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_get",
+      "arguments": {
+        "id": "EVID-003",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"Draft. Validate: `forgeplan_validate EVID-003`. Phase: `shape` → next `validate`.\",\n  \"assigned_number\": 3,\n  \"author\": null,\n  \"body\": \"---\\nassigned_number: 3\\ncreated: 2026-10-13\\npredicted_number: 3\\nslug: evid-unknown-evidence-type-probe\\nupdated: 2026-10-13\\n---\\n\\n## Structured Fields\\n\\nverdict: supports\\ncongruence_level: 3\\nevidence_type: unsupported_probe_type\\n\\n## Observation\\n\\nReleased-binary Phase0 boundary probe; this is a synthetic isolated measurement of core semantics, not verification of Marketplace implementation.\\n\",\n  \"created_at\": \"2026-10-13T14:03:35.079797+00:00\",\n  \"depth\": \"standard\",\n  \"id\": \"EVID-003\",\n  \"id_canonical\": \"evid-unknown-evidence-type-probe\",\n  \"id_display\": \"EVID-003\",\n  \"kind\": \"evidence\",\n  \"links\": {\n    \"inbound\": [],\n    \"outbound\": []\n  },\n  \"parent_epic\": null,\n  \"predicted_number\": 3,\n  \"r_eff_score\": 0.0,\n  \"slug\": \"evid-unknown-evidence-type-probe\",\n  \"status\": \"draft\",\n  \"title\": \"Unknown evidence type probe\",\n  \"updated_at\": \"2026-10-13T14:03:35.101190+00:00\",\n  \"valid_until\": null\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 12,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_validate",
+      "arguments": {
+        "id": "EVID-003",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"results\": [\n    {\n      \"artifact_id\": \"EVID-003\",\n      \"kind\": \"EvidencePack\",\n      \"depth\": \"Standard\",\n      \"passed\": true,\n      \"error_count\": 0,\n      \"warning_count\": 0,\n      \"findings\": []\n    }\n  ],\n  \"total_artifacts\": 1,\n  \"total_passed\": 1,\n  \"total_errors\": 0,\n  \"total_warnings\": 0,\n  \"_next_action\": \"All passed! Implement → create EvidencePack with structured fields (verdict/congruence_level/evidence_type) → `forgeplan_link EVID-XXX <id>` → `forgeplan_activate <id>`.\"\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 13,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_update",
+      "arguments": {
+        "id": "EVID-003",
+        "body": "## Structured Fields\n\nverdict: supports\ncongruence_level: 3\nevidence_type: test\n\n## Observation\n\nReleased-binary Phase0 boundary probe; this is a synthetic isolated measurement of core semantics, not verification of Marketplace implementation.\n\nverdict: refutes\n",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"Updated (draft). Re-validate: `forgeplan_validate EVID-003`.\",\n  \"id\": \"EVID-003\",\n  \"message\": \"Updated successfully\",\n  \"resolved_via\": \"param\",\n  \"resolved_workspace\": \"/private/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl/.forgeplan\",\n  \"status\": \"draft\",\n  \"title\": \"Unknown evidence type probe\"\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 14,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_get",
+      "arguments": {
+        "id": "EVID-003",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"Draft. Validate: `forgeplan_validate EVID-003`. Phase: `validate` → next `adi`.\",\n  \"assigned_number\": 3,\n  \"author\": null,\n  \"body\": \"---\\nassigned_number: 3\\ncreated: 2026-10-13\\npredicted_number: 3\\nslug: evid-unknown-evidence-type-probe\\nupdated: 2026-10-13\\n---\\n\\n## Structured Fields\\n\\nverdict: supports\\ncongruence_level: 3\\nevidence_type: test\\n\\n## Observation\\n\\nReleased-binary Phase0 boundary probe; this is a synthetic isolated measurement of core semantics, not verification of Marketplace implementation.\\n\\nverdict: refutes\\n\",\n  \"created_at\": \"2026-10-13T14:03:35.079797+00:00\",\n  \"depth\": \"standard\",\n  \"id\": \"EVID-003\",\n  \"id_canonical\": \"evid-unknown-evidence-type-probe\",\n  \"id_display\": \"EVID-003\",\n  \"kind\": \"evidence\",\n  \"links\": {\n    \"inbound\": [],\n    \"outbound\": []\n  },\n  \"parent_epic\": null,\n  \"predicted_number\": 3,\n  \"r_eff_score\": 0.0,\n  \"slug\": \"evid-unknown-evidence-type-probe\",\n  \"status\": \"draft\",\n  \"title\": \"Unknown evidence type probe\",\n  \"updated_at\": \"2026-10-13T14:03:35.129468+00:00\",\n  \"valid_until\": null\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 15,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_validate",
+      "arguments": {
+        "id": "EVID-003",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"results\": [\n    {\n      \"artifact_id\": \"EVID-003\",\n      \"kind\": \"EvidencePack\",\n      \"depth\": \"Standard\",\n      \"passed\": true,\n      \"error_count\": 0,\n      \"warning_count\": 0,\n      \"findings\": []\n    }\n  ],\n  \"total_artifacts\": 1,\n  \"total_passed\": 1,\n  \"total_errors\": 0,\n  \"total_warnings\": 0,\n  \"_next_action\": \"All passed! Implement → create EvidencePack with structured fields (verdict/congruence_level/evidence_type) → `forgeplan_link EVID-XXX <id>` → `forgeplan_activate <id>`.\"\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 16,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_new",
+      "arguments": {
+        "kind": "evidence",
+        "title": "Core weakens probe",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"Add structured fields (verdict, congruence_level, evidence_type) to body, then: forgeplan link EVID-004 <TARGET> --relation informs\",\n  \"assigned_number\": 4,\n  \"filepath\": \"/private/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl/.forgeplan/evidence/EVID-004-core-weakens-probe.md\",\n  \"hint\": \"Number is final (EVID-004). Use `evid-core-weakens-probe` or `EVID-004` in commit Refs interchangeably.\",\n  \"id\": \"EVID-004\",\n  \"id_canonical\": \"evid-core-weakens-probe\",\n  \"id_display\": \"EVID-004\",\n  \"kind\": \"evidence\",\n  \"predicted_number\": 4,\n  \"resolved_via\": \"param\",\n  \"resolved_workspace\": \"/private/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl/.forgeplan\",\n  \"slug\": \"evid-core-weakens-probe\",\n  \"title\": \"Core weakens probe\",\n  \"warnings\": []\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 17,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_update",
+      "arguments": {
+        "id": "EVID-004",
+        "body": "## Structured Fields\n\nverdict: weakens\ncongruence_level: 3\nevidence_type: test\n\n## Observation\n\nReleased-binary Phase0 boundary probe; this is a synthetic isolated measurement of core semantics, not verification of Marketplace implementation.\n",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"Updated (draft). Re-validate: `forgeplan_validate EVID-004`.\",\n  \"id\": \"EVID-004\",\n  \"message\": \"Updated successfully\",\n  \"resolved_via\": \"param\",\n  \"resolved_workspace\": \"/private/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl/.forgeplan\",\n  \"status\": \"draft\",\n  \"title\": \"Core weakens probe\"\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 18,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_link",
+      "arguments": {
+        "source": "EVID-004",
+        "target": "PRD-001",
+        "relation": "informs",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"Linked. R_eff=0.50 on EVID-004 (complete evidence, draft). Activate: `forgeplan_activate EVID-004`.\",\n  \"message\": \"Linked: EVID-004 --informs--> PRD-001\",\n  \"resolved_via\": \"param\",\n  \"resolved_workspace\": \"/private/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl/.forgeplan\"\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 19,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_score",
+      "arguments": {
+        "id": "PRD-001",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"R_eff = 0.50 (adequate). Run lifecycle review: `forgeplan_review PRD-001`.\",\n  \"decay_penalty\": 0.0,\n  \"evidence\": [\n    {\n      \"congruence_level\": 3,\n      \"excluded\": false,\n      \"expired\": false,\n      \"id\": \"EVID-001\",\n      \"score\": 1.0,\n      \"status\": \"active\",\n      \"verdict\": \"Supports\"\n    },\n    {\n      \"congruence_level\": 3,\n      \"excluded\": false,\n      \"expired\": false,\n      \"id\": \"EVID-002\",\n      \"score\": 1.0,\n      \"status\": \"active\",\n      \"verdict\": \"Supports\"\n    },\n    {\n      \"congruence_level\": 3,\n      \"excluded\": false,\n      \"expired\": false,\n      \"id\": \"EVID-004\",\n      \"score\": 0.5,\n      \"status\": \"draft\",\n      \"verdict\": \"Weakens\"\n    }\n  ],\n  \"factors\": [],\n  \"formality\": 0.8333333333333334,\n  \"granularity\": 0.8,\n  \"id\": \"PRD-001\",\n  \"overall_grade\": \"B\",\n  \"r_eff\": 0.5,\n  \"reliability\": 0.651,\n  \"self_score\": 0.5,\n  \"title\": \"EvidencePack boundary probe parent\",\n  \"weakest_link\": null\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 20,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_activate",
+      "arguments": {
+        "id": "EVID-004",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"R_eff recomputed on activation. Reconcile parents: `forgeplan_score_all`.\",\n  \"artifact_id\": \"EVID-004\",\n  \"forced\": false,\n  \"message\": \"Activated EVID-004 (draft → active)\",\n  \"must_errors\": [],\n  \"resolved_via\": \"param\",\n  \"resolved_workspace\": \"/private/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl/.forgeplan\"\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 21,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_get",
+      "arguments": {
+        "id": "EVID-004",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"Active. Verify trust: `forgeplan_score EVID-004`. Phase: `done` (terminal).\",\n  \"assigned_number\": 4,\n  \"author\": null,\n  \"body\": \"---\\nassigned_number: 4\\ncreated: 2026-10-13\\npredicted_number: 4\\nslug: evid-core-weakens-probe\\nupdated: 2026-10-13\\n---\\n\\n## Structured Fields\\n\\nverdict: weakens\\ncongruence_level: 3\\nevidence_type: test\\n\\n## Observation\\n\\nReleased-binary Phase0 boundary probe; this is a synthetic isolated measurement of core semantics, not verification of Marketplace implementation.\\n\",\n  \"created_at\": \"2026-10-13T14:03:35.153769+00:00\",\n  \"depth\": \"standard\",\n  \"id\": \"EVID-004\",\n  \"id_canonical\": \"evid-core-weakens-probe\",\n  \"id_display\": \"EVID-004\",\n  \"kind\": \"evidence\",\n  \"links\": {\n    \"inbound\": [],\n    \"outbound\": [\n      {\n        \"relation\": \"informs\",\n        \"target\": \"PRD-001\"\n      }\n    ]\n  },\n  \"parent_epic\": null,\n  \"predicted_number\": 4,\n  \"r_eff_score\": 0.5,\n  \"slug\": \"evid-core-weakens-probe\",\n  \"status\": \"active\",\n  \"title\": \"Core weakens probe\",\n  \"updated_at\": \"2026-10-13T14:03:35.233317+00:00\",\n  \"valid_until\": null\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 22,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_supersede",
+      "arguments": {
+        "id": "EVID-004",
+        "by": "EVID-002",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"`EVID-004` superseded by `EVID-002`. Verify replacement trust: `forgeplan_score EVID-002`.\",\n  \"dependents_affected\": [],\n  \"receipt_id\": \"evidence-EVID-004-1791900215263-04a7eecf\",\n  \"replacement\": \"EVID-002\",\n  \"resolved_via\": \"param\",\n  \"resolved_workspace\": \"/private/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl/.forgeplan\",\n  \"superseded\": \"EVID-004\",\n  \"warnings\": []\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 23,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_get",
+      "arguments": {
+        "id": "EVID-004",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"Terminal state (superseded). Read-only — find successor: `forgeplan_search query=\\\"EVID-004\\\"`. Phase: `done` (terminal).\",\n  \"assigned_number\": 4,\n  \"author\": null,\n  \"body\": \"---\\nassigned_number: 4\\ncreated: 2026-10-13\\npredicted_number: 4\\nslug: evid-core-weakens-probe\\nupdated: 2026-10-13\\n---\\n\\n## Structured Fields\\n\\nverdict: weakens\\ncongruence_level: 3\\nevidence_type: test\\n\\n## Observation\\n\\nReleased-binary Phase0 boundary probe; this is a synthetic isolated measurement of core semantics, not verification of Marketplace implementation.\\n\",\n  \"created_at\": \"2026-10-13T14:03:35.153769+00:00\",\n  \"depth\": \"standard\",\n  \"id\": \"EVID-004\",\n  \"id_canonical\": \"evid-core-weakens-probe\",\n  \"id_display\": \"EVID-004\",\n  \"kind\": \"evidence\",\n  \"links\": {\n    \"inbound\": [],\n    \"outbound\": [\n      {\n        \"relation\": \"informs\",\n        \"target\": \"PRD-001\"\n      },\n      {\n        \"relation\": \"supersedes\",\n        \"target\": \"EVID-002\"\n      }\n    ]\n  },\n  \"parent_epic\": null,\n  \"predicted_number\": 4,\n  \"r_eff_score\": 0.5,\n  \"slug\": \"evid-core-weakens-probe\",\n  \"status\": \"superseded\",\n  \"title\": \"Core weakens probe\",\n  \"updated_at\": \"2026-10-13T14:03:35.273748+00:00\",\n  \"valid_until\": null\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 24,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_score",
+      "arguments": {
+        "id": "PRD-001",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"R_eff = 1.00 (strong). Ready: `forgeplan_activate PRD-001`.\",\n  \"decay_penalty\": 0.0,\n  \"evidence\": [\n    {\n      \"congruence_level\": 3,\n      \"excluded\": false,\n      \"expired\": false,\n      \"id\": \"EVID-001\",\n      \"score\": 1.0,\n      \"status\": \"active\",\n      \"verdict\": \"Supports\"\n    },\n    {\n      \"congruence_level\": 3,\n      \"excluded\": false,\n      \"expired\": false,\n      \"id\": \"EVID-002\",\n      \"score\": 1.0,\n      \"status\": \"active\",\n      \"verdict\": \"Supports\"\n    },\n    {\n      \"congruence_level\": 3,\n      \"excluded\": true,\n      \"expired\": false,\n      \"id\": \"EVID-004\",\n      \"score\": 0.5,\n      \"status\": \"superseded\",\n      \"verdict\": \"Weakens\"\n    }\n  ],\n  \"factors\": [\n    \"Skipped EVID-004 (status: superseded)\"\n  ],\n  \"formality\": 0.8333333333333334,\n  \"granularity\": 0.8,\n  \"id\": \"PRD-001\",\n  \"overall_grade\": \"A\",\n  \"r_eff\": 1.0,\n  \"reliability\": 0.901,\n  \"self_score\": 1.0,\n  \"title\": \"EvidencePack boundary probe parent\",\n  \"weakest_link\": null\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 25,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_new",
+      "arguments": {
+        "kind": "evidence",
+        "title": "Core refutes probe",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"Add structured fields (verdict, congruence_level, evidence_type) to body, then: forgeplan link EVID-005 <TARGET> --relation informs\",\n  \"assigned_number\": 5,\n  \"filepath\": \"/private/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl/.forgeplan/evidence/EVID-005-core-refutes-probe.md\",\n  \"hint\": \"Number is final (EVID-005). Use `evid-core-refutes-probe` or `EVID-005` in commit Refs interchangeably.\",\n  \"id\": \"EVID-005\",\n  \"id_canonical\": \"evid-core-refutes-probe\",\n  \"id_display\": \"EVID-005\",\n  \"kind\": \"evidence\",\n  \"predicted_number\": 5,\n  \"resolved_via\": \"param\",\n  \"resolved_workspace\": \"/private/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl/.forgeplan\",\n  \"slug\": \"evid-core-refutes-probe\",\n  \"title\": \"Core refutes probe\",\n  \"warnings\": []\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 26,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_update",
+      "arguments": {
+        "id": "EVID-005",
+        "body": "## Structured Fields\n\nverdict: refutes\ncongruence_level: 3\nevidence_type: test\n\n## Observation\n\nReleased-binary Phase0 boundary probe; this is a synthetic isolated measurement of core semantics, not verification of Marketplace implementation.\n",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"Updated (draft). Re-validate: `forgeplan_validate EVID-005`.\",\n  \"id\": \"EVID-005\",\n  \"message\": \"Updated successfully\",\n  \"resolved_via\": \"param\",\n  \"resolved_workspace\": \"/private/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl/.forgeplan\",\n  \"status\": \"draft\",\n  \"title\": \"Core refutes probe\"\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 27,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_link",
+      "arguments": {
+        "source": "EVID-005",
+        "target": "PRD-001",
+        "relation": "informs",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"Linked. R_eff=0.00 on EVID-005 (complete evidence, draft). Activate: `forgeplan_activate EVID-005`.\",\n  \"message\": \"Linked: EVID-005 --informs--> PRD-001\",\n  \"resolved_via\": \"param\",\n  \"resolved_workspace\": \"/private/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl/.forgeplan\"\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 28,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_score",
+      "arguments": {
+        "id": "PRD-001",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"R_eff = 0 (no valid evidence). Add EvidencePack: `forgeplan_new kind=evidence` → fill structured fields (verdict/congruence_level/evidence_type) → `forgeplan_link EVID-XXX PRD-001 relation=informs`.\",\n  \"decay_penalty\": 0.0,\n  \"evidence\": [\n    {\n      \"congruence_level\": 3,\n      \"excluded\": false,\n      \"expired\": false,\n      \"id\": \"EVID-001\",\n      \"score\": 1.0,\n      \"status\": \"active\",\n      \"verdict\": \"Supports\"\n    },\n    {\n      \"congruence_level\": 3,\n      \"excluded\": false,\n      \"expired\": false,\n      \"id\": \"EVID-002\",\n      \"score\": 1.0,\n      \"status\": \"active\",\n      \"verdict\": \"Supports\"\n    },\n    {\n      \"congruence_level\": 3,\n      \"excluded\": true,\n      \"expired\": false,\n      \"id\": \"EVID-004\",\n      \"score\": 0.5,\n      \"status\": \"superseded\",\n      \"verdict\": \"Weakens\"\n    },\n    {\n      \"congruence_level\": 3,\n      \"excluded\": false,\n      \"expired\": false,\n      \"id\": \"EVID-005\",\n      \"score\": 0.0,\n      \"status\": \"draft\",\n      \"verdict\": \"Refutes\"\n    }\n  ],\n  \"factors\": [\n    \"Skipped EVID-004 (status: superseded)\"\n  ],\n  \"formality\": 0.8333333333333334,\n  \"granularity\": 0.8,\n  \"id\": \"PRD-001\",\n  \"overall_grade\": \"B\",\n  \"r_eff\": 0.0,\n  \"reliability\": 0.5,\n  \"self_score\": 0.0,\n  \"title\": \"EvidencePack boundary probe parent\",\n  \"weakest_link\": null\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 29,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_activate",
+      "arguments": {
+        "id": "EVID-005",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"R_eff recomputed on activation. Reconcile parents: `forgeplan_score_all`.\",\n  \"artifact_id\": \"EVID-005\",\n  \"forced\": false,\n  \"message\": \"Activated EVID-005 (draft → active)\",\n  \"must_errors\": [],\n  \"resolved_via\": \"param\",\n  \"resolved_workspace\": \"/private/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl/.forgeplan\"\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 30,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_get",
+      "arguments": {
+        "id": "EVID-005",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"Active. Verify trust: `forgeplan_score EVID-005`. Phase: `done` (terminal).\",\n  \"assigned_number\": 5,\n  \"author\": null,\n  \"body\": \"---\\nassigned_number: 5\\ncreated: 2026-10-13\\npredicted_number: 5\\nslug: evid-core-refutes-probe\\nupdated: 2026-10-13\\n---\\n\\n## Structured Fields\\n\\nverdict: refutes\\ncongruence_level: 3\\nevidence_type: test\\n\\n## Observation\\n\\nReleased-binary Phase0 boundary probe; this is a synthetic isolated measurement of core semantics, not verification of Marketplace implementation.\\n\",\n  \"created_at\": \"2026-10-13T14:03:35.322127+00:00\",\n  \"depth\": \"standard\",\n  \"id\": \"EVID-005\",\n  \"id_canonical\": \"evid-core-refutes-probe\",\n  \"id_display\": \"EVID-005\",\n  \"kind\": \"evidence\",\n  \"links\": {\n    \"inbound\": [],\n    \"outbound\": [\n      {\n        \"relation\": \"informs\",\n        \"target\": \"PRD-001\"\n      }\n    ]\n  },\n  \"parent_epic\": null,\n  \"predicted_number\": 5,\n  \"r_eff_score\": 0.0,\n  \"slug\": \"evid-core-refutes-probe\",\n  \"status\": \"active\",\n  \"title\": \"Core refutes probe\",\n  \"updated_at\": \"2026-10-13T14:03:35.397114+00:00\",\n  \"valid_until\": null\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 31,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_deprecate",
+      "arguments": {
+        "id": "EVID-005",
+        "reason": "Synthetic probe complete; preserve observed refutation in isolated history",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"`EVID-005` deprecated. No dependents — clean state.\",\n  \"dependents_affected\": [],\n  \"deprecated\": \"EVID-005\",\n  \"reason\": \"Synthetic probe complete; preserve observed refutation in isolated history\",\n  \"receipt_id\": \"evidence-EVID-005-1791900215420-c6f9ff2f\",\n  \"resolved_via\": \"param\",\n  \"resolved_workspace\": \"/private/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl/.forgeplan\"\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 32,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_get",
+      "arguments": {
+        "id": "EVID-005",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"Terminal state (deprecated). Read-only — find successor: `forgeplan_search query=\\\"EVID-005\\\"`. Phase: `done` (terminal).\",\n  \"assigned_number\": 5,\n  \"author\": null,\n  \"body\": \"---\\nassigned_number: 5\\ncreated: 2026-10-13\\npredicted_number: 5\\nslug: evid-core-refutes-probe\\nupdated: 2026-10-13\\n---\\n\\n## Structured Fields\\n\\nverdict: refutes\\ncongruence_level: 3\\nevidence_type: test\\n\\n## Observation\\n\\nReleased-binary Phase0 boundary probe; this is a synthetic isolated measurement of core semantics, not verification of Marketplace implementation.\\n\\n\\n## Deprecation\\n\\nReason: Synthetic probe complete; preserve observed refutation in isolated history\\nDate: 2026-10-13\",\n  \"created_at\": \"2026-10-13T14:03:35.322127+00:00\",\n  \"depth\": \"standard\",\n  \"id\": \"EVID-005\",\n  \"id_canonical\": \"evid-core-refutes-probe\",\n  \"id_display\": \"EVID-005\",\n  \"kind\": \"evidence\",\n  \"links\": {\n    \"inbound\": [],\n    \"outbound\": [\n      {\n        \"relation\": \"informs\",\n        \"target\": \"PRD-001\"\n      }\n    ]\n  },\n  \"parent_epic\": null,\n  \"predicted_number\": 5,\n  \"r_eff_score\": 0.0,\n  \"slug\": \"evid-core-refutes-probe\",\n  \"status\": \"deprecated\",\n  \"title\": \"Core refutes probe\",\n  \"updated_at\": \"2026-10-13T14:03:35.436409+00:00\",\n  \"valid_until\": null\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 33,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_score",
+      "arguments": {
+        "id": "PRD-001",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"R_eff = 1.00 (strong). Ready: `forgeplan_activate PRD-001`.\",\n  \"decay_penalty\": 0.0,\n  \"evidence\": [\n    {\n      \"congruence_level\": 3,\n      \"excluded\": false,\n      \"expired\": false,\n      \"id\": \"EVID-001\",\n      \"score\": 1.0,\n      \"status\": \"active\",\n      \"verdict\": \"Supports\"\n    },\n    {\n      \"congruence_level\": 3,\n      \"excluded\": false,\n      \"expired\": false,\n      \"id\": \"EVID-002\",\n      \"score\": 1.0,\n      \"status\": \"active\",\n      \"verdict\": \"Supports\"\n    },\n    {\n      \"congruence_level\": 3,\n      \"excluded\": true,\n      \"expired\": false,\n      \"id\": \"EVID-004\",\n      \"score\": 0.5,\n      \"status\": \"superseded\",\n      \"verdict\": \"Weakens\"\n    },\n    {\n      \"congruence_level\": 3,\n      \"excluded\": true,\n      \"expired\": false,\n      \"id\": \"EVID-005\",\n      \"score\": 0.0,\n      \"status\": \"deprecated\",\n      \"verdict\": \"Refutes\"\n    }\n  ],\n  \"factors\": [\n    \"Skipped EVID-004 (status: superseded)\",\n    \"Skipped EVID-005 (status: deprecated)\"\n  ],\n  \"formality\": 0.8333333333333334,\n  \"granularity\": 0.8,\n  \"id\": \"PRD-001\",\n  \"overall_grade\": \"A\",\n  \"r_eff\": 1.0,\n  \"reliability\": 1.0,\n  \"self_score\": 1.0,\n  \"title\": \"EvidencePack boundary probe parent\",\n  \"weakest_link\": null\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 34,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_validate",
+      "arguments": {
+        "id": "EVID-002",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"results\": [\n    {\n      \"artifact_id\": \"EVID-002\",\n      \"kind\": \"EvidencePack\",\n      \"depth\": \"Standard\",\n      \"passed\": true,\n      \"error_count\": 0,\n      \"warning_count\": 0,\n      \"findings\": []\n    }\n  ],\n  \"total_artifacts\": 1,\n  \"total_passed\": 1,\n  \"total_errors\": 0,\n  \"total_warnings\": 0,\n  \"_next_action\": \"All passed! Implement → create EvidencePack with structured fields (verdict/congruence_level/evidence_type) → `forgeplan_link EVID-XXX <id>` → `forgeplan_activate <id>`.\"\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "mcp",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "rpc_id": 35,
+    "method": "tools/call",
+    "params": {
+      "name": "forgeplan_get",
+      "arguments": {
+        "id": "EVID-002",
+        "workspace": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-core-probe-WbfAZl"
+      }
+    },
+    "state": "response",
+    "result": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"_next_action\": \"Active. Verify trust: `forgeplan_score EVID-002`. Phase: `validate` → next `adi`.\",\n  \"assigned_number\": 2,\n  \"author\": null,\n  \"body\": \"---\\nassigned_number: 2\\ncreated: 2026-10-13\\npredicted_number: 2\\nslug: evid-mcp-boundary-probe-supports\\nupdated: 2026-10-13\\n---\\n\\n## Structured Fields\\n\\nverdict: supports\\ncongruence_level: 3\\nevidence_type: test\\n\\n## Observation\\n\\nReleased-binary Phase0 boundary probe; this is a synthetic isolated measurement of core semantics, not verification of Marketplace implementation.\\n\",\n  \"created_at\": \"2026-10-13T14:03:34.907631+00:00\",\n  \"depth\": \"standard\",\n  \"id\": \"EVID-002\",\n  \"id_canonical\": \"evid-mcp-boundary-probe-supports\",\n  \"id_display\": \"EVID-002\",\n  \"kind\": \"evidence\",\n  \"links\": {\n    \"inbound\": [\n      {\n        \"relation\": \"supersedes\",\n        \"source\": \"EVID-004\"\n      }\n    ],\n    \"outbound\": [\n      {\n        \"relation\": \"informs\",\n        \"target\": \"PRD-001\"\n      }\n    ]\n  },\n  \"parent_epic\": null,\n  \"predicted_number\": 2,\n  \"r_eff_score\": 1.0,\n  \"slug\": \"evid-mcp-boundary-probe-supports\",\n  \"status\": \"active\",\n  \"title\": \"MCP boundary probe supports\",\n  \"updated_at\": \"2026-10-13T14:03:35.060762+00:00\",\n  \"valid_until\": null\n}"
+        }
+      ],
+      "isError": false
+    }
+  },
+  {
+    "surface": "cli",
+    "args": [
+      "new",
+      "--help"
+    ],
+    "status": 0,
+    "signal": null,
+    "stdout": "Create a new artifact from template\n\nUsage: forgeplan new [OPTIONS] <KIND> <TITLE>\n\nArguments:\n  <KIND>   Artifact kind: prd, epic, spec, rfc, adr, problem, solution, evidence, note, refresh\n  <TITLE>  Artifact title\n\nOptions:\n      --allow-duplicate  Skip duplicate-detection prompt and create anyway [alias: --force]\n  -h, --help             Print help\n  -V, --version          Print version\n",
+    "stderr": "",
+    "error": null
+  },
+  {
+    "surface": "mcp_shutdown",
+    "untrusted_client_info": "phase0-script-not-a-host",
+    "escalated": false,
+    "code": null,
+    "signal": "SIGTERM"
+  },
+  {
+    "surface": "mcp_shutdown",
+    "untrusted_client_info": "guardian-forged-by-ordinary-client",
+    "escalated": false,
+    "code": null,
+    "signal": "SIGTERM"
+  }
+]

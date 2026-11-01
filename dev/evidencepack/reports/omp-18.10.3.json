@@ -1,0 +1,65 @@
+{
+  "root": "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-omp-context-zdrNVo",
+  "args": [
+    "--mode",
+    "rpc",
+    "--cwd",
+    "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-omp-context-zdrNVo",
+    "--no-extensions",
+    "--extension",
+    "/var/folders/bs/vfybfmbx0zd402nf21tj00z40000gn/T/evidencepack-omp-context-zdrNVo/probe.ts",
+    "--no-tools",
+    "--no-skills",
+    "--no-rules",
+    "--no-session",
+    "--no-title",
+    "--no-lsp"
+  ],
+  "status": {
+    "code": 143,
+    "signal": null
+  },
+  "context": {
+    "context_keys": [
+      "ui"
+    ],
+    "agent": {
+      "kind": "main",
+      "id": "Main",
+      "name": "main",
+      "depth": 0
+    },
+    "agent_kind": null,
+    "agent_id": null,
+    "agent_profile": null,
+    "primary_responsibility": null,
+    "session_id": "01a13593-6635-73b7-8656-7f30e255ce9d",
+    "parent_session": null,
+    "header_keys": [
+      "cwd",
+      "id",
+      "parentSession",
+      "providerPromptCacheKey",
+      "taskPromptCacheKey",
+      "timestamp",
+      "type",
+      "version"
+    ],
+    "has_register_tool": true,
+    "has_event_bus": true
+  },
+  "stdout": "{\"type\":\"ready\",\"protocolVersion\":1,\"supportedProtocolVersions\":[1,2],\"maxFrameBytes\":1048576,\"maxReassembledFrameBytes\":67108864}\n{\"type\":\"extension_ui_request\",\"id\":\"15a4b22debcd8597\",\"method\":\"setWidget\",\"widgetKey\":\"autoresearch\"}\n",
+  "stderr": "",
+  "model_runs": 0,
+  "forgeplan_mutations": 0,
+  "timed_out": false,
+  "capture_complete": true,
+  "shutdown_escalated": false,
+  "result": "main_context_observed_not_mutation_certified",
+  "error": null,
+  "runtime_version": "omp/18.10.3",
+  "resolved_binary": "/opt/homebrew/Cellar/omp/18.10.3/bin/omp",
+  "probe_source_sha256": "76462479ec665b6dab65822bb234646957f319c3d5747569069b3b873e4b250e",
+  "classification": "uncertified_extension_context_only",
+  "checked_at": "2026-10-13T14:03:35.250Z"
+}

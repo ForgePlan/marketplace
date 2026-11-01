@@ -5,6 +5,7 @@ on:
     branches: [main, dev]
     paths:
       - 'plugins/**'
+      - 'dev/evidencepack/**'
       - '.claude-plugin/marketplace.json'
       - '.github/workflows/**'
       - 'scripts/**'
@@ -12,6 +13,7 @@ on:
     branches: [main, dev]
     paths:
       - 'plugins/**'
+      - 'dev/evidencepack/**'
       - '.claude-plugin/marketplace.json'
       - '.github/workflows/**'
       - 'scripts/**'
@@ -183,6 +185,9 @@ jobs:
           done
           [ "$found" -eq 0 ] && echo "No plugin test suites found (skipped)"
           [ "$errors" -eq 0 ] || exit 1
+
+      - name: Run EvidencePack investigation regressions
+        run: node --test dev/evidencepack/tests/surface-census.test.mjs dev/evidencepack/tests/mcp-client.test.mjs
 
       # The `official-plugin-validate` gate below runs the runtime's OWN manifest validator. It
       # is not on the runner by default, and without it the gate reports SKIPPED — honest, but it
