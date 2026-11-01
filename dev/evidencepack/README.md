@@ -29,6 +29,8 @@ CLI/MCP probe создаёт изолированный временный `.for
 
 Census resolves realpath for descendants of directory symlinks, preserves aliases, records source hashes/line matches, and explicitly leaves normative profile/responsibility reconciliation incomplete. `normative_inventory_complete=false` is intentional, not a PASS.
 
+The [inventory reconciliation workflow](inventory-reconciliation.md) checks independently reviewed classifications against a census without turning raw mentions into actor counts. Structural completeness is not a host or protocol certification.
+
 Alias metadata lists only distinct paths that differ from the canonical path, regardless of traversal order. A regression fixture covers multiple aliases visited before their target; the retained historical census was not regenerated.
 The marketplace validation workflow also runs the census and MCP transport regression suites for changes under `dev/evidencepack/`.
 
